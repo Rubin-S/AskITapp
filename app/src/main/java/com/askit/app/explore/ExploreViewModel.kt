@@ -40,6 +40,7 @@ data class ExploreSearchArea(
 data class ExploreUiState(
     val query: String = "",
     val searchArea: ExploreSearchArea = DEFAULT_SEARCH_AREA,
+    val recentSearches: List<String> = emptyList(),
 )
 
 class ExploreViewModel(
@@ -47,6 +48,10 @@ class ExploreViewModel(
 ) : ViewModel() {
 
     private val queryState = savedStateHandle.getStateFlow(QUERY_KEY, "")
+    private val recentSearchesState = savedStateHandle.getStateFlow(
+        RECENT_SEARCHES_KEY,
+        emptyList<String>(),
+    )
     private val searchAreaNameState = savedStateHandle.getStateFlow(
         SEARCH_AREA_NAME_KEY,
         DEFAULT_SEARCH_AREA.displayName,
@@ -104,13 +109,19 @@ class ExploreViewModel(
         )
     }
 
-    val uiState: StateFlow<ExploreUiState> = combine(queryState, searchAreaState, ::ExploreUiState)
+    val uiState: StateFlow<ExploreUiState> = combine(
+        queryState,
+        searchAreaState,
+        recentSearchesState,
+        ::ExploreUiState,
+    )
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
             initialValue = ExploreUiState(
                 query = queryState.value,
                 searchArea = DEFAULT_SEARCH_AREA,
+                recentSearches = recentSearchesState.value,
             ),
         )
 
@@ -120,6 +131,31 @@ class ExploreViewModel(
 
     fun onQueryCleared() {
         savedStateHandle[QUERY_KEY] = ""
+    }
+
+    fun submitQuery(query: String) {
+        val normalizedQuery = normalizeQuery(query)
+        savedStateHandle[QUERY_KEY] = normalizedQuery
+        if (normalizedQuery.isEmpty()) return
+
+        val updatedHistory = buildList {
+            add(normalizedQuery)
+            recentSearchesState.value
+                .filterNot { it.equals(normalizedQuery, ignoreCase = true) }
+                .take(MAX_RECENT_SEARCHES - 1)
+                .let(::addAll)
+        }
+        savedStateHandle[RECENT_SEARCHES_KEY] = ArrayList(updatedHistory)
+    }
+
+    fun removeRecentSearch(query: String) {
+        savedStateHandle[RECENT_SEARCHES_KEY] = ArrayList(
+            recentSearchesState.value.filterNot { it == query },
+        )
+    }
+
+    fun clearRecentSearches() {
+        savedStateHandle[RECENT_SEARCHES_KEY] = arrayListOf<String>()
     }
 
     fun onSearchAreaApplied(searchArea: ExploreSearchArea) {
@@ -134,6 +170,8 @@ class ExploreViewModel(
 
     private companion object {
         const val QUERY_KEY = "explore_query"
+        const val RECENT_SEARCHES_KEY = "explore_recent_searches"
+        const val MAX_RECENT_SEARCHES = 4
         const val SEARCH_AREA_NAME_KEY = "explore_search_area_name"
         const val SEARCH_AREA_SUPPORTING_TEXT_KEY = "explore_search_area_supporting_text"
         const val SEARCH_AREA_PLACE_ID_KEY = "explore_search_area_place_id"
@@ -144,6 +182,9 @@ class ExploreViewModel(
 
     }
 }
+
+private fun normalizeQuery(query: String): String =
+    query.trim().replace(Regex("\\s+"), " ")
 
 private fun String.toExploreLocationSource(): ExploreLocationSource =
     runCatching { ExploreLocationSource.valueOf(this) }

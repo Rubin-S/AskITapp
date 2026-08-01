@@ -39,6 +39,22 @@ class ExploreScreenshotTest {
     }
 
     @Test
+    fun explore_search_active_light() {
+        setApp(darkTheme = false, withHistory = true)
+        openExplore()
+        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        capture("explore_search_active_light")
+    }
+
+    @Test
+    fun explore_search_active_dark() {
+        setApp(darkTheme = true, withHistory = true)
+        openExplore()
+        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        capture("explore_search_active_dark")
+    }
+
+    @Test
     fun search_area_default_light() {
         setApp(darkTheme = false)
         openExplore()
@@ -54,10 +70,18 @@ class ExploreScreenshotTest {
         capture("search_area_default_dark")
     }
 
-    private fun setApp(darkTheme: Boolean) {
+    private fun setApp(darkTheme: Boolean, withHistory: Boolean = false) {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            if (withHistory) {
+                it.submitQuery("Home tutor")
+                it.submitQuery("Laptop repair")
+                it.submitQuery("Electrician")
+                it.onQueryCleared()
+            }
+        }
         composeTestRule.setContent {
             AskITTheme(darkTheme = darkTheme) {
-                AskITApp(ExploreViewModel(SavedStateHandle()))
+                AskITApp(viewModel)
             }
         }
     }
