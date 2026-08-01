@@ -44,6 +44,8 @@ class PersonResultItemScreenshotTest {
                     Column(modifier = Modifier.width(360.dp).fillMaxWidth()) {
                         EstablishedPerson()
                         HorizontalDivider()
+                        OrdinaryPerson()
+                        HorizontalDivider()
                         NewPerson()
                         HorizontalDivider()
                         LongContentPerson()
@@ -85,6 +87,22 @@ class PersonResultItemScreenshotTest {
             locationLabel = "Kallakurichi",
             priceLabel = null,
             statusLabel = null,
+            onClick = {},
+        )
+    }
+
+    @Composable
+    private fun OrdinaryPerson() {
+        PersonResultItem(
+            name = "Arun Kumar",
+            avatarUrl = null,
+            primaryService = null,
+            additionalServices = emptyList(),
+            rating = 4.8,
+            reviewCount = 36,
+            locationLabel = "Kallakurichi",
+            priceLabel = "From â‚¹500",
+            statusLabel = "Available today",
             onClick = {},
         )
     }

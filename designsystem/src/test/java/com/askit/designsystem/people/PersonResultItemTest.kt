@@ -104,6 +104,46 @@ class PersonResultItemTest {
     }
 
     @Test
+    fun nullPrimaryService_omitsServiceMetadata_butKeepsPersonContext() {
+        setItem(
+            primaryService = null,
+            additionalServices = listOf("Wiring"),
+            rating = 4.8,
+            reviewCount = 36,
+            priceLabel = "From â‚¹500",
+            statusLabel = "Available today",
+        )
+
+        composeTestRule.onAllNodesWithText("Electrician").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Wiring").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("4.8 (36)").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("New").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("From â‚¹500").assertCountEquals(0)
+        composeTestRule.onNodeWithText("2.4 km").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Available today").assertIsDisplayed()
+    }
+
+    @Test
+    fun blankPrimaryService_behavesAsAbsent() {
+        setItem(primaryService = " ")
+
+        composeTestRule.onAllNodesWithText("Electrician").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("New").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("4.8 (36)").assertCountEquals(0)
+    }
+
+    @Test
+    fun ordinaryPerson_remainsOneClickableResultAction() {
+        var clicks = 0
+        setItem(primaryService = null, onClick = { clicks++ })
+
+        val row = composeTestRule.onNodeWithText("Ravi Kumar")
+        row.assertHasClickAction().performClick()
+
+        assertEquals(1, clicks)
+    }
+
+    @Test
     fun inconsistentRatingData_isSafeAndShowsNew() {
         setItem(rating = Double.NaN, reviewCount = 12)
 
@@ -236,6 +276,7 @@ class PersonResultItemTest {
 
     private fun setItem(
         avatarUrl: String? = null,
+        primaryService: String? = "Electrician",
         additionalServices: List<String> = listOf("Fan installation", "Wiring", "Appliance repair"),
         rating: Double? = 4.8,
         reviewCount: Int = 36,
@@ -250,7 +291,7 @@ class PersonResultItemTest {
                     PersonResultItem(
                         name = "Ravi Kumar",
                         avatarUrl = avatarUrl,
-                        primaryService = "Electrician",
+                        primaryService = primaryService,
                         additionalServices = additionalServices,
                         rating = rating,
                         reviewCount = reviewCount,

@@ -43,5 +43,9 @@
     <string name="explore_category_appliance_repair">Appliance repair</string>
     <string name="explore_search_typed_query">Search for “%1$s”</string>
     <string name="explore_search_typed_query_action">Search for %1$s</string>
+    <string name="explore_all">All</string>
+    <string name="explore_people">People</string>
+    <string name="explore_tasks">Tasks</string>
+    <string name="explore_people_and_services">People and services</string>
     <string name="explore_services">Services</string>
 </resources>

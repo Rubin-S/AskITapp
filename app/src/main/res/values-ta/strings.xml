@@ -43,5 +43,9 @@
     <string name="explore_category_appliance_repair">மின்சாதன பழுது</string>
     <string name="explore_search_typed_query">“%1$s”-ஐ தேடு</string>
     <string name="explore_search_typed_query_action">%1$s-ஐ தேடு</string>
+    <string name="explore_all">அனைத்தும்</string>
+    <string name="explore_people">மக்கள்</string>
+    <string name="explore_tasks">பணிகள்</string>
+    <string name="explore_people_and_services">மக்கள் மற்றும் சேவைகள்</string>
     <string name="explore_services">சேவைகள்</string>
 </resources>
