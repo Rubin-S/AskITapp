@@ -43,7 +43,10 @@ class TaskResultItemTest {
 
         composeTestRule.onNodeWithText("Repair laptop charging port").assertIsDisplayed()
         composeTestRule
-            .onNodeWithText("Computer repair · Open", useUnmergedTree = true)
+            .onNodeWithText("Computer repair", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("\u00B7 Open", useUnmergedTree = true)
             .assertIsDisplayed()
         composeTestRule
             .onNodeWithText("Laptop only charges when the cable is held at an angle.")
@@ -67,7 +70,7 @@ class TaskResultItemTest {
                     TaskResultStatus.entries.forEach { status ->
                         TaskResultItem(
                             title = "Task ${status.name}",
-                            category = "Category",
+                            category = "A long category label for a task with detailed scope",
                             summary = null,
                             budgetLabel = "Budget",
                             locationLabel = "Location",
@@ -84,7 +87,7 @@ class TaskResultItemTest {
 
         listOf("Open", "Applied", "Filled", "Closed", "Expired", "Unavailable").forEach {
             composeTestRule
-                .onNodeWithText("Category · $it", useUnmergedTree = true)
+                .onNodeWithText("\u00B7 $it", useUnmergedTree = true)
                 .assertExists()
         }
     }
@@ -113,10 +116,12 @@ class TaskResultItemTest {
             postedLabel = "Posted 2h ago",
         )
 
-        composeTestRule.onNodeWithText("Open").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("Open", useUnmergedTree = true)
+            .assertIsDisplayed()
         composeTestRule.onNodeWithText("Kallakurichi").assertIsDisplayed()
         composeTestRule.onNodeWithText("Arun P. · Posted 2h ago").assertIsDisplayed()
-        composeTestRule.onAllNodesWithText(" · ", substring = true).assertCountEquals(1)
+        composeTestRule.onAllNodesWithText("\u00B7", substring = true).assertCountEquals(1)
     }
 
     @Test
@@ -160,6 +165,24 @@ class TaskResultItemTest {
     }
 
     @Test
+    fun longCategory_preservesStatusInMergedSemantics_withoutIndependentStatusAction() {
+        setItem(
+            category = "A long category label for a task with detailed scope",
+            status = TaskResultStatus.Unavailable,
+        )
+
+        composeTestRule
+            .onNodeWithText("Unavailable", substring = true)
+            .assertIsDisplayed()
+        val status = composeTestRule.onNodeWithText(
+            "Unavailable",
+            substring = true,
+            useUnmergedTree = true,
+        )
+        assertFalse(status.fetchSemanticsNode().config.contains(SemanticsActions.OnClick))
+    }
+
+    @Test
     fun row_remainsReachableAtSupportedWidthsAndLargeText() {
         composeTestRule.setContent {
             AskITTheme {
@@ -168,7 +191,7 @@ class TaskResultItemTest {
                         Box(modifier = Modifier.width(width.dp)) {
                             TaskResultItem(
                                 title = "Task $width",
-                                category = "Computer repair",
+                                category = "A long category label for a task with detailed scope",
                                 summary = "A short task summary.",
                                 budgetLabel = "Budget range",
                                 locationLabel = "Kallakurichi",
@@ -184,7 +207,7 @@ class TaskResultItemTest {
                         Box(modifier = Modifier.width(320.dp)) {
                             TaskResultItem(
                                 title = "Large text task",
-                                category = "Computer repair",
+                                category = "A long category label for a task with detailed scope",
                                 summary = "A summary that can grow to two lines.",
                                 budgetLabel = "Budget range",
                                 locationLabel = "Kallakurichi",
@@ -203,6 +226,9 @@ class TaskResultItemTest {
         listOf("Task 320", "Task 360", "Task 412", "Large text task").forEach { title ->
             composeTestRule.onNodeWithText(title).assertHasClickAction()
         }
+        composeTestRule
+            .onAllNodesWithText("\u00B7 Open", useUnmergedTree = true)
+            .assertCountEquals(4)
     }
 
     @Test
@@ -214,24 +240,29 @@ class TaskResultItemTest {
             val tamilContext = LocalContext.current.createConfigurationContext(configuration)
             CompositionLocalProvider(LocalContext provides tamilContext) {
                 AskITTheme {
-                    TaskResultItem(
-                        title = "Repair laptop charging port",
-                        category = "Computer repair",
-                        summary = null,
-                        budgetLabel = "Budget range",
-                        locationLabel = "Kallakurichi",
-                        timingLabel = "Needed Monday",
-                        posterName = "Arun P.",
-                        postedLabel = "Posted 2h ago",
-                        status = TaskResultStatus.Open,
-                        onClick = {},
-                    )
+                    Box(modifier = Modifier.width(320.dp)) {
+                        TaskResultItem(
+                            title = "Repair laptop charging port",
+                            category = "A long category label for a task with detailed scope",
+                            summary = null,
+                            budgetLabel = "Budget range",
+                            locationLabel = "Kallakurichi",
+                            timingLabel = "Needed Monday",
+                            posterName = "Arun P.",
+                            postedLabel = "Posted 2h ago",
+                            status = TaskResultStatus.Unavailable,
+                            onClick = {},
+                        )
+                    }
                 }
             }
         }
 
         composeTestRule
-            .onNodeWithText("Computer repair · திறந்தது", useUnmergedTree = true)
+            .onNodeWithText("A long category label for a task with detailed scope", useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("\u00B7 கிடைக்கவில்லை", useUnmergedTree = true)
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Repair laptop charging port").assertHasClickAction()
         assertEquals(

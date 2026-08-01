@@ -2,7 +2,9 @@ package com.askit.designsystem.tasks
 
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,7 +47,6 @@ fun TaskResultItem(
     modifier: Modifier = Modifier,
 ) {
     val statusText = stringResource(taskStatusString(status))
-    val categoryStatus = joinMetadata(category, statusText)
     val taskMetadata = joinMetadata(budgetLabel, locationLabel, timingLabel)
     val posterMetadata = joinMetadata(posterName, postedLabel)
     val visibleSummary = summary?.takeIf(String::isNotBlank)
@@ -68,13 +70,28 @@ fun TaskResultItem(
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = categoryStatus,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (category.isNotBlank()) {
+                Text(
+                    text = category,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Text(
+                text = if (category.isBlank()) statusText else "\u00B7 $statusText",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+            )
+        }
         if (visibleSummary != null) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -181,7 +198,7 @@ private fun PreviewTaskResultItems() {
                     timingLabel = "Needed next Monday afternoon",
                     posterName = "A privacy-safe poster display name",
                     postedLabel = "Posted yesterday",
-                    status = TaskResultStatus.Closed,
+                    status = TaskResultStatus.Unavailable,
                     onClick = {},
                 )
             }
