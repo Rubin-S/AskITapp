@@ -23,8 +23,10 @@ import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -40,6 +42,7 @@ import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
 import com.askit.app.explore.ExploreTaskResult
 import com.askit.app.explore.ExploreViewModel
+import com.askit.app.explore.PersonMatchReason
 import com.askit.designsystem.tasks.TaskResultStatus
 import com.askit.designsystem.theme.AskITTheme
 import java.util.Locale
@@ -708,6 +711,239 @@ class ExploreFlowTest {
     }
 
     @Test
+    fun submittedResults_allShowsUniquePeopleBeforeTasks_andDefaultsToAll() {
+        setSubmittedContent()
+
+        composeTestRule.onNodeWithTag("explore_result_tabs").assertIsDisplayed()
+        composeTestRule.onNodeWithText("All").assertIsSelected()
+        composeTestRule.onNodeWithText("People and services").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_submitted_tasks").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Arun Kumar").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Both-reason person").assertCountEquals(1)
+        composeTestRule.onNodeWithText("Task 1").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun submittedResultScopes_filterByMatchReason_andKeepScopedHeadingsHidden() {
+        setSubmittedContent()
+
+        composeTestRule.onNodeWithText("People").performClick()
+        composeTestRule.onNodeWithText("People").assertIsSelected()
+        composeTestRule.onNodeWithText("Arun Kumar").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Identity professional").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Both-reason person").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Service professional").assertCountEquals(0)
+        composeTestRule.onAllNodesWithTag("explore_submitted_tasks").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("People and services").assertCountEquals(0)
+
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithText("Services").assertIsSelected()
+        composeTestRule.onNodeWithText("Service professional").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Both-reason person").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Arun Kumar").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Identity professional").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Identity-only unrelated service").assertCountEquals(0)
+        composeTestRule.onAllNodesWithTag("explore_submitted_tasks").assertCountEquals(0)
+
+        composeTestRule.onNodeWithText("Tasks").performClick()
+        composeTestRule.onNodeWithText("Tasks").assertIsSelected()
+        composeTestRule.onNodeWithText("Task 1").performScrollTo().assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Arun Kumar").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Service professional").assertCountEquals(0)
+    }
+
+    @Test
+    fun submittedResults_preserveSuppliedOrder_andRenderMoreThanFour() {
+        val people = submittedPeople() + personResult(
+            id = "person-6",
+            name = "Sixth submitted person",
+            reasons = setOf(PersonMatchReason.Identity),
+        )
+        val tasks = submittedTasks() + taskResult("task-6", "Task 6")
+        setSubmittedContent(people = people, tasks = tasks)
+
+        composeTestRule.onNodeWithText("Sixth submitted person").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Task 6").performScrollTo().assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("See all", substring = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun submittedResultClicks_passStableIdsOnce_andTabSelectionDoesNotSubmit() {
+        var selectedPersonId: String? = null
+        var selectedTaskId: String? = null
+        var submissions = 0
+        setSubmittedContent(
+            onQuerySubmitted = { submissions++ },
+            onPersonClick = { selectedPersonId = it },
+            onTaskClick = { selectedTaskId = it },
+        )
+
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithText("Service professional").performScrollTo().performClick()
+        assertEquals("service-person", selectedPersonId)
+        assertEquals(0, submissions)
+
+        composeTestRule.onNodeWithText("Tasks").performClick()
+        composeTestRule.onNodeWithText("Task 1").performScrollTo().performClick()
+        assertEquals("task-1", selectedTaskId)
+        assertEquals(0, submissions)
+    }
+
+    @Test
+    fun submittedResultTabs_hideWithoutRequiredCallbacks() {
+        setSubmittedContent(onPersonClick = null, onTaskClick = null)
+
+        composeTestRule.onNodeWithTag("explore_result_tabs").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("People and services").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Task 1").assertCountEquals(0)
+    }
+
+    @Test
+    fun submittedResultTabs_remainReachableAtSupportedWidthsAndLargeText() {
+        val contentWidth = mutableStateOf(320.dp)
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                CompositionLocalProvider(LocalDensity provides Density(1f, 2f)) {
+                    Box(
+                        modifier = androidx.compose.ui.Modifier
+                            .width(contentWidth.value)
+                            .height(900.dp),
+                    ) {
+                        ExploreScreen(
+                            query = "electrician",
+                            searchArea = testSearchArea(),
+                            recentSearches = emptyList(),
+                            onQueryChanged = {},
+                            onQueryCleared = {},
+                            onQuerySubmitted = {},
+                            onRecentSearchRemoved = {},
+                            onRecentSearchesCleared = {},
+                            onSearchFiltersClick = {},
+                            submittedPeople = submittedPeople(),
+                            submittedTasks = submittedTasks(),
+                            onPersonClick = {},
+                            onTaskClick = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        listOf(320, 360, 412).forEach { width ->
+            contentWidth.value = width.dp
+            composeTestRule.waitForIdle()
+            composeTestRule
+                .onNodeWithTag("explore_result_tabs")
+                .assertIsDisplayed()
+                .performTouchInput { swipeLeft() }
+            composeTestRule.onNodeWithText("All").assertIsSelected()
+            composeTestRule
+                .onAllNodesWithText("Tasks")[0]
+                .assertIsDisplayed()
+                .assertHasClickAction()
+        }
+    }
+
+    @Test
+    fun changingSubmittedQuery_resetsScope_andEditingShowsSuggestionsInsteadOfStaleResults() {
+        val query = mutableStateOf("electrician")
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = query.value,
+                    searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
+                    onQueryChanged = { query.value = it },
+                    onQueryCleared = { query.value = "" },
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                    submittedPeople = submittedPeople(),
+                    submittedTasks = submittedTasks(),
+                    onPersonClick = {},
+                    onTaskClick = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithText("Services").assertIsSelected()
+        query.value = "plumber"
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("All").assertIsSelected()
+
+        searchField().performClick()
+        composeTestRule.onNodeWithTag("explore_typed_suggestions").assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("explore_result_tabs").assertCountEquals(0)
+    }
+
+    @Test
+    fun selectedScope_survivesStateRestoration_forUnchangedQuery() {
+        val restorationTester = StateRestorationTester(composeTestRule)
+        restorationTester.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = "electrician",
+                    searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
+                    onQueryChanged = {},
+                    onQueryCleared = {},
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                    submittedPeople = submittedPeople(),
+                    submittedTasks = submittedTasks(),
+                    onPersonClick = {},
+                    onTaskClick = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Services").performClick()
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeTestRule.onNodeWithText("Services").assertIsSelected()
+    }
+
+    @Test
+    fun resultTabs_useMaterialTabSemantics_andTamilLabelsRemainComplete() {
+        composeTestRule.setContent {
+            val configuration = Configuration(LocalConfiguration.current).apply {
+                setLocale(Locale.forLanguageTag("ta"))
+            }
+            val tamilContext = LocalContext.current.createConfigurationContext(configuration)
+            CompositionLocalProvider(LocalContext provides tamilContext) {
+                AskITTheme(darkTheme = false) {
+                    ExploreScreen(
+                        query = "electrician",
+                        searchArea = testSearchArea(),
+                        recentSearches = emptyList(),
+                        onQueryChanged = {},
+                        onQueryCleared = {},
+                        onQuerySubmitted = {},
+                        onRecentSearchRemoved = {},
+                        onRecentSearchesCleared = {},
+                        onSearchFiltersClick = {},
+                        submittedPeople = submittedPeople(),
+                        submittedTasks = submittedTasks(),
+                        onPersonClick = {},
+                        onTaskClick = {},
+                    )
+                }
+            }
+        }
+
+        val allTab = composeTestRule.onNodeWithText("அனைத்தும்")
+        allTab.assertIsSelected()
+        assertEquals(Role.Tab, allTab.fetchSemanticsNode().config[SemanticsProperties.Role])
+        composeTestRule.onNodeWithText("மக்கள்").assertIsDisplayed()
+        composeTestRule.onNodeWithText("சேவைகள்").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("பணிகள்").assertCountEquals(2)
+    }
+
+    @Test
     fun optionalResultSections_withoutActions_areHidden() {
         composeTestRule.setContent {
             AskITTheme(darkTheme = false) {
@@ -1041,6 +1277,114 @@ class ExploreFlowTest {
     private fun filterButton() = composeTestRule.onNodeWithTag("explore_filter_button")
 
     private fun summary() = composeTestRule.onNodeWithTag("explore_location_summary")
+
+    private fun setSubmittedContent(
+        query: String = "electrician",
+        people: List<ExplorePersonResult> = submittedPeople(),
+        tasks: List<ExploreTaskResult> = submittedTasks(),
+        onQuerySubmitted: (String) -> Unit = {},
+        onPersonClick: ((String) -> Unit)? = {},
+        onTaskClick: ((String) -> Unit)? = {},
+    ) {
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = query,
+                    searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
+                    onQueryChanged = {},
+                    onQueryCleared = {},
+                    onQuerySubmitted = onQuerySubmitted,
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                    submittedPeople = people,
+                    submittedTasks = tasks,
+                    onPersonClick = onPersonClick,
+                    onTaskClick = onTaskClick,
+                )
+            }
+        }
+    }
+
+    private fun submittedPeople(): List<ExplorePersonResult> = listOf(
+        personResult(
+            id = "identity-person",
+            name = "Arun Kumar",
+            primaryService = null,
+            rating = 4.8,
+            reviewCount = 36,
+            priceLabel = "From â‚¹500",
+            statusLabel = "Available today",
+            reasons = setOf(PersonMatchReason.Identity),
+        ),
+        personResult(
+            id = "identity-professional",
+            name = "Identity professional",
+            primaryService = "Home tutor",
+            reasons = setOf(PersonMatchReason.Identity),
+        ),
+        personResult(
+            id = "service-person",
+            name = "Service professional",
+            primaryService = "Electrician",
+            rating = 4.8,
+            reviewCount = 36,
+            reasons = setOf(PersonMatchReason.Service),
+        ),
+        personResult(
+            id = "both-person",
+            name = "Both-reason person",
+            primaryService = "Plumber",
+            reasons = setOf(PersonMatchReason.Identity, PersonMatchReason.Service),
+        ),
+        personResult(
+            id = "identity-unrelated-service",
+            name = "Identity-only unrelated service",
+            primaryService = "Cleaning",
+            reasons = setOf(PersonMatchReason.Identity),
+        ),
+    )
+
+    private fun submittedTasks(): List<ExploreTaskResult> = (1..5).map { index ->
+        taskResult("task-$index", "Task $index")
+    }
+
+    private fun personResult(
+        id: String,
+        name: String,
+        reasons: Set<PersonMatchReason>,
+        primaryService: String? = "Electrician",
+        rating: Double? = null,
+        reviewCount: Int = 0,
+        priceLabel: String? = null,
+        statusLabel: String? = null,
+    ) = ExplorePersonResult(
+        id = id,
+        name = name,
+        avatarUrl = null,
+        primaryService = primaryService,
+        additionalServices = emptyList(),
+        rating = rating,
+        reviewCount = reviewCount,
+        locationLabel = "Kallakurichi",
+        priceLabel = priceLabel,
+        statusLabel = statusLabel,
+        matchReasons = reasons,
+    )
+
+    private fun taskResult(id: String, title: String) = ExploreTaskResult(
+        id = id,
+        title = title,
+        category = "Electrical work",
+        summary = "Repair work near Kallakurichi",
+        budgetLabel = "₹800–₹1,500",
+        locationLabel = "Kallakurichi",
+        timingLabel = "Needed Monday",
+        posterName = "Poster $id",
+        postedLabel = "Posted today",
+        status = TaskResultStatus.Open,
+    )
 
     private fun testSearchArea() = ExploreSearchArea(
         placeId = null,

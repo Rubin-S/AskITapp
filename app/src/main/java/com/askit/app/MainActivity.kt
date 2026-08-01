@@ -33,6 +33,8 @@ import androidx.navigation3.runtime.serialization.NavKeySerializer
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
 import com.askit.app.explore.ExploreRoute
+import com.askit.app.explore.ExplorePersonResult
+import com.askit.app.explore.ExploreTaskResult
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.SearchAreaRoute
 import com.askit.designsystem.navigation.AskITBottomBar
@@ -78,6 +80,10 @@ class MainActivity : ComponentActivity() {
 fun AskITApp(
     exploreViewModel: ExploreViewModel,
     onExit: () -> Unit = {},
+    submittedPeople: List<ExplorePersonResult> = emptyList(),
+    submittedTasks: List<ExploreTaskResult> = emptyList(),
+    onPersonClick: ((String) -> Unit)? = null,
+    onTaskClick: ((String) -> Unit)? = null,
 ) {
     val navigationState = rememberAskITNavigationState()
     val entryProvider = entryProvider<NavKey> {
@@ -88,6 +94,10 @@ fun AskITApp(
             ExploreRoute(
                 viewModel = exploreViewModel,
                 onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) },
+                submittedPeople = submittedPeople,
+                submittedTasks = submittedTasks,
+                onPersonClick = onPersonClick,
+                onTaskClick = onTaskClick,
             )
         }
         entry<AppDestination.SearchAreaDestination> {

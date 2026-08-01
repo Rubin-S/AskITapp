@@ -8,7 +8,11 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.lifecycle.SavedStateHandle
+import com.askit.app.explore.ExplorePersonResult
 import com.askit.app.explore.ExploreViewModel
+import com.askit.app.explore.ExploreTaskResult
+import com.askit.app.explore.PersonMatchReason
+import com.askit.designsystem.tasks.TaskResultStatus
 import com.askit.designsystem.theme.AskITTheme
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -90,10 +94,25 @@ class ExploreScreenshotTest {
         capture("search_area_default_dark")
     }
 
+    @Test
+    fun explore_submitted_results_all_light() {
+        setApp(darkTheme = false, submittedResults = true)
+        openExplore()
+        capture("explore_submitted_results_all_light")
+    }
+
+    @Test
+    fun explore_submitted_results_all_dark() {
+        setApp(darkTheme = true, submittedResults = true)
+        openExplore()
+        capture("explore_submitted_results_all_dark")
+    }
+
     private fun setApp(
         darkTheme: Boolean,
         withHistory: Boolean = false,
         typedQuery: Boolean = false,
+        submittedResults: Boolean = false,
     ) {
         val viewModel = ExploreViewModel(SavedStateHandle()).also {
             if (withHistory) {
@@ -107,13 +126,79 @@ class ExploreScreenshotTest {
                 it.submitQuery("Other recent")
                 it.onQueryChanged("elec")
             }
+            if (submittedResults) {
+                it.submitQuery("electrician")
+            }
         }
         composeTestRule.setContent {
             AskITTheme(darkTheme = darkTheme) {
-                AskITApp(viewModel)
+                AskITApp(
+                    exploreViewModel = viewModel,
+                    submittedPeople = if (submittedResults) submittedPeople() else emptyList(),
+                    submittedTasks = if (submittedResults) submittedTasks() else emptyList(),
+                    onPersonClick = {},
+                    onTaskClick = {},
+                )
             }
         }
     }
+
+    private fun submittedPeople() = listOf(
+        ExplorePersonResult(
+            id = "identity-person",
+            name = "Arun Kumar",
+            avatarUrl = null,
+            primaryService = null,
+            additionalServices = emptyList(),
+            rating = 4.8,
+            reviewCount = 36,
+            locationLabel = "Kallakurichi",
+            priceLabel = "From â‚¹500",
+            statusLabel = "Available today",
+            matchReasons = setOf(PersonMatchReason.Identity),
+        ),
+        ExplorePersonResult(
+            id = "service-person",
+            name = "Ravi Kumar",
+            avatarUrl = null,
+            primaryService = "Electrician",
+            additionalServices = listOf("Fan installation", "Wiring"),
+            rating = 4.8,
+            reviewCount = 36,
+            locationLabel = "2.4 km",
+            priceLabel = "From â‚¹500",
+            statusLabel = "Available today",
+            matchReasons = setOf(PersonMatchReason.Service),
+        ),
+        ExplorePersonResult(
+            id = "both-person",
+            name = "Both Match",
+            avatarUrl = null,
+            primaryService = "Plumber",
+            additionalServices = emptyList(),
+            rating = null,
+            reviewCount = 0,
+            locationLabel = "Kallakurichi",
+            priceLabel = null,
+            statusLabel = null,
+            matchReasons = setOf(PersonMatchReason.Identity, PersonMatchReason.Service),
+        ),
+    )
+
+    private fun submittedTasks() = listOf(
+        ExploreTaskResult(
+            id = "task-1",
+            title = "Repair damaged switchboard",
+            category = "Electrical work",
+            summary = "Replace a damaged switchboard safely.",
+            budgetLabel = "₹800–₹1,500",
+            locationLabel = "Kallakurichi",
+            timingLabel = "Needed Monday",
+            posterName = "Meena S.",
+            postedLabel = "Posted today",
+            status = TaskResultStatus.Open,
+        ),
+    )
 
     private fun openExplore() {
         composeTestRule.onNodeWithContentDescription("Explore").performClick()

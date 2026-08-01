@@ -35,8 +35,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipAnchorPosition
@@ -45,8 +47,10 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,14 +98,27 @@ data class ExplorePersonResult(
     val id: String,
     val name: String,
     val avatarUrl: String?,
-    val primaryService: String,
+    val primaryService: String?,
     val additionalServices: List<String>,
     val rating: Double?,
     val reviewCount: Int,
     val locationLabel: String,
     val priceLabel: String?,
     val statusLabel: String?,
+    val matchReasons: Set<PersonMatchReason> = emptySet(),
 )
+
+enum class PersonMatchReason {
+    Identity,
+    Service,
+}
+
+internal enum class ExploreResultScope(@StringRes val labelRes: Int) {
+    All(R.string.explore_all),
+    People(R.string.explore_people),
+    Services(R.string.explore_services),
+    Tasks(R.string.explore_tasks),
+}
 
 data class ExploreTaskResult(
     val id: String,
@@ -120,6 +137,10 @@ data class ExploreTaskResult(
 fun ExploreRoute(
     viewModel: ExploreViewModel,
     onSearchFiltersClick: () -> Unit,
+    submittedPeople: List<ExplorePersonResult> = emptyList(),
+    submittedTasks: List<ExploreTaskResult> = emptyList(),
+    onPersonClick: ((String) -> Unit)? = null,
+    onTaskClick: ((String) -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -133,6 +154,10 @@ fun ExploreRoute(
         onRecentSearchRemoved = viewModel::removeRecentSearch,
         onRecentSearchesCleared = viewModel::clearRecentSearches,
         onSearchFiltersClick = onSearchFiltersClick,
+        submittedPeople = submittedPeople,
+        submittedTasks = submittedTasks,
+        onPersonClick = onPersonClick,
+        onTaskClick = onTaskClick,
     )
 }
 
@@ -149,6 +174,8 @@ fun ExploreScreen(
     onSearchFiltersClick: () -> Unit,
     people: List<ExplorePersonResult> = emptyList(),
     tasks: List<ExploreTaskResult> = emptyList(),
+    submittedPeople: List<ExplorePersonResult> = emptyList(),
+    submittedTasks: List<ExploreTaskResult> = emptyList(),
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
 ) {
@@ -157,6 +184,10 @@ fun ExploreScreen(
     val listState = rememberLazyListState()
     var isSearchActive by remember { mutableStateOf(false) }
     val normalizedQuery = normalizeExploreQuery(query)
+    var selectedScopeOrdinal by rememberSaveable(normalizedQuery) {
+        mutableIntStateOf(ExploreResultScope.All.ordinal)
+    }
+    val selectedScope = ExploreResultScope.entries[selectedScopeOrdinal]
 
     fun closeSearch() {
         keyboardController?.hide()
@@ -221,6 +252,17 @@ fun ExploreScreen(
                         onQuerySubmitted(suggestion)
                         closeSearch()
                     },
+                )
+            }
+        } else if (!isSearchActive && normalizedQuery.isNotEmpty()) {
+            item(key = "submitted_search_results") {
+                SubmittedSearchResults(
+                    selectedScope = selectedScope,
+                    people = submittedPeople,
+                    tasks = submittedTasks,
+                    onPersonClick = personClick,
+                    onTaskClick = taskClick,
+                    onScopeSelected = { selectedScopeOrdinal = it.ordinal },
                 )
             }
         } else if (!isSearchActive && normalizedQuery.isEmpty()) {
@@ -469,8 +511,147 @@ private fun ServiceCategoryTile(
 }
 
 @Composable
+private fun SubmittedSearchResults(
+    selectedScope: ExploreResultScope,
+    people: List<ExplorePersonResult>,
+    tasks: List<ExploreTaskResult>,
+    onPersonClick: ((String) -> Unit)?,
+    onTaskClick: ((String) -> Unit)?,
+    onScopeSelected: (ExploreResultScope) -> Unit,
+) {
+    val identityPeople = people.filter { PersonMatchReason.Identity in it.matchReasons }
+    val servicePeople = people.filter { PersonMatchReason.Service in it.matchReasons }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("explore_submitted_results"),
+    ) {
+        SecondaryScrollableTabRow(
+            selectedTabIndex = selectedScope.ordinal,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("explore_result_tabs"),
+            edgePadding = 0.dp,
+            minTabWidth = 0.dp,
+        ) {
+            ExploreResultScope.entries.forEach { scope ->
+                Tab(
+                    selected = selectedScope == scope,
+                    onClick = { onScopeSelected(scope) },
+                    text = {
+                        Text(
+                            text = stringResource(scope.labelRes),
+                            maxLines = 1,
+                        )
+                    },
+                )
+            }
+        }
+
+        when (selectedScope) {
+            ExploreResultScope.All -> {
+                if (people.isNotEmpty() && onPersonClick != null) {
+                    ExploreResultSection(
+                        heading = stringResource(R.string.explore_people_and_services),
+                        testTag = "explore_submitted_people",
+                    ) {
+                        PersonResultRows(people, onPersonClick)
+                    }
+                }
+                if (tasks.isNotEmpty() && onTaskClick != null) {
+                    ExploreResultSection(
+                        heading = stringResource(R.string.explore_tasks),
+                        testTag = "explore_submitted_tasks",
+                    ) {
+                        TaskResultRows(tasks, onTaskClick)
+                    }
+                }
+            }
+
+            ExploreResultScope.People -> {
+                if (identityPeople.isNotEmpty() && onPersonClick != null) {
+                    ExploreResultSection(
+                        heading = null,
+                        testTag = "explore_submitted_people",
+                    ) {
+                        PersonResultRows(identityPeople, onPersonClick)
+                    }
+                }
+            }
+
+            ExploreResultScope.Services -> {
+                if (servicePeople.isNotEmpty() && onPersonClick != null) {
+                    ExploreResultSection(
+                        heading = null,
+                        testTag = "explore_submitted_services",
+                    ) {
+                        PersonResultRows(servicePeople, onPersonClick)
+                    }
+                }
+            }
+
+            ExploreResultScope.Tasks -> {
+                if (tasks.isNotEmpty() && onTaskClick != null) {
+                    ExploreResultSection(
+                        heading = null,
+                        testTag = "explore_submitted_tasks",
+                    ) {
+                        TaskResultRows(tasks, onTaskClick)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PersonResultRows(
+    people: List<ExplorePersonResult>,
+    onClick: (String) -> Unit,
+) {
+    people.forEachIndexed { index, person ->
+        if (index > 0) HorizontalDivider()
+        PersonResultItem(
+            name = person.name,
+            avatarUrl = person.avatarUrl,
+            primaryService = person.primaryService,
+            additionalServices = person.additionalServices,
+            rating = person.rating,
+            reviewCount = person.reviewCount,
+            locationLabel = person.locationLabel,
+            priceLabel = person.priceLabel,
+            statusLabel = person.statusLabel,
+            onClick = { onClick(person.id) },
+        )
+    }
+}
+
+@Composable
+private fun TaskResultRows(
+    tasks: List<ExploreTaskResult>,
+    onClick: (String) -> Unit,
+) {
+    tasks.forEachIndexed { index, task ->
+        if (index > 0) HorizontalDivider()
+        TaskResultItem(
+            title = task.title,
+            category = task.category,
+            summary = task.summary,
+            budgetLabel = task.budgetLabel,
+            locationLabel = task.locationLabel,
+            timingLabel = task.timingLabel,
+            posterName = task.posterName,
+            postedLabel = task.postedLabel,
+            status = task.status,
+            onClick = { onClick(task.id) },
+        )
+    }
+}
+
+@Composable
 private fun ExploreResultSection(
-    heading: String,
+    heading: String?,
     testTag: String,
     content: @Composable () -> Unit,
 ) {
@@ -480,12 +661,14 @@ private fun ExploreResultSection(
             .padding(top = 24.dp)
             .testTag(testTag),
     ) {
-        Text(
-            text = heading,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.semantics { heading() },
-        )
-        Spacer(Modifier.height(12.dp))
+        if (heading != null) {
+            Text(
+                text = heading,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.semantics { heading() },
+            )
+            Spacer(Modifier.height(12.dp))
+        }
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.medium,

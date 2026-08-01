@@ -50,7 +50,7 @@ import java.text.NumberFormat
 fun PersonResultItem(
     name: String,
     avatarUrl: String?,
-    primaryService: String,
+    primaryService: String?,
     additionalServices: List<String>,
     rating: Double?,
     reviewCount: Int,
@@ -62,7 +62,10 @@ fun PersonResultItem(
 ) {
     val displayName = name.trim()
     val status = statusLabel?.trim()?.takeIf(String::isNotEmpty)
-    val additionalSummary = summarizeAdditionalServices(primaryService, additionalServices)
+    val service = primaryService?.trim()?.takeIf(String::isNotEmpty)
+    val additionalSummary = service?.let {
+        summarizeAdditionalServices(it, additionalServices)
+    }
     val additionalAccessibility = additionalSummary?.let { (summary, remaining) ->
         if (remaining == 0) {
             null
@@ -126,13 +129,15 @@ fun PersonResultItem(
         },
         supportingContent = {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = primaryService.trim(),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (service != null) {
+                    Text(
+                        text = service,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 if (additionalSummary != null) {
                     Text(
                         text = additionalSummary.first,
@@ -153,7 +158,8 @@ fun PersonResultItem(
                     rating = rating,
                     reviewCount = reviewCount,
                     locationLabel = locationLabel,
-                    price = price,
+                    price = price.takeIf { service != null },
+                    showServiceMetadata = service != null,
                 )
             }
         },
@@ -217,6 +223,7 @@ private fun ResultMetadataLine(
     reviewCount: Int,
     locationLabel: String,
     price: String?,
+    showServiceMetadata: Boolean,
 ) {
     val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     val ratingFormatter = remember(locale) {
@@ -238,49 +245,51 @@ private fun ResultMetadataLine(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        MetadataSegment(showSeparator = false) {
-            if (hasReviews && formattedRating != null && formattedReviewCount != null) {
-                val reviewAccessibility = pluralStringResource(
-                    id = R.plurals.person_result_review_accessibility,
-                    count = reviewCount,
-                    formattedRating,
-                    formattedReviewCount,
-                )
-                Row(
-                    modifier = Modifier.semantics(mergeDescendants = true) {
-                        contentDescription = reviewAccessibility
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_star_filled),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        if (showServiceMetadata) {
+            MetadataSegment(showSeparator = false) {
+                if (hasReviews && formattedRating != null && formattedReviewCount != null) {
+                    val reviewAccessibility = pluralStringResource(
+                        id = R.plurals.person_result_review_accessibility,
+                        count = reviewCount,
+                        formattedRating,
+                        formattedReviewCount,
                     )
-                    Spacer(modifier = Modifier.width(2.dp))
+                    Row(
+                        modifier = Modifier.semantics(mergeDescendants = true) {
+                            contentDescription = reviewAccessibility
+                        },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_star_filled),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = stringResource(
+                                R.string.person_result_rating_display,
+                                formattedRating,
+                                formattedReviewCount,
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                } else {
                     Text(
-                        text = stringResource(
-                            R.string.person_result_rating_display,
-                            formattedRating,
-                            formattedReviewCount,
-                        ),
+                        text = stringResource(R.string.person_result_new),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
                     )
                 }
-            } else {
-                Text(
-                    text = stringResource(R.string.person_result_new),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
-                )
             }
         }
         if (location != null) {
-            MetadataSegment(showSeparator = true) {
+            MetadataSegment(showSeparator = showServiceMetadata) {
                 Text(
                     text = location,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -290,7 +299,7 @@ private fun ResultMetadataLine(
                 )
             }
         }
-        if (price != null) {
+        if (showServiceMetadata && price != null) {
             MetadataSegment(showSeparator = true) {
                 Text(
                     text = price,
