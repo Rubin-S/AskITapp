@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -137,12 +138,27 @@ class NavigationPersistenceTest {
     fun filterWhileSearchIsActive_closesSearchBeforeOpeningSearchArea() {
         openExplore()
         composeTestRule.onNodeWithTag("explore_search_field").performClick()
-        composeTestRule.onNodeWithText("Suggested categories").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_search_field").performTextInput("elec")
+        composeTestRule.onNodeWithTag("explore_typed_suggestions").assertIsDisplayed()
 
         composeTestRule.onNodeWithTag("explore_filter_button").performClick()
 
         composeTestRule.onNodeWithText("Search area").assertIsDisplayed()
-        composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestions").assertCountEquals(0)
+    }
+
+    @Test
+    fun backWhileTypedSearchIsActive_closesSuggestions_withoutSubmitting() {
+        openExplore()
+        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        composeTestRule.onNodeWithTag("explore_search_field").performTextInput("elec")
+
+        composeTestRule.onNodeWithTag("explore_typed_suggestions").assertIsDisplayed()
+        composeTestRule.activity.onBackPressedDispatcher.onBackPressed()
+
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestions").assertCountEquals(0)
+        composeTestRule.onNodeWithText("elec").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Browse services").assertCountEquals(0)
     }
 
     private fun openExplore() {

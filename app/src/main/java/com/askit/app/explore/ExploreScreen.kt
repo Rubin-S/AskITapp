@@ -30,6 +30,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
@@ -59,15 +60,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.R
 import com.askit.designsystem.people.PersonResultItem
 import com.askit.designsystem.tasks.TaskResultItem
 import com.askit.designsystem.tasks.TaskResultStatus
+import java.util.Locale
 
 private val EXPLORE_CATEGORIES = listOf(
     ExploreCategory(R.string.explore_category_electrician, R.drawable.service_electrician),
@@ -149,6 +156,7 @@ fun ExploreScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
     var isSearchActive by remember { mutableStateOf(false) }
+    val normalizedQuery = normalizeExploreQuery(query)
 
     fun closeSearch() {
         keyboardController?.hide()
@@ -187,7 +195,7 @@ fun ExploreScreen(
             )
         }
 
-        if (isSearchActive && query.isBlank()) {
+        if (isSearchActive && normalizedQuery.isEmpty()) {
             item(key = "active_search_content") {
                 ActiveSearchContent(
                     recentSearches = recentSearches,
@@ -203,7 +211,19 @@ fun ExploreScreen(
                     },
                 )
             }
-        } else if (!isSearchActive && query.isBlank()) {
+        } else if (isSearchActive && normalizedQuery.isNotEmpty()) {
+            item(key = "typed_search_suggestions") {
+                TypedSearchSuggestions(
+                    query = normalizedQuery,
+                    recentSearches = recentSearches,
+                    categories = EXPLORE_CATEGORIES.map { stringResource(it.labelRes) },
+                    onSuggestionSelected = { suggestion ->
+                        onQuerySubmitted(suggestion)
+                        closeSearch()
+                    },
+                )
+            }
+        } else if (!isSearchActive && normalizedQuery.isEmpty()) {
             item(key = "browse_services") {
                 BrowseServices(
                     onCategorySelected = { category ->
@@ -475,6 +495,187 @@ private fun ExploreResultSection(
             Column {
                 content()
             }
+        }
+    }
+}
+
+@Composable
+private fun TypedSearchSuggestions(
+    query: String,
+    recentSearches: List<String>,
+    categories: List<String>,
+    onSuggestionSelected: (String) -> Unit,
+) {
+    val normalizedQuery = query.lowercase(Locale.ROOT)
+    val recentSuggestions = remember(normalizedQuery, recentSearches) {
+        matchingRecentSearches(recentSearches, normalizedQuery)
+    }
+    val serviceSuggestions = remember(normalizedQuery, recentSuggestions, categories) {
+        matchingServiceCategories(categories, normalizedQuery, recentSuggestions)
+    }
+    val hasExactVisibleSuggestion = (recentSuggestions + serviceSuggestions)
+        .any { normalizedMatchValue(it) == normalizedQuery }
+    val directSearchVisible = !hasExactVisibleSuggestion
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+            .testTag("explore_typed_suggestions"),
+    ) {
+        if (recentSuggestions.isNotEmpty()) {
+            SuggestionSectionHeading(stringResource(R.string.explore_recent_searches))
+            recentSuggestions.forEach { recentQuery ->
+                SuggestionRow(
+                    text = AnnotatedString(recentQuery),
+                    iconRes = R.drawable.ic_history,
+                    actionLabel = stringResource(
+                        R.string.explore_search_recent_query,
+                        recentQuery,
+                    ),
+                    onClick = { onSuggestionSelected(recentQuery) },
+                )
+            }
+        }
+
+        if (serviceSuggestions.isNotEmpty()) {
+            if (recentSuggestions.isNotEmpty()) Spacer(Modifier.height(24.dp))
+            SuggestionSectionHeading(stringResource(R.string.explore_services))
+            serviceSuggestions.forEach { category ->
+                SuggestionRow(
+                    text = predictiveCategoryText(category, normalizedQuery),
+                    iconRes = R.drawable.ic_search,
+                    actionLabel = stringResource(R.string.explore_search_category, category),
+                    onClick = { onSuggestionSelected(category) },
+                )
+            }
+        }
+
+        if (directSearchVisible) {
+            SuggestionRow(
+                text = AnnotatedString(
+                    stringResource(R.string.explore_search_typed_query, query),
+                ),
+                iconRes = R.drawable.ic_search,
+                actionLabel = stringResource(
+                    R.string.explore_search_typed_query_action,
+                    query,
+                ),
+                onClick = { onSuggestionSelected(query) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SuggestionSectionHeading(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.semantics { heading() },
+    )
+}
+
+@Composable
+private fun SuggestionRow(
+    text: AnnotatedString,
+    @DrawableRes iconRes: Int,
+    actionLabel: String,
+    onClick: () -> Unit,
+) {
+    ListItem(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .testTag("explore_typed_suggestion_row")
+            .clickable(
+                onClickLabel = actionLabel,
+                onClick = onClick,
+            ),
+        leadingContent = {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+            )
+        },
+        headlineContent = {
+            Text(
+                text = text,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        },
+    )
+}
+
+private fun matchingRecentSearches(
+    recentSearches: List<String>,
+    normalizedQuery: String,
+): List<String> {
+    val matches = recentSearches.filter { recentQuery ->
+        matchStrength(normalizedMatchValue(recentQuery), normalizedQuery) != null
+    }
+    val exactMatch = matches.firstOrNull { normalizedMatchValue(it) == normalizedQuery }
+    return buildList {
+        exactMatch?.let(::add)
+        matches.filterNot { normalizedMatchValue(it) == normalizedQuery }.let(::addAll)
+    }.take(2)
+}
+
+private fun matchingServiceCategories(
+    categories: List<String>,
+    normalizedQuery: String,
+    recentSuggestions: List<String>,
+): List<String> {
+    val usedValues = recentSuggestions
+        .mapTo(mutableSetOf(), ::normalizedMatchValue)
+    return buildList {
+        categories.forEach { category ->
+            val normalizedCategory = normalizedMatchValue(category)
+            if (
+                size < 3 &&
+                normalizedCategory !in usedValues &&
+                matchStrength(normalizedCategory, normalizedQuery) != null
+            ) {
+                add(category)
+                usedValues += normalizedCategory
+            }
+        }
+    }
+}
+
+private fun matchStrength(normalizedLabel: String, normalizedQuery: String): Int? {
+    if (normalizedLabel.isEmpty() || normalizedQuery.isEmpty()) return null
+    return when {
+        normalizedLabel == normalizedQuery -> 0
+        normalizedLabel.startsWith(normalizedQuery) -> 1
+        normalizedLabel.split(' ').any { it.startsWith(normalizedQuery) } -> 2
+        normalizedLabel.contains(normalizedQuery) -> 3
+        else -> null
+    }
+}
+
+private fun normalizedMatchValue(value: String): String =
+    normalizeExploreQuery(value).lowercase(Locale.ROOT)
+
+private fun predictiveCategoryText(
+    category: String,
+    normalizedQuery: String,
+): AnnotatedString {
+    if (
+        !category.startsWith(normalizedQuery, ignoreCase = true) ||
+        normalizedQuery.isEmpty() ||
+        normalizedQuery.length > category.length
+    ) {
+        return AnnotatedString(category)
+    }
+
+    return buildAnnotatedString {
+        append(category.substring(0, normalizedQuery.length))
+        withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+            append(category.substring(normalizedQuery.length))
         }
     }
 }

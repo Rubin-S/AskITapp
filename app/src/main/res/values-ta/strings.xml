@@ -41,4 +41,7 @@
     <string name="explore_category_ac_repair">ஏசி பழுது</string>
     <string name="explore_category_home_tutor">வீட்டு ஆசிரியர்</string>
     <string name="explore_category_appliance_repair">மின்சாதன பழுது</string>
+    <string name="explore_search_typed_query">“%1$s”-ஐ தேடு</string>
+    <string name="explore_search_typed_query_action">%1$s-ஐ தேடு</string>
+    <string name="explore_services">சேவைகள்</string>
 </resources>

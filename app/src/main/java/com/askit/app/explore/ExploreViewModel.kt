@@ -134,7 +134,7 @@ class ExploreViewModel(
     }
 
     fun submitQuery(query: String) {
-        val normalizedQuery = normalizeQuery(query)
+        val normalizedQuery = normalizeExploreQuery(query)
         savedStateHandle[QUERY_KEY] = normalizedQuery
         if (normalizedQuery.isEmpty()) return
 
@@ -183,7 +183,7 @@ class ExploreViewModel(
     }
 }
 
-private fun normalizeQuery(query: String): String =
+internal fun normalizeExploreQuery(query: String): String =
     query.trim().replace(Regex("\\s+"), " ")
 
 private fun String.toExploreLocationSource(): ExploreLocationSource =

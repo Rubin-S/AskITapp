@@ -1,6 +1,7 @@
 package com.askit.app
 
 import android.content.res.Configuration
+import android.content.Context
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
@@ -10,6 +11,7 @@ import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -49,6 +51,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import androidx.compose.ui.unit.dp
+import androidx.test.core.app.ApplicationProvider
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], qualifiers = "w360dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
@@ -207,6 +210,17 @@ class ExploreFlowTest {
     }
 
     @Test
+    fun whitespaceOnlyTypedQuery_usesActiveEmptyAssistance() {
+        setApp()
+        openExplore()
+        searchField().performClick()
+        searchField().performTextInput("   ")
+
+        composeTestRule.onNodeWithText("Suggested categories").assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestions").assertCountEquals(0)
+    }
+
+    @Test
     fun typedQuery_hidesRecentSearchesAndCategories() {
         setAppWithHistory()
         openExplore()
@@ -216,6 +230,310 @@ class ExploreFlowTest {
         composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Browse services").assertCountEquals(0)
+        composeTestRule.onNodeWithTag("explore_typed_suggestions").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Plumber").assertCountEquals(2)
+    }
+
+    @Test
+    fun typedQuery_showsMatchingHistoryServicesAndDirectSearch() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.submitQuery("Other recent")
+            it.submitQuery("Electrician repair")
+            it.onQueryChanged("elec")
+        }
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule.onNodeWithText("Recent searches").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Electrician repair").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Services").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Electrician").performScrollTo().assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("Search for \u201celec\u201d")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestion_row").assertCountEquals(3)
+    }
+
+    @Test
+    fun typedQuery_withoutLocalMatches_showsOnlyDirectSearch() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.onQueryChanged("laptop charging problem")
+        }
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Services").assertCountEquals(0)
+        composeTestRule
+            .onNodeWithText("Search for \u201claptop charging problem\u201d")
+            .performScrollTo()
+            .assertHasClickAction()
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestion_row").assertCountEquals(1)
+    }
+
+    @Test
+    fun typedQuery_exactMatch_hidesDirectSearch() {
+        showTypedQuery("ELECTRICIAN")
+        composeTestRule.onAllNodesWithText("Electrician").assertCountEquals(1)
+        composeTestRule.onAllNodesWithText("Search for \u201cELECTRICIAN\u201d").assertCountEquals(0)
+    }
+
+    @Test
+    fun typedQuery_wholeLabelPrefix_matchesCaseInsensitively_afterWhitespaceNormalization() {
+        showTypedQuery("  elec  ")
+        composeTestRule.onNodeWithText("Electrician").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Search for \u201celec\u201d").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun typedQuery_wordPrefix_matchesServiceCategory() {
+        showTypedQuery("tut")
+        composeTestRule.onNodeWithText("Home tutor").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun typedQuery_containedMatch_keepsRelatedServicesWithoutFuzzyValues() {
+        showTypedQuery("air")
+        composeTestRule.onNodeWithText("AC repair").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Appliance repair").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun typedQuery_unrelatedValue_showsDirectSearchOnly() {
+        showTypedQuery("laptpo")
+        composeTestRule.onAllNodesWithText("Electrician").assertCountEquals(0)
+        composeTestRule.onNodeWithText("Search for \u201claptpo\u201d").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun typedQuery_capsSourcesAndTotalActions() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            listOf(
+                "first electrician",
+                "second electrician",
+                "third electrician",
+                "fourth electrician",
+            ).forEach(it::submitQuery)
+            it.onQueryChanged("e")
+        }
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestion_row").assertCountEquals(6)
+        composeTestRule.onNodeWithText("fourth electrician").assertIsDisplayed()
+        composeTestRule.onNodeWithText("third electrician").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("second electrician").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Services").assertCountEquals(1)
+    }
+
+    @Test
+    fun typedQuery_deduplicatesHistoryBeforeService_andHidesDirectForExactMatch() {
+        showTypedQuery("elec", recentSearches = listOf("Electrician"))
+        composeTestRule.onAllNodesWithText("Electrician").assertCountEquals(1)
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestion_row").assertCountEquals(2)
+        composeTestRule.onAllNodesWithText("Services").assertCountEquals(0)
+    }
+
+    @Test
+    fun typedSuggestions_exposeHeadingsAndLocalizedActionLabels() {
+        showTypedQuery("elec", recentSearches = listOf("Electrician repair"))
+
+        assertEquals(
+            true,
+            composeTestRule.onNodeWithText("Recent searches")
+                .fetchSemanticsNode()
+                .config
+                .contains(SemanticsProperties.Heading),
+        )
+        assertEquals(
+            true,
+            composeTestRule.onNodeWithText("Services")
+                .fetchSemanticsNode()
+                .config
+                .contains(SemanticsProperties.Heading),
+        )
+        assertEquals(
+            "Search for Electrician",
+            composeTestRule.onNodeWithText("Electrician")
+                .fetchSemanticsNode()
+                .config[SemanticsActions.OnClick]
+                .label,
+        )
+        assertEquals(
+            "Search for elec",
+            composeTestRule.onNodeWithText("Search for \u201celec\u201d")
+                .fetchSemanticsNode()
+                .config[SemanticsActions.OnClick]
+                .label,
+        )
+    }
+
+    @Test
+    fun clearingTypedSearch_restoresActiveEmptyVisibility() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.submitQuery("Electrician repair")
+            it.onQueryCleared()
+        }
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+        searchField().performTextInput("elec")
+
+        composeTestRule.onNodeWithTag("explore_typed_suggestions").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Clear search").performClick()
+        composeTestRule.onNodeWithText("Recent searches").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Services").assertCountEquals(0)
+    }
+
+    @Test
+    fun typedRecentSuggestion_selectionUsesExistingSubmissionPath() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.submitQuery("Electrician repair")
+            it.onQueryChanged("elec")
+        }
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule.onNodeWithText("Electrician repair").performScrollTo().performClick()
+
+        assertEquals("Electrician repair", viewModel.uiState.value.query)
+        assertEquals("Electrician repair", viewModel.uiState.value.recentSearches.first())
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestions").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Search area").assertCountEquals(0)
+    }
+
+    @Test
+    fun typedServiceSuggestion_selectionUsesExistingSubmissionPath() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.onQueryChanged("elec")
+        }
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule.onNodeWithText("Electrician").performScrollTo().performClick()
+
+        assertEquals("Electrician", viewModel.uiState.value.query)
+        assertEquals(listOf("Electrician"), viewModel.uiState.value.recentSearches)
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestions").assertCountEquals(0)
+    }
+
+    @Test
+    fun typedDirectSearch_selectionNormalizesAndStoresQuery() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.onQueryChanged("  laptop   charging issue  ")
+        }
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule
+            .onNodeWithText("Search for \u201claptop charging issue\u201d")
+            .performScrollTo()
+            .performClick()
+
+        assertEquals("laptop charging issue", viewModel.uiState.value.query)
+        assertEquals(listOf("laptop charging issue"), viewModel.uiState.value.recentSearches)
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestions").assertCountEquals(0)
+    }
+
+    @Test
+    fun typingDoesNotMutateHistory_andImeSubmitsTypedQuery_notFirstSuggestion() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.submitQuery("Electrician repair")
+            it.onQueryCleared()
+        }
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+        searchField().performTextInput("elec")
+
+        assertEquals(listOf("Electrician repair"), viewModel.uiState.value.recentSearches)
+        assertEquals("elec", viewModel.uiState.value.query)
+        searchField().performImeAction()
+
+        assertEquals(listOf("elec", "Electrician repair"), viewModel.uiState.value.recentSearches)
+        composeTestRule.onAllNodesWithTag("explore_typed_suggestions").assertCountEquals(0)
+    }
+
+    @Test
+    fun typedSuggestions_useTamilLabels_andAccessibleRows() {
+        val baseContext = ApplicationProvider.getApplicationContext<Context>()
+        val tamilContext = baseContext.createConfigurationContext(
+            Configuration(baseContext.resources.configuration).apply {
+                setLocale(Locale.forLanguageTag("ta"))
+            },
+        )
+        val tamilElectrician = tamilContext.getString(R.string.explore_category_electrician)
+        composeTestRule.setContent {
+            CompositionLocalProvider(LocalContext provides tamilContext) {
+                AskITTheme(darkTheme = false) {
+                    ExploreScreen(
+                        query = tamilElectrician.take(3),
+                        searchArea = testSearchArea(),
+                        recentSearches = emptyList(),
+                        onQueryChanged = {},
+                        onQueryCleared = {},
+                        onQuerySubmitted = {},
+                        onRecentSearchRemoved = {},
+                        onRecentSearchesCleared = {},
+                        onSearchFiltersClick = {},
+                    )
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        composeTestRule.onNodeWithText(tamilContext.getString(R.string.explore_services)).performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(tamilElectrician)
+            .performScrollTo()
+            .assertHasClickAction()
+    }
+
+    @Test
+    fun typedSuggestions_remainReachableAtNarrowWidthAndLargeText() {
+        val contentWidth = mutableStateOf(320.dp)
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                CompositionLocalProvider(LocalDensity provides Density(1f, 2f)) {
+                    Box(
+                        modifier = androidx.compose.ui.Modifier
+                            .width(contentWidth.value)
+                            .height(700.dp),
+                    ) {
+                        ExploreScreen(
+                            query = "elec",
+                            searchArea = testSearchArea(),
+                            recentSearches = listOf("Electrician repair"),
+                            onQueryChanged = {},
+                            onQueryCleared = {},
+                            onQuerySubmitted = {},
+                            onRecentSearchRemoved = {},
+                            onRecentSearchesCleared = {},
+                            onSearchFiltersClick = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        listOf(320, 360, 412).forEach { width ->
+            contentWidth.value = width.dp
+            composeTestRule.waitForIdle()
+            composeTestRule.onNodeWithText("Electrician").performScrollTo().assertIsDisplayed()
+            composeTestRule
+                .onNodeWithText("Search for \u201celec\u201d")
+                .performScrollTo()
+                .assertIsDisplayed()
+        }
     }
 
     @Test
@@ -683,6 +1001,28 @@ class ExploreFlowTest {
             it.onQueryCleared()
         }
         setApp(viewModel)
+    }
+
+    private fun showTypedQuery(
+        query: String,
+        recentSearches: List<String> = emptyList(),
+    ) {
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = query,
+                    searchArea = testSearchArea(),
+                    recentSearches = recentSearches,
+                    onQueryChanged = {},
+                    onQueryCleared = {},
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                )
+            }
+        }
+        composeTestRule.onNodeWithTag("explore_search_field").performClick()
     }
 
     private fun openExplore() {
