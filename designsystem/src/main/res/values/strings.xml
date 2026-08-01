@@ -28,4 +28,12 @@
         <item quantity="one">%1$s rating, %2$s review</item>
         <item quantity="other">%1$s rating, %2$s reviews</item>
     </plurals>
+
+    <string name="task_result_status_open">Open</string>
+    <string name="task_result_status_applied">Applied</string>
+    <string name="task_result_status_filled">Filled</string>
+    <string name="task_result_status_closed">Closed</string>
+    <string name="task_result_status_expired">Expired</string>
+    <string name="task_result_status_unavailable">Unavailable</string>
+    <string name="task_result_view_task">View task: %1$s</string>
 </resources>

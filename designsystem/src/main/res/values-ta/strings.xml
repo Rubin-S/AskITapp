@@ -28,4 +28,12 @@
         <item quantity="one">%1$s மதிப்பீடு, %2$s மதிப்புரை</item>
         <item quantity="other">%1$s மதிப்பீடு, %2$s மதிப்புரைகள்</item>
     </plurals>
+
+    <string name="task_result_status_open">திறந்தது</string>
+    <string name="task_result_status_applied">விண்ணப்பிக்கப்பட்டது</string>
+    <string name="task_result_status_filled">நிரம்பியது</string>
+    <string name="task_result_status_closed">மூடப்பட்டது</string>
+    <string name="task_result_status_expired">காலாவதியானது</string>
+    <string name="task_result_status_unavailable">கிடைக்கவில்லை</string>
+    <string name="task_result_view_task">பணியைப் பார்க்கவும்: %1$s</string>
 </resources>
