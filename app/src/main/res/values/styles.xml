@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AskITPlacesAutocompleteTheme" parent="PlacesMaterialTheme">
+        <item name="placesColorSurface">@color/askit_places_surface</item>
+        <item name="placesColorOnSurface">@color/askit_places_on_surface</item>
+        <item name="placesColorOnSurfaceVariant">@color/askit_places_on_surface_variant</item>
+        <item name="placesColorPrimary">@color/askit_places_primary</item>
+        <item name="placesColorOutlineDecorative">@color/askit_places_outline</item>
+        <item name="placesColorSecondaryContainer">@color/askit_places_secondary_container</item>
+        <item name="placesColorOnSecondaryContainer">@color/askit_places_on_secondary_container</item>
+    </style>
+</resources>

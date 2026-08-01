@@ -45,6 +45,16 @@ class NavigationPersistenceTest {
     }
 
     @Test
+    fun backFromExploreRoot_returnsDirectlyToHome() {
+        openExplore()
+
+        composeTestRule.activity.onBackPressedDispatcher.onBackPressed()
+
+        composeTestRule.onNodeWithContentDescription("Home").assertIsSelected()
+        composeTestRule.onNodeWithContentDescription("Explore").assertIsDisplayed()
+    }
+
+    @Test
     fun reselectingExplore_doesNotAddDuplicateRoot() {
         openExplore()
         repeat(3) {

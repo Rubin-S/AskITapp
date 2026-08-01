@@ -22,7 +22,6 @@ class MainActivitySmokeTest {
     @Test
     fun bottomBar_isDisplayed() {
         composeTestRule.setContent {
-            // Product shell is light-only (MainActivity); keep tests aligned.
             AskITTheme(darkTheme = false) {
                 AskITApp(ExploreViewModel(SavedStateHandle()))
             }
