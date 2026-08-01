@@ -25,17 +25,62 @@ class ExploreScreenshotTest {
 
     @Test
     fun explore_search_initial() {
+        setApp(darkTheme = false)
+        openExplore()
+        capture("explore_search_initial")
+    }
+
+    @Test
+    fun explore_location_row_light() {
+        setApp(darkTheme = false)
+        openExplore()
+        capture("explore_location_row_light")
+    }
+
+    @Test
+    fun explore_location_row_dark() {
+        setApp(darkTheme = true)
+        openExplore()
+        capture("explore_location_row_dark")
+    }
+
+    @Test
+    fun search_area_default_light() {
+        setApp(darkTheme = false)
+        openExplore()
+        composeTestRule
+            .onNodeWithContentDescription("Change search area. Near Kallakurichi. Within 10 km")
+            .performClick()
+        capture("search_area_default_light")
+    }
+
+    @Test
+    fun search_area_default_dark() {
+        setApp(darkTheme = true)
+        openExplore()
+        composeTestRule
+            .onNodeWithContentDescription("Change search area. Near Kallakurichi. Within 10 km")
+            .performClick()
+        capture("search_area_default_dark")
+    }
+
+    private fun setApp(darkTheme: Boolean) {
         composeTestRule.setContent {
-            AskITTheme(darkTheme = false) {
+            AskITTheme(darkTheme = darkTheme) {
                 AskITApp(ExploreViewModel(SavedStateHandle()))
             }
         }
+    }
 
+    private fun openExplore() {
         composeTestRule.onNodeWithContentDescription("Explore").performClick()
         composeTestRule.mainClock.advanceTimeBy(5_000)
         composeTestRule.waitForIdle()
+    }
+
+    private fun capture(name: String) {
         composeTestRule.onRoot().captureRoboImage(
-            filePath = "src/test/screenshots/explore_search_initial.png",
+            filePath = "src/test/screenshots/$name.png",
         )
     }
 }

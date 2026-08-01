@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.secrets)
     alias(libs.plugins.roborazzi)
 }
 
@@ -15,6 +16,7 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
+        manifestPlaceholders["PLACES_API_KEY"] = "DEFAULT_API_KEY"
     }
 
     buildTypes {
@@ -51,6 +53,11 @@ android {
     }
 }
 
+secrets {
+    propertiesFileName = "secrets.properties"
+    defaultPropertiesFileName = "local.defaults.properties"
+}
+
 roborazzi {
     outputDir.set(layout.projectDirectory.dir("src/test/screenshots"))
 }
@@ -63,6 +70,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.google.places)
+    implementation(libs.play.services.location)
 
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)

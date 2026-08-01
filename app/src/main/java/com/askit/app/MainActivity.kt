@@ -1,6 +1,7 @@
 package com.askit.app
 
 import android.os.Bundle
+import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
@@ -33,15 +34,18 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
 import com.askit.app.explore.ExploreRoute
 import com.askit.app.explore.ExploreViewModel
+import com.askit.app.explore.SearchAreaRoute
 import com.askit.designsystem.navigation.AskITBottomBar
 import com.askit.designsystem.navigation.AskITCreateSheet
 import com.askit.designsystem.navigation.AskITDestination
 import com.askit.designsystem.theme.AskITTheme
+import com.google.android.libraries.places.api.Places
 import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initializePlaces()
         val exploreViewModel = ViewModelProvider(
             this,
             viewModelFactory {
@@ -51,10 +55,21 @@ class MainActivity : ComponentActivity() {
             },
         )[ExploreViewModel::class.java]
         setContent {
-            // Product shell: light-only until dark is productized (canonical force).
-            AskITTheme(darkTheme = false) {
+            AskITTheme {
                 AskITApp(exploreViewModel, onExit = ::finish)
             }
+        }
+    }
+
+    private fun initializePlaces() {
+        val apiKey = packageManager
+            .getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+            .metaData
+            ?.getString("com.google.android.geo.API_KEY")
+            .orEmpty()
+        if (apiKey.isBlank() || apiKey == "DEFAULT_API_KEY" || Places.isInitialized()) return
+        runCatching {
+            Places.initializeWithNewPlacesApiEnabled(applicationContext, apiKey)
         }
     }
 }
@@ -70,7 +85,16 @@ fun AskITApp(
             EmptyRootDestination()
         }
         entry<AppDestination.Explore> {
-            ExploreRoute(exploreViewModel)
+            ExploreRoute(
+                viewModel = exploreViewModel,
+                onSearchAreaClick = { navigationState.push(AppDestination.SearchAreaDestination) },
+            )
+        }
+        entry<AppDestination.SearchAreaDestination> {
+            SearchAreaRoute(
+                viewModel = exploreViewModel,
+                onBack = { navigationState.pop() },
+            )
         }
         entry<AppDestination.Inbox> {
             EmptyRootDestination()
@@ -85,15 +109,17 @@ fun AskITApp(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            AskITBottomBar(
-                selectedDestination = navigationState.topLevelRoute.bottomBarDestination,
-                avatarUrl = null,
-                unreadCount = 0,
-                onDestinationClick = { destination ->
-                    navigationState.navigate(AppDestination.fromBottomBarDestination(destination))
-                },
-                onCreateClick = { showCreateSheet = true },
-            )
+            if (navigationState.isAtRoot) {
+                AskITBottomBar(
+                    selectedDestination = navigationState.topLevelRoute.bottomBarDestination,
+                    avatarUrl = null,
+                    unreadCount = 0,
+                    onDestinationClick = { destination ->
+                        navigationState.navigate(AppDestination.fromBottomBarDestination(destination))
+                    },
+                    onCreateClick = { showCreateSheet = true },
+                )
+            }
         },
     ) { padding ->
         Surface(
@@ -150,6 +176,21 @@ private class AskITNavigationState(
         topLevelRouteState.value = route
     }
 
+    fun push(route: AppDestination) {
+        val currentStack = backStacks.getValue(topLevelRoute)
+        if (currentStack.lastOrNull() != route) currentStack.add(route)
+    }
+
+    fun pop(): Boolean {
+        val currentStack = backStacks.getValue(topLevelRoute)
+        if (currentStack.size <= 1) return false
+        currentStack.removeLastOrNull()
+        return true
+    }
+
+    val isAtRoot: Boolean
+        get() = backStacks.getValue(topLevelRoute).size == 1
+
     fun goBack(): Boolean {
         val currentStack = backStacks.getValue(topLevelRoute)
         if (currentStack.size > 1) {
@@ -203,6 +244,11 @@ private sealed interface AppDestination : NavKey {
     @Serializable
     data object Profile : AppDestination {
         override val bottomBarDestination = AskITDestination.Profile
+    }
+
+    @Serializable
+    data object SearchAreaDestination : AppDestination {
+        override val bottomBarDestination = AskITDestination.Explore
     }
 
     companion object {

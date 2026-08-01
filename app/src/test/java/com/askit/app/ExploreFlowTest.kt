@@ -13,6 +13,8 @@ import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.SavedStateHandle
 import com.askit.app.explore.ExploreScreen
+import com.askit.app.explore.ExploreLocationSource
+import com.askit.app.explore.ExploreSearchArea
 import com.askit.app.explore.ExploreViewModel
 import com.askit.designsystem.theme.AskITTheme
 import org.junit.Assert.assertEquals
@@ -62,12 +64,15 @@ class ExploreFlowTest {
             AskITTheme(darkTheme = false) {
                 ExploreScreen(
                     query = "laptop repair",
+                    searchArea = testSearchArea(),
                     onQueryChanged = {},
                     onQueryCleared = {},
+                    onSearchAreaClick = {},
                 )
             }
         }
 
+        searchField().performClick()
         searchField().performImeAction()
 
         composeTestRule.onNodeWithText("laptop repair").assertIsDisplayed()
@@ -88,6 +93,40 @@ class ExploreFlowTest {
     }
 
     @Test
+    fun searchAreaRow_opensScreen_andBackDiscardsDraft() {
+        setApp()
+        openExplore()
+
+        composeTestRule
+            .onNodeWithContentDescription("Change search area. Near Kallakurichi. Within 10 km")
+            .performClick()
+        composeTestRule.onNodeWithText("Search area").assertIsDisplayed()
+
+        composeTestRule.onNodeWithContentDescription("Within 25 km").performClick()
+        composeTestRule.onNodeWithContentDescription("Back").performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription("Change search area. Near Kallakurichi. Within 10 km")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun applyingSearchArea_updatesConfirmedRadius() {
+        setApp()
+        openExplore()
+        composeTestRule
+            .onNodeWithContentDescription("Change search area. Near Kallakurichi. Within 10 km")
+            .performClick()
+
+        composeTestRule.onNodeWithContentDescription("Within 25 km").performClick()
+        composeTestRule.onNodeWithText("Apply").performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription("Change search area. Near Kallakurichi. Within 25 km")
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun viewModel_rehydratesQueryFromSavedStateHandle() {
         val savedStateHandle = SavedStateHandle()
         ExploreViewModel(savedStateHandle).onQueryChanged("electrician")
@@ -95,6 +134,19 @@ class ExploreFlowTest {
         val recreatedViewModel = ExploreViewModel(savedStateHandle)
 
         assertEquals("electrician", recreatedViewModel.uiState.value.query)
+    }
+
+    @Test
+    fun viewModel_rehydratesAppliedSearchAreaFromSavedStateHandle() {
+        val savedStateHandle = SavedStateHandle()
+        ExploreViewModel(savedStateHandle).onSearchAreaApplied(
+            testSearchArea().copy(radiusKm = 25),
+        )
+
+        val recreatedViewModel = ExploreViewModel(savedStateHandle)
+
+        assertEquals(25, recreatedViewModel.uiState.value.searchArea.radiusKm)
+        assertEquals("Kallakurichi", recreatedViewModel.uiState.value.searchArea.displayName)
     }
 
     @Test
@@ -127,4 +179,14 @@ class ExploreFlowTest {
     }
 
     private fun searchField() = composeTestRule.onNodeWithTag("explore_search_field")
+
+    private fun testSearchArea() = ExploreSearchArea(
+        placeId = null,
+        displayName = "Kallakurichi",
+        supportingText = "Tamil Nadu",
+        latitude = 11.7401,
+        longitude = 78.9597,
+        radiusKm = 10,
+        source = ExploreLocationSource.SAVED,
+    )
 }

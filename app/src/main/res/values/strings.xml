@@ -2,4 +2,20 @@
 <resources>
     <string name="explore_search_placeholder">Search people, services, or tasks</string>
     <string name="explore_clear_search">Clear search</string>
+    <string name="explore_search_area_content_description">Change search area. %1$s. %2$s</string>
+    <string name="explore_search_area_action">Change search area</string>
+    <string name="explore_search_area_title">Search area</string>
+    <string name="explore_selected_area">Selected area</string>
+    <string name="explore_use_current_location">Use current location</string>
+    <string name="explore_search_another_area">Search another area</string>
+    <string name="explore_search_distance">Search distance</string>
+    <string name="explore_apply">Apply</string>
+    <string name="explore_near">Near %1$s</string>
+    <string name="explore_within_km">Within %1$d km</string>
+    <string name="explore_current_area">Current area</string>
+    <string name="explore_location_permission_denied">Location permission was not granted. Search for an area instead.</string>
+    <string name="explore_current_location_unavailable">Current location is unavailable.</string>
+    <string name="explore_location_search_unavailable">Location search is unavailable.</string>
+    <string name="explore_could_not_load_area">Could not load that area.</string>
+    <string name="explore_back">Back</string>
 </resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="askit_places_surface">#FFFFFFFF</color>
+    <color name="askit_places_on_surface">#FF000000</color>
+    <color name="askit_places_on_surface_variant">#FF616161</color>
+    <color name="askit_places_primary">#FF000000</color>
+    <color name="askit_places_outline">#FFBDBDBD</color>
+    <color name="askit_places_secondary_container">#FFEEEEEE</color>
+    <color name="askit_places_on_secondary_container">#FF000000</color>
+</resources>
