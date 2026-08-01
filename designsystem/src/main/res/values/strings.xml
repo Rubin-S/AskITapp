@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_home">Home</string>
+    <string name="nav_explore">Explore</string>
+    <string name="nav_create">Create</string>
+    <string name="nav_inbox">Inbox</string>
+    <string name="nav_profile">Profile</string>
+    <plurals name="nav_inbox_unread">
+        <item quantity="one">Inbox, %d unread message</item>
+        <item quantity="other">Inbox, %d unread messages</item>
+    </plurals>
+
+    <string name="create_post_task_title">Post a task</string>
+    <string name="create_post_task_supporting">Find someone for a local job</string>
+    <string name="create_add_service_title">Add a service</string>
+    <string name="create_add_service_supporting">Offer a service to nearby customers</string>
+    <string name="create_share_work_title">Share your work</string>
+    <string name="create_share_work_supporting">Show completed work or an update</string>
+</resources>
