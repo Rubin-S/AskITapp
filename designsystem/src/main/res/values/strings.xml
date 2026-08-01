@@ -16,4 +16,16 @@
     <string name="create_add_service_supporting">Offer a service to nearby customers</string>
     <string name="create_share_work_title">Share your work</string>
     <string name="create_share_work_supporting">Show completed work or an update</string>
+
+    <string name="person_result_new">New</string>
+    <string name="person_result_view_profile">View %1$s\'s profile</string>
+    <string name="person_result_rating_display">%1$s (%2$s)</string>
+    <plurals name="person_result_additional_services_accessibility">
+        <item quantity="one">%1$s and %2$d more service</item>
+        <item quantity="other">%1$s and %2$d more services</item>
+    </plurals>
+    <plurals name="person_result_review_accessibility">
+        <item quantity="one">%1$s rating, %2$s review</item>
+        <item quantity="other">%1$s rating, %2$s reviews</item>
+    </plurals>
 </resources>
