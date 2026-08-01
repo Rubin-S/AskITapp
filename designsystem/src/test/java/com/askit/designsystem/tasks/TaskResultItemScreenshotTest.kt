@@ -121,7 +121,7 @@ class TaskResultItemScreenshotTest {
             timingLabel = "Needed next Monday afternoon",
             posterName = "A privacy-safe poster display name",
             postedLabel = "Posted yesterday",
-            status = TaskResultStatus.Closed,
+            status = TaskResultStatus.Unavailable,
             onClick = {},
         )
     }
