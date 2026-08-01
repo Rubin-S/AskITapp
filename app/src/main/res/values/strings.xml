@@ -30,7 +30,11 @@
     <string name="explore_clear_all">Clear all</string>
     <string name="explore_search_recent_query">Search for %1$s</string>
     <string name="explore_remove_recent_search">Remove %1$s from recent searches</string>
+    <string name="explore_search_category">Search for %1$s</string>
     <string name="explore_suggested_categories">Suggested categories</string>
+    <string name="explore_browse_services">Browse services</string>
+    <string name="explore_nearby_professionals">Nearby professionals</string>
+    <string name="explore_open_tasks_nearby">Open tasks nearby</string>
     <string name="explore_category_electrician">Electrician</string>
     <string name="explore_category_plumber">Plumber</string>
     <string name="explore_category_cleaning">Cleaning</string>

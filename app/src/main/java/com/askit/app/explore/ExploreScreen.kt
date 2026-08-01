@@ -1,10 +1,12 @@
 package com.askit.app.explore
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,13 +18,16 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +35,7 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipAnchorPosition
@@ -59,14 +65,48 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.R
+import com.askit.designsystem.people.PersonResultItem
+import com.askit.designsystem.tasks.TaskResultItem
+import com.askit.designsystem.tasks.TaskResultStatus
 
-private val SUGGESTED_CATEGORY_RESOURCES = listOf(
-    R.string.explore_category_electrician,
-    R.string.explore_category_plumber,
-    R.string.explore_category_cleaning,
-    R.string.explore_category_ac_repair,
-    R.string.explore_category_home_tutor,
-    R.string.explore_category_appliance_repair,
+private val EXPLORE_CATEGORIES = listOf(
+    ExploreCategory(R.string.explore_category_electrician, R.drawable.service_electrician),
+    ExploreCategory(R.string.explore_category_plumber, R.drawable.service_plumber),
+    ExploreCategory(R.string.explore_category_cleaning, R.drawable.service_cleaning),
+    ExploreCategory(R.string.explore_category_ac_repair, R.drawable.service_ac_repair),
+    ExploreCategory(R.string.explore_category_home_tutor, R.drawable.service_home_tutor),
+    ExploreCategory(R.string.explore_category_appliance_repair, R.drawable.service_appliance_repair),
+)
+
+private data class ExploreCategory(
+    @StringRes val labelRes: Int,
+    @DrawableRes val artworkRes: Int,
+)
+
+data class ExplorePersonResult(
+    val id: String,
+    val name: String,
+    val avatarUrl: String?,
+    val primaryService: String,
+    val additionalServices: List<String>,
+    val rating: Double?,
+    val reviewCount: Int,
+    val locationLabel: String,
+    val priceLabel: String?,
+    val statusLabel: String?,
+)
+
+data class ExploreTaskResult(
+    val id: String,
+    val title: String,
+    val category: String,
+    val summary: String?,
+    val budgetLabel: String,
+    val locationLabel: String,
+    val timingLabel: String,
+    val posterName: String,
+    val postedLabel: String,
+    val status: TaskResultStatus,
 )
 
 @Composable
@@ -100,9 +140,14 @@ fun ExploreScreen(
     onRecentSearchRemoved: (String) -> Unit,
     onRecentSearchesCleared: () -> Unit,
     onSearchFiltersClick: () -> Unit,
+    people: List<ExplorePersonResult> = emptyList(),
+    tasks: List<ExploreTaskResult> = emptyList(),
+    onPersonClick: ((String) -> Unit)? = null,
+    onTaskClick: ((String) -> Unit)? = null,
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val listState = rememberLazyListState()
     var isSearchActive by remember { mutableStateOf(false) }
 
     fun closeSearch() {
@@ -115,11 +160,124 @@ fun ExploreScreen(
         closeSearch()
     }
 
-    Column(
+    val personClick = onPersonClick
+    val taskClick = onTaskClick
+
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .imePadding(),
+        state = listState,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.Top,
     ) {
+        item(key = "explore_header") {
+            ExploreHeader(
+                query = query,
+                searchArea = searchArea,
+                onQueryChanged = onQueryChanged,
+                onQueryCleared = onQueryCleared,
+                onQuerySubmitted = onQuerySubmitted,
+                onSearchFiltersClick = {
+                    closeSearch()
+                    onSearchFiltersClick()
+                },
+                onSearchFocused = { isSearchActive = true },
+                onCloseSearch = ::closeSearch,
+            )
+        }
+
+        if (isSearchActive && query.isBlank()) {
+            item(key = "active_search_content") {
+                ActiveSearchContent(
+                    recentSearches = recentSearches,
+                    onRecentSearchSelected = { recentQuery ->
+                        onQuerySubmitted(recentQuery)
+                        closeSearch()
+                    },
+                    onRecentSearchRemoved = onRecentSearchRemoved,
+                    onRecentSearchesCleared = onRecentSearchesCleared,
+                    onCategorySelected = { category ->
+                        onQuerySubmitted(category)
+                        closeSearch()
+                    },
+                )
+            }
+        } else if (!isSearchActive && query.isBlank()) {
+            item(key = "browse_services") {
+                BrowseServices(
+                    onCategorySelected = { category ->
+                        onQuerySubmitted(category)
+                        closeSearch()
+                    },
+                )
+            }
+
+            if (people.isNotEmpty() && personClick != null) {
+                item(key = "nearby_professionals") {
+                    ExploreResultSection(
+                        heading = stringResource(R.string.explore_nearby_professionals),
+                        testTag = "explore_nearby_professionals",
+                    ) {
+                        people.take(4).forEachIndexed { index, person ->
+                            if (index > 0) HorizontalDivider()
+                            PersonResultItem(
+                                name = person.name,
+                                avatarUrl = person.avatarUrl,
+                                primaryService = person.primaryService,
+                                additionalServices = person.additionalServices,
+                                rating = person.rating,
+                                reviewCount = person.reviewCount,
+                                locationLabel = person.locationLabel,
+                                priceLabel = person.priceLabel,
+                                statusLabel = person.statusLabel,
+                                onClick = { personClick(person.id) },
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (tasks.isNotEmpty() && taskClick != null) {
+                item(key = "open_tasks_nearby") {
+                    ExploreResultSection(
+                        heading = stringResource(R.string.explore_open_tasks_nearby),
+                        testTag = "explore_open_tasks_nearby",
+                    ) {
+                        tasks.take(4).forEachIndexed { index, task ->
+                            if (index > 0) HorizontalDivider()
+                            TaskResultItem(
+                                title = task.title,
+                                category = task.category,
+                                summary = task.summary,
+                                budgetLabel = task.budgetLabel,
+                                locationLabel = task.locationLabel,
+                                timingLabel = task.timingLabel,
+                                posterName = task.posterName,
+                                postedLabel = task.postedLabel,
+                                status = task.status,
+                                onClick = { taskClick(task.id) },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExploreHeader(
+    query: String,
+    searchArea: ExploreSearchArea,
+    onQueryChanged: (String) -> Unit,
+    onQueryCleared: () -> Unit,
+    onQuerySubmitted: (String) -> Unit,
+    onSearchFiltersClick: () -> Unit,
+    onSearchFocused: () -> Unit,
+    onCloseSearch: () -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -132,7 +290,7 @@ fun ExploreScreen(
                     .weight(1f)
                     .testTag("explore_search_field")
                     .onFocusChanged { focusState ->
-                        if (focusState.isFocused) isSearchActive = true
+                        if (focusState.isFocused) onSearchFocused()
                     },
                 placeholder = {
                     Text(
@@ -167,7 +325,7 @@ fun ExploreScreen(
                 keyboardActions = KeyboardActions(
                     onSearch = {
                         onQuerySubmitted(query)
-                        closeSearch()
+                        onCloseSearch()
                     },
                 ),
                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
@@ -177,34 +335,15 @@ fun ExploreScreen(
             )
             SearchFiltersButton(
                 searchArea = searchArea,
-                onClick = {
-                    closeSearch()
-                    onSearchFiltersClick()
-                },
+                onClick = onSearchFiltersClick,
             )
         }
         SearchAreaSummary(searchArea)
-
-        if (isSearchActive && query.isBlank()) {
-            ActiveSearchContent(
-                recentSearches = recentSearches,
-                onRecentSearchSelected = { recentQuery ->
-                    onQuerySubmitted(recentQuery)
-                    closeSearch()
-                },
-                onRecentSearchRemoved = onRecentSearchRemoved,
-                onRecentSearchesCleared = onRecentSearchesCleared,
-                onCategorySelected = { category ->
-                    onQuerySubmitted(category)
-                    closeSearch()
-                },
-            )
-        }
     }
 }
 
 @Composable
-private fun ColumnScope.ActiveSearchContent(
+private fun ActiveSearchContent(
     recentSearches: List<String>,
     onRecentSearchSelected: (String) -> Unit,
     onRecentSearchRemoved: (String) -> Unit,
@@ -214,9 +353,6 @@ private fun ColumnScope.ActiveSearchContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .weight(1f)
-            .imePadding()
-            .verticalScroll(rememberScrollState())
             .padding(top = 16.dp),
     ) {
         if (recentSearches.isNotEmpty()) {
@@ -229,6 +365,117 @@ private fun ColumnScope.ActiveSearchContent(
             Spacer(Modifier.height(24.dp))
         }
         SuggestedCategories(onCategorySelected)
+    }
+}
+
+@Composable
+private fun BrowseServices(
+    onCategorySelected: (String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+            .testTag("explore_browse_services"),
+    ) {
+        Text(
+            text = stringResource(R.string.explore_browse_services),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+        Spacer(Modifier.height(12.dp))
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("explore_browse_category_row"),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(EXPLORE_CATEGORIES, key = { it.labelRes }) { categoryDefinition ->
+                val category = stringResource(categoryDefinition.labelRes)
+                ServiceCategoryTile(
+                    category = category,
+                    artworkRes = categoryDefinition.artworkRes,
+                    onClick = { onCategorySelected(category) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ServiceCategoryTile(
+    category: String,
+    @DrawableRes artworkRes: Int,
+    onClick: () -> Unit,
+) {
+    val searchLabel = stringResource(R.string.explore_search_category, category)
+
+    Card(
+        modifier = Modifier
+            .width(120.dp)
+            .heightIn(min = 136.dp)
+            .clickable(
+                onClickLabel = searchLabel,
+                onClick = onClick,
+            ),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            androidx.compose.foundation.Image(
+                painter = painterResource(artworkRes),
+                contentDescription = null,
+                modifier = Modifier.size(72.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = category,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExploreResultSection(
+    heading: String,
+    testTag: String,
+    content: @Composable () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp)
+            .testTag(testTag),
+    ) {
+        Text(
+            text = heading,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+        Spacer(Modifier.height(12.dp))
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 0.dp,
+        ) {
+            Column {
+                content()
+            }
+        }
     }
 }
 
@@ -337,8 +584,8 @@ private fun SuggestedCategories(onCategorySelected: (String) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(SUGGESTED_CATEGORY_RESOURCES, key = { it }) { categoryResource ->
-                val category = stringResource(categoryResource)
+            items(EXPLORE_CATEGORIES, key = { it.labelRes }) { categoryDefinition ->
+                val category = stringResource(categoryDefinition.labelRes)
                 SuggestionChip(
                     onClick = { onCategorySelected(category) },
                     label = {

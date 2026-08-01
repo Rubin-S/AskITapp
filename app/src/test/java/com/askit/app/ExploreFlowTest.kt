@@ -1,5 +1,7 @@
 package com.askit.app
 
+import android.content.res.Configuration
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -12,21 +14,33 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import com.askit.app.explore.ExplorePersonResult
 import com.askit.app.explore.ExploreScreen
 import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
+import com.askit.app.explore.ExploreTaskResult
 import com.askit.app.explore.ExploreViewModel
+import com.askit.designsystem.tasks.TaskResultStatus
 import com.askit.designsystem.theme.AskITTheme
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Rule
@@ -77,6 +91,107 @@ class ExploreFlowTest {
 
         composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+        composeTestRule.onNodeWithText("Browse services").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Electrician").assertIsDisplayed()
+    }
+
+    @Test
+    fun browseServices_rendersAllSixLocalizedCategoryActions() {
+        setApp()
+        openExplore()
+
+        listOf(
+            "Electrician",
+            "Plumber",
+            "Cleaning",
+            "AC repair",
+            "Home tutor",
+            "Appliance repair",
+        ).forEachIndexed { index, category ->
+            composeTestRule.onNodeWithTag("explore_browse_category_row").performScrollToIndex(index)
+            composeTestRule.onNodeWithText(category).assertHasClickAction()
+        }
+
+        composeTestRule.onNodeWithTag("explore_browse_category_row")
+            .performTouchInput { swipeLeft() }
+        composeTestRule.onNodeWithText("Appliance repair").assertIsDisplayed()
+    }
+
+    @Test
+    fun browseCategory_clickSubmitsQuery_updatesHistory_andHidesBrowse() {
+        val viewModel = ExploreViewModel(SavedStateHandle())
+        setApp(viewModel)
+        openExplore()
+
+        composeTestRule.onNodeWithText("Electrician").performClick()
+
+        assertEquals("Electrician", viewModel.uiState.value.query)
+        assertEquals(listOf("Electrician"), viewModel.uiState.value.recentSearches)
+        composeTestRule.onAllNodesWithText("Browse services").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+    }
+
+    @Test
+    fun browseServices_usesTamilLabels_andKeepsTilesAccessible() {
+        composeTestRule.setContent {
+            val configuration = Configuration(LocalConfiguration.current).apply {
+                setLocale(Locale.forLanguageTag("ta"))
+            }
+            val tamilContext = LocalContext.current.createConfigurationContext(configuration)
+            CompositionLocalProvider(LocalContext provides tamilContext) {
+                AskITTheme(darkTheme = false) {
+                    ExploreScreen(
+                        query = "",
+                        searchArea = testSearchArea(),
+                        recentSearches = emptyList(),
+                        onQueryChanged = {},
+                        onQueryCleared = {},
+                        onQuerySubmitted = {},
+                        onRecentSearchRemoved = {},
+                        onRecentSearchesCleared = {},
+                        onSearchFiltersClick = {},
+                    )
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithText("சேவைகளை உலாவுங்கள்").assertIsDisplayed()
+        composeTestRule.onNodeWithText("எலக்ட்ரீஷியன்").assertHasClickAction()
+    }
+
+    @Test
+    fun browseServices_remainsReachableAtNarrowWidthsAndLargeText() {
+        val contentWidth = mutableStateOf(320.dp)
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                CompositionLocalProvider(LocalDensity provides Density(1f, 2f)) {
+                    Box(
+                        modifier = androidx.compose.ui.Modifier
+                            .width(contentWidth.value)
+                            .height(700.dp),
+                    ) {
+                        ExploreScreen(
+                            query = "",
+                            searchArea = testSearchArea(),
+                            recentSearches = emptyList(),
+                            onQueryChanged = {},
+                            onQueryCleared = {},
+                            onQuerySubmitted = {},
+                            onRecentSearchRemoved = {},
+                            onRecentSearchesCleared = {},
+                            onSearchFiltersClick = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        listOf(320, 360, 412).forEach { width ->
+            contentWidth.value = width.dp
+            composeTestRule.waitForIdle()
+            composeTestRule.onNodeWithText("Browse services").assertIsDisplayed()
+            composeTestRule.onNodeWithTag("explore_browse_category_row").assertIsDisplayed()
+        }
     }
 
     @Test
@@ -88,6 +203,7 @@ class ExploreFlowTest {
         composeTestRule.onNodeWithText("Suggested categories").assertIsDisplayed()
         composeTestRule.onNodeWithText("Electrician").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Browse services").assertCountEquals(0)
     }
 
     @Test
@@ -99,6 +215,7 @@ class ExploreFlowTest {
 
         composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Browse services").assertCountEquals(0)
     }
 
     @Test
@@ -124,6 +241,7 @@ class ExploreFlowTest {
 
         composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+        composeTestRule.onNodeWithText("Browse services").assertIsDisplayed()
     }
 
     @Test
@@ -201,6 +319,109 @@ class ExploreFlowTest {
 
         composeTestRule.onNodeWithText("Recent searches").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Clear all").assertCountEquals(0)
+    }
+
+    @Test
+    fun optionalResultSections_showOnlyWithActions_limitToFour_andPreserveIds() {
+        var selectedPersonId: String? = null
+        var selectedTaskId: String? = null
+        val people = (1..5).map { index ->
+            ExplorePersonResult(
+                id = "person-$index",
+                name = "Professional $index",
+                avatarUrl = null,
+                primaryService = "Electrician",
+                additionalServices = emptyList(),
+                rating = null,
+                reviewCount = 0,
+                locationLabel = "Kallakurichi",
+                priceLabel = null,
+                statusLabel = null,
+            )
+        }
+        val tasks = (1..5).map { index ->
+            ExploreTaskResult(
+                id = "task-$index",
+                title = "Task $index",
+                category = "Repair",
+                summary = null,
+                budgetLabel = "Quote required",
+                locationLabel = "Kallakurichi",
+                timingLabel = "Flexible",
+                posterName = "Poster $index",
+                postedLabel = "Posted today",
+                status = TaskResultStatus.Open,
+            )
+        }
+
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = "",
+                    searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
+                    onQueryChanged = {},
+                    onQueryCleared = {},
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                    people = people,
+                    tasks = tasks,
+                    onPersonClick = { selectedPersonId = it },
+                    onTaskClick = { selectedTaskId = it },
+                )
+            }
+        }
+
+        val peopleHeading = composeTestRule.onNodeWithText("Nearby professionals")
+        peopleHeading.assertIsDisplayed()
+        assertEquals(true, peopleHeading.fetchSemanticsNode().config.contains(SemanticsProperties.Heading))
+        composeTestRule.onAllNodesWithText("Professional 5").assertCountEquals(0)
+        composeTestRule.onNodeWithText("Professional 1").performScrollTo().performClick()
+        assertEquals("person-1", selectedPersonId)
+
+        val tasksHeading = composeTestRule.onNodeWithText("Open tasks nearby")
+        tasksHeading.performScrollTo().assertIsDisplayed()
+        assertEquals(true, tasksHeading.fetchSemanticsNode().config.contains(SemanticsProperties.Heading))
+        composeTestRule.onAllNodesWithText("Task 5").assertCountEquals(0)
+        composeTestRule.onNodeWithText("Task 1").performScrollTo().performClick()
+        assertEquals("task-1", selectedTaskId)
+    }
+
+    @Test
+    fun optionalResultSections_withoutActions_areHidden() {
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = "",
+                    searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
+                    onQueryChanged = {},
+                    onQueryCleared = {},
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                    people = listOf(
+                        ExplorePersonResult(
+                            id = "person-1",
+                            name = "Actionless person",
+                            avatarUrl = null,
+                            primaryService = "Electrician",
+                            additionalServices = emptyList(),
+                            rating = null,
+                            reviewCount = 0,
+                            locationLabel = "Kallakurichi",
+                            priceLabel = null,
+                            statusLabel = null,
+                        ),
+                    ),
+                )
+            }
+        }
+
+        composeTestRule.onAllNodesWithText("Nearby professionals").assertCountEquals(0)
     }
 
     @Test

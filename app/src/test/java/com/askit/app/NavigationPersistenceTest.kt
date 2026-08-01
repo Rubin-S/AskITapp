@@ -126,6 +126,7 @@ class NavigationPersistenceTest {
 
         composeTestRule.activity.onBackPressedDispatcher.onBackPressed()
         composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+        composeTestRule.onNodeWithText("Browse services").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Explore").assertIsSelected()
 
         composeTestRule.activity.onBackPressedDispatcher.onBackPressed()
