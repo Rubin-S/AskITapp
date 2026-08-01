@@ -1,10 +1,12 @@
 package com.askit.app
 
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.lifecycle.SavedStateHandle
 import com.askit.app.explore.ExploreViewModel
 import com.askit.designsystem.theme.AskITTheme
@@ -55,6 +57,24 @@ class ExploreScreenshotTest {
     }
 
     @Test
+    fun explore_typed_suggestions_light() {
+        setApp(darkTheme = false, typedQuery = true)
+        openExplore()
+        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        composeTestRule.onNodeWithTag("explore_location_summary").performTouchInput { click() }
+        capture("explore_typed_suggestions_light")
+    }
+
+    @Test
+    fun explore_typed_suggestions_dark() {
+        setApp(darkTheme = true, typedQuery = true)
+        openExplore()
+        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        composeTestRule.onNodeWithTag("explore_location_summary").performTouchInput { click() }
+        capture("explore_typed_suggestions_dark")
+    }
+
+    @Test
     fun search_area_default_light() {
         setApp(darkTheme = false)
         openExplore()
@@ -70,13 +90,22 @@ class ExploreScreenshotTest {
         capture("search_area_default_dark")
     }
 
-    private fun setApp(darkTheme: Boolean, withHistory: Boolean = false) {
+    private fun setApp(
+        darkTheme: Boolean,
+        withHistory: Boolean = false,
+        typedQuery: Boolean = false,
+    ) {
         val viewModel = ExploreViewModel(SavedStateHandle()).also {
             if (withHistory) {
                 it.submitQuery("Home tutor")
                 it.submitQuery("Laptop repair")
                 it.submitQuery("Electrician")
                 it.onQueryCleared()
+            }
+            if (typedQuery) {
+                it.submitQuery("Electrician repair")
+                it.submitQuery("Other recent")
+                it.onQueryChanged("elec")
             }
         }
         composeTestRule.setContent {
