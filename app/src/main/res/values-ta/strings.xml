@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="explore_search_placeholder">மக்கள், சேவைகள் அல்லது பணிகளைத் தேடுங்கள்</string>
+    <string name="explore_clear_search">தேடலை அழி</string>
+    <string name="explore_search_filters_content_description">தேடல் வடிகட்டிகள். தற்போதைய பகுதி: %1$s, %2$s உள்ளே.</string>
+    <string name="explore_filters_tooltip">வடிகட்டிகள்</string>
+    <string name="explore_location_summary">%1$s · %2$s</string>
+    <plurals name="explore_radius_km">
+        <item quantity="one">%1$d கி.மீ.</item>
+        <item quantity="other">%1$d கி.மீ.</item>
+    </plurals>
+    <plurals name="explore_radius_kilometres">
+        <item quantity="one">%1$d கிலோமீட்டர்</item>
+        <item quantity="other">%1$d கிலோமீட்டர்</item>
+    </plurals>
+    <string name="explore_search_area_title">தேடல் பகுதி</string>
+    <string name="explore_selected_area">தேர்ந்தெடுக்கப்பட்ட பகுதி</string>
+    <string name="explore_use_current_location">தற்போதைய இருப்பிடத்தைப் பயன்படுத்து</string>
+    <string name="explore_search_another_area">மற்றொரு பகுதியைத் தேடு</string>
+    <string name="explore_search_distance">தேடல் தூரம்</string>
+    <string name="explore_apply">பயன்படுத்து</string>
+    <string name="explore_within_km">%1$d கி.மீ.க்குள்</string>
+    <string name="explore_current_area">தற்போதைய பகுதி</string>
+    <string name="explore_location_permission_denied">இருப்பிட அனுமதி வழங்கப்படவில்லை. அதற்குப் பதிலாக ஒரு பகுதியைத் தேடுங்கள்.</string>
+    <string name="explore_current_location_unavailable">தற்போதைய இருப்பிடம் கிடைக்கவில்லை.</string>
+    <string name="explore_location_search_unavailable">இருப்பிடத் தேடல் கிடைக்கவில்லை.</string>
+    <string name="explore_could_not_load_area">அந்தப் பகுதியை ஏற்ற முடியவில்லை.</string>
+    <string name="explore_back">பின்செல்</string>
+    <string name="explore_recent_searches">சமீபத்திய தேடல்கள்</string>
+    <string name="explore_clear_all">அனைத்தையும் அழி</string>
+    <string name="explore_search_recent_query">%1$s-ஐ தேடு</string>
+    <string name="explore_remove_recent_search">சமீபத்திய தேடல்களில் இருந்து %1$s-ஐ அகற்று</string>
+    <string name="explore_suggested_categories">பரிந்துரைக்கப்பட்ட வகைகள்</string>
+    <string name="explore_category_electrician">எலக்ட்ரீஷியன்</string>
+    <string name="explore_category_plumber">பிளம்பர்</string>
+    <string name="explore_category_cleaning">சுத்தம் செய்தல்</string>
+    <string name="explore_category_ac_repair">ஏசி பழுது</string>
+    <string name="explore_category_home_tutor">வீட்டு ஆசிரியர்</string>
+    <string name="explore_category_appliance_repair">மின்சாதன பழுது</string>
+</resources>

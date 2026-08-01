@@ -1,12 +1,14 @@
 package com.askit.app
 
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -69,14 +71,216 @@ class ExploreFlowTest {
     }
 
     @Test
+    fun idleExplore_hidesActiveSearchContent() {
+        setApp()
+        openExplore()
+
+        composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+    }
+
+    @Test
+    fun focusingEmptySearch_showsCategories_withoutEmptyHistory() {
+        setApp()
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule.onNodeWithText("Suggested categories").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Electrician").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
+    }
+
+    @Test
+    fun typedQuery_hidesRecentSearchesAndCategories() {
+        setAppWithHistory()
+        openExplore()
+        searchField().performClick()
+        searchField().performTextInput("Plumber")
+
+        composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+    }
+
+    @Test
+    fun clearingActiveQuery_restoresHistoryAndCategories() {
+        setAppWithHistory()
+        openExplore()
+        searchField().performClick()
+        searchField().performTextInput("Plumber")
+        composeTestRule.onNodeWithContentDescription("Clear search").performClick()
+
+        composeTestRule.onNodeWithText("Recent searches").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Suggested categories").assertIsDisplayed()
+    }
+
+    @Test
+    fun clearingInactiveQuery_keepsActiveSearchContentHidden() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.onQueryChanged("Electrician")
+        }
+        setApp(viewModel)
+        openExplore()
+        composeTestRule.onNodeWithContentDescription("Clear search").performClick()
+
+        composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+    }
+
+    @Test
+    fun imeSearch_normalizesAndStoresQuery_thenClosesActiveSearch() {
+        val viewModel = ExploreViewModel(SavedStateHandle())
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+        searchField().performTextInput("  Laptop   repair  ")
+        searchField().performImeAction()
+
+        composeTestRule.onNodeWithText("Laptop repair").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+        assertEquals(listOf("Laptop repair"), viewModel.uiState.value.recentSearches)
+    }
+
+    @Test
+    fun recentSearch_selection_submitsAndClosesSearch() {
+        setAppWithHistory()
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription("Search for Electrician")
+            .assertHasClickAction()
+            .performClick()
+
+        composeTestRule.onNodeWithText("Electrician").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
+    }
+
+    @Test
+    fun recentSearch_remove_doesNotSubmit_orChangeCurrentQuery() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.submitQuery("Laptop repair")
+            it.submitQuery("Electrician")
+            it.onQueryCleared()
+        }
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription("Remove Laptop repair from recent searches")
+            .performClick()
+
+        composeTestRule.onAllNodesWithText("Laptop repair").assertCountEquals(0)
+        composeTestRule.onNodeWithTag("explore_search_field").assertIsDisplayed()
+        composeTestRule.waitForIdle()
+        assertEquals("", viewModel.uiState.value.query)
+        assertEquals(listOf("Electrician"), viewModel.uiState.value.recentSearches)
+    }
+
+    @Test
+    fun clearAll_removesHistory_butLeavesCategoriesVisible() {
+        setAppWithHistory()
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule.onNodeWithText("Clear all").performClick()
+
+        composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
+        composeTestRule.onNodeWithText("Suggested categories").assertIsDisplayed()
+    }
+
+    @Test
+    fun clearAll_isHiddenWhenOnlyOneRecentSearchExists() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.submitQuery("Electrician")
+            it.onQueryCleared()
+        }
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule.onNodeWithText("Recent searches").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Clear all").assertCountEquals(0)
+    }
+
+    @Test
+    fun suggestedCategory_selection_submitsWithoutNavigation() {
+        val viewModel = ExploreViewModel(SavedStateHandle())
+        setApp(viewModel)
+        openExplore()
+        searchField().performClick()
+
+        composeTestRule.onNodeWithText("Plumber").performClick()
+
+        composeTestRule.onNodeWithText("Plumber").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Search area").assertCountEquals(0)
+        assertEquals(listOf("Plumber"), viewModel.uiState.value.recentSearches)
+    }
+
+    @Test
+    fun viewModel_normalizes_deduplicates_andLimitsRecentSearches() {
+        val viewModel = ExploreViewModel(SavedStateHandle())
+
+        viewModel.submitQuery("  Electrician  ")
+        viewModel.submitQuery("Laptop   repair")
+        viewModel.submitQuery("Home tutor")
+        viewModel.submitQuery("Plumber")
+        viewModel.submitQuery("Cleaning")
+        viewModel.submitQuery("electrician")
+        composeTestRule.waitForIdle()
+
+        assertEquals(
+            listOf("electrician", "Cleaning", "Plumber", "Home tutor"),
+            viewModel.uiState.value.recentSearches,
+        )
+        assertEquals("electrician", viewModel.uiState.value.query)
+    }
+
+    @Test
+    fun viewModel_rejectsWhitespace_andDoesNotStorePartialTyping() {
+        val viewModel = ExploreViewModel(SavedStateHandle())
+
+        viewModel.submitQuery("   ")
+        viewModel.onQueryChanged("Partial typing")
+        composeTestRule.waitForIdle()
+
+        assertEquals("Partial typing", viewModel.uiState.value.query)
+        assertEquals(emptyList<String>(), viewModel.uiState.value.recentSearches)
+        viewModel.submitQuery("   ")
+        composeTestRule.waitForIdle()
+        assertEquals("", viewModel.uiState.value.query)
+    }
+
+    @Test
+    fun viewModel_history_survivesSavedStateRecreation() {
+        val savedStateHandle = SavedStateHandle()
+        ExploreViewModel(savedStateHandle).apply {
+            submitQuery("Home tutor")
+            submitQuery("Electrician")
+        }
+        composeTestRule.waitForIdle()
+
+        val recreatedViewModel = ExploreViewModel(savedStateHandle)
+
+        assertEquals(
+            listOf("Electrician", "Home tutor"),
+            recreatedViewModel.uiState.value.recentSearches,
+        )
+    }
+
+    @Test
     fun searchImeAction_keepsQuery() {
         composeTestRule.setContent {
             AskITTheme(darkTheme = false) {
                 ExploreScreen(
                     query = "laptop repair",
                     searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
                     onQueryChanged = {},
                     onQueryCleared = {},
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
                     onSearchFiltersClick = {},
                 )
             }
@@ -145,9 +349,9 @@ class ExploreFlowTest {
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Kallakurichi · 10 km").assertIsDisplayed()
         assertFalse(summary().fetchSemanticsNode().config.contains(SemanticsActions.OnClick))
-        composeTestRule.onNodeWithText("Near Kallakurichi").assertDoesNotExist()
-        composeTestRule.onNodeWithText("Within 10 km").assertDoesNotExist()
-        composeTestRule.onNodeWithContentDescription("Change search area").assertDoesNotExist()
+        composeTestRule.onAllNodesWithText("Near Kallakurichi").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Within 10 km").assertCountEquals(0)
+        composeTestRule.onAllNodesWithContentDescription("Change search area").assertCountEquals(0)
     }
 
     @Test
@@ -188,8 +392,12 @@ class ExploreFlowTest {
                     ExploreScreen(
                         query = "",
                         searchArea = testSearchArea(),
+                        recentSearches = emptyList(),
                         onQueryChanged = {},
                         onQueryCleared = {},
+                        onQuerySubmitted = {},
+                        onRecentSearchRemoved = {},
+                        onRecentSearchesCleared = {},
                         onSearchFiltersClick = {},
                     )
                 }
@@ -238,12 +446,22 @@ class ExploreFlowTest {
         composeTestRule.onNodeWithContentDescription("Clear search").assertIsDisplayed()
     }
 
-    private fun setApp() {
+    private fun setApp(viewModel: ExploreViewModel = ExploreViewModel(SavedStateHandle())) {
         composeTestRule.setContent {
             AskITTheme(darkTheme = false) {
-                AskITApp(ExploreViewModel(SavedStateHandle()))
+                AskITApp(viewModel)
             }
         }
+    }
+
+    private fun setAppWithHistory() {
+        val viewModel = ExploreViewModel(SavedStateHandle()).also {
+            it.submitQuery("Home tutor")
+            it.submitQuery("Laptop repair")
+            it.submitQuery("Electrician")
+            it.onQueryCleared()
+        }
+        setApp(viewModel)
     }
 
     private fun openExplore() {
