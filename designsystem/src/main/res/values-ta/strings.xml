@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_home">முகப்பு</string>
+    <string name="nav_explore">ஆராயுங்கள்</string>
+    <string name="nav_create">உருவாக்கு</string>
+    <string name="nav_inbox">இன்பாக்ஸ்</string>
+    <string name="nav_profile">சுயவிவரம்</string>
+    <plurals name="nav_inbox_unread">
+        <item quantity="one">இன்பாக்ஸில் %d படிக்காத செய்தி</item>
+        <item quantity="other">இன்பாக்ஸில் %d படிக்காத செய்திகள்</item>
+    </plurals>
+
+    <string name="create_post_task_title">பணியைப் பதிவிடு</string>
+    <string name="create_post_task_supporting">உள்ளூர் பணிக்கு ஒருவரைக் கண்டுபிடிக்கவும்</string>
+    <string name="create_add_service_title">சேவையைச் சேர்</string>
+    <string name="create_add_service_supporting">அருகிலுள்ள வாடிக்கையாளர்களுக்கு சேவை வழங்குங்கள்</string>
+    <string name="create_share_work_title">உங்கள் பணியைப் பகிரவும்</string>
+    <string name="create_share_work_supporting">முடித்த பணியை அல்லது புதுப்பிப்பைப் பகிரவும்</string>
+
+    <string name="person_result_new">புதியவர்</string>
+    <string name="person_result_view_profile">%1$s-ன் சுயவிவரத்தைப் பார்க்க</string>
+    <string name="person_result_rating_display">%1$s (%2$s)</string>
+    <plurals name="person_result_additional_services_accessibility">
+        <item quantity="one">%1$s மற்றும் %2$d கூடுதல் சேவை</item>
+        <item quantity="other">%1$s மற்றும் %2$d கூடுதல் சேவைகள்</item>
+    </plurals>
+    <plurals name="person_result_review_accessibility">
+        <item quantity="one">%1$s மதிப்பீடு, %2$s மதிப்புரை</item>
+        <item quantity="other">%1$s மதிப்பீடு, %2$s மதிப்புரைகள்</item>
+    </plurals>
+</resources>

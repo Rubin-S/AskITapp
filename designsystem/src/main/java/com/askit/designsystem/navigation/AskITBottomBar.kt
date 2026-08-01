@@ -28,10 +28,7 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -41,10 +38,8 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
 import com.askit.designsystem.R
+import com.askit.designsystem.people.AskITAvatar
 import com.askit.designsystem.theme.AskITTheme
 
 enum class AskITDestination {
@@ -201,28 +196,11 @@ private fun RowScope.ProfileDestination(
 @Composable
 private fun ProfileAvatar(avatarUrl: String?, selected: Boolean) {
     val avatar = @Composable {
-        if (avatarUrl.isNullOrBlank()) {
-            Icon(
-                painter = painterResource(R.drawable.ic_person),
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-            )
-        } else {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(avatarUrl)
-                    .crossfade(false)
-                    .build(),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(R.drawable.ic_person),
-                error = painterResource(R.drawable.ic_person),
-                fallback = painterResource(R.drawable.ic_person),
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape),
-            )
-        }
+        AskITAvatar(
+            avatarUrl = avatarUrl,
+            avatarSize = 28.dp,
+            fallbackIconSize = 28.dp,
+        )
     }
 
     Box(
