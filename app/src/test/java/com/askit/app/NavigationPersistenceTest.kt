@@ -79,6 +79,33 @@ class NavigationPersistenceTest {
     }
 
     @Test
+    fun filterButton_opensNestedSearchArea_andBackReturnsToExplore() {
+        openExplore()
+
+        composeTestRule.onNodeWithTag("explore_filter_button").performClick()
+        composeTestRule.onNodeWithText("Search area").assertIsDisplayed()
+        composeTestRule.onAllNodesWithContentDescription("Create").assertCountEquals(0)
+
+        composeTestRule.onNodeWithContentDescription("Back").performClick()
+        composeTestRule.onNodeWithTag("explore_search_field").assertIsDisplayed()
+        composeTestRule.onAllNodesWithContentDescription("Create").assertCountEquals(1)
+    }
+
+    @Test
+    fun activityRecreation_preservesConfirmedSearchArea() {
+        openExplore()
+        composeTestRule.onNodeWithTag("explore_filter_button").performClick()
+        composeTestRule.onNodeWithContentDescription("Within 25 km").performClick()
+        composeTestRule.onNodeWithText("Apply").performClick()
+
+        composeTestRule.activity.recreate()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Kallakurichi · 25 km").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Explore").assertIsSelected()
+    }
+
+    @Test
     fun activityRecreation_preservesExploreAndQuery() {
         openExplore()
         composeTestRule.onNodeWithTag("explore_search_field").performTextInput("electrician")

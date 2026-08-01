@@ -87,7 +87,7 @@ fun AskITApp(
         entry<AppDestination.Explore> {
             ExploreRoute(
                 viewModel = exploreViewModel,
-                onSearchAreaClick = { navigationState.push(AppDestination.SearchAreaDestination) },
+                onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) },
             )
         }
         entry<AppDestination.SearchAreaDestination> {

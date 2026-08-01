@@ -2,6 +2,7 @@ package com.askit.app
 
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.SavedStateHandle
@@ -24,33 +25,24 @@ class ExploreScreenshotTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun explore_search_initial() {
+    fun explore_compact_header_light() {
         setApp(darkTheme = false)
         openExplore()
-        capture("explore_search_initial")
+        capture("explore_compact_header_light")
     }
 
     @Test
-    fun explore_location_row_light() {
-        setApp(darkTheme = false)
-        openExplore()
-        capture("explore_location_row_light")
-    }
-
-    @Test
-    fun explore_location_row_dark() {
+    fun explore_compact_header_dark() {
         setApp(darkTheme = true)
         openExplore()
-        capture("explore_location_row_dark")
+        capture("explore_compact_header_dark")
     }
 
     @Test
     fun search_area_default_light() {
         setApp(darkTheme = false)
         openExplore()
-        composeTestRule
-            .onNodeWithContentDescription("Change search area. Near Kallakurichi. Within 10 km")
-            .performClick()
+        composeTestRule.onNodeWithTag("explore_filter_button").performClick()
         capture("search_area_default_light")
     }
 
@@ -58,9 +50,7 @@ class ExploreScreenshotTest {
     fun search_area_default_dark() {
         setApp(darkTheme = true)
         openExplore()
-        composeTestRule
-            .onNodeWithContentDescription("Change search area. Near Kallakurichi. Within 10 km")
-            .performClick()
+        composeTestRule.onNodeWithTag("explore_filter_button").performClick()
         capture("search_area_default_dark")
     }
 
