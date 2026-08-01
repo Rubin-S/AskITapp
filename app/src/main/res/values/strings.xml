@@ -2,15 +2,23 @@
 <resources>
     <string name="explore_search_placeholder">Search people, services, or tasks</string>
     <string name="explore_clear_search">Clear search</string>
-    <string name="explore_search_area_content_description">Change search area. %1$s. %2$s</string>
-    <string name="explore_search_area_action">Change search area</string>
+    <string name="explore_search_filters_content_description">Search filters. Current area: %1$s, within %2$s.</string>
+    <string name="explore_filters_tooltip">Filters</string>
+    <string name="explore_location_summary">%1$s · %2$s</string>
+    <plurals name="explore_radius_km">
+        <item quantity="one">%1$d km</item>
+        <item quantity="other">%1$d km</item>
+    </plurals>
+    <plurals name="explore_radius_kilometres">
+        <item quantity="one">%1$d kilometre</item>
+        <item quantity="other">%1$d kilometres</item>
+    </plurals>
     <string name="explore_search_area_title">Search area</string>
     <string name="explore_selected_area">Selected area</string>
     <string name="explore_use_current_location">Use current location</string>
     <string name="explore_search_another_area">Search another area</string>
     <string name="explore_search_distance">Search distance</string>
     <string name="explore_apply">Apply</string>
-    <string name="explore_near">Near %1$s</string>
     <string name="explore_within_km">Within %1$d km</string>
     <string name="explore_current_area">Current area</string>
     <string name="explore_location_permission_denied">Location permission was not granted. Search for an area instead.</string>
