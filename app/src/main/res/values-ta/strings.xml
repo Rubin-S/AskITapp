@@ -30,7 +30,11 @@
     <string name="explore_clear_all">அனைத்தையும் அழி</string>
     <string name="explore_search_recent_query">%1$s-ஐ தேடு</string>
     <string name="explore_remove_recent_search">சமீபத்திய தேடல்களில் இருந்து %1$s-ஐ அகற்று</string>
+    <string name="explore_search_category">%1$s-ஐ தேடு</string>
     <string name="explore_suggested_categories">பரிந்துரைக்கப்பட்ட வகைகள்</string>
+    <string name="explore_browse_services">சேவைகளை உலாவுங்கள்</string>
+    <string name="explore_nearby_professionals">அருகிலுள்ள நிபுணர்கள்</string>
+    <string name="explore_open_tasks_nearby">அருகிலுள்ள திறந்த பணிகள்</string>
     <string name="explore_category_electrician">எலக்ட்ரீஷியன்</string>
     <string name="explore_category_plumber">பிளம்பர்</string>
     <string name="explore_category_cleaning">சுத்தம் செய்தல்</string>
