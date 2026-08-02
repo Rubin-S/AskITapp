@@ -4,7 +4,6 @@ import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,10 +13,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.askit.designsystem.R
@@ -43,53 +40,50 @@ fun TaskResultItem(
     posterName: String,
     postedLabel: String,
     status: TaskResultStatus,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
     val statusText = stringResource(taskStatusString(status))
     val taskMetadata = joinMetadata(budgetLabel, locationLabel, timingLabel)
     val posterMetadata = joinMetadata(posterName, postedLabel)
     val visibleSummary = summary?.takeIf(String::isNotBlank)
     val openTaskLabel = stringResource(R.string.task_result_view_task, title)
+    val itemModifier = modifier
+        .fillMaxWidth()
+        .heightIn(min = 48.dp)
+        .then(
+            if (onClick == null) {
+                Modifier
+            } else {
+                Modifier.clickable(
+                    onClickLabel = openTaskLabel,
+                    onClick = onClick,
+                )
+            },
+        )
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                onClickLabel = openTaskLabel,
-                onClick = onClick,
-            )
-            .heightIn(min = 48.dp)
+        modifier = itemModifier
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Text(
             text = title,
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.titleMedium,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
         )
         Spacer(modifier = Modifier.height(4.dp))
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            itemVerticalAlignment = Alignment.CenterVertically,
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             if (category.isNotBlank()) {
                 Text(
                     text = category,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
             Text(
-                text = if (category.isBlank()) statusText else "\u00B7 $statusText",
+                text = statusText,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
             )
         }
         if (visibleSummary != null) {
@@ -98,8 +92,6 @@ fun TaskResultItem(
                 text = visibleSummary,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
             )
         }
         if (taskMetadata.isNotEmpty()) {
@@ -108,8 +100,6 @@ fun TaskResultItem(
                 text = taskMetadata,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
             )
         }
         if (posterMetadata.isNotEmpty()) {
@@ -118,8 +108,6 @@ fun TaskResultItem(
                 text = posterMetadata,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
             )
         }
     }

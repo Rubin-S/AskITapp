@@ -46,7 +46,7 @@ class TaskResultItemTest {
             .onNodeWithText("Computer repair", useUnmergedTree = true)
             .assertIsDisplayed()
         composeTestRule
-            .onNodeWithText("\u00B7 Open", useUnmergedTree = true)
+            .onNodeWithText("Open", useUnmergedTree = true)
             .assertIsDisplayed()
         composeTestRule
             .onNodeWithText("Laptop only charges when the cable is held at an angle.")
@@ -87,7 +87,7 @@ class TaskResultItemTest {
 
         listOf("Open", "Applied", "Filled", "Closed", "Expired", "Unavailable").forEach {
             composeTestRule
-                .onNodeWithText("\u00B7 $it", useUnmergedTree = true)
+                .onNodeWithText(it, useUnmergedTree = true)
                 .assertExists()
         }
     }
@@ -137,6 +137,20 @@ class TaskResultItemTest {
         assertEquals(
             "View task: Repair laptop charging port",
             row.fetchSemanticsNode().config.get(SemanticsActions.OnClick).label,
+        )
+    }
+
+    @Test
+    fun taskWithoutAction_isNotClickableAndRetainsTitle() {
+        setItem(onClick = null)
+
+        composeTestRule.onNodeWithText("Repair laptop charging port").assertIsDisplayed()
+        assertFalse(
+            composeTestRule
+                .onNodeWithText("Repair laptop charging port")
+                .fetchSemanticsNode()
+                .config
+                .contains(SemanticsActions.OnClick),
         )
     }
 
@@ -227,7 +241,7 @@ class TaskResultItemTest {
             composeTestRule.onNodeWithText(title).assertHasClickAction()
         }
         composeTestRule
-            .onAllNodesWithText("\u00B7 Open", useUnmergedTree = true)
+            .onAllNodesWithText("Open", useUnmergedTree = true)
             .assertCountEquals(4)
     }
 
@@ -262,7 +276,7 @@ class TaskResultItemTest {
             .onNodeWithText("A long category label for a task with detailed scope", useUnmergedTree = true)
             .assertIsDisplayed()
         composeTestRule
-            .onNodeWithText("\u00B7 கிடைக்கவில்லை", useUnmergedTree = true)
+            .onNodeWithText("கிடைக்கவில்லை", useUnmergedTree = true)
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Repair laptop charging port").assertHasClickAction()
         assertEquals(
@@ -286,7 +300,7 @@ class TaskResultItemTest {
         posterName: String = "Arun P.",
         postedLabel: String = "Posted 2h ago",
         status: TaskResultStatus = TaskResultStatus.Open,
-        onClick: () -> Unit = {},
+        onClick: (() -> Unit)? = {},
     ) {
         composeTestRule.setContent {
             AskITTheme {

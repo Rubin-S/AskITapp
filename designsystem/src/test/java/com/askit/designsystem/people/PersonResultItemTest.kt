@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.askit.designsystem.theme.AskITTheme
 import java.util.Locale
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -141,6 +142,20 @@ class PersonResultItemTest {
         row.assertHasClickAction().performClick()
 
         assertEquals(1, clicks)
+    }
+
+    @Test
+    fun personWithoutAction_isNotClickableAndRetainsContent() {
+        setItem(onClick = null)
+
+        composeTestRule.onNodeWithText("Ravi Kumar").assertIsDisplayed()
+        assertFalse(
+            composeTestRule
+                .onNodeWithText("Ravi Kumar")
+                .fetchSemanticsNode()
+                .config
+                .contains(SemanticsActions.OnClick),
+        )
     }
 
     @Test
@@ -283,7 +298,7 @@ class PersonResultItemTest {
         priceLabel: String? = "From ₹500",
         statusLabel: String? = "Available today",
         widthDp: Int = 360,
-        onClick: () -> Unit = {},
+        onClick: (() -> Unit)? = {},
     ) {
         composeTestRule.setContent {
             AskITTheme(darkTheme = false) {
