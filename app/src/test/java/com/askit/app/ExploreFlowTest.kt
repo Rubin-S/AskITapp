@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import com.askit.app.explore.ExplorePersonResult
+import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreScreen
 import com.askit.app.explore.ExploreLocationSource
@@ -848,8 +849,10 @@ class ExploreFlowTest {
                     onRecentSearchRemoved = {},
                     onRecentSearchesCleared = {},
                     onSearchFiltersClick = {},
-                    submittedPeople = people.value,
-                    submittedTasks = submittedTasks(),
+                    resultState = ExploreResultState.Results(
+                        people = people.value,
+                        tasks = submittedTasks(),
+                    ),
                     availableSortOptions = available.value,
                     selectedSortOptions = selected.value,
                     onSortChanged = sortCallback.value,
@@ -1023,8 +1026,10 @@ class ExploreFlowTest {
                     onRecentSearchRemoved = {},
                     onRecentSearchesCleared = {},
                     onSearchFiltersClick = {},
-                    submittedPeople = submittedPeople(),
-                    submittedTasks = submittedTasks(),
+                    resultState = ExploreResultState.Results(
+                        people = submittedPeople(),
+                        tasks = submittedTasks(),
+                    ),
                     availableSortOptions = supportedSortOptions(),
                     selectedSortOptions = defaultSortOptions(),
                     onSortChanged = { _, _ -> },
@@ -1069,8 +1074,10 @@ class ExploreFlowTest {
                             onRecentSearchRemoved = {},
                             onRecentSearchesCleared = {},
                             onSearchFiltersClick = {},
-                            submittedPeople = submittedPeople(),
-                            submittedTasks = submittedTasks(),
+                            resultState = ExploreResultState.Results(
+                                people = submittedPeople(),
+                                tasks = submittedTasks(),
+                            ),
                             availableSortOptions = supportedSortOptions(),
                             selectedSortOptions = defaultSortOptions(),
                             onSortChanged = { _, _ -> },
@@ -1125,8 +1132,10 @@ class ExploreFlowTest {
                             onRecentSearchRemoved = {},
                             onRecentSearchesCleared = {},
                             onSearchFiltersClick = {},
-                            submittedPeople = submittedPeople(),
-                            submittedTasks = submittedTasks(),
+                            resultState = ExploreResultState.Results(
+                                people = submittedPeople(),
+                                tasks = submittedTasks(),
+                            ),
                             onPersonClick = {},
                             onTaskClick = {},
                         )
@@ -1165,8 +1174,10 @@ class ExploreFlowTest {
                     onRecentSearchRemoved = {},
                     onRecentSearchesCleared = {},
                     onSearchFiltersClick = {},
-                    submittedPeople = submittedPeople(),
-                    submittedTasks = submittedTasks(),
+                    resultState = ExploreResultState.Results(
+                        people = submittedPeople(),
+                        tasks = submittedTasks(),
+                    ),
                     onPersonClick = {},
                     onTaskClick = {},
                 )
@@ -1199,8 +1210,10 @@ class ExploreFlowTest {
                     onRecentSearchRemoved = {},
                     onRecentSearchesCleared = {},
                     onSearchFiltersClick = {},
-                    submittedPeople = submittedPeople(),
-                    submittedTasks = submittedTasks(),
+                    resultState = ExploreResultState.Results(
+                        people = submittedPeople(),
+                        tasks = submittedTasks(),
+                    ),
                     onPersonClick = {},
                     onTaskClick = {},
                 )
@@ -1232,8 +1245,10 @@ class ExploreFlowTest {
                         onRecentSearchRemoved = {},
                         onRecentSearchesCleared = {},
                         onSearchFiltersClick = {},
-                        submittedPeople = submittedPeople(),
-                        submittedTasks = submittedTasks(),
+                        resultState = ExploreResultState.Results(
+                            people = submittedPeople(),
+                            tasks = submittedTasks(),
+                        ),
                         onPersonClick = {},
                         onTaskClick = {},
                     )
@@ -1607,8 +1622,10 @@ class ExploreFlowTest {
                     onRecentSearchRemoved = {},
                     onRecentSearchesCleared = {},
                     onSearchFiltersClick = {},
-                    submittedPeople = people,
-                    submittedTasks = tasks,
+                    resultState = ExploreResultState.Results(
+                        people = people,
+                        tasks = tasks,
+                    ),
                     availableSortOptions = availableSortOptions,
                     selectedSortOptions = selectedSortOptions,
                     onSortChanged = onSortChanged,
@@ -1635,8 +1652,10 @@ class ExploreFlowTest {
                     onRecentSearchRemoved = {},
                     onRecentSearchesCleared = {},
                     onSearchFiltersClick = {},
-                    submittedPeople = submittedPeople(),
-                    submittedTasks = submittedTasks(),
+                    resultState = ExploreResultState.Results(
+                        people = submittedPeople(),
+                        tasks = submittedTasks(),
+                    ),
                     availableSortOptions = supportedSortOptions(),
                     selectedSortOptions = selected.value,
                     onSortChanged = onSortChanged,
@@ -1675,7 +1694,7 @@ class ExploreFlowTest {
             primaryService = null,
             rating = 4.8,
             reviewCount = 36,
-            priceLabel = "From â‚¹500",
+            priceLabel = "From ₹500",
             statusLabel = "Available today",
             reasons = setOf(PersonMatchReason.Identity),
         ),

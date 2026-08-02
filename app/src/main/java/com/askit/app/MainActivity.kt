@@ -34,11 +34,10 @@ import androidx.navigation3.runtime.serialization.NavKeySerializer
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
 import com.askit.app.explore.ExploreRoute
-import com.askit.app.explore.ExplorePersonResult
 import com.askit.app.explore.ExploreFilterOption
+import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreSortOption
-import com.askit.app.explore.ExploreTaskResult
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.SearchAreaRoute
 import com.askit.app.explore.defaultExploreFilterOptions
@@ -89,8 +88,8 @@ class MainActivity : ComponentActivity() {
 fun AskITApp(
     exploreViewModel: ExploreViewModel,
     onExit: () -> Unit = {},
-    submittedPeople: List<ExplorePersonResult> = emptyList(),
-    submittedTasks: List<ExploreTaskResult> = emptyList(),
+    resultState: ExploreResultState = ExploreResultState.Loading,
+    onRetryResults: () -> Unit = {},
     availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
     selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
@@ -118,8 +117,8 @@ fun AskITApp(
             ExploreRoute(
                 viewModel = exploreViewModel,
                 onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) },
-                submittedPeople = submittedPeople,
-                submittedTasks = submittedTasks,
+                resultState = resultState,
+                onRetryResults = onRetryResults,
                 availableSortOptions = availableSortOptions,
                 selectedSortOptions = selectedSortOptions,
                 onSortChanged = onSortChanged,
