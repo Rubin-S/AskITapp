@@ -32,6 +32,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -165,6 +166,10 @@ fun ExploreRoute(
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
+    availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
+    appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
+    onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
+    onFilterScopeChanged: (ExploreResultScope) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -183,6 +188,10 @@ fun ExploreRoute(
         availableSortOptions = availableSortOptions,
         selectedSortOptions = selectedSortOptions,
         onSortChanged = onSortChanged,
+        availableFilterOptions = availableFilterOptions,
+        appliedFilterOptions = appliedFilterOptions,
+        onFiltersChanged = onFiltersChanged,
+        onFilterScopeChanged = onFilterScopeChanged,
         onPersonClick = onPersonClick,
         onTaskClick = onTaskClick,
     )
@@ -208,6 +217,10 @@ fun ExploreScreen(
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
+    availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
+    appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
+    onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
+    onFilterScopeChanged: (ExploreResultScope) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -249,8 +262,12 @@ fun ExploreScreen(
                 onQuerySubmitted = onQuerySubmitted,
                 onSearchFiltersClick = {
                     closeSearch()
+                    onFilterScopeChanged(selectedScope)
                     onSearchFiltersClick()
                 },
+                selectedScope = selectedScope,
+                availableFilterOptions = availableFilterOptions,
+                appliedFilterOptions = appliedFilterOptions,
                 onSearchFocused = { isSearchActive = true },
                 onCloseSearch = ::closeSearch,
             )
@@ -293,6 +310,9 @@ fun ExploreScreen(
                     availableSortOptions = availableSortOptions,
                     selectedSortOptions = selectedSortOptions,
                     onSortChanged = onSortChanged,
+                    availableFilterOptions = availableFilterOptions,
+                    appliedFilterOptions = appliedFilterOptions,
+                    onFiltersChanged = onFiltersChanged,
                     onPersonClick = personClick,
                     onTaskClick = taskClick,
                     onScopeSelected = { selectedScopeOrdinal = it.ordinal },
@@ -314,21 +334,7 @@ fun ExploreScreen(
                         heading = stringResource(R.string.explore_nearby_professionals),
                         testTag = "explore_nearby_professionals",
                     ) {
-                        people.take(4).forEachIndexed { index, person ->
-                            if (index > 0) HorizontalDivider()
-                            PersonResultItem(
-                                name = person.name,
-                                avatarUrl = person.avatarUrl,
-                                primaryService = person.primaryService,
-                                additionalServices = person.additionalServices,
-                                rating = person.rating,
-                                reviewCount = person.reviewCount,
-                                locationLabel = person.locationLabel,
-                                priceLabel = person.priceLabel,
-                                statusLabel = person.statusLabel,
-                                onClick = { personClick(person.id) },
-                            )
-                        }
+                        PersonResultRows(people.take(4), personClick)
                     }
                 }
             }
@@ -339,21 +345,7 @@ fun ExploreScreen(
                         heading = stringResource(R.string.explore_open_tasks_nearby),
                         testTag = "explore_open_tasks_nearby",
                     ) {
-                        tasks.take(4).forEachIndexed { index, task ->
-                            if (index > 0) HorizontalDivider()
-                            TaskResultItem(
-                                title = task.title,
-                                category = task.category,
-                                summary = task.summary,
-                                budgetLabel = task.budgetLabel,
-                                locationLabel = task.locationLabel,
-                                timingLabel = task.timingLabel,
-                                posterName = task.posterName,
-                                postedLabel = task.postedLabel,
-                                status = task.status,
-                                onClick = { taskClick(task.id) },
-                            )
-                        }
+                        TaskResultRows(tasks.take(4), taskClick)
                     }
                 }
             }
@@ -369,6 +361,9 @@ private fun ExploreHeader(
     onQueryCleared: () -> Unit,
     onQuerySubmitted: (String) -> Unit,
     onSearchFiltersClick: () -> Unit,
+    selectedScope: ExploreResultScope,
+    availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>>,
+    appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>>,
     onSearchFocused: () -> Unit,
     onCloseSearch: () -> Unit,
 ) {
@@ -429,7 +424,11 @@ private fun ExploreHeader(
                 ),
             )
             SearchFiltersButton(
-                searchArea = searchArea,
+                appliedFilterCount = normalizeAppliedExploreFilterOptions(
+                    scope = selectedScope,
+                    availableOptions = availableFilterOptions[selectedScope].orEmpty(),
+                    appliedOptions = appliedFilterOptions[selectedScope].orEmpty(),
+                ).size,
                 onClick = onSearchFiltersClick,
             )
         }
@@ -551,6 +550,9 @@ private fun SubmittedSearchResults(
     availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>>,
     selectedSortOptions: Map<ExploreResultScope, ExploreSortOption>,
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)?,
+    availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>>,
+    appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>>,
+    onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)?,
     onPersonClick: ((String) -> Unit)?,
     onTaskClick: ((String) -> Unit)?,
     onScopeSelected: (ExploreResultScope) -> Unit,
@@ -585,6 +587,24 @@ private fun SubmittedSearchResults(
                     },
                 )
             }
+        }
+
+        val orderedAppliedFilters = normalizeAvailableExploreFilterOptions(
+            scope = selectedScope,
+            options = availableFilterOptions[selectedScope].orEmpty(),
+        ).filter {
+            it in appliedFilterOptions[selectedScope].orEmpty()
+        }
+        if (orderedAppliedFilters.isNotEmpty()) {
+            AppliedFilterChips(
+                options = orderedAppliedFilters,
+                onFilterRemoved = { option ->
+                    onFiltersChanged?.invoke(
+                        selectedScope,
+                        orderedAppliedFilters.filterNot { it == option }.toSet(),
+                    )
+                },
+            )
         }
 
         val hasVisibleResults = when (selectedScope) {
@@ -667,6 +687,41 @@ private fun SubmittedSearchResults(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun AppliedFilterChips(
+    options: List<ExploreFilterOption>,
+    onFilterRemoved: (ExploreFilterOption) -> Unit,
+) {
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("explore_applied_filters"),
+        contentPadding = PaddingValues(top = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(
+            items = options,
+            key = ExploreFilterOption::name,
+        ) { option ->
+            val label = stringResource(option.labelRes())
+            InputChip(
+                selected = true,
+                onClick = { onFilterRemoved(option) },
+                label = { Text(label) },
+                trailingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_clear),
+                        contentDescription = stringResource(
+                            R.string.explore_remove_filter,
+                            label,
+                        ),
+                    )
+                },
+            )
         }
     }
 }
@@ -1238,19 +1293,18 @@ private fun SuggestedCategories(onCategorySelected: (String) -> Unit) {
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun SearchFiltersButton(
-    searchArea: ExploreSearchArea,
+    appliedFilterCount: Int,
     onClick: () -> Unit,
 ) {
-    val radius = pluralStringResource(
-        R.plurals.explore_radius_kilometres,
-        searchArea.radiusKm,
-        searchArea.radiusKm,
-    )
-    val contentDescription = stringResource(
-        R.string.explore_search_filters_content_description,
-        searchArea.displayName,
-        radius,
-    )
+    val contentDescription = if (appliedFilterCount == 0) {
+        stringResource(R.string.explore_search_filters_content_description)
+    } else {
+        pluralStringResource(
+            R.plurals.explore_search_filters_applied_content_description,
+            appliedFilterCount,
+            appliedFilterCount,
+        )
+    }
 
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(

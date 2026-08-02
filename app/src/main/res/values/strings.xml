@@ -2,23 +2,25 @@
 <resources>
     <string name="explore_search_placeholder">Search people, services, or tasks</string>
     <string name="explore_clear_search">Clear search</string>
-    <string name="explore_search_filters_content_description">Search filters. Current area: %1$s, within %2$s.</string>
+    <string name="explore_search_filters_content_description">Search filters</string>
+    <plurals name="explore_search_filters_applied_content_description">
+        <item quantity="one">Search filters, 1 filter applied</item>
+        <item quantity="other">Search filters, %1$d filters applied</item>
+    </plurals>
     <string name="explore_filters_tooltip">Filters</string>
     <string name="explore_location_summary">%1$s · %2$s</string>
     <plurals name="explore_radius_km">
         <item quantity="one">%1$d km</item>
         <item quantity="other">%1$d km</item>
     </plurals>
-    <plurals name="explore_radius_kilometres">
-        <item quantity="one">%1$d kilometre</item>
-        <item quantity="other">%1$d kilometres</item>
-    </plurals>
-    <string name="explore_search_area_title">Search area</string>
+    <string name="explore_filters_title">Filters</string>
+    <string name="explore_filter_scope_caption">Filters for %1$s</string>
     <string name="explore_selected_area">Selected area</string>
     <string name="explore_use_current_location">Use current location</string>
     <string name="explore_search_another_area">Search another area</string>
     <string name="explore_search_distance">Search distance</string>
     <string name="explore_apply">Apply</string>
+    <string name="explore_clear_filters">Clear filters</string>
     <string name="explore_within_km">Within %1$d km</string>
     <string name="explore_current_area">Current area</string>
     <string name="explore_location_permission_denied">Location permission was not granted. Search for an area instead.</string>
@@ -55,6 +57,20 @@
     <string name="explore_sort_newest">Newest</string>
     <string name="explore_sort_due_soon">Due soon</string>
     <string name="explore_view_service">View service: %1$s</string>
+    <string name="explore_filter_group_rating">Rating</string>
+    <string name="explore_filter_group_work_location">Work location</string>
+    <string name="explore_filter_group_availability">Availability</string>
+    <string name="explore_filter_group_status">Status</string>
+    <string name="explore_filter_group_needed">Needed</string>
+    <string name="explore_filter_rating_four_plus">4+ rating</string>
+    <string name="explore_filter_remote">Remote</string>
+    <string name="explore_filter_available_today">Available today</string>
+    <string name="explore_filter_available_this_week">Available this week</string>
+    <string name="explore_filter_task_open">Open</string>
+    <string name="explore_filter_task_applied">Applied</string>
+    <string name="explore_filter_needed_today">Needed today</string>
+    <string name="explore_filter_needed_this_week">Needed this week</string>
+    <string name="explore_remove_filter">Remove %1$s filter</string>
     <plurals name="explore_additional_services">
         <item quantity="one">+%1$d other service</item>
         <item quantity="other">+%1$d other services</item>

@@ -10,12 +10,14 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.lifecycle.SavedStateHandle
+import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExplorePersonResult
 import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.ExploreTaskResult
 import com.askit.app.explore.PersonMatchReason
+import com.askit.app.explore.defaultExploreFilterOptions
 import com.askit.designsystem.tasks.TaskResultStatus
 import com.askit.designsystem.theme.AskITTheme
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
@@ -84,19 +86,21 @@ class ExploreScreenshotTest {
     }
 
     @Test
-    fun search_area_default_light() {
-        setApp(darkTheme = false)
+    fun explore_filters_services_light() {
+        setApp(darkTheme = false, submittedResults = true)
         openExplore()
+        composeTestRule.onNodeWithText("Services").performClick()
         composeTestRule.onNodeWithTag("explore_filter_button").performClick()
-        capture("search_area_default_light")
+        capture("explore_filters_services_light")
     }
 
     @Test
-    fun search_area_default_dark() {
-        setApp(darkTheme = true)
+    fun explore_filters_services_dark() {
+        setApp(darkTheme = true, submittedResults = true)
         openExplore()
+        composeTestRule.onNodeWithText("Services").performClick()
         composeTestRule.onNodeWithTag("explore_filter_button").performClick()
-        capture("search_area_default_dark")
+        capture("explore_filters_services_dark")
     }
 
     @Test
@@ -176,6 +180,21 @@ class ExploreScreenshotTest {
         }
         val onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? =
             if (sortMenu) ({ _, _ -> }) else null
+        val availableFilterOptions = if (submittedResults) {
+            defaultExploreFilterOptions()
+        } else {
+            emptyMap()
+        }
+        val appliedFilterOptions = if (sortMenu) {
+            mapOf(
+                ExploreResultScope.Services to setOf(
+                    ExploreFilterOption.RatingFourPlus,
+                    ExploreFilterOption.Remote,
+                ),
+            )
+        } else {
+            emptyMap()
+        }
         composeTestRule.setContent {
             AskITTheme(darkTheme = darkTheme) {
                 AskITApp(
@@ -185,6 +204,8 @@ class ExploreScreenshotTest {
                     availableSortOptions = sortOptions,
                     selectedSortOptions = selectedSortOptions,
                     onSortChanged = onSortChanged,
+                    availableFilterOptions = availableFilterOptions,
+                    appliedFilterOptions = appliedFilterOptions,
                     onPersonClick = {},
                     onTaskClick = {},
                 )

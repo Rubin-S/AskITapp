@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
@@ -34,11 +35,13 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
 import com.askit.app.explore.ExploreRoute
 import com.askit.app.explore.ExplorePersonResult
+import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreTaskResult
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.SearchAreaRoute
+import com.askit.app.explore.defaultExploreFilterOptions
 import com.askit.designsystem.navigation.AskITBottomBar
 import com.askit.designsystem.navigation.AskITCreateSheet
 import com.askit.designsystem.navigation.AskITDestination
@@ -60,7 +63,11 @@ class MainActivity : ComponentActivity() {
         )[ExploreViewModel::class.java]
         setContent {
             AskITTheme {
-                AskITApp(exploreViewModel, onExit = ::finish)
+                AskITApp(
+                    exploreViewModel = exploreViewModel,
+                    onExit = ::finish,
+                    availableFilterOptions = defaultExploreFilterOptions(),
+                )
             }
         }
     }
@@ -89,7 +96,19 @@ fun AskITApp(
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
+    availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
+    appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
+    onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
 ) {
+    val viewModelAppliedFilterOptions by exploreViewModel.appliedFilterOptions.collectAsStateWithLifecycle()
+    val controlledAppliedFilterOptions = if (
+        appliedFilterOptions.isEmpty() && onFiltersChanged == null
+    ) {
+        viewModelAppliedFilterOptions
+    } else {
+        appliedFilterOptions
+    }
+    val controlledFiltersChanged = onFiltersChanged ?: exploreViewModel::onFiltersChanged
     val navigationState = rememberAskITNavigationState()
     val entryProvider = entryProvider<NavKey> {
         entry<AppDestination.Home> {
@@ -104,6 +123,10 @@ fun AskITApp(
                 availableSortOptions = availableSortOptions,
                 selectedSortOptions = selectedSortOptions,
                 onSortChanged = onSortChanged,
+                availableFilterOptions = availableFilterOptions,
+                appliedFilterOptions = controlledAppliedFilterOptions,
+                onFiltersChanged = controlledFiltersChanged,
+                onFilterScopeChanged = exploreViewModel::onFilterScopeSelected,
                 onPersonClick = onPersonClick,
                 onTaskClick = onTaskClick,
             )
@@ -112,6 +135,9 @@ fun AskITApp(
             SearchAreaRoute(
                 viewModel = exploreViewModel,
                 onBack = { navigationState.pop() },
+                availableFilterOptions = availableFilterOptions,
+                appliedFilterOptions = controlledAppliedFilterOptions,
+                onFiltersChanged = controlledFiltersChanged,
             )
         }
         entry<AppDestination.Inbox> {

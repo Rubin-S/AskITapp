@@ -1,4 +1,4 @@
-# Keep rules for product features as they are added.
+# Places Autocomplete constructs internal request models reflectively.
 -keepclassmembers class com.google.android.libraries.places.internal.** {
     <init>();
 }
