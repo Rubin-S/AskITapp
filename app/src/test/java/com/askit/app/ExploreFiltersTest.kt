@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExplorePersonResult
+import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreScreen
 import com.askit.app.explore.ExploreSearchArea
@@ -170,20 +171,23 @@ class ExploreFiltersTest {
                     onRecentSearchRemoved = {},
                     onRecentSearchesCleared = {},
                     onSearchFiltersClick = {},
-                    submittedPeople = listOf(
-                        ExplorePersonResult(
-                            id = "person",
-                            name = "Ravi Kumar",
-                            avatarUrl = null,
-                            primaryService = "Electrician",
-                            additionalServices = emptyList(),
-                            rating = 4.8,
-                            reviewCount = 12,
-                            locationLabel = "Kallakurichi",
-                            priceLabel = null,
-                            statusLabel = null,
-                            matchReasons = setOf(PersonMatchReason.Service),
+                    resultState = ExploreResultState.Results(
+                        people = listOf(
+                            ExplorePersonResult(
+                                id = "person",
+                                name = "Ravi Kumar",
+                                avatarUrl = null,
+                                primaryService = "Electrician",
+                                additionalServices = emptyList(),
+                                rating = 4.8,
+                                reviewCount = 12,
+                                locationLabel = "Kallakurichi",
+                                priceLabel = null,
+                                statusLabel = null,
+                                matchReasons = setOf(PersonMatchReason.Service),
+                            ),
                         ),
+                        tasks = emptyList(),
                     ),
                     availableSortOptions = mapOf(
                         ExploreResultScope.Services to listOf(
@@ -305,20 +309,23 @@ class ExploreFiltersTest {
                     availableFilterOptions = mapOf(
                         ExploreResultScope.Services to listOf(ExploreFilterOption.Remote),
                     ),
-                    submittedPeople = listOf(
-                        ExplorePersonResult(
-                            id = "service-person",
-                            name = "Ravi Kumar",
-                            avatarUrl = null,
-                            primaryService = "Electrician",
-                            additionalServices = emptyList(),
-                            rating = 4.8,
-                            reviewCount = 8,
-                            locationLabel = "Kallakurichi",
-                            priceLabel = null,
-                            statusLabel = null,
-                            matchReasons = setOf(PersonMatchReason.Service),
+                    resultState = ExploreResultState.Results(
+                        people = listOf(
+                            ExplorePersonResult(
+                                id = "service-person",
+                                name = "Ravi Kumar",
+                                avatarUrl = null,
+                                primaryService = "Electrician",
+                                additionalServices = emptyList(),
+                                rating = 4.8,
+                                reviewCount = 8,
+                                locationLabel = "Kallakurichi",
+                                priceLabel = null,
+                                statusLabel = null,
+                                matchReasons = setOf(PersonMatchReason.Service),
+                            ),
                         ),
+                        tasks = emptyList(),
                     ),
                     onPersonClick = {},
                 )

@@ -9,9 +9,13 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.lifecycle.SavedStateHandle
 import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExplorePersonResult
+import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreViewModel
@@ -139,12 +143,89 @@ class ExploreScreenshotTest {
         capture("explore_sort_services_menu_dark", includePopup = true)
     }
 
+    @Test
+    @Config(qualifiers = "w320dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_result_failure_320_light() {
+        setApp(
+            darkTheme = false,
+            resultState = ExploreResultState.Failure(ExploreResultState.FailureReason.General),
+        )
+        openExplore()
+        capture("explore_result_failure_320_light")
+    }
+
+    @Test
+    fun explore_result_empty_360_dark() {
+        setApp(
+            darkTheme = true,
+            resultState = ExploreResultState.Empty(ExploreResultState.EmptyReason.Filters),
+            appliedFilters = mapOf(
+                ExploreResultScope.Services to setOf(ExploreFilterOption.Remote),
+            ),
+        )
+        openExplore()
+        composeTestRule.onNodeWithText("Services").performClick()
+        capture("explore_result_empty_360_dark")
+    }
+
+    @Test
+    @Config(qualifiers = "w412dp-h915dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_result_stale_412_light() {
+        setApp(
+            darkTheme = false,
+            resultState = ExploreResultState.Results(
+                people = submittedPeople(),
+                tasks = submittedTasks(),
+                status = ExploreResultState.ContentStatus.Stale,
+            ),
+        )
+        openExplore()
+        capture("explore_result_stale_412_light")
+    }
+
+    @Test
+    @Config(qualifiers = "ta-rIN-w360dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_result_partial_tamil_360_dark() {
+        setApp(
+            darkTheme = true,
+            resultState = ExploreResultState.Results(
+                people = submittedPeople(),
+                tasks = submittedTasks(),
+                status = ExploreResultState.ContentStatus.PartialFailure(
+                    ExploreResultState.Source.Tasks,
+                ),
+            ),
+        )
+        openExplore("ஆராயுங்கள்")
+        capture("explore_result_partial_tamil_360_dark")
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_result_refreshing_large_text_320_light() {
+        setApp(
+            darkTheme = false,
+            fontScale = 1.6f,
+            resultState = ExploreResultState.Results(
+                people = submittedPeople(),
+                tasks = submittedTasks(),
+                isRefreshing = true,
+                status = ExploreResultState.ContentStatus.OfflineCached,
+            ),
+        )
+        openExplore()
+        capture("explore_result_refreshing_large_text_320_light")
+    }
+
     private fun setApp(
         darkTheme: Boolean,
         withHistory: Boolean = false,
         typedQuery: Boolean = false,
         submittedResults: Boolean = false,
         sortMenu: Boolean = false,
+        resultState: ExploreResultState? = null,
+        appliedFilters: Map<ExploreResultScope, Set<ExploreFilterOption>>? = null,
+        fontScale: Float = 1f,
     ) {
         val viewModel = ExploreViewModel(SavedStateHandle()).also {
             if (withHistory) {
@@ -158,7 +239,7 @@ class ExploreScreenshotTest {
                 it.submitQuery("Other recent")
                 it.onQueryChanged("elec")
             }
-            if (submittedResults) {
+            if (submittedResults || resultState != null) {
                 it.submitQuery("electrician")
             }
         }
@@ -180,12 +261,12 @@ class ExploreScreenshotTest {
         }
         val onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? =
             if (sortMenu) ({ _, _ -> }) else null
-        val availableFilterOptions = if (submittedResults) {
+        val availableFilterOptions = if (submittedResults || resultState != null) {
             defaultExploreFilterOptions()
         } else {
             emptyMap()
         }
-        val appliedFilterOptions = if (sortMenu) {
+        val appliedFilterOptions = appliedFilters ?: if (sortMenu) {
             mapOf(
                 ExploreResultScope.Services to setOf(
                     ExploreFilterOption.RatingFourPlus,
@@ -196,19 +277,30 @@ class ExploreScreenshotTest {
             emptyMap()
         }
         composeTestRule.setContent {
-            AskITTheme(darkTheme = darkTheme) {
-                AskITApp(
-                    exploreViewModel = viewModel,
-                    submittedPeople = if (submittedResults) submittedPeople() else emptyList(),
-                    submittedTasks = if (submittedResults) submittedTasks() else emptyList(),
-                    availableSortOptions = sortOptions,
-                    selectedSortOptions = selectedSortOptions,
-                    onSortChanged = onSortChanged,
-                    availableFilterOptions = availableFilterOptions,
-                    appliedFilterOptions = appliedFilterOptions,
-                    onPersonClick = {},
-                    onTaskClick = {},
-                )
+            val density = LocalDensity.current
+            CompositionLocalProvider(
+                LocalDensity provides Density(density.density, fontScale),
+            ) {
+                AskITTheme(darkTheme = darkTheme) {
+                    AskITApp(
+                        exploreViewModel = viewModel,
+                        resultState = resultState ?: if (submittedResults) {
+                            ExploreResultState.Results(
+                                people = submittedPeople(),
+                                tasks = submittedTasks(),
+                            )
+                        } else {
+                            ExploreResultState.Loading
+                        },
+                        availableSortOptions = sortOptions,
+                        selectedSortOptions = selectedSortOptions,
+                        onSortChanged = onSortChanged,
+                        availableFilterOptions = availableFilterOptions,
+                        appliedFilterOptions = appliedFilterOptions,
+                        onPersonClick = {},
+                        onTaskClick = {},
+                    )
+                }
             }
         }
     }
@@ -223,7 +315,7 @@ class ExploreScreenshotTest {
             rating = 4.8,
             reviewCount = 36,
             locationLabel = "Kallakurichi",
-            priceLabel = "From â‚¹500",
+            priceLabel = "From ₹500",
             statusLabel = "Available today",
             matchReasons = setOf(PersonMatchReason.Identity),
         ),
@@ -236,7 +328,7 @@ class ExploreScreenshotTest {
             rating = 4.8,
             reviewCount = 36,
             locationLabel = "2.4 km",
-            priceLabel = "From â‚¹500",
+            priceLabel = "From ₹500",
             statusLabel = "Available today",
             matchReasons = setOf(PersonMatchReason.Service),
         ),
@@ -270,8 +362,8 @@ class ExploreScreenshotTest {
         ),
     )
 
-    private fun openExplore() {
-        composeTestRule.onNodeWithContentDescription("Explore").performClick()
+    private fun openExplore(contentDescription: String = "Explore") {
+        composeTestRule.onNodeWithContentDescription(contentDescription).performClick()
         composeTestRule.mainClock.advanceTimeBy(5_000)
         composeTestRule.waitForIdle()
     }

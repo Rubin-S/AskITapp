@@ -30,6 +30,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.InputChip
@@ -37,6 +38,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
@@ -73,7 +75,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -159,8 +163,8 @@ data class ExploreTaskResult(
 fun ExploreRoute(
     viewModel: ExploreViewModel,
     onSearchFiltersClick: () -> Unit,
-    submittedPeople: List<ExplorePersonResult> = emptyList(),
-    submittedTasks: List<ExploreTaskResult> = emptyList(),
+    resultState: ExploreResultState = ExploreResultState.Loading,
+    onRetryResults: () -> Unit = {},
     availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
     selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
@@ -183,8 +187,8 @@ fun ExploreRoute(
         onRecentSearchRemoved = viewModel::removeRecentSearch,
         onRecentSearchesCleared = viewModel::clearRecentSearches,
         onSearchFiltersClick = onSearchFiltersClick,
-        submittedPeople = submittedPeople,
-        submittedTasks = submittedTasks,
+        resultState = resultState,
+        onRetryResults = onRetryResults,
         availableSortOptions = availableSortOptions,
         selectedSortOptions = selectedSortOptions,
         onSortChanged = onSortChanged,
@@ -210,8 +214,8 @@ fun ExploreScreen(
     onSearchFiltersClick: () -> Unit,
     people: List<ExplorePersonResult> = emptyList(),
     tasks: List<ExploreTaskResult> = emptyList(),
-    submittedPeople: List<ExplorePersonResult> = emptyList(),
-    submittedTasks: List<ExploreTaskResult> = emptyList(),
+    resultState: ExploreResultState = ExploreResultState.Loading,
+    onRetryResults: () -> Unit = {},
     availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
     selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
@@ -238,6 +242,12 @@ fun ExploreScreen(
         isSearchActive = false
     }
 
+    fun openFilters() {
+        closeSearch()
+        onFilterScopeChanged(selectedScope)
+        onSearchFiltersClick()
+    }
+
     BackHandler(enabled = isSearchActive) {
         closeSearch()
     }
@@ -260,11 +270,7 @@ fun ExploreScreen(
                 onQueryChanged = onQueryChanged,
                 onQueryCleared = onQueryCleared,
                 onQuerySubmitted = onQuerySubmitted,
-                onSearchFiltersClick = {
-                    closeSearch()
-                    onFilterScopeChanged(selectedScope)
-                    onSearchFiltersClick()
-                },
+                onSearchFiltersClick = ::openFilters,
                 selectedScope = selectedScope,
                 availableFilterOptions = availableFilterOptions,
                 appliedFilterOptions = appliedFilterOptions,
@@ -305,8 +311,9 @@ fun ExploreScreen(
             item(key = "submitted_search_results") {
                 SubmittedSearchResults(
                     selectedScope = selectedScope,
-                    people = submittedPeople,
-                    tasks = submittedTasks,
+                    resultState = resultState,
+                    onRetryResults = onRetryResults,
+                    onEditFilters = ::openFilters,
                     availableSortOptions = availableSortOptions,
                     selectedSortOptions = selectedSortOptions,
                     onSortChanged = onSortChanged,
@@ -545,8 +552,9 @@ private fun ServiceCategoryTile(
 @Composable
 private fun SubmittedSearchResults(
     selectedScope: ExploreResultScope,
-    people: List<ExplorePersonResult>,
-    tasks: List<ExploreTaskResult>,
+    resultState: ExploreResultState,
+    onRetryResults: () -> Unit,
+    onEditFilters: () -> Unit,
     availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>>,
     selectedSortOptions: Map<ExploreResultScope, ExploreSortOption>,
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)?,
@@ -557,11 +565,6 @@ private fun SubmittedSearchResults(
     onTaskClick: ((String) -> Unit)?,
     onScopeSelected: (ExploreResultScope) -> Unit,
 ) {
-    val identityPeople = people.filter { PersonMatchReason.Identity in it.matchReasons }
-    val servicePeople = people.filter {
-        PersonMatchReason.Service in it.matchReasons && !it.primaryService.isNullOrBlank()
-    }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -607,11 +610,23 @@ private fun SubmittedSearchResults(
             )
         }
 
+        val normalizedResultState = normalizeExploreResultState(
+            state = resultState,
+            scope = selectedScope,
+            emptyReason = if (orderedAppliedFilters.isEmpty()) {
+                ExploreResultState.EmptyReason.Query
+            } else {
+                ExploreResultState.EmptyReason.Filters
+            },
+        )
+        val results = normalizedResultState as? ExploreResultState.Results
         val hasVisibleResults = when (selectedScope) {
             ExploreResultScope.All -> false
-            ExploreResultScope.People -> identityPeople.isNotEmpty() && onPersonClick != null
-            ExploreResultScope.Services -> servicePeople.isNotEmpty() && onPersonClick != null
-            ExploreResultScope.Tasks -> tasks.isNotEmpty() && onTaskClick != null
+            ExploreResultScope.People,
+            ExploreResultScope.Services,
+            -> results?.people?.isNotEmpty() == true && onPersonClick != null
+
+            ExploreResultScope.Tasks -> results?.tasks?.isNotEmpty() == true && onTaskClick != null
         }
         val options = availableSortOptions[selectedScope].orEmpty()
         val selectedOption = selectedSortOptions[selectedScope]
@@ -640,51 +655,273 @@ private fun SubmittedSearchResults(
             }
         }
 
-        when (selectedScope) {
-            ExploreResultScope.All -> {
-                if (people.isNotEmpty() && onPersonClick != null) {
-                    ExploreResultSection(
-                        heading = stringResource(R.string.explore_people_and_services),
-                        testTag = "explore_submitted_people",
+        ExploreResultBody(
+            selectedScope = selectedScope,
+            state = normalizedResultState,
+            onRetryResults = onRetryResults,
+            onEditFilters = onEditFilters,
+            onPersonClick = onPersonClick,
+            onTaskClick = onTaskClick,
+        )
+    }
+}
+
+@Composable
+private fun ExploreResultBody(
+    selectedScope: ExploreResultScope,
+    state: ExploreResultState,
+    onRetryResults: () -> Unit,
+    onEditFilters: () -> Unit,
+    onPersonClick: ((String) -> Unit)?,
+    onTaskClick: ((String) -> Unit)?,
+) {
+    when (state) {
+        ExploreResultState.Loading -> {
+            val loadingDescription = stringResource(
+                R.string.explore_loading_results_content_description,
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp)
+                    .testTag("explore_result_loading"),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .testTag("explore_result_loading_indicator")
+                        .semantics {
+                            contentDescription = loadingDescription
+                        },
+                )
+                Text(
+                    text = stringResource(R.string.explore_loading_results),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+        }
+
+        is ExploreResultState.Empty -> {
+            val isFiltered = state.reason == ExploreResultState.EmptyReason.Filters
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp)
+                    .testTag("explore_result_empty")
+                    .semantics { liveRegion = LiveRegionMode.Polite },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = stringResource(
+                        if (isFiltered) {
+                            R.string.explore_empty_filters_title
+                        } else {
+                            R.string.explore_empty_query_title
+                        },
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Text(
+                    text = stringResource(
+                        if (isFiltered) {
+                            R.string.explore_empty_filters_supporting_text
+                        } else {
+                            R.string.explore_empty_query_supporting_text
+                        },
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                if (isFiltered) {
+                    OutlinedButton(
+                        onClick = onEditFilters,
+                        modifier = Modifier.testTag("explore_edit_filters"),
                     ) {
-                        PersonResultRows(people, onPersonClick)
-                    }
-                }
-                if (tasks.isNotEmpty() && onTaskClick != null) {
-                    ExploreResultSection(
-                        heading = stringResource(R.string.explore_tasks),
-                        testTag = "explore_submitted_tasks",
-                    ) {
-                        TaskResultRows(tasks, onTaskClick)
+                        Text(stringResource(R.string.explore_edit_filters))
                     }
                 }
             }
+        }
 
-            ExploreResultScope.People -> {
-                if (identityPeople.isNotEmpty() && onPersonClick != null) {
-                    ExploreResultSection(
-                        heading = null,
-                        testTag = "explore_submitted_people",
-                    ) {
-                        PersonResultRows(identityPeople, onPersonClick)
+        is ExploreResultState.Failure -> {
+            val titleRes: Int
+            val supportingTextRes: Int
+            when (val reason = state.reason) {
+                ExploreResultState.FailureReason.General -> {
+                    titleRes = R.string.explore_failure_general_title
+                    supportingTextRes = R.string.explore_failure_general_supporting_text
+                }
+
+                ExploreResultState.FailureReason.Offline -> {
+                    titleRes = R.string.explore_failure_offline_title
+                    supportingTextRes = R.string.explore_failure_offline_supporting_text
+                }
+
+                is ExploreResultState.FailureReason.SourceUnavailable -> when (reason.source) {
+                    ExploreResultState.Source.PeopleAndServices -> {
+                        titleRes = R.string.explore_failure_people_services_title
+                        supportingTextRes = R.string.explore_failure_people_services_supporting_text
+                    }
+
+                    ExploreResultState.Source.Tasks -> {
+                        titleRes = R.string.explore_failure_tasks_title
+                        supportingTextRes = R.string.explore_failure_tasks_supporting_text
                     }
                 }
             }
-
-            ExploreResultScope.Services -> {
-                if (servicePeople.isNotEmpty() && onPersonClick != null) {
-                    ServiceResultRows(servicePeople, onPersonClick)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp)
+                    .testTag("explore_result_failure")
+                    .semantics { liveRegion = LiveRegionMode.Polite },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = stringResource(titleRes),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Text(
+                    text = stringResource(supportingTextRes),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                OutlinedButton(
+                    onClick = onRetryResults,
+                    modifier = Modifier.testTag("explore_retry_results"),
+                ) {
+                    Text(stringResource(R.string.explore_retry))
                 }
             }
+        }
 
-            ExploreResultScope.Tasks -> {
-                if (tasks.isNotEmpty() && onTaskClick != null) {
-                    ExploreResultSection(
-                        heading = null,
-                        testTag = "explore_submitted_tasks",
-                    ) {
-                        TaskResultRows(tasks, onTaskClick)
+        is ExploreResultState.Results -> {
+            if (state.isRefreshing) {
+                val refreshingDescription = stringResource(
+                    R.string.explore_refreshing_results_content_description,
+                )
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .testTag("explore_result_refreshing_indicator")
+                        .semantics {
+                            contentDescription = refreshingDescription
+                        },
+                )
+            }
+            state.status?.let { status ->
+                ExploreResultStatus(
+                    status = status,
+                    actionEnabled = !state.isRefreshing,
+                    onAction = onRetryResults,
+                )
+            }
+            when (selectedScope) {
+                ExploreResultScope.All -> {
+                    if (state.people.isNotEmpty() && onPersonClick != null) {
+                        ExploreResultSection(
+                            heading = stringResource(R.string.explore_people_and_services),
+                            testTag = "explore_submitted_people",
+                        ) {
+                            PersonResultRows(state.people, onPersonClick)
+                        }
                     }
+                    if (state.tasks.isNotEmpty() && onTaskClick != null) {
+                        ExploreResultSection(
+                            heading = stringResource(R.string.explore_tasks),
+                            testTag = "explore_submitted_tasks",
+                        ) {
+                            TaskResultRows(state.tasks, onTaskClick)
+                        }
+                    }
+                }
+
+                ExploreResultScope.People -> {
+                    if (state.people.isNotEmpty() && onPersonClick != null) {
+                        ExploreResultSection(
+                            heading = null,
+                            testTag = "explore_submitted_people",
+                        ) {
+                            PersonResultRows(state.people, onPersonClick)
+                        }
+                    }
+                }
+
+                ExploreResultScope.Services -> {
+                    if (state.people.isNotEmpty() && onPersonClick != null) {
+                        ServiceResultRows(state.people, onPersonClick)
+                    }
+                }
+
+                ExploreResultScope.Tasks -> {
+                    if (state.tasks.isNotEmpty() && onTaskClick != null) {
+                        ExploreResultSection(
+                            heading = null,
+                            testTag = "explore_submitted_tasks",
+                        ) {
+                            TaskResultRows(state.tasks, onTaskClick)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExploreResultStatus(
+    status: ExploreResultState.ContentStatus,
+    actionEnabled: Boolean,
+    onAction: () -> Unit,
+) {
+    val messageRes = when (status) {
+        ExploreResultState.ContentStatus.Stale -> R.string.explore_status_stale
+        ExploreResultState.ContentStatus.OfflineCached -> R.string.explore_status_offline_cached
+        is ExploreResultState.ContentStatus.PartialFailure -> when (status.source) {
+            ExploreResultState.Source.PeopleAndServices -> {
+                R.string.explore_status_people_services_partial_failure
+            }
+
+            ExploreResultState.Source.Tasks -> R.string.explore_status_tasks_partial_failure
+        }
+    }
+    val actionRes = if (status == ExploreResultState.ContentStatus.Stale) {
+        R.string.explore_refresh
+    } else {
+        R.string.explore_retry
+    }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp)
+            .testTag("explore_result_status")
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = stringResource(messageRes),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            if (actionEnabled) {
+                TextButton(
+                    onClick = onAction,
+                    modifier = Modifier.testTag("explore_result_status_action"),
+                ) {
+                    Text(stringResource(actionRes))
                 }
             }
         }
