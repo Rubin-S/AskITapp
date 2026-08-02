@@ -2,18 +2,23 @@ package com.askit.app
 
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.lifecycle.SavedStateHandle
 import com.askit.app.explore.ExplorePersonResult
+import com.askit.app.explore.ExploreResultScope
+import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.ExploreTaskResult
 import com.askit.app.explore.PersonMatchReason
 import com.askit.designsystem.tasks.TaskResultStatus
 import com.askit.designsystem.theme.AskITTheme
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
 import org.junit.Test
@@ -108,11 +113,34 @@ class ExploreScreenshotTest {
         capture("explore_submitted_results_all_dark")
     }
 
+    @Test
+    fun explore_sort_services_menu_light() {
+        setApp(darkTheme = false, submittedResults = true, sortMenu = true)
+        openExplore()
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Nearest").assertIsDisplayed()
+        capture("explore_sort_services_menu_light", includePopup = true)
+    }
+
+    @Test
+    fun explore_sort_services_menu_dark() {
+        setApp(darkTheme = true, submittedResults = true, sortMenu = true)
+        openExplore()
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Nearest").assertIsDisplayed()
+        capture("explore_sort_services_menu_dark", includePopup = true)
+    }
+
     private fun setApp(
         darkTheme: Boolean,
         withHistory: Boolean = false,
         typedQuery: Boolean = false,
         submittedResults: Boolean = false,
+        sortMenu: Boolean = false,
     ) {
         val viewModel = ExploreViewModel(SavedStateHandle()).also {
             if (withHistory) {
@@ -130,12 +158,33 @@ class ExploreScreenshotTest {
                 it.submitQuery("electrician")
             }
         }
+        val sortOptions = if (sortMenu) {
+            mapOf(
+                ExploreResultScope.Services to listOf(
+                    ExploreSortOption.BestMatch,
+                    ExploreSortOption.Nearest,
+                    ExploreSortOption.RatingHighToLow,
+                ),
+            )
+        } else {
+            emptyMap()
+        }
+        val selectedSortOptions = if (sortMenu) {
+            mapOf(ExploreResultScope.Services to ExploreSortOption.BestMatch)
+        } else {
+            emptyMap()
+        }
+        val onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? =
+            if (sortMenu) ({ _, _ -> }) else null
         composeTestRule.setContent {
             AskITTheme(darkTheme = darkTheme) {
                 AskITApp(
                     exploreViewModel = viewModel,
                     submittedPeople = if (submittedResults) submittedPeople() else emptyList(),
                     submittedTasks = if (submittedResults) submittedTasks() else emptyList(),
+                    availableSortOptions = sortOptions,
+                    selectedSortOptions = selectedSortOptions,
+                    onSortChanged = onSortChanged,
                     onPersonClick = {},
                     onTaskClick = {},
                 )
@@ -206,9 +255,16 @@ class ExploreScreenshotTest {
         composeTestRule.waitForIdle()
     }
 
-    private fun capture(name: String) {
-        composeTestRule.onRoot().captureRoboImage(
-            filePath = "src/test/screenshots/$name.png",
-        )
+    @OptIn(ExperimentalRoborazziApi::class)
+    private fun capture(name: String, includePopup: Boolean = false) {
+        if (includePopup) {
+            composeTestRule.onNodeWithTag("explore_sort_menu").captureRoboImage(
+                filePath = "src/test/screenshots/$name.png",
+            )
+        } else {
+            composeTestRule.onRoot().captureRoboImage(
+                filePath = "src/test/screenshots/$name.png",
+            )
+        }
     }
 }
