@@ -819,16 +819,41 @@ class ExploreFlowTest {
     }
 
     @Test
-    fun submittedResultTabs_hideWithoutRequiredCallbacks() {
+    fun submittedResults_renderWithoutOptionalCallbacks_andRowsRemainNonInteractive() {
         setSubmittedContent(onPersonClick = null, onTaskClick = null)
 
         composeTestRule.onNodeWithTag("explore_result_tabs").assertIsDisplayed()
-        composeTestRule.onAllNodesWithText("People and services").assertCountEquals(0)
-        composeTestRule.onAllNodesWithText("Task 1").assertCountEquals(0)
+        composeTestRule.onNodeWithText("People and services").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Arun Kumar").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Task 1").performScrollTo().assertIsDisplayed()
+        assertFalse(
+            composeTestRule
+                .onNodeWithText("Arun Kumar")
+                .fetchSemanticsNode()
+                .config
+                .contains(SemanticsActions.OnClick),
+        )
+        assertFalse(
+            composeTestRule
+                .onNodeWithText("Task 1")
+                .fetchSemanticsNode()
+                .config
+                .contains(SemanticsActions.OnClick),
+        )
+
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithText("Electrician").assertIsDisplayed()
+        assertFalse(
+            composeTestRule
+                .onNodeWithText("Electrician")
+                .fetchSemanticsNode()
+                .config
+                .contains(SemanticsActions.OnClick),
+        )
     }
 
     @Test
-    fun submittedSort_visibilityRequiresScopedResultsCallbacksAndValidOptions() {
+    fun submittedSort_visibilityRequiresScopedResultsAndValidOptions() {
         val options = supportedSortOptions()
         val people = mutableStateOf(submittedPeople())
         val personClick = mutableStateOf<((String) -> Unit)?>(null)
@@ -879,7 +904,7 @@ class ExploreFlowTest {
         personClick.value = null
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("People").performClick()
-        composeTestRule.onAllNodesWithTag("explore_sort_control").assertCountEquals(0)
+        composeTestRule.onNodeWithTag("explore_sort_control").assertIsDisplayed()
 
         personClick.value = {}
         sortCallback.value = null

@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,14 +26,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -57,8 +54,8 @@ fun PersonResultItem(
     locationLabel: String,
     priceLabel: String?,
     statusLabel: String?,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
     val displayName = name.trim()
     val status = statusLabel?.trim()?.takeIf(String::isNotEmpty)
@@ -80,49 +77,38 @@ fun PersonResultItem(
     }
     val price = priceLabel?.trim()?.takeIf(String::isNotEmpty)
     val profileAction = stringResource(R.string.person_result_view_profile, displayName)
+    val itemModifier = modifier
+        .fillMaxWidth()
+        .heightIn(min = 48.dp)
+        .then(
+            if (onClick == null) {
+                Modifier
+            } else {
+                Modifier.clickable(
+                    role = Role.Button,
+                    onClickLabel = profileAction,
+                    onClick = onClick,
+                )
+            },
+        )
 
     ListItem(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .clickable(
-                role = Role.Button,
-                onClickLabel = profileAction,
-                onClick = onClick,
-            ),
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent,
-        ),
+        modifier = itemModifier,
         leadingContent = {
             ResultAvatar(avatarUrl = avatarUrl)
         },
         headlineContent = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = displayName,
-                    modifier = if (status == null) {
-                        Modifier.fillMaxWidth()
-                    } else {
-                        Modifier.weight(0.6f)
-                    },
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
                 if (status != null) {
-                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = status,
-                        modifier = Modifier.weight(0.4f),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.End,
                     )
                 }
             }
@@ -134,8 +120,6 @@ fun PersonResultItem(
                         text = service,
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 if (additionalSummary != null) {
@@ -150,8 +134,6 @@ fun PersonResultItem(
                         },
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 ResultMetadataLine(
@@ -294,8 +276,6 @@ private fun ResultMetadataLine(
                             ),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 } else {
@@ -313,8 +293,6 @@ private fun ResultMetadataLine(
                     text = location,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -324,8 +302,6 @@ private fun ResultMetadataLine(
                     text = price,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

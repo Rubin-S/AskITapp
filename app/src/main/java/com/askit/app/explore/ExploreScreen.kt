@@ -45,7 +45,7 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.SecondaryScrollableTabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
@@ -570,7 +570,7 @@ private fun SubmittedSearchResults(
             .fillMaxWidth()
             .testTag("explore_submitted_results"),
     ) {
-        SecondaryScrollableTabRow(
+        PrimaryScrollableTabRow(
             selectedTabIndex = selectedScope.ordinal,
             modifier = Modifier
                 .fillMaxWidth()
@@ -624,9 +624,9 @@ private fun SubmittedSearchResults(
             ExploreResultScope.All -> false
             ExploreResultScope.People,
             ExploreResultScope.Services,
-            -> results?.people?.isNotEmpty() == true && onPersonClick != null
+            -> results?.people?.isNotEmpty() == true
 
-            ExploreResultScope.Tasks -> results?.tasks?.isNotEmpty() == true && onTaskClick != null
+            ExploreResultScope.Tasks -> results?.tasks?.isNotEmpty() == true
         }
         val options = availableSortOptions[selectedScope].orEmpty()
         val selectedOption = selectedSortOptions[selectedScope]
@@ -825,7 +825,7 @@ private fun ExploreResultBody(
             }
             when (selectedScope) {
                 ExploreResultScope.All -> {
-                    if (state.people.isNotEmpty() && onPersonClick != null) {
+                    if (state.people.isNotEmpty()) {
                         ExploreResultSection(
                             heading = stringResource(R.string.explore_people_and_services),
                             testTag = "explore_submitted_people",
@@ -833,7 +833,7 @@ private fun ExploreResultBody(
                             PersonResultRows(state.people, onPersonClick)
                         }
                     }
-                    if (state.tasks.isNotEmpty() && onTaskClick != null) {
+                    if (state.tasks.isNotEmpty()) {
                         ExploreResultSection(
                             heading = stringResource(R.string.explore_tasks),
                             testTag = "explore_submitted_tasks",
@@ -844,7 +844,7 @@ private fun ExploreResultBody(
                 }
 
                 ExploreResultScope.People -> {
-                    if (state.people.isNotEmpty() && onPersonClick != null) {
+                    if (state.people.isNotEmpty()) {
                         ExploreResultSection(
                             heading = null,
                             testTag = "explore_submitted_people",
@@ -855,13 +855,13 @@ private fun ExploreResultBody(
                 }
 
                 ExploreResultScope.Services -> {
-                    if (state.people.isNotEmpty() && onPersonClick != null) {
+                    if (state.people.isNotEmpty()) {
                         ServiceResultRows(state.people, onPersonClick)
                     }
                 }
 
                 ExploreResultScope.Tasks -> {
-                    if (state.tasks.isNotEmpty() && onTaskClick != null) {
+                    if (state.tasks.isNotEmpty()) {
                         ExploreResultSection(
                             heading = null,
                             testTag = "explore_submitted_tasks",
@@ -905,7 +905,7 @@ private fun ExploreResultStatus(
             .testTag("explore_result_status")
             .semantics { liveRegion = LiveRegionMode.Polite },
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -1019,7 +1019,7 @@ private fun ExploreSortControl(
 @Composable
 private fun PersonResultRows(
     people: List<ExplorePersonResult>,
-    onClick: (String) -> Unit,
+    onClick: ((String) -> Unit)?,
 ) {
     people.forEachIndexed { index, person ->
         if (index > 0) HorizontalDivider()
@@ -1033,7 +1033,7 @@ private fun PersonResultRows(
             locationLabel = person.locationLabel,
             priceLabel = person.priceLabel,
             statusLabel = person.statusLabel,
-            onClick = { onClick(person.id) },
+            onClick = onClick?.let { click -> { click(person.id) } },
         )
     }
 }
@@ -1041,7 +1041,7 @@ private fun PersonResultRows(
 @Composable
 private fun ServiceResultRows(
     people: List<ExplorePersonResult>,
-    onClick: (String) -> Unit,
+    onClick: ((String) -> Unit)?,
 ) {
     Column(
         modifier = Modifier
@@ -1053,7 +1053,7 @@ private fun ServiceResultRows(
         people.forEach { person ->
             CompactServiceResultCard(
                 result = person,
-                onClick = { onClick(person.id) },
+                onClick = onClick?.let { click -> { click(person.id) } },
             )
         }
     }
@@ -1062,7 +1062,7 @@ private fun ServiceResultRows(
 @Composable
 private fun CompactServiceResultCard(
     result: ExplorePersonResult,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val service = result.primaryService?.trim().orEmpty()
@@ -1074,15 +1074,23 @@ private fun CompactServiceResultCard(
     }
     val clickLabel = stringResource(R.string.explore_view_service, service)
 
+    val cardModifier = modifier
+        .fillMaxWidth()
+        .testTag("explore_service_result_card")
+        .then(
+            if (onClick == null) {
+                Modifier
+            } else {
+                Modifier.clickable(
+                    role = Role.Button,
+                    onClickLabel = clickLabel,
+                    onClick = onClick,
+                )
+            },
+        )
+
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("explore_service_result_card")
-            .clickable(
-                role = Role.Button,
-                onClickLabel = clickLabel,
-                onClick = onClick,
-            ),
+        modifier = cardModifier,
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -1099,8 +1107,6 @@ private fun CompactServiceResultCard(
                 text = service,
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1110,7 +1116,7 @@ private fun CompactServiceResultCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                     contentAlignment = Alignment.Center,
                 ) {
                     CompositionLocalProvider(
@@ -1132,16 +1138,12 @@ private fun CompactServiceResultCard(
                         text = provider,
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                     )
                     if (status != null) {
                         Text(
                             text = status,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                     PersonResultMetadata(
@@ -1161,8 +1163,6 @@ private fun CompactServiceResultCard(
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -1172,7 +1172,7 @@ private fun CompactServiceResultCard(
 @Composable
 private fun TaskResultRows(
     tasks: List<ExploreTaskResult>,
-    onClick: (String) -> Unit,
+    onClick: ((String) -> Unit)?,
 ) {
     tasks.forEachIndexed { index, task ->
         if (index > 0) HorizontalDivider()
@@ -1186,7 +1186,7 @@ private fun TaskResultRows(
             posterName = task.posterName,
             postedLabel = task.postedLabel,
             status = task.status,
-            onClick = { onClick(task.id) },
+            onClick = onClick?.let { click -> { click(task.id) } },
         )
     }
 }
@@ -1211,16 +1211,7 @@ private fun ExploreResultSection(
             )
             Spacer(Modifier.height(12.dp))
         }
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            tonalElevation = 0.dp,
-        ) {
-            Column {
-                content()
-            }
-        }
+        content()
     }
 }
 
@@ -1598,8 +1589,6 @@ private fun SearchAreaSummary(searchArea: ExploreSearchArea) {
                 radius,
             ),
             color = contentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
                 .weight(1f)
