@@ -3,9 +3,11 @@ package com.askit.app.explore
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 private val DEFAULT_SEARCH_AREA = ExploreSearchArea(
@@ -21,7 +23,12 @@ private val DEFAULT_SEARCH_AREA = ExploreSearchArea(
 enum class ExploreLocationSource {
     SAVED,
     GOOGLE_PLACES,
-    CURRENT_LOCATION,
+    CURRENT_LOCATION;
+
+    companion object {
+        fun fromName(value: String): ExploreLocationSource =
+            entries.firstOrNull { it.name == value } ?: SAVED
+    }
 }
 
 data class ExploreSearchArea(
@@ -80,6 +87,23 @@ class ExploreViewModel(
         SEARCH_AREA_SOURCE_KEY,
         DEFAULT_SEARCH_AREA.source.name,
     )
+    private val filterScopeState = MutableStateFlow(
+        savedStateHandle.get<String>(FILTER_SCOPE_KEY)
+            ?.let { value -> ExploreResultScope.entries.firstOrNull { it.name == value } }
+            ?: ExploreResultScope.All,
+    )
+    private val appliedFilterOptionsState = MutableStateFlow(
+        ExploreResultScope.entries.associateWith { scope ->
+            savedStateHandle.get<ArrayList<String>>(filterOptionsKey(scope))
+                .orEmpty()
+                .mapNotNull { name -> ExploreFilterOption.entries.firstOrNull { it.name == name } }
+                .toSet()
+        }.filterValues { it.isNotEmpty() },
+    )
+
+    val filterScope: StateFlow<ExploreResultScope> = filterScopeState.asStateFlow()
+    val appliedFilterOptions: StateFlow<Map<ExploreResultScope, Set<ExploreFilterOption>>> =
+        appliedFilterOptionsState.asStateFlow()
 
     private val searchAreaBaseState = combine(
         searchAreaNameState,
@@ -105,7 +129,7 @@ class ExploreViewModel(
     ) { searchArea, radiusKm, source ->
         searchArea.copy(
             radiusKm = radiusKm,
-            source = source.toExploreLocationSource(),
+            source = ExploreLocationSource.fromName(source),
         )
     }
 
@@ -168,6 +192,22 @@ class ExploreViewModel(
         savedStateHandle[SEARCH_AREA_SOURCE_KEY] = searchArea.source.name
     }
 
+    fun onFilterScopeSelected(scope: ExploreResultScope) {
+        filterScopeState.value = scope
+        savedStateHandle[FILTER_SCOPE_KEY] = scope.name
+    }
+
+    fun onFiltersChanged(scope: ExploreResultScope, options: Set<ExploreFilterOption>) {
+        val updated = appliedFilterOptionsState.value.toMutableMap()
+        if (options.isEmpty()) {
+            updated.remove(scope)
+        } else {
+            updated[scope] = options.toSet()
+        }
+        appliedFilterOptionsState.value = updated.toMap()
+        savedStateHandle[filterOptionsKey(scope)] = ArrayList(options.map { it.name }.sorted())
+    }
+
     private companion object {
         const val QUERY_KEY = "explore_query"
         const val RECENT_SEARCHES_KEY = "explore_recent_searches"
@@ -179,13 +219,13 @@ class ExploreViewModel(
         const val SEARCH_AREA_LONGITUDE_KEY = "explore_search_area_longitude"
         const val SEARCH_AREA_RADIUS_KEY = "explore_search_area_radius"
         const val SEARCH_AREA_SOURCE_KEY = "explore_search_area_source"
+        const val FILTER_SCOPE_KEY = "explore_filter_scope"
+
+        fun filterOptionsKey(scope: ExploreResultScope): String =
+            "explore_filter_options_${scope.name.lowercase()}"
 
     }
 }
 
 internal fun normalizeExploreQuery(query: String): String =
     query.trim().replace(Regex("\\s+"), " ")
-
-private fun String.toExploreLocationSource(): ExploreLocationSource =
-    runCatching { ExploreLocationSource.valueOf(this) }
-        .getOrDefault(ExploreLocationSource.SAVED)

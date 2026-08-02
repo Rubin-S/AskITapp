@@ -13,6 +13,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +31,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -39,6 +44,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -53,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -95,15 +102,47 @@ private val SEARCH_RADII_KM = listOf(5, 10, 25, 50)
 fun SearchAreaRoute(
     viewModel: ExploreViewModel,
     onBack: () -> Unit,
+    availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
+    appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
+    onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val filterScope by viewModel.filterScope.collectAsStateWithLifecycle()
+    val initialAvailableOptions = normalizeAvailableExploreFilterOptions(
+        scope = filterScope,
+        options = availableFilterOptions[filterScope].orEmpty(),
+    )
+    val initialAppliedOptions = normalizeAppliedExploreFilterOptions(
+        scope = filterScope,
+        availableOptions = initialAvailableOptions,
+        appliedOptions = appliedFilterOptions[filterScope].orEmpty(),
+    )
     SearchAreaScreen(
         confirmedArea = uiState.searchArea,
+        filterScope = filterScope,
+        availableFilterOptions = availableFilterOptions,
+        appliedFilterOptions = appliedFilterOptions,
         onBack = onBack,
-        onApply = { searchArea ->
+        onApply = { searchArea, optionalFilterOptions ->
             viewModel.onSearchAreaApplied(searchArea)
+            if (optionalFilterOptions != initialAppliedOptions) {
+                onFiltersChanged?.invoke(filterScope, optionalFilterOptions)
+            }
             onBack()
         },
+    )
+}
+
+@Composable
+fun SearchAreaScreen(
+    confirmedArea: ExploreSearchArea,
+    onBack: () -> Unit,
+    onApply: (ExploreSearchArea) -> Unit,
+) {
+    SearchAreaScreen(
+        confirmedArea = confirmedArea,
+        onBack = onBack,
+        onApply = { searchArea, _ -> onApply(searchArea) },
     )
 }
 
@@ -112,7 +151,10 @@ fun SearchAreaRoute(
 fun SearchAreaScreen(
     confirmedArea: ExploreSearchArea,
     onBack: () -> Unit,
-    onApply: (ExploreSearchArea) -> Unit,
+    filterScope: ExploreResultScope = ExploreResultScope.All,
+    availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
+    appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
+    onApply: (ExploreSearchArea, Set<ExploreFilterOption>) -> Unit,
 ) {
     var displayName by rememberSaveable(confirmedArea.displayName) { mutableStateOf(confirmedArea.displayName) }
     var supportingText by rememberSaveable(confirmedArea.displayName) { mutableStateOf(confirmedArea.supportingText) }
@@ -121,12 +163,39 @@ fun SearchAreaScreen(
     var longitude by rememberSaveable(confirmedArea.displayName) { mutableStateOf(confirmedArea.longitude) }
     var radiusKm by rememberSaveable(confirmedArea.displayName) { mutableIntStateOf(confirmedArea.radiusKm) }
     var sourceName by rememberSaveable(confirmedArea.displayName) { mutableStateOf(confirmedArea.source.name) }
+    val availableOptions = remember(filterScope, availableFilterOptions[filterScope]) {
+        normalizeAvailableExploreFilterOptions(
+            scope = filterScope,
+            options = availableFilterOptions[filterScope].orEmpty(),
+        )
+    }
+    val initialOptionalOptions = remember(filterScope, availableOptions, appliedFilterOptions[filterScope]) {
+        normalizeAppliedExploreFilterOptions(
+            scope = filterScope,
+            availableOptions = availableOptions,
+            appliedOptions = appliedFilterOptions[filterScope].orEmpty(),
+        )
+    }
+    val availableOptionNames = availableOptions.map(ExploreFilterOption::name)
+    val availableOptionKey = availableOptionNames.joinToString(separator = "|")
+    val initialOptionalOptionNames = availableOptions
+        .filter { it in initialOptionalOptions }
+        .map(ExploreFilterOption::name)
+    var draftOptionalOptionNames by rememberSaveable(
+        filterScope,
+        availableOptionKey,
+    ) {
+        mutableStateOf(initialOptionalOptionNames)
+    }
+    val draftOptionalOptions = availableOptions
+        .filter { it.name in draftOptionalOptionNames }
+        .toSet()
     var isResolvingLocation by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val resources = LocalResources.current
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var locationRequest by remember { mutableStateOf<CancellationTokenSource?>(null) }
@@ -147,7 +216,7 @@ fun SearchAreaScreen(
         latitude = latitude,
         longitude = longitude,
         radiusKm = radiusKm,
-        source = sourceName.toExploreLocationSourceForScreen(),
+        source = ExploreLocationSource.fromName(sourceName),
     )
 
     @SuppressLint("MissingPermission")
@@ -175,7 +244,7 @@ fun SearchAreaScreen(
                 errorMessage = resources.getString(R.string.explore_current_location_unavailable)
                 return@addOnSuccessListener
             }
-            scope.launch {
+            coroutineScope.launch {
                 val locality = reverseGeocode(context, location)
                 applyDraft(
                     ExploreSearchArea(
@@ -246,7 +315,7 @@ fun SearchAreaScreen(
             prediction = prediction,
             sessionToken = sessionToken,
             fallbackDisplayName = resources.getString(R.string.explore_selected_area),
-            scope = scope,
+            scope = coroutineScope,
             onSuccess = ::applyDraft,
             onFailure = { errorMessage = resources.getString(R.string.explore_could_not_load_area) },
         )
@@ -293,11 +362,15 @@ fun SearchAreaScreen(
     }
 
     val draft = currentDraft()
+    val filterGroups = ExploreFilterGroup.entries.mapNotNull { group ->
+        val options = availableOptions.filter { it.groupFor(filterScope) == group }
+        options.takeIf { it.isNotEmpty() }?.let { group to it }
+    }
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.explore_search_area_title)) },
+                title = { Text(stringResource(R.string.explore_filters_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -314,15 +387,28 @@ fun SearchAreaScreen(
                 color = MaterialTheme.colorScheme.background,
                 shadowElevation = 0.dp,
             ) {
-                Button(
-                    onClick = { onApply(draft) },
-                    enabled = draft.isUsable && !isResolvingLocation,
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
                         .padding(16.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(stringResource(R.string.explore_apply))
+                    TextButton(
+                        onClick = { draftOptionalOptionNames = emptyList() },
+                        enabled = draftOptionalOptions.isNotEmpty(),
+                        modifier = Modifier.testTag("explore_clear_filters"),
+                    ) {
+                        Text(stringResource(R.string.explore_clear_filters))
+                    }
+                    Spacer(Modifier.size(8.dp))
+                    Button(
+                        onClick = { onApply(draft, draftOptionalOptions) },
+                        enabled = draft.isUsable && !isResolvingLocation,
+                    ) {
+                        Text(stringResource(R.string.explore_apply))
+                    }
                 }
             }
         },
@@ -337,6 +423,37 @@ fun SearchAreaScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            item {
+                Text(
+                    text = stringResource(
+                        R.string.explore_filter_scope_caption,
+                        stringResource(filterScope.labelRes),
+                    ),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (filterGroups.isNotEmpty()) {
+                item {
+                    HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
+                }
+                filterGroups.forEach { (group, options) ->
+                    item(key = "explore_filter_group_${group.name}") {
+                        ExploreFilterGroupSection(
+                            group = group,
+                            options = options,
+                            selectedOptions = draftOptionalOptions,
+                            onOptionToggled = { option ->
+                                draftOptionalOptionNames = if (option.name in draftOptionalOptionNames) {
+                                    draftOptionalOptionNames.filterNot { it == option.name }
+                                } else {
+                                    draftOptionalOptionNames + option.name
+                                }
+                            },
+                        )
+                    }
+                }
+            }
             item {
                 Text(
                     text = stringResource(R.string.explore_selected_area),
@@ -423,6 +540,51 @@ fun SearchAreaScreen(
                     )
                     Text(radiusDescription)
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ExploreFilterGroupSection(
+    group: ExploreFilterGroup,
+    options: List<ExploreFilterOption>,
+    selectedOptions: Set<ExploreFilterOption>,
+    onOptionToggled: (ExploreFilterOption) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("explore_filter_group_${group.name.lowercase()}"),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(group.labelRes),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            options.forEach { option ->
+                val isSelected = option in selectedOptions
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { onOptionToggled(option) },
+                    modifier = Modifier.testTag("explore_filter_option_${option.name.lowercase()}"),
+                    label = { Text(stringResource(option.labelRes())) },
+                    leadingIcon = if (isSelected) {
+                        {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_check),
+                                contentDescription = null,
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                )
             }
         }
     }
@@ -548,7 +710,3 @@ private fun Address?.toLocalityLabel(): LocalityLabel? {
         .ifBlank { null }
     return LocalityLabel(displayName, supportingText)
 }
-
-private fun String.toExploreLocationSourceForScreen(): ExploreLocationSource =
-    runCatching { ExploreLocationSource.valueOf(this) }
-        .getOrDefault(ExploreLocationSource.SAVED)

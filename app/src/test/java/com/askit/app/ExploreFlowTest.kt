@@ -410,7 +410,7 @@ class ExploreFlowTest {
         assertEquals("Electrician repair", viewModel.uiState.value.query)
         assertEquals("Electrician repair", viewModel.uiState.value.recentSearches.first())
         composeTestRule.onAllNodesWithTag("explore_typed_suggestions").assertCountEquals(0)
-        composeTestRule.onAllNodesWithText("Search area").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Filters").assertCountEquals(0)
     }
 
     @Test
@@ -1294,7 +1294,7 @@ class ExploreFlowTest {
         composeTestRule.onNodeWithText("Plumber").performClick()
 
         composeTestRule.onNodeWithText("Plumber").assertIsDisplayed()
-        composeTestRule.onAllNodesWithText("Search area").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Filters").assertCountEquals(0)
         assertEquals(listOf("Plumber"), viewModel.uiState.value.recentSearches)
     }
 
@@ -1388,13 +1388,13 @@ class ExploreFlowTest {
     }
 
     @Test
-    fun filterButton_opensSearchArea_andBackDiscardsDraft() {
+    fun filterButton_opensFilters_andBackDiscardsDraft() {
         setApp()
         openExplore()
         searchField().performTextInput("electrician")
 
         filterButton().performClick()
-        composeTestRule.onNodeWithText("Search area").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Filters").assertIsDisplayed()
 
         composeTestRule.onNodeWithContentDescription("Within 25 km").performClick()
         composeTestRule.onNodeWithContentDescription("Back").performClick()
@@ -1425,7 +1425,7 @@ class ExploreFlowTest {
         filterButton().assertWidthIsEqualTo(48.dp)
         composeTestRule
             .onNodeWithContentDescription(
-                "Search filters. Current area: Kallakurichi, within 10 kilometres.",
+                "Search filters",
             )
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Kallakurichi · 10 km").assertIsDisplayed()
@@ -1446,16 +1446,16 @@ class ExploreFlowTest {
     }
 
     @Test
-    fun filterButton_reopen_doesNotDuplicateSearchAreaDestination() {
+    fun filterButton_reopen_doesNotDuplicateFiltersDestination() {
         setApp()
         openExplore()
 
         filterButton().performClick()
-        composeTestRule.onNodeWithText("Search area").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Filters").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Back").performClick()
 
         filterButton().performClick()
-        composeTestRule.onNodeWithText("Search area").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Filters").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Back").performClick()
         composeTestRule.onNodeWithText("Kallakurichi · 10 km").assertIsDisplayed()
     }

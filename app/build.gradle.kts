@@ -16,6 +16,7 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
+        // The unit-test manifest merge does not receive the secrets plugin's injected placeholder.
         manifestPlaceholders["PLACES_API_KEY"] = "DEFAULT_API_KEY"
     }
 
@@ -37,6 +38,8 @@ android {
 
     buildFeatures {
         compose = true
+        // The secrets plugin injects values into both BuildConfig and the manifest.
+        buildConfig = true
     }
 
     testOptions {
@@ -66,7 +69,6 @@ dependencies {
     implementation(project(":designsystem"))
 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.activity.compose)
@@ -78,7 +80,6 @@ dependencies {
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
 
     testImplementation(libs.junit)
