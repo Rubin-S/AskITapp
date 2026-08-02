@@ -37,9 +37,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import com.askit.app.explore.ExplorePersonResult
+import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreScreen
 import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
+import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreTaskResult
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.PersonMatchReason
@@ -48,6 +50,7 @@ import com.askit.designsystem.theme.AskITTheme
 import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -753,6 +756,31 @@ class ExploreFlowTest {
     }
 
     @Test
+    fun submittedServices_useCompactServiceCards_withProviderMetadataAndOneClick() {
+        var selectedPersonId: String? = null
+        setSubmittedContent(onPersonClick = { selectedPersonId = it })
+
+        composeTestRule.onNodeWithText("Services").performClick()
+
+        composeTestRule.onNodeWithTag("explore_submitted_services").assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("explore_service_result_card").assertCountEquals(2)
+        composeTestRule.onNodeWithText("Electrician").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Service professional").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Available today").assertIsDisplayed()
+        composeTestRule.onNodeWithText("4.8 (36)").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Kallakurichi").assertCountEquals(2)
+        composeTestRule.onNodeWithText("From ₹500").assertIsDisplayed()
+        composeTestRule.onNodeWithText("+2 other services").assertIsDisplayed()
+        composeTestRule.onNodeWithText("New").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Identity-only unrelated service").assertCountEquals(0)
+        composeTestRule.onAllNodesWithTag("explore_submitted_people").assertCountEquals(0)
+        composeTestRule.onAllNodesWithTag("explore_submitted_tasks").assertCountEquals(0)
+
+        composeTestRule.onNodeWithText("Electrician").performClick()
+        assertEquals("service-person", selectedPersonId)
+    }
+
+    @Test
     fun submittedResults_preserveSuppliedOrder_andRenderMoreThanFour() {
         val people = submittedPeople() + personResult(
             id = "person-6",
@@ -796,6 +824,284 @@ class ExploreFlowTest {
         composeTestRule.onNodeWithTag("explore_result_tabs").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("People and services").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Task 1").assertCountEquals(0)
+    }
+
+    @Test
+    fun submittedSort_visibilityRequiresScopedResultsCallbacksAndValidOptions() {
+        val options = supportedSortOptions()
+        val people = mutableStateOf(submittedPeople())
+        val personClick = mutableStateOf<((String) -> Unit)?>(null)
+        val available = mutableStateOf(options)
+        val selected = mutableStateOf(defaultSortOptions())
+        val sortCallback = mutableStateOf<((ExploreResultScope, ExploreSortOption) -> Unit)?>(null)
+        personClick.value = {}
+        sortCallback.value = { _, _ -> }
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = "electrician",
+                    searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
+                    onQueryChanged = {},
+                    onQueryCleared = {},
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                    submittedPeople = people.value,
+                    submittedTasks = submittedTasks(),
+                    availableSortOptions = available.value,
+                    selectedSortOptions = selected.value,
+                    onSortChanged = sortCallback.value,
+                    onPersonClick = personClick.value,
+                    onTaskClick = {},
+                )
+            }
+        }
+
+        composeTestRule.onAllNodesWithTag("explore_sort_control").assertCountEquals(0)
+        composeTestRule.onNodeWithText("People").performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Tasks").performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").assertIsDisplayed()
+
+        people.value = emptyList()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("People").performClick()
+        composeTestRule.onAllNodesWithTag("explore_sort_control").assertCountEquals(0)
+
+        people.value = submittedPeople()
+        personClick.value = null
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("People").performClick()
+        composeTestRule.onAllNodesWithTag("explore_sort_control").assertCountEquals(0)
+
+        personClick.value = {}
+        sortCallback.value = null
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("People").performClick()
+        composeTestRule.onAllNodesWithTag("explore_sort_control").assertCountEquals(0)
+
+        sortCallback.value = { _, _ -> }
+        available.value = mapOf(
+            ExploreResultScope.People to listOf(ExploreSortOption.BestMatch),
+        )
+        selected.value = mapOf(ExploreResultScope.People to ExploreSortOption.BestMatch)
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("People").performClick()
+        composeTestRule.onAllNodesWithTag("explore_sort_control").assertCountEquals(0)
+
+        available.value = options
+        selected.value = mapOf(
+            ExploreResultScope.People to ExploreSortOption.DueSoon,
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("People").performClick()
+        composeTestRule.onAllNodesWithTag("explore_sort_control").assertCountEquals(0)
+    }
+
+    @Test
+    fun submittedSort_menuUsesOnlySuppliedOrderAndSelectedSemantics() {
+        val options = mapOf(
+            ExploreResultScope.Services to listOf(
+                ExploreSortOption.RatingHighToLow,
+                ExploreSortOption.BestMatch,
+                ExploreSortOption.Nearest,
+            ),
+        )
+        setSubmittedContent(
+            availableSortOptions = options,
+            selectedSortOptions = mapOf(
+                ExploreResultScope.Services to ExploreSortOption.RatingHighToLow,
+            ),
+            onSortChanged = { _, _ -> },
+        )
+
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").performClick()
+
+        val labels = listOf("Rating: high to low", "Best match", "Nearest")
+        val tops = labels.map {
+            composeTestRule.onNodeWithText(it).assertIsDisplayed().fetchSemanticsNode().boundsInRoot.top
+        }
+        assertTrue(tops.zipWithNext().all { (first, second) -> first < second })
+        composeTestRule.onNodeWithText("Rating: high to low").assertIsSelected()
+        composeTestRule.onAllNodesWithText("Price: low to high").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Budget: low to high").assertCountEquals(0)
+    }
+
+    @Test
+    fun submittedSort_selectionIsControlled_andCurrentSelectionDoesNotCallback() {
+        val selected = mutableStateOf(defaultSortOptions())
+        var callbackCount = 0
+        var callbackScope: ExploreResultScope? = null
+        var callbackOption: ExploreSortOption? = null
+        setControlledSubmittedContent(
+            selected = selected,
+            onSortChanged = { scope, option ->
+                callbackCount++
+                callbackScope = scope
+                callbackOption = option
+                selected.value = selected.value + (scope to option)
+            },
+        )
+
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").performClick()
+        composeTestRule.onNodeWithText("Nearest").performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals(1, callbackCount)
+        assertEquals(ExploreResultScope.Services, callbackScope)
+        assertEquals(ExploreSortOption.Nearest, callbackOption)
+        composeTestRule.onNodeWithText("Sort by: Nearest").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Services").assertIsSelected()
+        composeTestRule.onAllNodesWithTag("explore_sort_menu").assertCountEquals(0)
+
+        composeTestRule.onNodeWithTag("explore_sort_control").performClick()
+        composeTestRule.onNodeWithText("Nearest").performClick()
+        assertEquals(1, callbackCount)
+        composeTestRule.onNodeWithText("Sort by: Nearest").assertIsDisplayed()
+    }
+
+    @Test
+    fun submittedSort_withoutCallerUpdate_doesNotOptimisticallyChangeTrigger() {
+        var callbackCount = 0
+        setSubmittedContent(
+            availableSortOptions = supportedSortOptions(),
+            selectedSortOptions = defaultSortOptions(),
+            onSortChanged = { _, _ -> callbackCount++ },
+        )
+
+        composeTestRule.onAllNodesWithText("Tasks")[0].performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").performClick()
+        composeTestRule.onNodeWithText("Newest").performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals(1, callbackCount)
+        composeTestRule.onNodeWithText("Sort by: Best match").assertIsDisplayed()
+    }
+
+    @Test
+    fun submittedSort_retainsEachScopeSelection_andTabChangeClosesMenu() {
+        val selected = mutableStateOf(defaultSortOptions())
+        setControlledSubmittedContent(
+            selected = selected,
+            onSortChanged = { scope, option ->
+                selected.value = selected.value + (scope to option)
+            },
+        )
+
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").performClick()
+        composeTestRule.onNodeWithText("Rating: high to low").performClick()
+        composeTestRule.onNodeWithText("Tasks").performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").performClick()
+        composeTestRule.onNodeWithText("Newest").performClick()
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithText("Sort by: Rating: high to low").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("explore_sort_control").performClick()
+        composeTestRule.onNodeWithText("Tasks").performClick()
+        composeTestRule.onAllNodesWithTag("explore_sort_menu").assertCountEquals(0)
+    }
+
+    @Test
+    fun submittedSort_menuStateIsNotRestoredAsOpen() {
+        val restorationTester = StateRestorationTester(composeTestRule)
+        restorationTester.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = "electrician",
+                    searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
+                    onQueryChanged = {},
+                    onQueryCleared = {},
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                    submittedPeople = submittedPeople(),
+                    submittedTasks = submittedTasks(),
+                    availableSortOptions = supportedSortOptions(),
+                    selectedSortOptions = defaultSortOptions(),
+                    onSortChanged = { _, _ -> },
+                    onPersonClick = {},
+                    onTaskClick = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.onNodeWithTag("explore_sort_control").performClick()
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeTestRule.onAllNodesWithTag("explore_sort_menu").assertCountEquals(0)
+    }
+
+    @Test
+    fun submittedSort_remainsReachableAtSupportedWidthsAndTamilLargeText() {
+        val contentWidth = mutableStateOf(320.dp)
+        composeTestRule.setContent {
+            val configuration = Configuration(LocalConfiguration.current).apply {
+                setLocale(Locale.forLanguageTag("ta"))
+            }
+            val tamilContext = LocalContext.current.createConfigurationContext(configuration)
+            CompositionLocalProvider(
+                LocalContext provides tamilContext,
+                LocalDensity provides Density(1f, 1.3f),
+            ) {
+                AskITTheme(darkTheme = false) {
+                    Box(
+                        modifier = androidx.compose.ui.Modifier
+                            .width(contentWidth.value)
+                            .height(900.dp),
+                    ) {
+                        ExploreScreen(
+                            query = "electrician",
+                            searchArea = testSearchArea(),
+                            recentSearches = emptyList(),
+                            onQueryChanged = {},
+                            onQueryCleared = {},
+                            onQuerySubmitted = {},
+                            onRecentSearchRemoved = {},
+                            onRecentSearchesCleared = {},
+                            onSearchFiltersClick = {},
+                            submittedPeople = submittedPeople(),
+                            submittedTasks = submittedTasks(),
+                            availableSortOptions = supportedSortOptions(),
+                            selectedSortOptions = defaultSortOptions(),
+                            onSortChanged = { _, _ -> },
+                            onPersonClick = {},
+                            onTaskClick = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithText("சேவைகள்").performClick()
+        composeTestRule.onNodeWithText("வரிசைப்படுத்து: சிறந்த பொருத்தம்").assertIsDisplayed()
+        listOf(320, 360, 412).forEach { width ->
+            contentWidth.value = width.dp
+            composeTestRule.waitForIdle()
+            val bounds = composeTestRule
+                .onNodeWithTag("explore_sort_control")
+                .assertIsDisplayed()
+                .fetchSemanticsNode()
+                .boundsInRoot
+            assertTrue(bounds.left >= 0f)
+            assertTrue(bounds.right <= width.toFloat())
+            val cardBounds = composeTestRule
+                .onAllNodesWithTag("explore_service_result_card")[0]
+                .assertIsDisplayed()
+                .fetchSemanticsNode()
+                .boundsInRoot
+            assertTrue(cardBounds.left >= 0f)
+            assertTrue(cardBounds.right <= width.toFloat())
+        }
     }
 
     @Test
@@ -1282,6 +1588,9 @@ class ExploreFlowTest {
         query: String = "electrician",
         people: List<ExplorePersonResult> = submittedPeople(),
         tasks: List<ExploreTaskResult> = submittedTasks(),
+        availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
+        selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
+        onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
         onQuerySubmitted: (String) -> Unit = {},
         onPersonClick: ((String) -> Unit)? = {},
         onTaskClick: ((String) -> Unit)? = {},
@@ -1300,12 +1609,64 @@ class ExploreFlowTest {
                     onSearchFiltersClick = {},
                     submittedPeople = people,
                     submittedTasks = tasks,
+                    availableSortOptions = availableSortOptions,
+                    selectedSortOptions = selectedSortOptions,
+                    onSortChanged = onSortChanged,
                     onPersonClick = onPersonClick,
                     onTaskClick = onTaskClick,
                 )
             }
         }
     }
+
+    private fun setControlledSubmittedContent(
+        selected: androidx.compose.runtime.MutableState<Map<ExploreResultScope, ExploreSortOption>>,
+        onSortChanged: (ExploreResultScope, ExploreSortOption) -> Unit,
+    ) {
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = "electrician",
+                    searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
+                    onQueryChanged = {},
+                    onQueryCleared = {},
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                    submittedPeople = submittedPeople(),
+                    submittedTasks = submittedTasks(),
+                    availableSortOptions = supportedSortOptions(),
+                    selectedSortOptions = selected.value,
+                    onSortChanged = onSortChanged,
+                    onPersonClick = {},
+                    onTaskClick = {},
+                )
+            }
+        }
+    }
+
+    private fun supportedSortOptions() = mapOf(
+        ExploreResultScope.People to listOf(
+            ExploreSortOption.BestMatch,
+            ExploreSortOption.Nearest,
+        ),
+        ExploreResultScope.Services to listOf(
+            ExploreSortOption.BestMatch,
+            ExploreSortOption.Nearest,
+            ExploreSortOption.RatingHighToLow,
+        ),
+        ExploreResultScope.Tasks to listOf(
+            ExploreSortOption.BestMatch,
+            ExploreSortOption.Newest,
+            ExploreSortOption.Nearest,
+            ExploreSortOption.DueSoon,
+        ),
+    )
+
+    private fun defaultSortOptions() = supportedSortOptions()
+        .mapValues { (_, options) -> options.first() }
 
     private fun submittedPeople(): List<ExplorePersonResult> = listOf(
         personResult(
@@ -1330,6 +1691,9 @@ class ExploreFlowTest {
             primaryService = "Electrician",
             rating = 4.8,
             reviewCount = 36,
+            additionalServices = listOf("Fan installation", "Wiring"),
+            priceLabel = "From ₹500",
+            statusLabel = "Available today",
             reasons = setOf(PersonMatchReason.Service),
         ),
         personResult(
@@ -1355,6 +1719,7 @@ class ExploreFlowTest {
         name: String,
         reasons: Set<PersonMatchReason>,
         primaryService: String? = "Electrician",
+        additionalServices: List<String> = emptyList(),
         rating: Double? = null,
         reviewCount: Int = 0,
         priceLabel: String? = null,
@@ -1364,7 +1729,7 @@ class ExploreFlowTest {
         name = name,
         avatarUrl = null,
         primaryService = primaryService,
-        additionalServices = emptyList(),
+        additionalServices = additionalServices,
         rating = rating,
         reviewCount = reviewCount,
         locationLabel = "Kallakurichi",

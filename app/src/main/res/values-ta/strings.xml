@@ -48,4 +48,15 @@
     <string name="explore_tasks">பணிகள்</string>
     <string name="explore_people_and_services">மக்கள் மற்றும் சேவைகள்</string>
     <string name="explore_services">சேவைகள்</string>
+    <string name="explore_sort_by">வரிசைப்படுத்து: %1$s</string>
+    <string name="explore_sort_best_match">சிறந்த பொருத்தம்</string>
+    <string name="explore_sort_nearest">அருகிலுள்ளவை</string>
+    <string name="explore_sort_rating_high_to_low">மதிப்பீடு: அதிகம் முதல் குறைவு வரை</string>
+    <string name="explore_sort_newest">புதியவை</string>
+    <string name="explore_sort_due_soon">விரைவில் முடிக்க வேண்டியவை</string>
+    <string name="explore_view_service">சேவையைப் பார்க்கவும்: %1$s</string>
+    <plurals name="explore_additional_services">
+        <item quantity="one">+%1$d கூடுதல் சேவை</item>
+        <item quantity="other">+%1$d கூடுதல் சேவைகள்</item>
+    </plurals>
 </resources>

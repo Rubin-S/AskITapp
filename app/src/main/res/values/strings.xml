@@ -48,4 +48,15 @@
     <string name="explore_tasks">Tasks</string>
     <string name="explore_people_and_services">People and services</string>
     <string name="explore_services">Services</string>
+    <string name="explore_sort_by">Sort by: %1$s</string>
+    <string name="explore_sort_best_match">Best match</string>
+    <string name="explore_sort_nearest">Nearest</string>
+    <string name="explore_sort_rating_high_to_low">Rating: high to low</string>
+    <string name="explore_sort_newest">Newest</string>
+    <string name="explore_sort_due_soon">Due soon</string>
+    <string name="explore_view_service">View service: %1$s</string>
+    <plurals name="explore_additional_services">
+        <item quantity="one">+%1$d other service</item>
+        <item quantity="other">+%1$d other services</item>
+    </plurals>
 </resources>

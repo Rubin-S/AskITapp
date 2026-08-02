@@ -167,7 +167,7 @@ fun PersonResultItem(
 }
 
 @Composable
-internal fun AskITAvatar(
+fun AskITAvatar(
     avatarUrl: String?,
     avatarSize: Dp,
     fallbackIconSize: Dp,
@@ -199,6 +199,24 @@ internal fun AskITAvatar(
 }
 
 @Composable
+fun PersonResultMetadata(
+    rating: Double?,
+    reviewCount: Int,
+    locationLabel: String,
+    price: String?,
+    modifier: Modifier = Modifier,
+) {
+    ResultMetadataLine(
+        rating = rating,
+        reviewCount = reviewCount,
+        locationLabel = locationLabel,
+        price = price,
+        showServiceMetadata = true,
+        modifier = modifier,
+    )
+}
+
+@Composable
 private fun ResultAvatar(avatarUrl: String?) {
     Box(
         modifier = Modifier
@@ -224,6 +242,7 @@ private fun ResultMetadataLine(
     locationLabel: String,
     price: String?,
     showServiceMetadata: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     val ratingFormatter = remember(locale) {
@@ -241,7 +260,7 @@ private fun ResultMetadataLine(
     val location = locationLabel.trim().takeIf(String::isNotEmpty)
 
     FlowRow(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {

@@ -3,8 +3,10 @@ package com.askit.app.explore
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -27,12 +30,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.SecondaryScrollableTabRow
@@ -46,6 +53,7 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +62,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -63,6 +72,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -75,6 +86,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.R
+import com.askit.designsystem.people.AskITAvatar
+import com.askit.designsystem.people.PersonResultMetadata
 import com.askit.designsystem.people.PersonResultItem
 import com.askit.designsystem.tasks.TaskResultItem
 import com.askit.designsystem.tasks.TaskResultStatus
@@ -113,11 +126,19 @@ enum class PersonMatchReason {
     Service,
 }
 
-internal enum class ExploreResultScope(@StringRes val labelRes: Int) {
+enum class ExploreResultScope(@StringRes val labelRes: Int) {
     All(R.string.explore_all),
     People(R.string.explore_people),
     Services(R.string.explore_services),
     Tasks(R.string.explore_tasks),
+}
+
+enum class ExploreSortOption(@StringRes val labelRes: Int) {
+    BestMatch(R.string.explore_sort_best_match),
+    Nearest(R.string.explore_sort_nearest),
+    RatingHighToLow(R.string.explore_sort_rating_high_to_low),
+    Newest(R.string.explore_sort_newest),
+    DueSoon(R.string.explore_sort_due_soon),
 }
 
 data class ExploreTaskResult(
@@ -139,6 +160,9 @@ fun ExploreRoute(
     onSearchFiltersClick: () -> Unit,
     submittedPeople: List<ExplorePersonResult> = emptyList(),
     submittedTasks: List<ExploreTaskResult> = emptyList(),
+    availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
+    selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
+    onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
 ) {
@@ -156,6 +180,9 @@ fun ExploreRoute(
         onSearchFiltersClick = onSearchFiltersClick,
         submittedPeople = submittedPeople,
         submittedTasks = submittedTasks,
+        availableSortOptions = availableSortOptions,
+        selectedSortOptions = selectedSortOptions,
+        onSortChanged = onSortChanged,
         onPersonClick = onPersonClick,
         onTaskClick = onTaskClick,
     )
@@ -176,6 +203,9 @@ fun ExploreScreen(
     tasks: List<ExploreTaskResult> = emptyList(),
     submittedPeople: List<ExplorePersonResult> = emptyList(),
     submittedTasks: List<ExploreTaskResult> = emptyList(),
+    availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
+    selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
+    onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
 ) {
@@ -260,6 +290,9 @@ fun ExploreScreen(
                     selectedScope = selectedScope,
                     people = submittedPeople,
                     tasks = submittedTasks,
+                    availableSortOptions = availableSortOptions,
+                    selectedSortOptions = selectedSortOptions,
+                    onSortChanged = onSortChanged,
                     onPersonClick = personClick,
                     onTaskClick = taskClick,
                     onScopeSelected = { selectedScopeOrdinal = it.ordinal },
@@ -515,12 +548,17 @@ private fun SubmittedSearchResults(
     selectedScope: ExploreResultScope,
     people: List<ExplorePersonResult>,
     tasks: List<ExploreTaskResult>,
+    availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>>,
+    selectedSortOptions: Map<ExploreResultScope, ExploreSortOption>,
+    onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)?,
     onPersonClick: ((String) -> Unit)?,
     onTaskClick: ((String) -> Unit)?,
     onScopeSelected: (ExploreResultScope) -> Unit,
 ) {
     val identityPeople = people.filter { PersonMatchReason.Identity in it.matchReasons }
-    val servicePeople = people.filter { PersonMatchReason.Service in it.matchReasons }
+    val servicePeople = people.filter {
+        PersonMatchReason.Service in it.matchReasons && !it.primaryService.isNullOrBlank()
+    }
 
     Column(
         modifier = Modifier
@@ -544,6 +582,39 @@ private fun SubmittedSearchResults(
                             text = stringResource(scope.labelRes),
                             maxLines = 1,
                         )
+                    },
+                )
+            }
+        }
+
+        val hasVisibleResults = when (selectedScope) {
+            ExploreResultScope.All -> false
+            ExploreResultScope.People -> identityPeople.isNotEmpty() && onPersonClick != null
+            ExploreResultScope.Services -> servicePeople.isNotEmpty() && onPersonClick != null
+            ExploreResultScope.Tasks -> tasks.isNotEmpty() && onTaskClick != null
+        }
+        val options = availableSortOptions[selectedScope].orEmpty()
+        val selectedOption = selectedSortOptions[selectedScope]
+        val sortCallback = onSortChanged
+        if (
+            hasVisibleResults &&
+            options.size >= 2 &&
+            selectedOption != null &&
+            selectedOption in options &&
+            sortCallback != null
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                ExploreSortControl(
+                    scope = selectedScope,
+                    options = options,
+                    selectedOption = selectedOption,
+                    onOptionSelected = { option ->
+                        sortCallback(selectedScope, option)
                     },
                 )
             }
@@ -582,12 +653,7 @@ private fun SubmittedSearchResults(
 
             ExploreResultScope.Services -> {
                 if (servicePeople.isNotEmpty() && onPersonClick != null) {
-                    ExploreResultSection(
-                        heading = null,
-                        testTag = "explore_submitted_services",
-                    ) {
-                        PersonResultRows(servicePeople, onPersonClick)
-                    }
+                    ServiceResultRows(servicePeople, onPersonClick)
                 }
             }
 
@@ -600,6 +666,59 @@ private fun SubmittedSearchResults(
                         TaskResultRows(tasks, onTaskClick)
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExploreSortControl(
+    scope: ExploreResultScope,
+    options: List<ExploreSortOption>,
+    selectedOption: ExploreSortOption,
+    onOptionSelected: (ExploreSortOption) -> Unit,
+) {
+    var expanded by remember(scope) { mutableStateOf(false) }
+
+    Box {
+        OutlinedButton(
+            onClick = { expanded = true },
+            modifier = Modifier.testTag("explore_sort_control"),
+        ) {
+            Text(
+                text = stringResource(
+                    R.string.explore_sort_by,
+                    stringResource(selectedOption.labelRes),
+                ),
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.testTag("explore_sort_menu"),
+        ) {
+            options.forEach { option ->
+                val isSelected = option == selectedOption
+                DropdownMenuItem(
+                    text = { Text(stringResource(option.labelRes)) },
+                    onClick = {
+                        expanded = false
+                        if (!isSelected) onOptionSelected(option)
+                    },
+                    modifier = Modifier.semantics {
+                        selected = isSelected
+                    },
+                    leadingIcon = if (isSelected) {
+                        {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_check),
+                                contentDescription = null,
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                )
             }
         }
     }
@@ -624,6 +743,137 @@ private fun PersonResultRows(
             statusLabel = person.statusLabel,
             onClick = { onClick(person.id) },
         )
+    }
+}
+
+@Composable
+private fun ServiceResultRows(
+    people: List<ExplorePersonResult>,
+    onClick: (String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp)
+            .testTag("explore_submitted_services"),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        people.forEach { person ->
+            CompactServiceResultCard(
+                result = person,
+                onClick = { onClick(person.id) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompactServiceResultCard(
+    result: ExplorePersonResult,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val service = result.primaryService?.trim().orEmpty()
+    val provider = result.name.trim()
+    val status = result.statusLabel?.trim()?.takeIf(String::isNotEmpty)
+    val additionalServiceCount = result.additionalServices.count { additionalService ->
+        val normalized = additionalService.trim()
+        normalized.isNotEmpty() && !normalized.equals(service, ignoreCase = true)
+    }
+    val clickLabel = stringResource(R.string.explore_view_service, service)
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("explore_service_result_card")
+            .clickable(
+                role = Role.Button,
+                onClickLabel = clickLabel,
+                onClick = onClick,
+            ),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = service,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CompositionLocalProvider(
+                        LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
+                    ) {
+                        AskITAvatar(
+                            avatarUrl = result.avatarUrl,
+                            avatarSize = 40.dp,
+                            fallbackIconSize = 28.dp,
+                        )
+                    }
+                }
+                Spacer(Modifier.width(8.dp))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        text = provider,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (status != null) {
+                        Text(
+                            text = status,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    PersonResultMetadata(
+                        rating = result.rating,
+                        reviewCount = result.reviewCount,
+                        locationLabel = result.locationLabel,
+                        price = result.priceLabel,
+                    )
+                }
+            }
+            if (additionalServiceCount > 0) {
+                Text(
+                    text = pluralStringResource(
+                        R.plurals.explore_additional_services,
+                        additionalServiceCount,
+                        additionalServiceCount,
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }
 
