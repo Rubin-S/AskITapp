@@ -26,6 +26,7 @@ class AskITThemeTest {
         var onSurface = Color.Unspecified
         var secondaryContainer = Color.Unspecified
         var onSecondaryContainer = Color.Unspecified
+        var outline = Color.Unspecified
 
         composeTestRule.setContent {
             AskITTheme(darkTheme = false) {
@@ -35,6 +36,7 @@ class AskITThemeTest {
                 onSurface = MaterialTheme.colorScheme.onSurface
                 secondaryContainer = MaterialTheme.colorScheme.secondaryContainer
                 onSecondaryContainer = MaterialTheme.colorScheme.onSecondaryContainer
+                outline = MaterialTheme.colorScheme.outline
             }
         }
         composeTestRule.waitForIdle()
@@ -45,6 +47,7 @@ class AskITThemeTest {
         assertEquals(Color(0xFF000000), onSurface)
         assertEquals(Color(0xFFF5F5F5), secondaryContainer)
         assertEquals(Color(0xFF000000), onSecondaryContainer)
+        assertEquals(Color(0xFF8A8A8A), outline)
     }
 
     @Test
