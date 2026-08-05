@@ -84,7 +84,7 @@ class NavigationPersistenceTest {
     fun filterButton_opensNestedFilters_andBackReturnsToExplore() {
         openExplore()
 
-        composeTestRule.onNodeWithTag("explore_filter_button").performClick()
+        composeTestRule.onNodeWithTag("explore_search_filter_action").performClick()
         composeTestRule.onNodeWithText("Filters").assertIsDisplayed()
         composeTestRule.onAllNodesWithContentDescription("Create").assertCountEquals(0)
 
@@ -96,7 +96,7 @@ class NavigationPersistenceTest {
     @Test
     fun activityRecreation_preservesConfirmedSearchAreaFromFilters() {
         openExplore()
-        composeTestRule.onNodeWithTag("explore_filter_button").performClick()
+        composeTestRule.onNodeWithTag("explore_search_filter_action").performClick()
         composeTestRule.onNodeWithContentDescription("Within 25 km").performClick()
         composeTestRule.onNodeWithText("Apply").performClick()
 
@@ -141,7 +141,7 @@ class NavigationPersistenceTest {
         composeTestRule.onNodeWithTag("explore_search_field").performTextInput("elec")
         composeTestRule.onNodeWithTag("explore_typed_suggestions").assertIsDisplayed()
 
-        composeTestRule.onNodeWithTag("explore_filter_button").performClick()
+        composeTestRule.onNodeWithTag("explore_search_filter_action").performClick()
 
         composeTestRule.onNodeWithText("Filters").assertIsDisplayed()
         composeTestRule.onAllNodesWithTag("explore_typed_suggestions").assertCountEquals(0)

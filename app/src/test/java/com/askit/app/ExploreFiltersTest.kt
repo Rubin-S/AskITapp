@@ -13,6 +13,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -220,7 +221,13 @@ class ExploreFiltersTest {
         composeTestRule.onAllNodesWithTag("explore_applied_filters").assertCountEquals(0)
         composeTestRule.onAllNodesWithTag("explore_sort_control").assertCountEquals(0)
         composeTestRule.onNodeWithText("Services").performClick()
-        composeTestRule.onNodeWithContentDescription("Search filters, 2 filters applied").assertIsDisplayed()
+        composeTestRule
+            .onAllNodesWithTag("explore_search_filter_action")
+            .assertCountEquals(1)
+        composeTestRule
+            .onAllNodesWithContentDescription("Search filters, 2 filters applied")
+            .assertCountEquals(1)
+        composeTestRule.onAllNodesWithText("2", useUnmergedTree = true).assertCountEquals(0)
         composeTestRule.onNodeWithText("4+ rating").assertIsDisplayed()
         composeTestRule.onNodeWithText("Remote").performClick()
         composeTestRule.waitForIdle()
@@ -334,7 +341,7 @@ class ExploreFiltersTest {
 
         composeTestRule.onNodeWithContentDescription("Explore").performClick()
         composeTestRule.onNodeWithText("Services").performClick()
-        composeTestRule.onNodeWithTag("explore_filter_button").performClick()
+        composeTestRule.onNodeWithTag("explore_search_filter_action").performClick()
         composeTestRule.onNodeWithTag("explore_filter_option_remote").performClick()
         composeTestRule.onNodeWithText("Apply").performClick()
         composeTestRule.waitForIdle()

@@ -94,7 +94,7 @@ class ExploreScreenshotTest {
         setApp(darkTheme = false, submittedResults = true)
         openExplore()
         composeTestRule.onNodeWithText("Services").performClick()
-        composeTestRule.onNodeWithTag("explore_filter_button").performClick()
+        composeTestRule.onNodeWithTag("explore_search_filter_action").performClick()
         capture("explore_filters_services_light")
     }
 
@@ -103,7 +103,7 @@ class ExploreScreenshotTest {
         setApp(darkTheme = true, submittedResults = true)
         openExplore()
         composeTestRule.onNodeWithText("Services").performClick()
-        composeTestRule.onNodeWithTag("explore_filter_button").performClick()
+        composeTestRule.onNodeWithTag("explore_search_filter_action").performClick()
         capture("explore_filters_services_dark")
     }
 
