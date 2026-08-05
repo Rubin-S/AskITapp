@@ -217,6 +217,46 @@ class ExploreScreenshotTest {
         capture("explore_result_refreshing_large_text_320_light")
     }
 
+    @Test
+    @Config(qualifiers = "w800dp-h412dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_submitted_results_landscape_800_light() {
+        setApp(darkTheme = false, submittedResults = true)
+        openExplore()
+        capture("explore_submitted_results_landscape_800_light")
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h412dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_submitted_results_constrained_320_light() {
+        setApp(darkTheme = false, submittedResults = true)
+        openExplore()
+        capture("explore_submitted_results_constrained_320_light")
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_result_font_scale_130_320_light() {
+        setApp(darkTheme = false, submittedResults = true, fontScale = 1.3f)
+        openExplore()
+        capture("explore_result_font_scale_130_320_light")
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_result_font_scale_150_320_light() {
+        setApp(darkTheme = false, submittedResults = true, fontScale = 1.5f)
+        openExplore()
+        capture("explore_result_font_scale_150_320_light")
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_result_font_scale_200_320_light() {
+        setApp(darkTheme = false, submittedResults = true, fontScale = 2f)
+        openExplore()
+        capture("explore_result_font_scale_200_320_light")
+    }
+
     private fun setApp(
         darkTheme: Boolean,
         withHistory: Boolean = false,
