@@ -8,7 +8,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +32,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -43,7 +48,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
@@ -80,6 +84,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -92,9 +97,12 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.R
 import com.askit.designsystem.people.AskITAvatar
@@ -114,9 +122,20 @@ private val EXPLORE_CATEGORIES = listOf(
     ExploreCategory(R.string.explore_category_appliance_repair, R.drawable.service_appliance_repair),
 )
 
+private val EXPLORE_BROWSE_CATEGORIES = EXPLORE_CATEGORIES.take(5) + ExploreCategory(
+    labelRes = R.string.explore_category_view_all,
+    artworkRes = R.drawable.ic_view_all,
+    isViewAll = true,
+)
+
+private val BROWSE_CATEGORY_SPACING = 12.dp
+private val BROWSE_CATEGORY_MIN_WIDTH = 88.dp
+private val BROWSE_CATEGORY_MAX_WIDTH = 160.dp
+
 private data class ExploreCategory(
     @StringRes val labelRes: Int,
     @DrawableRes val artworkRes: Int,
+    val isViewAll: Boolean = false,
 )
 
 data class ExplorePersonResult(
@@ -549,6 +568,7 @@ fun ExploreScreen(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun ExploreHeader(
     query: String,
     searchArea: ExploreSearchArea,
@@ -562,36 +582,49 @@ private fun ExploreHeader(
     onSearchFocused: () -> Unit,
     onCloseSearch: () -> Unit,
 ) {
+    val appliedFilterCount = normalizeAppliedExploreFilterOptions(
+        scope = selectedScope,
+        availableOptions = availableFilterOptions[selectedScope].orEmpty(),
+        appliedOptions = appliedFilterOptions[selectedScope].orEmpty(),
+    ).size
+    val filterContentDescription = if (appliedFilterCount == 0) {
+        stringResource(R.string.explore_search_filters_content_description)
+    } else {
+        pluralStringResource(
+            R.plurals.explore_search_filters_applied_content_description,
+            appliedFilterCount,
+            appliedFilterCount,
+        )
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = onQueryChanged,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("explore_search_field")
-                    .onFocusChanged { focusState ->
-                        if (focusState.isFocused) onSearchFocused()
-                    },
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.explore_search_placeholder),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChanged,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("explore_search_field")
+                .onFocusChanged { focusState ->
+                    if (focusState.isFocused) onSearchFocused()
                 },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_search),
-                        contentDescription = null,
-                    )
-                },
-                trailingIcon = if (query.isNotEmpty()) {
-                    {
+            placeholder = {
+                Text(
+                    text = stringResource(R.string.explore_search_placeholder),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(R.drawable.ic_search),
+                    contentDescription = null,
+                )
+            },
+            trailingIcon = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (query.isNotEmpty()) {
                         IconButton(onClick = onQueryCleared) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_clear),
@@ -599,34 +632,63 @@ private fun ExploreHeader(
                             )
                         }
                     }
-                } else {
-                    null
+                    BadgedBox(
+                        badge = {
+                            if (appliedFilterCount > 0) {
+                                Badge(
+                                    modifier = Modifier.clearAndSetSemantics {},
+                                ) {
+                                    Text(
+                                        text = appliedFilterCount.toString(),
+                                        modifier = Modifier.clearAndSetSemantics {},
+                                    )
+                                }
+                            }
+                        },
+                    ) {
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                                positioning = TooltipAnchorPosition.Above,
+                            ),
+                            tooltip = {
+                                PlainTooltip {
+                                    Text(stringResource(R.string.explore_filters_tooltip))
+                                }
+                            },
+                            state = rememberTooltipState(),
+                        ) {
+                            IconButton(
+                                onClick = onSearchFiltersClick,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .testTag("explore_search_filter_action"),
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_filter_list),
+                                    contentDescription = filterContentDescription,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Search,
+            ),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    onQuerySubmitted(query)
+                    onCloseSearch()
                 },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Search,
-                ),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        onQuerySubmitted(query)
-                        onCloseSearch()
-                    },
-                ),
-                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                ),
-            )
-            SearchFiltersButton(
-                appliedFilterCount = normalizeAppliedExploreFilterOptions(
-                    scope = selectedScope,
-                    availableOptions = availableFilterOptions[selectedScope].orEmpty(),
-                    appliedOptions = appliedFilterOptions[selectedScope].orEmpty(),
-                ).size,
-                onClick = onSearchFiltersClick,
-            )
-        }
+            ),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            ),
+        )
         SearchAreaSummary(searchArea)
     }
 }
@@ -658,9 +720,12 @@ private fun ActiveSearchContent(
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun BrowseServices(
     onCategorySelected: (String) -> Unit,
 ) {
+    var showAllCategories by rememberSaveable { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -673,23 +738,53 @@ private fun BrowseServices(
             modifier = Modifier.semantics { heading() },
         )
         Spacer(Modifier.height(12.dp))
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("explore_browse_category_row"),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            items(
-                items = EXPLORE_CATEGORIES,
-                key = { "category:${it.labelRes}" },
-                contentType = { "category" },
-            ) { categoryDefinition ->
-                val category = stringResource(categoryDefinition.labelRes)
-                ServiceCategoryTile(
-                    category = category,
-                    artworkRes = categoryDefinition.artworkRes,
-                    onClick = { onCategorySelected(category) },
-                )
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val columnCount = when {
+                maxWidth >= BROWSE_CATEGORY_MIN_WIDTH * 2f + BROWSE_CATEGORY_SPACING -> 2
+                else -> 1
+            }
+            val categoryWidth = (
+                (maxWidth - BROWSE_CATEGORY_SPACING * (columnCount - 1).toFloat()) /
+                    columnCount.toFloat()
+                ).coerceAtMost(BROWSE_CATEGORY_MAX_WIDTH)
+            val categories = if (showAllCategories) {
+                EXPLORE_CATEGORIES
+            } else {
+                EXPLORE_BROWSE_CATEGORIES
+            }
+
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("explore_browse_categories"),
+                maxItemsInEachRow = columnCount,
+                horizontalArrangement = Arrangement.spacedBy(
+                    BROWSE_CATEGORY_SPACING,
+                    Alignment.CenterHorizontally,
+                ),
+                verticalArrangement = Arrangement.spacedBy(BROWSE_CATEGORY_SPACING),
+            ) {
+                categories.forEach { categoryDefinition ->
+                    val category = stringResource(categoryDefinition.labelRes)
+                    val clickLabel = if (categoryDefinition.isViewAll) {
+                        stringResource(R.string.explore_view_all_services)
+                    } else {
+                        stringResource(R.string.explore_search_category, category)
+                    }
+                    ServiceCategoryTile(
+                        category = category,
+                        artworkRes = categoryDefinition.artworkRes,
+                        tileWidth = categoryWidth,
+                        onClickLabel = clickLabel,
+                        onClick = {
+                            if (categoryDefinition.isViewAll) {
+                                showAllCategories = true
+                            } else {
+                                onCategorySelected(category)
+                            }
+                        },
+                    )
+                }
             }
         }
     }
@@ -699,17 +794,17 @@ private fun BrowseServices(
 private fun ServiceCategoryTile(
     category: String,
     @DrawableRes artworkRes: Int,
+    tileWidth: Dp,
+    onClickLabel: String,
     onClick: () -> Unit,
 ) {
-    val searchLabel = stringResource(R.string.explore_search_category, category)
-
     Card(
         modifier = Modifier
-            .width(120.dp)
+            .width(tileWidth)
             .heightIn(min = 136.dp)
             .clickable(
                 role = Role.Button,
-                onClickLabel = searchLabel,
+                onClickLabel = onClickLabel,
                 onClick = onClick,
             ),
         shape = MaterialTheme.shapes.medium,
@@ -721,21 +816,27 @@ private fun ServiceCategoryTile(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 8.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            androidx.compose.foundation.Image(
-                painter = painterResource(artworkRes),
-                contentDescription = null,
+            Box(
                 modifier = Modifier.size(72.dp),
-            )
+                contentAlignment = Alignment.Center,
+            ) {
+                androidx.compose.foundation.Image(
+                    painter = painterResource(artworkRes),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit,
+                )
+            }
             Spacer(Modifier.height(8.dp))
             Text(
                 text = category,
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                minLines = 2,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -1993,48 +2094,6 @@ private fun SuggestedCategories(onCategorySelected: (String) -> Unit) {
                     },
                 )
             }
-        }
-    }
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun SearchFiltersButton(
-    appliedFilterCount: Int,
-    onClick: () -> Unit,
-) {
-    val contentDescription = if (appliedFilterCount == 0) {
-        stringResource(R.string.explore_search_filters_content_description)
-    } else {
-        pluralStringResource(
-            R.plurals.explore_search_filters_applied_content_description,
-            appliedFilterCount,
-            appliedFilterCount,
-        )
-    }
-
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-            positioning = TooltipAnchorPosition.Above,
-        ),
-        tooltip = {
-            PlainTooltip {
-                Text(stringResource(R.string.explore_filters_tooltip))
-            }
-        },
-        state = rememberTooltipState(),
-    ) {
-        OutlinedIconButton(
-            onClick = onClick,
-            modifier = Modifier
-                .size(48.dp)
-                .testTag("explore_filter_button"),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_filter_list),
-                contentDescription = contentDescription,
-                modifier = Modifier.size(24.dp),
-            )
         }
     }
 }

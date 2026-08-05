@@ -97,4 +97,6 @@
         <item quantity="one">+%1$d கூடுதல் சேவை</item>
         <item quantity="other">+%1$d கூடுதல் சேவைகள்</item>
     </plurals>
+    <string name="explore_category_view_all">அனைத்தையும் காண்க</string>
+    <string name="explore_view_all_services">அனைத்து சேவைகளையும் காண்க</string>
 </resources>

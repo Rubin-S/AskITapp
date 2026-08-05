@@ -97,4 +97,6 @@
         <item quantity="one">+%1$d other service</item>
         <item quantity="other">+%1$d other services</item>
     </plurals>
+    <string name="explore_category_view_all">View all</string>
+    <string name="explore_view_all_services">View all services</string>
 </resources>

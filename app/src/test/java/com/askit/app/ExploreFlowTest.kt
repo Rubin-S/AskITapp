@@ -106,7 +106,7 @@ class ExploreFlowTest {
     }
 
     @Test
-    fun browseServices_rendersAllSixLocalizedCategoryActions() {
+    fun browseServices_rendersFiveCategories_andViewAllExpandsTheSixth_withoutHorizontalScroll() {
         setApp()
         openExplore()
 
@@ -116,15 +116,14 @@ class ExploreFlowTest {
             "Cleaning",
             "AC repair",
             "Home tutor",
-            "Appliance repair",
-        ).forEachIndexed { index, category ->
-            composeTestRule.onNodeWithTag("explore_browse_category_row").performScrollToIndex(index)
+            "View all",
+        ).forEach { category ->
             composeTestRule.onNodeWithText(category).assertHasClickAction()
         }
 
-        composeTestRule.onNodeWithTag("explore_browse_category_row")
-            .performTouchInput { swipeLeft() }
-        composeTestRule.onNodeWithText("Appliance repair").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_browse_categories").assertIsDisplayed()
+        composeTestRule.onNodeWithText("View all").performClick()
+        composeTestRule.onNodeWithText("Appliance repair").assertHasClickAction()
     }
 
     @Test
@@ -200,7 +199,40 @@ class ExploreFlowTest {
             contentWidth.value = width.dp
             composeTestRule.waitForIdle()
             composeTestRule.onNodeWithText("Browse services").assertIsDisplayed()
-            composeTestRule.onNodeWithTag("explore_browse_category_row").assertIsDisplayed()
+            composeTestRule.onNodeWithTag("explore_browse_categories").assertIsDisplayed()
+
+            val firstRowTop = composeTestRule
+                .onNodeWithText("Electrician")
+                .fetchSemanticsNode()
+                .boundsInRoot
+                .top
+            assertEquals(
+                firstRowTop,
+                composeTestRule.onNodeWithText("Plumber").fetchSemanticsNode().boundsInRoot.top,
+                0.1f,
+            )
+            val secondRowTop = composeTestRule
+                .onNodeWithText("Cleaning")
+                .fetchSemanticsNode()
+                .boundsInRoot
+                .top
+            assertEquals(
+                secondRowTop,
+                composeTestRule.onNodeWithText("AC repair").fetchSemanticsNode().boundsInRoot.top,
+                0.1f,
+            )
+            assertTrue(secondRowTop > firstRowTop)
+            val thirdRowTop = composeTestRule
+                .onNodeWithText("Home tutor")
+                .fetchSemanticsNode()
+                .boundsInRoot
+                .top
+            assertEquals(
+                thirdRowTop,
+                composeTestRule.onNodeWithText("View all").fetchSemanticsNode().boundsInRoot.top,
+                0.1f,
+            )
+            assertTrue(thirdRowTop > secondRowTop)
         }
     }
 
@@ -1627,7 +1659,7 @@ class ExploreFlowTest {
         openExplore()
         searchField().performTextInput("electrician")
 
-        filterButton().performClick()
+        filterAction().performClick()
         composeTestRule.onNodeWithText("Filters").assertIsDisplayed()
 
         composeTestRule.onNodeWithContentDescription("Within 25 km").performClick()
@@ -1642,7 +1674,7 @@ class ExploreFlowTest {
     fun applyingSearchArea_updatesConfirmedRadius() {
         setApp()
         openExplore()
-        filterButton().performClick()
+        filterAction().performClick()
 
         composeTestRule.onNodeWithContentDescription("Within 25 km").performClick()
         composeTestRule.onNodeWithText("Apply").performClick()
@@ -1651,12 +1683,12 @@ class ExploreFlowTest {
     }
 
     @Test
-    fun exploreHeader_showsCompactSummary_andFilterButton() {
+    fun exploreHeader_showsCompactSummary_andFilterAction() {
         setApp()
         openExplore()
 
-        filterButton().assertIsDisplayed()
-        filterButton().assertWidthIsEqualTo(48.dp)
+        filterAction().assertIsDisplayed()
+        filterAction().assertWidthIsEqualTo(48.dp)
         composeTestRule
             .onNodeWithContentDescription(
                 "Search filters",
@@ -1670,25 +1702,25 @@ class ExploreFlowTest {
     }
 
     @Test
-    fun filterButton_longPress_showsFiltersTooltip() {
+    fun filterAction_longPress_showsFiltersTooltip() {
         setApp()
         openExplore()
 
-        filterButton().performTouchInput { longClick() }
+        filterAction().performTouchInput { longClick() }
 
         composeTestRule.onNodeWithText("Filters").assertIsDisplayed()
     }
 
     @Test
-    fun filterButton_reopen_doesNotDuplicateFiltersDestination() {
+    fun filterAction_reopen_doesNotDuplicateFiltersDestination() {
         setApp()
         openExplore()
 
-        filterButton().performClick()
+        filterAction().performClick()
         composeTestRule.onNodeWithText("Filters").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Back").performClick()
 
-        filterButton().performClick()
+        filterAction().performClick()
         composeTestRule.onNodeWithText("Filters").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Back").performClick()
         composeTestRule.onNodeWithText("Kallakurichi · 10 km").assertIsDisplayed()
@@ -1723,7 +1755,7 @@ class ExploreFlowTest {
             contentWidth.value = width.dp
             composeTestRule.waitForIdle()
             searchField().assertIsDisplayed()
-            filterButton().assertIsDisplayed().assertWidthIsEqualTo(48.dp)
+            filterAction().assertIsDisplayed().assertWidthIsEqualTo(48.dp)
             summary().assertIsDisplayed()
         }
     }
@@ -1814,7 +1846,7 @@ class ExploreFlowTest {
 
     private fun searchField() = composeTestRule.onNodeWithTag("explore_search_field")
 
-    private fun filterButton() = composeTestRule.onNodeWithTag("explore_filter_button")
+    private fun filterAction() = composeTestRule.onNodeWithTag("explore_search_filter_action")
 
     private fun summary() = composeTestRule.onNodeWithTag("explore_location_summary")
 
