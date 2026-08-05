@@ -647,7 +647,7 @@ class ExploreFlowTest {
     }
 
     @Test
-    fun optionalResultSections_showOnlyWithActions_limitToFour_andPreserveIds() {
+    fun optionalResultSections_showEveryValidRow_andPreserveIds() {
         var selectedPersonId: String? = null
         var selectedTaskId: String? = null
         val people = (1..5).map { index ->
@@ -702,15 +702,27 @@ class ExploreFlowTest {
         val peopleHeading = composeTestRule.onNodeWithText("Nearby professionals")
         peopleHeading.assertIsDisplayed()
         assertEquals(true, peopleHeading.fetchSemanticsNode().config.contains(SemanticsProperties.Heading))
-        composeTestRule.onAllNodesWithText("Professional 5").assertCountEquals(0)
-        composeTestRule.onNodeWithText("Professional 1").performScrollTo().performClick()
+        composeTestRule
+            .onNodeWithTag("explore_results_list")
+            .performScrollToIndex(7)
+        composeTestRule.onNodeWithText("Professional 5").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithTag("explore_results_list")
+            .performScrollToIndex(3)
+        composeTestRule.onNodeWithText("Professional 1").performClick()
         assertEquals("person-1", selectedPersonId)
 
         val tasksHeading = composeTestRule.onNodeWithText("Open tasks nearby")
         tasksHeading.performScrollTo().assertIsDisplayed()
         assertEquals(true, tasksHeading.fetchSemanticsNode().config.contains(SemanticsProperties.Heading))
-        composeTestRule.onAllNodesWithText("Task 5").assertCountEquals(0)
-        composeTestRule.onNodeWithText("Task 1").performScrollTo().performClick()
+        composeTestRule
+            .onNodeWithTag("explore_results_list")
+            .performScrollToIndex(13)
+        composeTestRule.onNodeWithText("Task 5").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithTag("explore_results_list")
+            .performScrollToIndex(9)
+        composeTestRule.onNodeWithText("Task 1").performClick()
         assertEquals("task-1", selectedTaskId)
     }
 
@@ -791,8 +803,14 @@ class ExploreFlowTest {
         val tasks = submittedTasks() + taskResult("task-6", "Task 6")
         setSubmittedContent(people = people, tasks = tasks)
 
-        composeTestRule.onNodeWithText("Sixth submitted person").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("Task 6").performScrollTo().assertIsDisplayed()
+        composeTestRule
+            .onNodeWithTag("explore_results_list")
+            .performScrollToIndex(8)
+        composeTestRule.onNodeWithText("Sixth submitted person").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithTag("explore_results_list")
+            .performScrollToIndex(15)
+        composeTestRule.onNodeWithText("Task 6").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("See all", substring = true).assertCountEquals(0)
     }
 
@@ -850,6 +868,97 @@ class ExploreFlowTest {
                 .config
                 .contains(SemanticsActions.OnClick),
         )
+    }
+
+    @Test
+    fun unavailableTask_remainsVisible_withoutADeadClickAction() {
+        var clickCount = 0
+        setSubmittedContent(
+            people = emptyList(),
+            tasks = listOf(
+                taskResult("unavailable-task", "Removed task")
+                    .copy(status = TaskResultStatus.Unavailable),
+            ),
+            onPersonClick = null,
+            onTaskClick = { clickCount++ },
+        )
+
+        val task = composeTestRule
+            .onNodeWithText("Removed task")
+            .performScrollTo()
+            .assertIsDisplayed()
+        assertFalse(task.fetchSemanticsNode().config.contains(SemanticsActions.OnClick))
+        assertEquals(0, clickCount)
+    }
+
+    @Test
+    fun resultRows_deduplicateStableIds_withoutCollidingAcrossEntityKinds() {
+        setSubmittedContent(
+            people = listOf(
+                personResult(
+                    id = "same-id",
+                    name = "Stable person",
+                    primaryService = "Electrician",
+                    reasons = setOf(PersonMatchReason.Identity),
+                ),
+                personResult(
+                    id = "same-id",
+                    name = "Duplicate person should not render",
+                    primaryService = "Electrician",
+                    reasons = setOf(PersonMatchReason.Identity),
+                ),
+            ),
+            tasks = listOf(
+                taskResult("same-id", "Stable task"),
+                taskResult("same-id", "Duplicate task should not render"),
+            ),
+            onPersonClick = null,
+            onTaskClick = null,
+        )
+
+        composeTestRule.onAllNodesWithText("Stable person").assertCountEquals(1)
+        composeTestRule.onAllNodesWithText("Duplicate person should not render").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("Stable task").assertCountEquals(1)
+        composeTestRule.onAllNodesWithText("Duplicate task should not render").assertCountEquals(0)
+    }
+
+    @Test
+    fun resultRows_withMissingIdsRemainVisibleAndNonInteractive() {
+        setSubmittedContent(
+            people = listOf(
+                personResult(
+                    id = "",
+                    name = "Missing ID person one",
+                    reasons = setOf(PersonMatchReason.Identity),
+                ),
+                personResult(
+                    id = "",
+                    name = "Missing ID person two",
+                    reasons = setOf(PersonMatchReason.Identity),
+                ),
+            ),
+            tasks = listOf(
+                taskResult("", "Missing ID task one"),
+                taskResult("", "Missing ID task two"),
+            ),
+            onPersonClick = {},
+            onTaskClick = {},
+        )
+
+        listOf("Missing ID person one", "Missing ID person two").forEach { name ->
+            val node = composeTestRule
+                .onNodeWithText(name)
+                .performScrollTo()
+                .assertIsDisplayed()
+            assertFalse(node.fetchSemanticsNode().config.contains(SemanticsActions.OnClick))
+        }
+        listOf("Missing ID task one", "Missing ID task two").forEach { title ->
+            val node = composeTestRule
+                .onNodeWithText(title)
+                .performScrollTo()
+                .assertIsDisplayed()
+            assertFalse(node.fetchSemanticsNode().config.contains(SemanticsActions.OnClick))
+        }
     }
 
     @Test
@@ -1252,6 +1361,77 @@ class ExploreFlowTest {
     }
 
     @Test
+    fun submittedScopes_preserveIndependentScrollPositions_inOneLazyColumn() {
+        val people = (1..12).map { index ->
+            personResult(
+                id = "scope-person-$index",
+                name = "Provider $index",
+                primaryService = "Electrician",
+                reasons = setOf(PersonMatchReason.Identity, PersonMatchReason.Service),
+            )
+        }
+        setSubmittedContent(
+            people = people,
+            tasks = emptyList(),
+            onPersonClick = null,
+            onTaskClick = null,
+        )
+
+        val resultsList = composeTestRule.onNodeWithTag("explore_results_list")
+        composeTestRule.onNodeWithText("People").performClick()
+        resultsList.performScrollToIndex(8)
+        composeTestRule.onNodeWithText("Provider 7").assertIsDisplayed()
+
+        composeTestRule.onNodeWithText("Services").performClick()
+        resultsList.performScrollToIndex(6)
+        composeTestRule.onNodeWithText("Provider 5").assertIsDisplayed()
+
+        composeTestRule.onNodeWithText("People").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Provider 7").assertIsDisplayed()
+    }
+
+    @Test
+    fun submittedScroll_restoresAfterSavedInstanceStateRecreation() {
+        val people = (1..12).map { index ->
+            personResult(
+                id = "restored-person-$index",
+                name = "Restored provider $index",
+                primaryService = "Electrician",
+                reasons = setOf(PersonMatchReason.Identity),
+            )
+        }
+        val restorationTester = StateRestorationTester(composeTestRule)
+        restorationTester.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = "electrician",
+                    searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
+                    onQueryChanged = {},
+                    onQueryCleared = {},
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                    resultState = ExploreResultState.Results(
+                        people = people,
+                        tasks = emptyList(),
+                    ),
+                    onPersonClick = null,
+                    onTaskClick = null,
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("explore_results_list").performScrollToIndex(8)
+        composeTestRule.onNodeWithText("Restored provider 7").assertIsDisplayed()
+        restorationTester.emulateSavedInstanceStateRestore()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Restored provider 7").assertIsDisplayed()
+    }
+
+    @Test
     fun resultTabs_useMaterialTabSemantics_andTamilLabelsRemainComplete() {
         composeTestRule.setContent {
             val configuration = Configuration(LocalConfiguration.current).apply {
@@ -1290,7 +1470,7 @@ class ExploreFlowTest {
     }
 
     @Test
-    fun optionalResultSections_withoutActions_areHidden() {
+    fun optionalResultSections_withoutActions_remainVisibleAndNonInteractive() {
         composeTestRule.setContent {
             AskITTheme(darkTheme = false) {
                 ExploreScreen(
@@ -1321,7 +1501,15 @@ class ExploreFlowTest {
             }
         }
 
-        composeTestRule.onAllNodesWithText("Nearby professionals").assertCountEquals(0)
+        composeTestRule
+            .onNodeWithText("Nearby professionals")
+            .performScrollTo()
+            .assertIsDisplayed()
+        val person = composeTestRule
+            .onNodeWithText("Actionless person")
+            .performScrollTo()
+            .assertIsDisplayed()
+        assertFalse(person.fetchSemanticsNode().config.contains(SemanticsActions.OnClick))
     }
 
     @Test

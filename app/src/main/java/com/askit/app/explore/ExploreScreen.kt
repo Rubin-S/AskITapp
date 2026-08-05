@@ -5,6 +5,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -57,11 +59,15 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,6 +102,7 @@ import com.askit.designsystem.people.PersonResultMetadata
 import com.askit.designsystem.people.PersonResultItem
 import com.askit.designsystem.tasks.TaskResultItem
 import com.askit.designsystem.tasks.TaskResultStatus
+import kotlinx.coroutines.flow.collect
 import java.util.Locale
 
 private val EXPLORE_CATEGORIES = listOf(
@@ -158,6 +165,127 @@ data class ExploreTaskResult(
     val postedLabel: String,
     val status: TaskResultStatus,
 )
+
+private data class ExploreListPosition(
+    val index: Int,
+    val offset: Int,
+)
+
+private data class ExploreListPositionState(
+    val index: MutableIntState,
+    val offset: MutableIntState,
+)
+
+/**
+ * Keeps one LazyColumn while remembering the last viewport for each logical result scope.
+ * Only primitive viewport values and request signatures are saveable; result rows remain
+ * caller-owned and are never placed in saved instance state.
+ */
+private class ExploreScrollState(
+    private val positions: Map<ExploreResultScope, ExploreListPositionState>,
+    private val requestKey: MutableState<String?>,
+    private val filterKeys: Map<ExploreResultScope, MutableState<String?>>,
+    private val sortKeys: Map<ExploreResultScope, MutableState<String?>>,
+) {
+    fun position(scope: ExploreResultScope): ExploreListPosition {
+        val state = positions.getValue(scope)
+        return ExploreListPosition(
+            index = state.index.intValue,
+            offset = state.offset.intValue,
+        )
+    }
+
+    fun record(scope: ExploreResultScope, index: Int, offset: Int) {
+        val state = positions.getValue(scope)
+        state.index.intValue = index
+        state.offset.intValue = offset
+    }
+
+    fun reset(scope: ExploreResultScope) {
+        val state = positions.getValue(scope)
+        state.index.intValue = 0
+        state.offset.intValue = 0
+    }
+
+    fun resetAll() {
+        ExploreResultScope.entries.forEach(::reset)
+    }
+
+    fun synchronize(
+        currentRequestKey: String,
+        currentFilterKeys: Map<ExploreResultScope, String>,
+        currentSortKeys: Map<ExploreResultScope, String>,
+    ) {
+        val requestChanged = requestKey.value != currentRequestKey
+        if (requestChanged) {
+            resetAll()
+        } else {
+            ExploreResultScope.entries.forEach { scope ->
+                if (filterKeys.getValue(scope).value != currentFilterKeys.getValue(scope)) {
+                    reset(scope)
+                }
+                if (sortKeys.getValue(scope).value != currentSortKeys.getValue(scope)) {
+                    reset(scope)
+                }
+            }
+        }
+
+        requestKey.value = currentRequestKey
+        ExploreResultScope.entries.forEach { scope ->
+            filterKeys.getValue(scope).value = currentFilterKeys.getValue(scope)
+            sortKeys.getValue(scope).value = currentSortKeys.getValue(scope)
+        }
+    }
+}
+
+@Composable
+private fun rememberExploreScrollState(): ExploreScrollState {
+    val allIndex = rememberSaveable { mutableIntStateOf(0) }
+    val allOffset = rememberSaveable { mutableIntStateOf(0) }
+    val peopleIndex = rememberSaveable { mutableIntStateOf(0) }
+    val peopleOffset = rememberSaveable { mutableIntStateOf(0) }
+    val servicesIndex = rememberSaveable { mutableIntStateOf(0) }
+    val servicesOffset = rememberSaveable { mutableIntStateOf(0) }
+    val tasksIndex = rememberSaveable { mutableIntStateOf(0) }
+    val tasksOffset = rememberSaveable { mutableIntStateOf(0) }
+
+    val requestKey = rememberSaveable { mutableStateOf<String?>(null) }
+    val allFilterKey = rememberSaveable { mutableStateOf<String?>(null) }
+    val peopleFilterKey = rememberSaveable { mutableStateOf<String?>(null) }
+    val servicesFilterKey = rememberSaveable { mutableStateOf<String?>(null) }
+    val tasksFilterKey = rememberSaveable { mutableStateOf<String?>(null) }
+    val allSortKey = rememberSaveable { mutableStateOf<String?>(null) }
+    val peopleSortKey = rememberSaveable { mutableStateOf<String?>(null) }
+    val servicesSortKey = rememberSaveable { mutableStateOf<String?>(null) }
+    val tasksSortKey = rememberSaveable { mutableStateOf<String?>(null) }
+
+    return remember {
+        ExploreScrollState(
+            positions = mapOf(
+                ExploreResultScope.All to ExploreListPositionState(allIndex, allOffset),
+                ExploreResultScope.People to ExploreListPositionState(peopleIndex, peopleOffset),
+                ExploreResultScope.Services to ExploreListPositionState(
+                    servicesIndex,
+                    servicesOffset,
+                ),
+                ExploreResultScope.Tasks to ExploreListPositionState(tasksIndex, tasksOffset),
+            ),
+            requestKey = requestKey,
+            filterKeys = mapOf(
+                ExploreResultScope.All to allFilterKey,
+                ExploreResultScope.People to peopleFilterKey,
+                ExploreResultScope.Services to servicesFilterKey,
+                ExploreResultScope.Tasks to tasksFilterKey,
+            ),
+            sortKeys = mapOf(
+                ExploreResultScope.All to allSortKey,
+                ExploreResultScope.People to peopleSortKey,
+                ExploreResultScope.Services to servicesSortKey,
+                ExploreResultScope.Tasks to tasksSortKey,
+            ),
+        )
+    }
+}
 
 @Composable
 fun ExploreRoute(
@@ -229,12 +357,54 @@ fun ExploreScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
+    val scrollState = rememberExploreScrollState()
     var isSearchActive by remember { mutableStateOf(false) }
     val normalizedQuery = normalizeExploreQuery(query)
     var selectedScopeOrdinal by rememberSaveable(normalizedQuery) {
         mutableIntStateOf(ExploreResultScope.All.ordinal)
     }
     val selectedScope = ExploreResultScope.entries[selectedScopeOrdinal]
+    val currentFilterKeys = ExploreResultScope.entries.associateWith { scope ->
+        normalizeAppliedExploreFilterOptions(
+            scope = scope,
+            availableOptions = availableFilterOptions[scope].orEmpty(),
+            appliedOptions = appliedFilterOptions[scope].orEmpty(),
+        ).map(ExploreFilterOption::name).sorted().joinToString(",")
+    }
+    val currentSortKeys = ExploreResultScope.entries.associateWith { scope ->
+        selectedSortOptions[scope]?.name.orEmpty()
+    }
+    val filterKey = currentFilterKeys.entries.joinToString("|") { (scope, value) ->
+        "${scope.name}=$value"
+    }
+    val sortKey = currentSortKeys.entries.joinToString("|") { (scope, value) ->
+        "${scope.name}=$value"
+    }
+    val requestKey = exploreRequestKey(normalizedQuery, searchArea)
+
+    LaunchedEffect(requestKey, filterKey, sortKey, selectedScope, resultState) {
+        scrollState.synchronize(
+            currentRequestKey = requestKey,
+            currentFilterKeys = currentFilterKeys,
+            currentSortKeys = currentSortKeys,
+        )
+        val savedPosition = scrollState.position(selectedScope)
+        val itemCount = listState.layoutInfo.totalItemsCount
+        val safeIndex = if (itemCount == 0) {
+            0
+        } else {
+            savedPosition.index.coerceAtMost(itemCount - 1)
+        }
+        listState.scrollToItem(
+            index = safeIndex,
+            scrollOffset = if (safeIndex == savedPosition.index) savedPosition.offset else 0,
+        )
+        snapshotFlow {
+            listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+        }.collect { (index, offset) ->
+            scrollState.record(selectedScope, index, offset)
+        }
+    }
 
     fun closeSearch() {
         keyboardController?.hide()
@@ -255,15 +425,39 @@ fun ExploreScreen(
     val personClick = onPersonClick
     val taskClick = onTaskClick
 
+    val orderedAppliedFilters = normalizeAvailableExploreFilterOptions(
+        scope = selectedScope,
+        options = availableFilterOptions[selectedScope].orEmpty(),
+    ).filter { it in appliedFilterOptions[selectedScope].orEmpty() }
+    val normalizedSubmittedResultState = normalizeExploreResultState(
+        state = resultState,
+        scope = selectedScope,
+        emptyReason = if (orderedAppliedFilters.isEmpty()) {
+            ExploreResultState.EmptyReason.Query
+        } else {
+            ExploreResultState.EmptyReason.Filters
+        },
+    )
+    val submittedResults = normalizedSubmittedResultState as? ExploreResultState.Results
+    val hasVisibleSubmittedResults = when (selectedScope) {
+        ExploreResultScope.All -> false
+        ExploreResultScope.People,
+        ExploreResultScope.Services,
+        -> submittedResults?.people?.isNotEmpty() == true
+
+        ExploreResultScope.Tasks -> submittedResults?.tasks?.isNotEmpty() == true
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding(),
+            .imePadding()
+            .testTag("explore_results_list"),
         state = listState,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.Top,
     ) {
-        item(key = "explore_header") {
+        item(key = "header:explore", contentType = "header") {
             ExploreHeader(
                 query = query,
                 searchArea = searchArea,
@@ -280,7 +474,7 @@ fun ExploreScreen(
         }
 
         if (isSearchActive && normalizedQuery.isEmpty()) {
-            item(key = "active_search_content") {
+            item(key = "search:active", contentType = "search") {
                 ActiveSearchContent(
                     recentSearches = recentSearches,
                     onRecentSearchSelected = { recentQuery ->
@@ -296,7 +490,7 @@ fun ExploreScreen(
                 )
             }
         } else if (isSearchActive && normalizedQuery.isNotEmpty()) {
-            item(key = "typed_search_suggestions") {
+            item(key = "search:typed", contentType = "search") {
                 TypedSearchSuggestions(
                     query = normalizedQuery,
                     recentSearches = recentSearches,
@@ -308,25 +502,23 @@ fun ExploreScreen(
                 )
             }
         } else if (!isSearchActive && normalizedQuery.isNotEmpty()) {
-            item(key = "submitted_search_results") {
-                SubmittedSearchResults(
-                    selectedScope = selectedScope,
-                    resultState = resultState,
-                    onRetryResults = onRetryResults,
-                    onEditFilters = ::openFilters,
-                    availableSortOptions = availableSortOptions,
-                    selectedSortOptions = selectedSortOptions,
-                    onSortChanged = onSortChanged,
-                    availableFilterOptions = availableFilterOptions,
-                    appliedFilterOptions = appliedFilterOptions,
-                    onFiltersChanged = onFiltersChanged,
-                    onPersonClick = personClick,
-                    onTaskClick = taskClick,
-                    onScopeSelected = { selectedScopeOrdinal = it.ordinal },
-                )
-            }
+            addSubmittedSearchResults(
+                selectedScope = selectedScope,
+                normalizedResultState = normalizedSubmittedResultState,
+                orderedAppliedFilters = orderedAppliedFilters,
+                hasVisibleResults = hasVisibleSubmittedResults,
+                onRetryResults = onRetryResults,
+                onEditFilters = ::openFilters,
+                availableSortOptions = availableSortOptions,
+                selectedSortOptions = selectedSortOptions,
+                onSortChanged = onSortChanged,
+                onFiltersChanged = onFiltersChanged,
+                onPersonClick = personClick,
+                onTaskClick = taskClick,
+                onScopeSelected = { selectedScopeOrdinal = it.ordinal },
+            )
         } else if (!isSearchActive && normalizedQuery.isEmpty()) {
-            item(key = "browse_services") {
+            item(key = "browse:categories", contentType = "browse") {
                 BrowseServices(
                     onCategorySelected = { category ->
                         onQuerySubmitted(category)
@@ -334,28 +526,12 @@ fun ExploreScreen(
                     },
                 )
             }
-
-            if (people.isNotEmpty() && personClick != null) {
-                item(key = "nearby_professionals") {
-                    ExploreResultSection(
-                        heading = stringResource(R.string.explore_nearby_professionals),
-                        testTag = "explore_nearby_professionals",
-                    ) {
-                        PersonResultRows(people.take(4), personClick)
-                    }
-                }
-            }
-
-            if (tasks.isNotEmpty() && taskClick != null) {
-                item(key = "open_tasks_nearby") {
-                    ExploreResultSection(
-                        heading = stringResource(R.string.explore_open_tasks_nearby),
-                        testTag = "explore_open_tasks_nearby",
-                    ) {
-                        TaskResultRows(tasks.take(4), taskClick)
-                    }
-                }
-            }
+            addBrowseResultSections(
+                people = people,
+                tasks = tasks,
+                onPersonClick = personClick,
+                onTaskClick = taskClick,
+            )
         }
     }
 }
@@ -491,7 +667,11 @@ private fun BrowseServices(
                 .testTag("explore_browse_category_row"),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(EXPLORE_CATEGORIES, key = { it.labelRes }) { categoryDefinition ->
+            items(
+                items = EXPLORE_CATEGORIES,
+                key = { "category:${it.labelRes}" },
+                contentType = { "category" },
+            ) { categoryDefinition ->
                 val category = stringResource(categoryDefinition.labelRes)
                 ServiceCategoryTile(
                     category = category,
@@ -549,56 +729,55 @@ private fun ServiceCategoryTile(
     }
 }
 
-@Composable
-private fun SubmittedSearchResults(
+@OptIn(ExperimentalFoundationApi::class)
+private fun LazyListScope.addSubmittedSearchResults(
     selectedScope: ExploreResultScope,
-    resultState: ExploreResultState,
+    normalizedResultState: ExploreResultState,
+    orderedAppliedFilters: List<ExploreFilterOption>,
+    hasVisibleResults: Boolean,
     onRetryResults: () -> Unit,
     onEditFilters: () -> Unit,
     availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>>,
     selectedSortOptions: Map<ExploreResultScope, ExploreSortOption>,
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)?,
-    availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>>,
-    appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>>,
     onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)?,
     onPersonClick: ((String) -> Unit)?,
     onTaskClick: ((String) -> Unit)?,
     onScopeSelected: (ExploreResultScope) -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("explore_submitted_results"),
-    ) {
-        PrimaryScrollableTabRow(
-            selectedTabIndex = selectedScope.ordinal,
+    stickyHeader(key = "controls:scope-tabs", contentType = "control") {
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag("explore_result_tabs"),
-            edgePadding = 0.dp,
-            minTabWidth = 0.dp,
+                .testTag("explore_submitted_results"),
+            color = MaterialTheme.colorScheme.background,
         ) {
-            ExploreResultScope.entries.forEach { scope ->
-                Tab(
-                    selected = selectedScope == scope,
-                    onClick = { onScopeSelected(scope) },
-                    text = {
-                        Text(
-                            text = stringResource(scope.labelRes),
-                            maxLines = 1,
-                        )
-                    },
-                )
+            PrimaryScrollableTabRow(
+                selectedTabIndex = selectedScope.ordinal,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("explore_result_tabs"),
+                edgePadding = 0.dp,
+                minTabWidth = 0.dp,
+            ) {
+                ExploreResultScope.entries.forEach { scope ->
+                    Tab(
+                        selected = selectedScope == scope,
+                        onClick = { onScopeSelected(scope) },
+                        text = {
+                            Text(
+                                text = stringResource(scope.labelRes),
+                                maxLines = 1,
+                            )
+                        },
+                    )
+                }
             }
         }
+    }
 
-        val orderedAppliedFilters = normalizeAvailableExploreFilterOptions(
-            scope = selectedScope,
-            options = availableFilterOptions[selectedScope].orEmpty(),
-        ).filter {
-            it in appliedFilterOptions[selectedScope].orEmpty()
-        }
-        if (orderedAppliedFilters.isNotEmpty()) {
+    if (orderedAppliedFilters.isNotEmpty()) {
+        item(key = "controls:filters", contentType = "control") {
             AppliedFilterChips(
                 options = orderedAppliedFilters,
                 onFilterRemoved = { option ->
@@ -609,35 +788,18 @@ private fun SubmittedSearchResults(
                 },
             )
         }
+    }
 
-        val normalizedResultState = normalizeExploreResultState(
-            state = resultState,
-            scope = selectedScope,
-            emptyReason = if (orderedAppliedFilters.isEmpty()) {
-                ExploreResultState.EmptyReason.Query
-            } else {
-                ExploreResultState.EmptyReason.Filters
-            },
-        )
-        val results = normalizedResultState as? ExploreResultState.Results
-        val hasVisibleResults = when (selectedScope) {
-            ExploreResultScope.All -> false
-            ExploreResultScope.People,
-            ExploreResultScope.Services,
-            -> results?.people?.isNotEmpty() == true
-
-            ExploreResultScope.Tasks -> results?.tasks?.isNotEmpty() == true
-        }
-        val options = availableSortOptions[selectedScope].orEmpty()
-        val selectedOption = selectedSortOptions[selectedScope]
-        val sortCallback = onSortChanged
-        if (
-            hasVisibleResults &&
-            options.size >= 2 &&
-            selectedOption != null &&
-            selectedOption in options &&
-            sortCallback != null
-        ) {
+    val options = availableSortOptions[selectedScope].orEmpty()
+    val selectedOption = selectedSortOptions[selectedScope]
+    if (
+        hasVisibleResults &&
+        options.size >= 2 &&
+        selectedOption != null &&
+        selectedOption in options &&
+        onSortChanged != null
+    ) {
+        item(key = "controls:sort:${selectedScope.name}", contentType = "control") {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -649,25 +811,46 @@ private fun SubmittedSearchResults(
                     options = options,
                     selectedOption = selectedOption,
                     onOptionSelected = { option ->
-                        sortCallback(selectedScope, option)
+                        onSortChanged(selectedScope, option)
                     },
                 )
             }
         }
-
-        ExploreResultBody(
-            selectedScope = selectedScope,
-            state = normalizedResultState,
-            onRetryResults = onRetryResults,
-            onEditFilters = onEditFilters,
-            onPersonClick = onPersonClick,
-            onTaskClick = onTaskClick,
-        )
     }
+
+    addExploreResultBody(
+        selectedScope = selectedScope,
+        state = normalizedResultState,
+        onRetryResults = onRetryResults,
+        onEditFilters = onEditFilters,
+        onPersonClick = onPersonClick,
+        onTaskClick = onTaskClick,
+    )
 }
 
-@Composable
-private fun ExploreResultBody(
+private fun LazyListScope.addBrowseResultSections(
+    people: List<ExplorePersonResult>,
+    tasks: List<ExploreTaskResult>,
+    onPersonClick: ((String) -> Unit)?,
+    onTaskClick: ((String) -> Unit)?,
+) {
+    addPersonResultSection(
+        sectionKey = "browse:people",
+        heading = R.string.explore_nearby_professionals,
+        sectionTag = "explore_nearby_professionals",
+        people = people,
+        onClick = onPersonClick,
+    )
+    addTaskResultSection(
+        sectionKey = "browse:tasks",
+        heading = R.string.explore_open_tasks_nearby,
+        sectionTag = "explore_open_tasks_nearby",
+        tasks = tasks,
+        onClick = onTaskClick,
+    )
+}
+
+private fun LazyListScope.addExploreResultBody(
     selectedScope: ExploreResultScope,
     state: ExploreResultState,
     onRetryResults: () -> Unit,
@@ -677,200 +860,484 @@ private fun ExploreResultBody(
 ) {
     when (state) {
         ExploreResultState.Loading -> {
-            val loadingDescription = stringResource(
-                R.string.explore_loading_results_content_description,
-            )
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp)
-                    .testTag("explore_result_loading"),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .testTag("explore_result_loading_indicator")
-                        .semantics {
-                            contentDescription = loadingDescription
-                        },
-                )
-                Text(
-                    text = stringResource(R.string.explore_loading_results),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+            item(key = "body:loading", contentType = "progress") {
+                ExploreLoadingResultBody()
             }
         }
 
         is ExploreResultState.Empty -> {
-            val isFiltered = state.reason == ExploreResultState.EmptyReason.Filters
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp)
-                    .testTag("explore_result_empty")
-                    .semantics { liveRegion = LiveRegionMode.Polite },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(
-                    text = stringResource(
-                        if (isFiltered) {
-                            R.string.explore_empty_filters_title
-                        } else {
-                            R.string.explore_empty_query_title
-                        },
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleLarge,
+            item(key = "body:empty", contentType = "blocking") {
+                ExploreEmptyResultBody(
+                    reason = state.reason,
+                    onEditFilters = onEditFilters,
                 )
-                Text(
-                    text = stringResource(
-                        if (isFiltered) {
-                            R.string.explore_empty_filters_supporting_text
-                        } else {
-                            R.string.explore_empty_query_supporting_text
-                        },
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                if (isFiltered) {
-                    OutlinedButton(
-                        onClick = onEditFilters,
-                        modifier = Modifier.testTag("explore_edit_filters"),
-                    ) {
-                        Text(stringResource(R.string.explore_edit_filters))
-                    }
-                }
             }
         }
 
         is ExploreResultState.Failure -> {
-            val titleRes: Int
-            val supportingTextRes: Int
-            when (val reason = state.reason) {
-                ExploreResultState.FailureReason.General -> {
-                    titleRes = R.string.explore_failure_general_title
-                    supportingTextRes = R.string.explore_failure_general_supporting_text
-                }
-
-                ExploreResultState.FailureReason.Offline -> {
-                    titleRes = R.string.explore_failure_offline_title
-                    supportingTextRes = R.string.explore_failure_offline_supporting_text
-                }
-
-                is ExploreResultState.FailureReason.SourceUnavailable -> when (reason.source) {
-                    ExploreResultState.Source.PeopleAndServices -> {
-                        titleRes = R.string.explore_failure_people_services_title
-                        supportingTextRes = R.string.explore_failure_people_services_supporting_text
-                    }
-
-                    ExploreResultState.Source.Tasks -> {
-                        titleRes = R.string.explore_failure_tasks_title
-                        supportingTextRes = R.string.explore_failure_tasks_supporting_text
-                    }
-                }
-            }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp)
-                    .testTag("explore_result_failure")
-                    .semantics { liveRegion = LiveRegionMode.Polite },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(
-                    text = stringResource(titleRes),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleLarge,
+            item(key = "body:failure", contentType = "blocking") {
+                ExploreFailureResultBody(
+                    reason = state.reason,
+                    onRetryResults = onRetryResults,
                 )
-                Text(
-                    text = stringResource(supportingTextRes),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                OutlinedButton(
-                    onClick = onRetryResults,
-                    modifier = Modifier.testTag("explore_retry_results"),
-                ) {
-                    Text(stringResource(R.string.explore_retry))
-                }
             }
         }
 
         is ExploreResultState.Results -> {
             if (state.isRefreshing) {
-                val refreshingDescription = stringResource(
-                    R.string.explore_refreshing_results_content_description,
-                )
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                        .testTag("explore_result_refreshing_indicator")
-                        .semantics {
-                            contentDescription = refreshingDescription
-                        },
-                )
+                item(key = "progress:refreshing", contentType = "progress") {
+                    val refreshingDescription = stringResource(
+                        R.string.explore_refreshing_results_content_description,
+                    )
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp)
+                            .testTag("explore_result_refreshing_indicator")
+                            .semantics {
+                                contentDescription = refreshingDescription
+                            },
+                    )
+                }
             }
             state.status?.let { status ->
-                ExploreResultStatus(
-                    status = status,
-                    actionEnabled = !state.isRefreshing,
-                    onAction = onRetryResults,
-                )
+                item(
+                    key = "status:${exploreStatusKey(status)}",
+                    contentType = "status",
+                ) {
+                    ExploreResultStatus(
+                        status = status,
+                        actionEnabled = !state.isRefreshing,
+                        onAction = onRetryResults,
+                    )
+                }
             }
+
             when (selectedScope) {
                 ExploreResultScope.All -> {
-                    if (state.people.isNotEmpty()) {
-                        ExploreResultSection(
-                            heading = stringResource(R.string.explore_people_and_services),
-                            testTag = "explore_submitted_people",
-                        ) {
-                            PersonResultRows(state.people, onPersonClick)
-                        }
-                    }
-                    if (state.tasks.isNotEmpty()) {
-                        ExploreResultSection(
-                            heading = stringResource(R.string.explore_tasks),
-                            testTag = "explore_submitted_tasks",
-                        ) {
-                            TaskResultRows(state.tasks, onTaskClick)
-                        }
-                    }
+                    addPersonResultSection(
+                        sectionKey = "submitted:people",
+                        heading = R.string.explore_people_and_services,
+                        sectionTag = "explore_submitted_people",
+                        people = state.people,
+                        onClick = onPersonClick,
+                    )
+                    addTaskResultSection(
+                        sectionKey = "submitted:tasks",
+                        heading = R.string.explore_tasks,
+                        sectionTag = "explore_submitted_tasks",
+                        tasks = state.tasks,
+                        onClick = onTaskClick,
+                    )
                 }
 
                 ExploreResultScope.People -> {
-                    if (state.people.isNotEmpty()) {
-                        ExploreResultSection(
-                            heading = null,
-                            testTag = "explore_submitted_people",
-                        ) {
-                            PersonResultRows(state.people, onPersonClick)
-                        }
-                    }
+                    addPersonResultSection(
+                        sectionKey = "submitted:people",
+                        heading = null,
+                        sectionTag = "explore_submitted_people",
+                        people = state.people,
+                        onClick = onPersonClick,
+                    )
                 }
 
                 ExploreResultScope.Services -> {
-                    if (state.people.isNotEmpty()) {
-                        ServiceResultRows(state.people, onPersonClick)
-                    }
+                    addServiceResultRows(
+                        people = state.people,
+                        onClick = onPersonClick,
+                    )
                 }
 
                 ExploreResultScope.Tasks -> {
-                    if (state.tasks.isNotEmpty()) {
-                        ExploreResultSection(
-                            heading = null,
-                            testTag = "explore_submitted_tasks",
-                        ) {
-                            TaskResultRows(state.tasks, onTaskClick)
-                        }
-                    }
+                    addTaskResultSection(
+                        sectionKey = "submitted:tasks",
+                        heading = null,
+                        sectionTag = "explore_submitted_tasks",
+                        tasks = state.tasks,
+                        onClick = onTaskClick,
+                    )
                 }
             }
+        }
+    }
+}
+
+private fun LazyListScope.addPersonResultSection(
+    sectionKey: String,
+    @StringRes heading: Int?,
+    sectionTag: String,
+    people: List<ExplorePersonResult>,
+    onClick: ((String) -> Unit)?,
+) {
+    val uniquePeople = distinctPeopleById(people)
+    if (uniquePeople.isEmpty()) return
+
+    if (heading != null) {
+        item(key = "section:$sectionKey", contentType = "section") {
+            ExploreResultSectionHeading(
+                heading = stringResource(heading),
+                testTag = sectionTag,
+            )
+        }
+    }
+    addPersonResultRows(
+        itemKeyPrefix = sectionKey,
+        people = uniquePeople,
+        onClick = onClick,
+        firstRowTag = sectionTag.takeIf { heading == null },
+        addTopPadding = heading == null,
+    )
+}
+
+private fun LazyListScope.addTaskResultSection(
+    sectionKey: String,
+    @StringRes heading: Int?,
+    sectionTag: String,
+    tasks: List<ExploreTaskResult>,
+    onClick: ((String) -> Unit)?,
+) {
+    val uniqueTasks = distinctTasksById(tasks)
+    if (uniqueTasks.isEmpty()) return
+
+    if (heading != null) {
+        item(key = "section:$sectionKey", contentType = "section") {
+            ExploreResultSectionHeading(
+                heading = stringResource(heading),
+                testTag = sectionTag,
+            )
+        }
+    }
+    addTaskResultRows(
+        itemKeyPrefix = sectionKey,
+        tasks = uniqueTasks,
+        onClick = onClick,
+        firstRowTag = sectionTag.takeIf { heading == null },
+        addTopPadding = heading == null,
+    )
+}
+
+private fun LazyListScope.addPersonResultRows(
+    itemKeyPrefix: String,
+    people: List<ExplorePersonResult>,
+    onClick: ((String) -> Unit)?,
+    firstRowTag: String?,
+    addTopPadding: Boolean,
+) {
+    people.forEachIndexed { index, person ->
+        val stablePersonId = person.id.trim()
+        item(
+            key = "person:$itemKeyPrefix:${stablePersonId.ifEmpty { "anonymous-$index" }}",
+            contentType = "person",
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (index == 0 && addTopPadding) Modifier.padding(top = 24.dp) else Modifier)
+                    .then(if (index == 0 && firstRowTag != null) Modifier.testTag(firstRowTag) else Modifier),
+            ) {
+                if (index > 0) HorizontalDivider()
+                PersonResultItem(
+                    name = person.name,
+                    avatarUrl = person.avatarUrl,
+                    primaryService = person.primaryService,
+                    additionalServices = person.additionalServices,
+                    rating = person.rating,
+                    reviewCount = person.reviewCount,
+                    locationLabel = person.locationLabel,
+                    priceLabel = person.priceLabel,
+                    statusLabel = person.statusLabel,
+                    onClick = onClick
+                        ?.takeIf { stablePersonId.isNotEmpty() }
+                        ?.let { click -> { click(stablePersonId) } },
+                )
+            }
+        }
+    }
+}
+
+private fun LazyListScope.addServiceResultRows(
+    people: List<ExplorePersonResult>,
+    onClick: ((String) -> Unit)?,
+) {
+    distinctPeopleById(people).forEachIndexed { index, person ->
+        val stablePersonId = person.id.trim()
+        item(
+            key = "service:person:${stablePersonId.ifEmpty { "anonymous-$index" }}",
+            contentType = "service",
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = if (index == 0) 24.dp else 12.dp)
+                    .then(
+                        if (index == 0) {
+                            Modifier.testTag("explore_submitted_services")
+                        } else {
+                            Modifier
+                        },
+                    ),
+            ) {
+                CompactServiceResultCard(
+                    result = person,
+                    onClick = onClick
+                        ?.takeIf { stablePersonId.isNotEmpty() }
+                        ?.let { click -> { click(stablePersonId) } },
+                )
+            }
+        }
+    }
+}
+
+private fun LazyListScope.addTaskResultRows(
+    itemKeyPrefix: String,
+    tasks: List<ExploreTaskResult>,
+    onClick: ((String) -> Unit)?,
+    firstRowTag: String?,
+    addTopPadding: Boolean,
+) {
+    tasks.forEachIndexed { index, task ->
+        val stableTaskId = task.id.trim()
+        item(
+            key = "task:$itemKeyPrefix:${stableTaskId.ifEmpty { "anonymous-$index" }}",
+            contentType = "task",
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (index == 0 && addTopPadding) Modifier.padding(top = 24.dp) else Modifier)
+                    .then(if (index == 0 && firstRowTag != null) Modifier.testTag(firstRowTag) else Modifier),
+            ) {
+                if (index > 0) HorizontalDivider()
+                TaskResultItem(
+                    title = task.title,
+                    category = task.category,
+                    summary = task.summary,
+                    budgetLabel = task.budgetLabel,
+                    locationLabel = task.locationLabel,
+                    timingLabel = task.timingLabel,
+                    posterName = task.posterName,
+                    postedLabel = task.postedLabel,
+                    status = task.status,
+                    onClick = onClick
+                        ?.takeIf {
+                            task.status != TaskResultStatus.Unavailable && stableTaskId.isNotEmpty()
+                        }
+                        ?.let { click -> { click(stableTaskId) } },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExploreResultSectionHeading(
+    heading: String,
+    testTag: String,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp)
+            .testTag(testTag),
+    ) {
+        Text(
+            text = heading,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+        Spacer(Modifier.height(12.dp))
+    }
+}
+
+private fun distinctPeopleById(people: List<ExplorePersonResult>): List<ExplorePersonResult> {
+    val merged = mutableListOf<ExplorePersonResult>()
+    val indicesById = linkedMapOf<String, Int>()
+    people.forEach { person ->
+        val stableId = person.id.trim()
+        if (stableId.isEmpty()) {
+            merged += person
+        } else {
+            val existingIndex = indicesById[stableId]
+            if (existingIndex == null) {
+                indicesById[stableId] = merged.size
+                merged += person
+            } else {
+                val existing = merged[existingIndex]
+                merged[existingIndex] = existing.copy(
+                    additionalServices = (existing.additionalServices + person.additionalServices).distinct(),
+                    matchReasons = existing.matchReasons + person.matchReasons,
+                )
+            }
+        }
+    }
+    return merged
+}
+
+private fun distinctTasksById(tasks: List<ExploreTaskResult>): List<ExploreTaskResult> {
+    val seenIds = mutableSetOf<String>()
+    return tasks.filter { task ->
+        val stableId = task.id.trim()
+        stableId.isEmpty() || seenIds.add(stableId)
+    }
+}
+
+private fun exploreStatusKey(status: ExploreResultState.ContentStatus): String = when (status) {
+    ExploreResultState.ContentStatus.Stale -> "stale"
+    ExploreResultState.ContentStatus.OfflineCached -> "offline-cached"
+    is ExploreResultState.ContentStatus.PartialFailure -> "partial-${status.source.name.lowercase()}"
+}
+
+private fun exploreRequestKey(
+    query: String,
+    searchArea: ExploreSearchArea,
+): String = buildString {
+    append(query)
+    append('|')
+    append(searchArea.placeId.orEmpty())
+    append('|')
+    append(searchArea.displayName)
+    append('|')
+    append(searchArea.supportingText.orEmpty())
+    append('|')
+    append(searchArea.latitude ?: "")
+    append('|')
+    append(searchArea.longitude ?: "")
+    append('|')
+    append(searchArea.radiusKm)
+    append('|')
+    append(searchArea.source.name)
+}
+
+@Composable
+private fun ExploreLoadingResultBody() {
+    val loadingDescription = stringResource(
+        R.string.explore_loading_results_content_description,
+    )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 32.dp)
+            .testTag("explore_result_loading"),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .testTag("explore_result_loading_indicator")
+                .semantics {
+                    contentDescription = loadingDescription
+                },
+        )
+        Text(
+            text = stringResource(R.string.explore_loading_results),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
+private fun ExploreEmptyResultBody(
+    reason: ExploreResultState.EmptyReason,
+    onEditFilters: () -> Unit,
+) {
+    val isFiltered = reason == ExploreResultState.EmptyReason.Filters
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 32.dp)
+            .testTag("explore_result_empty")
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = stringResource(
+                if (isFiltered) {
+                    R.string.explore_empty_filters_title
+                } else {
+                    R.string.explore_empty_query_title
+                },
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Text(
+            text = stringResource(
+                if (isFiltered) {
+                    R.string.explore_empty_filters_supporting_text
+                } else {
+                    R.string.explore_empty_query_supporting_text
+                },
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        if (isFiltered) {
+            OutlinedButton(
+                onClick = onEditFilters,
+                modifier = Modifier.testTag("explore_edit_filters"),
+            ) {
+                Text(stringResource(R.string.explore_edit_filters))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExploreFailureResultBody(
+    reason: ExploreResultState.FailureReason,
+    onRetryResults: () -> Unit,
+) {
+    val titleRes: Int
+    val supportingTextRes: Int
+    when (reason) {
+        ExploreResultState.FailureReason.General -> {
+            titleRes = R.string.explore_failure_general_title
+            supportingTextRes = R.string.explore_failure_general_supporting_text
+        }
+
+        ExploreResultState.FailureReason.Offline -> {
+            titleRes = R.string.explore_failure_offline_title
+            supportingTextRes = R.string.explore_failure_offline_supporting_text
+        }
+
+        is ExploreResultState.FailureReason.SourceUnavailable -> when (reason.source) {
+            ExploreResultState.Source.PeopleAndServices -> {
+                titleRes = R.string.explore_failure_people_services_title
+                supportingTextRes = R.string.explore_failure_people_services_supporting_text
+            }
+
+            ExploreResultState.Source.Tasks -> {
+                titleRes = R.string.explore_failure_tasks_title
+                supportingTextRes = R.string.explore_failure_tasks_supporting_text
+            }
+        }
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 32.dp)
+            .testTag("explore_result_failure")
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = stringResource(titleRes),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Text(
+            text = stringResource(supportingTextRes),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        OutlinedButton(
+            onClick = onRetryResults,
+            modifier = Modifier.testTag("explore_retry_results"),
+        ) {
+            Text(stringResource(R.string.explore_retry))
         }
     }
 }
@@ -942,7 +1409,8 @@ private fun AppliedFilterChips(
     ) {
         items(
             items = options,
-            key = ExploreFilterOption::name,
+            key = { "filter:${it.name}" },
+            contentType = { "filter" },
         ) { option ->
             val label = stringResource(option.labelRes())
             InputChip(
@@ -1012,49 +1480,6 @@ private fun ExploreSortControl(
                     },
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun PersonResultRows(
-    people: List<ExplorePersonResult>,
-    onClick: ((String) -> Unit)?,
-) {
-    people.forEachIndexed { index, person ->
-        if (index > 0) HorizontalDivider()
-        PersonResultItem(
-            name = person.name,
-            avatarUrl = person.avatarUrl,
-            primaryService = person.primaryService,
-            additionalServices = person.additionalServices,
-            rating = person.rating,
-            reviewCount = person.reviewCount,
-            locationLabel = person.locationLabel,
-            priceLabel = person.priceLabel,
-            statusLabel = person.statusLabel,
-            onClick = onClick?.let { click -> { click(person.id) } },
-        )
-    }
-}
-
-@Composable
-private fun ServiceResultRows(
-    people: List<ExplorePersonResult>,
-    onClick: ((String) -> Unit)?,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 24.dp)
-            .testTag("explore_submitted_services"),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        people.forEach { person ->
-            CompactServiceResultCard(
-                result = person,
-                onClick = onClick?.let { click -> { click(person.id) } },
-            )
         }
     }
 }
@@ -1166,52 +1591,6 @@ private fun CompactServiceResultCard(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun TaskResultRows(
-    tasks: List<ExploreTaskResult>,
-    onClick: ((String) -> Unit)?,
-) {
-    tasks.forEachIndexed { index, task ->
-        if (index > 0) HorizontalDivider()
-        TaskResultItem(
-            title = task.title,
-            category = task.category,
-            summary = task.summary,
-            budgetLabel = task.budgetLabel,
-            locationLabel = task.locationLabel,
-            timingLabel = task.timingLabel,
-            posterName = task.posterName,
-            postedLabel = task.postedLabel,
-            status = task.status,
-            onClick = onClick?.let { click -> { click(task.id) } },
-        )
-    }
-}
-
-@Composable
-private fun ExploreResultSection(
-    heading: String?,
-    testTag: String,
-    content: @Composable () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 24.dp)
-            .testTag(testTag),
-    ) {
-        if (heading != null) {
-            Text(
-                text = heading,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.semantics { heading() },
-            )
-            Spacer(Modifier.height(12.dp))
-        }
-        content()
     }
 }
 
@@ -1501,7 +1880,11 @@ private fun SuggestedCategories(onCategorySelected: (String) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(EXPLORE_CATEGORIES, key = { it.labelRes }) { categoryDefinition ->
+            items(
+                items = EXPLORE_CATEGORIES,
+                key = { "category:${it.labelRes}" },
+                contentType = { "category" },
+            ) { categoryDefinition ->
                 val category = stringResource(categoryDefinition.labelRes)
                 SuggestionChip(
                     onClick = { onCategorySelected(category) },
