@@ -480,7 +480,11 @@ fun SearchAreaScreen(
                 ListItem(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(onClick = ::requestCurrentLocation),
+                        .clickable(
+                            role = Role.Button,
+                            onClickLabel = stringResource(R.string.explore_use_current_location),
+                            onClick = ::requestCurrentLocation,
+                        ),
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.ic_my_location),
@@ -500,7 +504,11 @@ fun SearchAreaScreen(
                 ListItem(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(onClick = ::openPlaceSearch),
+                        .clickable(
+                            role = Role.Button,
+                            onClickLabel = stringResource(R.string.explore_search_another_area),
+                            onClick = ::openPlaceSearch,
+                        ),
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.ic_location_on),

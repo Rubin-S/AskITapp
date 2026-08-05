@@ -166,6 +166,18 @@ data class ExploreTaskResult(
     val status: TaskResultStatus,
 )
 
+internal data class ExplorePersonRenderRow(
+    val result: ExplorePersonResult,
+    val stableId: String,
+    val uiKey: String,
+)
+
+internal data class ExploreTaskRenderRow(
+    val result: ExploreTaskResult,
+    val stableId: String,
+    val uiKey: String,
+)
+
 private data class ExploreListPosition(
     val index: Int,
     val offset: Int,
@@ -696,6 +708,7 @@ private fun ServiceCategoryTile(
             .width(120.dp)
             .heightIn(min = 136.dp)
             .clickable(
+                role = Role.Button,
                 onClickLabel = searchLabel,
                 onClick = onClick,
             ),
@@ -1023,10 +1036,10 @@ private fun LazyListScope.addPersonResultRows(
     firstRowTag: String?,
     addTopPadding: Boolean,
 ) {
-    people.forEachIndexed { index, person ->
-        val stablePersonId = person.id.trim()
+    buildExplorePersonRenderRows(people).forEachIndexed { index, row ->
+        val person = row.result
         item(
-            key = "person:$itemKeyPrefix:${stablePersonId.ifEmpty { "anonymous-$index" }}",
+            key = "person:$itemKeyPrefix:${row.uiKey}",
             contentType = "person",
         ) {
             Column(
@@ -1047,8 +1060,8 @@ private fun LazyListScope.addPersonResultRows(
                     priceLabel = person.priceLabel,
                     statusLabel = person.statusLabel,
                     onClick = onClick
-                        ?.takeIf { stablePersonId.isNotEmpty() }
-                        ?.let { click -> { click(stablePersonId) } },
+                        ?.takeIf { row.stableId.isNotEmpty() }
+                        ?.let { click -> { click(row.stableId) } },
                 )
             }
         }
@@ -1059,10 +1072,10 @@ private fun LazyListScope.addServiceResultRows(
     people: List<ExplorePersonResult>,
     onClick: ((String) -> Unit)?,
 ) {
-    distinctPeopleById(people).forEachIndexed { index, person ->
-        val stablePersonId = person.id.trim()
+    buildExplorePersonRenderRows(distinctPeopleById(people)).forEachIndexed { index, row ->
+        val person = row.result
         item(
-            key = "service:person:${stablePersonId.ifEmpty { "anonymous-$index" }}",
+            key = "service:person:${row.uiKey}",
             contentType = "service",
         ) {
             Box(
@@ -1080,8 +1093,8 @@ private fun LazyListScope.addServiceResultRows(
                 CompactServiceResultCard(
                     result = person,
                     onClick = onClick
-                        ?.takeIf { stablePersonId.isNotEmpty() }
-                        ?.let { click -> { click(stablePersonId) } },
+                        ?.takeIf { row.stableId.isNotEmpty() }
+                        ?.let { click -> { click(row.stableId) } },
                 )
             }
         }
@@ -1095,10 +1108,10 @@ private fun LazyListScope.addTaskResultRows(
     firstRowTag: String?,
     addTopPadding: Boolean,
 ) {
-    tasks.forEachIndexed { index, task ->
-        val stableTaskId = task.id.trim()
+    buildExploreTaskRenderRows(tasks).forEachIndexed { index, row ->
+        val task = row.result
         item(
-            key = "task:$itemKeyPrefix:${stableTaskId.ifEmpty { "anonymous-$index" }}",
+            key = "task:$itemKeyPrefix:${row.uiKey}",
             contentType = "task",
         ) {
             Column(
@@ -1120,9 +1133,9 @@ private fun LazyListScope.addTaskResultRows(
                     status = task.status,
                     onClick = onClick
                         ?.takeIf {
-                            task.status != TaskResultStatus.Unavailable && stableTaskId.isNotEmpty()
+                            task.status != TaskResultStatus.Unavailable && row.stableId.isNotEmpty()
                         }
-                        ?.let { click -> { click(stableTaskId) } },
+                        ?.let { click -> { click(row.stableId) } },
                 )
             }
         }
@@ -1171,6 +1184,87 @@ private fun distinctPeopleById(people: List<ExplorePersonResult>): List<ExploreP
         }
     }
     return merged
+}
+
+internal fun buildExplorePersonRenderRows(
+    people: List<ExplorePersonResult>,
+): List<ExplorePersonRenderRow> {
+    val anonymousOccurrences = mutableMapOf<String, Int>()
+    return people.map { person ->
+        val stableId = person.id.trim()
+        val uiKey = if (stableId.isNotEmpty()) {
+            stableId
+        } else {
+            val fingerprint = explorePersonContentFingerprint(person)
+            val occurrence = anonymousOccurrences.getOrDefault(fingerprint, 0)
+            anonymousOccurrences[fingerprint] = occurrence + 1
+            "anonymous-person:$fingerprint:$occurrence"
+        }
+        ExplorePersonRenderRow(
+            result = person,
+            stableId = stableId,
+            uiKey = uiKey,
+        )
+    }
+}
+
+internal fun buildExploreTaskRenderRows(
+    tasks: List<ExploreTaskResult>,
+): List<ExploreTaskRenderRow> {
+    val anonymousOccurrences = mutableMapOf<String, Int>()
+    return tasks.map { task ->
+        val stableId = task.id.trim()
+        val uiKey = if (stableId.isNotEmpty()) {
+            stableId
+        } else {
+            val fingerprint = exploreTaskContentFingerprint(task)
+            val occurrence = anonymousOccurrences.getOrDefault(fingerprint, 0)
+            anonymousOccurrences[fingerprint] = occurrence + 1
+            "anonymous-task:$fingerprint:$occurrence"
+        }
+        ExploreTaskRenderRow(
+            result = task,
+            stableId = stableId,
+            uiKey = uiKey,
+        )
+    }
+}
+
+private fun explorePersonContentFingerprint(person: ExplorePersonResult): String = buildString {
+    appendExploreKeyPart(person.name)
+    appendExploreKeyPart(person.avatarUrl)
+    appendExploreKeyPart(person.primaryService)
+    appendExploreKeyParts(person.additionalServices)
+    appendExploreKeyPart(person.rating?.toString())
+    appendExploreKeyPart(person.reviewCount.toString())
+    appendExploreKeyPart(person.locationLabel)
+    appendExploreKeyPart(person.priceLabel)
+    appendExploreKeyPart(person.statusLabel)
+    appendExploreKeyParts(person.matchReasons.map(PersonMatchReason::name).sorted())
+}
+
+private fun exploreTaskContentFingerprint(task: ExploreTaskResult): String = buildString {
+    appendExploreKeyPart(task.title)
+    appendExploreKeyPart(task.category)
+    appendExploreKeyPart(task.summary)
+    appendExploreKeyPart(task.budgetLabel)
+    appendExploreKeyPart(task.locationLabel)
+    appendExploreKeyPart(task.timingLabel)
+    appendExploreKeyPart(task.posterName)
+    appendExploreKeyPart(task.postedLabel)
+    appendExploreKeyPart(task.status.name)
+}
+
+private fun StringBuilder.appendExploreKeyParts(values: List<String>) {
+    append(values.size)
+    values.forEach { value -> appendExploreKeyPart(value) }
+}
+
+private fun StringBuilder.appendExploreKeyPart(value: String?) {
+    val normalized = value.orEmpty()
+    append(normalized.length)
+    append(':')
+    append(normalized)
 }
 
 private fun distinctTasksById(tasks: List<ExploreTaskResult>): List<ExploreTaskResult> {
@@ -1684,6 +1778,7 @@ private fun SuggestionRow(
             .heightIn(min = 48.dp)
             .testTag("explore_typed_suggestion_row")
             .clickable(
+                role = Role.Button,
                 onClickLabel = actionLabel,
                 onClick = onClick,
             ),
@@ -1834,6 +1929,7 @@ private fun RecentSearchRow(
                 .weight(1f)
                 .fillMaxHeight()
                 .clickable(
+                    role = Role.Button,
                     onClickLabel = searchAction,
                     onClick = onSelect,
                 )

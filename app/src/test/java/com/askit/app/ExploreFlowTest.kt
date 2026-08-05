@@ -377,6 +377,12 @@ class ExploreFlowTest {
                 .config[SemanticsActions.OnClick]
                 .label,
         )
+        assertEquals(
+            Role.Button,
+            composeTestRule.onNodeWithText("Electrician")
+                .fetchSemanticsNode()
+                .config[SemanticsProperties.Role],
+        )
     }
 
     @Test
