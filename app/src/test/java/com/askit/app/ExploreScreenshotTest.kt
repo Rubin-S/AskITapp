@@ -14,6 +14,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.lifecycle.SavedStateHandle
 import com.askit.app.explore.ExploreFilterOption
+import com.askit.app.explore.ExploreBrowseState
+import com.askit.app.explore.ExploreBrowseStatus
 import com.askit.app.explore.ExplorePersonResult
 import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreResultScope
@@ -56,10 +58,66 @@ class ExploreScreenshotTest {
     }
 
     @Test
+    fun explore_browse_empty_states_light() {
+        setApp(
+            darkTheme = false,
+            browseState = ExploreBrowseState(
+                services = ExploreBrowseStatus.Empty,
+                professionals = ExploreBrowseStatus.Empty,
+                tasks = ExploreBrowseStatus.Empty,
+            ),
+        )
+        openExplore()
+        capture("explore_browse_empty_states_light")
+    }
+
+    @Test
+    fun explore_browse_offline_states_dark() {
+        setApp(
+            darkTheme = true,
+            browseState = ExploreBrowseState(
+                services = ExploreBrowseStatus.Offline,
+                professionals = ExploreBrowseStatus.Offline,
+                tasks = ExploreBrowseStatus.Offline,
+            ),
+        )
+        openExplore()
+        capture("explore_browse_offline_states_dark")
+    }
+
+    @Test
+    fun explore_browse_server_states_light() {
+        setApp(
+            darkTheme = false,
+            browseState = ExploreBrowseState(
+                services = ExploreBrowseStatus.ServerUnavailable,
+                professionals = ExploreBrowseStatus.ServerUnavailable,
+                tasks = ExploreBrowseStatus.ServerUnavailable,
+            ),
+        )
+        openExplore()
+        capture("explore_browse_server_states_light")
+    }
+
+    @Test
+    fun explore_browse_loading_states_dark() {
+        setApp(
+            darkTheme = true,
+            browseState = ExploreBrowseState(
+                services = ExploreBrowseStatus.Loading,
+                professionals = ExploreBrowseStatus.Loading,
+                tasks = ExploreBrowseStatus.Loading,
+            ),
+        )
+        openExplore()
+        capture("explore_browse_loading_states_dark")
+    }
+
+    @Test
     fun explore_search_active_light() {
         setApp(darkTheme = false, withHistory = true)
         openExplore()
-        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        openSearch()
         capture("explore_search_active_light")
     }
 
@@ -67,7 +125,7 @@ class ExploreScreenshotTest {
     fun explore_search_active_dark() {
         setApp(darkTheme = true, withHistory = true)
         openExplore()
-        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        openSearch()
         capture("explore_search_active_dark")
     }
 
@@ -75,7 +133,7 @@ class ExploreScreenshotTest {
     fun explore_typed_suggestions_light() {
         setApp(darkTheme = false, typedQuery = true)
         openExplore()
-        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        openSearch()
         composeTestRule.onNodeWithTag("explore_location_summary").performTouchInput { click() }
         capture("explore_typed_suggestions_light")
     }
@@ -84,7 +142,7 @@ class ExploreScreenshotTest {
     fun explore_typed_suggestions_dark() {
         setApp(darkTheme = true, typedQuery = true)
         openExplore()
-        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        openSearch()
         composeTestRule.onNodeWithTag("explore_location_summary").performTouchInput { click() }
         capture("explore_typed_suggestions_dark")
     }
@@ -166,6 +224,40 @@ class ExploreScreenshotTest {
         openExplore()
         composeTestRule.onNodeWithText("Services").performClick()
         capture("explore_result_empty_360_dark")
+    }
+
+    @Test
+    fun explore_result_loading_360_light() {
+        setApp(
+            darkTheme = false,
+            resultState = ExploreResultState.Loading,
+        )
+        openExplore()
+        capture("explore_result_loading_360_light")
+    }
+
+    @Test
+    fun explore_result_offline_360_dark() {
+        setApp(
+            darkTheme = true,
+            resultState = ExploreResultState.Failure(ExploreResultState.FailureReason.Offline),
+        )
+        openExplore()
+        capture("explore_result_offline_360_dark")
+    }
+
+    @Test
+    fun explore_result_server_360_light() {
+        setApp(
+            darkTheme = false,
+            resultState = ExploreResultState.Failure(
+                ExploreResultState.FailureReason.SourceUnavailable(
+                    ExploreResultState.Source.Tasks,
+                ),
+            ),
+        )
+        openExplore()
+        capture("explore_result_server_360_light")
     }
 
     @Test
@@ -264,6 +356,7 @@ class ExploreScreenshotTest {
         submittedResults: Boolean = false,
         sortMenu: Boolean = false,
         resultState: ExploreResultState? = null,
+        browseState: ExploreBrowseState = ExploreBrowseState(),
         appliedFilters: Map<ExploreResultScope, Set<ExploreFilterOption>>? = null,
         fontScale: Float = 1f,
     ) {
@@ -332,6 +425,7 @@ class ExploreScreenshotTest {
                         } else {
                             ExploreResultState.Loading
                         },
+                        browseState = browseState,
                         availableSortOptions = sortOptions,
                         selectedSortOptions = selectedSortOptions,
                         onSortChanged = onSortChanged,
@@ -405,6 +499,12 @@ class ExploreScreenshotTest {
     private fun openExplore(contentDescription: String = "Explore") {
         composeTestRule.onNodeWithContentDescription(contentDescription).performClick()
         composeTestRule.mainClock.advanceTimeBy(5_000)
+        composeTestRule.waitForIdle()
+    }
+
+    private fun openSearch() {
+        composeTestRule.onNodeWithTag("explore_search_field").performClick()
+        composeTestRule.mainClock.advanceTimeBy(1_000)
         composeTestRule.waitForIdle()
     }
 

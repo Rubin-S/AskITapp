@@ -1,5 +1,25 @@
 package com.askit.app.explore
 
+enum class ExploreBrowseSection {
+    Services,
+    Professionals,
+    Tasks,
+}
+
+enum class ExploreBrowseStatus {
+    Available,
+    Loading,
+    Empty,
+    Offline,
+    ServerUnavailable,
+}
+
+data class ExploreBrowseState(
+    val services: ExploreBrowseStatus = ExploreBrowseStatus.Available,
+    val professionals: ExploreBrowseStatus = ExploreBrowseStatus.Empty,
+    val tasks: ExploreBrowseStatus = ExploreBrowseStatus.Empty,
+)
+
 sealed interface ExploreResultState {
     data object Loading : ExploreResultState
 

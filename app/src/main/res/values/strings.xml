@@ -93,10 +93,19 @@
     <string name="explore_status_offline_cached">You’re offline. Showing previously loaded results.</string>
     <string name="explore_status_tasks_partial_failure">Tasks couldn’t be loaded. Showing people and services.</string>
     <string name="explore_status_people_services_partial_failure">People and services couldn’t be loaded. Showing tasks.</string>
+    <string name="explore_change_area">Change area</string>
+    <string name="explore_browse_services_empty_title">No services available</string>
+    <string name="explore_browse_services_empty_supporting_text">Try changing the search area.</string>
+    <string name="explore_browse_professionals_empty_title">No professionals nearby</string>
+    <string name="explore_browse_professionals_empty_supporting_text">Try a wider search area.</string>
+    <string name="explore_browse_tasks_empty_title">No open tasks nearby</string>
+    <string name="explore_browse_tasks_empty_supporting_text">Try a wider search area.</string>
+    <string name="explore_browse_offline_title">No internet connection</string>
+    <string name="explore_browse_offline_supporting_text">Connect to the internet and try again.</string>
+    <string name="explore_browse_server_title">Unable to reach the server</string>
+    <string name="explore_browse_server_supporting_text">Try again in a moment.</string>
     <plurals name="explore_additional_services">
         <item quantity="one">+%1$d other service</item>
         <item quantity="other">+%1$d other services</item>
     </plurals>
-    <string name="explore_category_view_all">View all</string>
-    <string name="explore_view_all_services">View all services</string>
 </resources>

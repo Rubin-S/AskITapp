@@ -45,8 +45,8 @@ class AskITThemeTest {
         assertEquals(Color(0xFFFFFFFF), onPrimary)
         assertEquals(Color(0xFFFFFFFF), surface)
         assertEquals(Color(0xFF000000), onSurface)
-        assertEquals(Color(0xFFF5F5F5), secondaryContainer)
-        assertEquals(Color(0xFF000000), onSecondaryContainer)
+        assertEquals(Color(0xFFE0F6BF), secondaryContainer)
+        assertEquals(Color(0xFF1A2E00), onSecondaryContainer)
         assertEquals(Color(0xFF8A8A8A), outline)
     }
 

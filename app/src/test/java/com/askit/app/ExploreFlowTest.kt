@@ -37,6 +37,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import com.askit.app.explore.ExplorePersonResult
+import com.askit.app.explore.ExploreBrowseSection
+import com.askit.app.explore.ExploreBrowseState
+import com.askit.app.explore.ExploreBrowseStatus
 import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreScreen
@@ -106,7 +109,85 @@ class ExploreFlowTest {
     }
 
     @Test
-    fun browseServices_rendersFiveCategories_andViewAllExpandsTheSixth_withoutHorizontalScroll() {
+    fun idleExplore_keepsAllBrowseSectionsVisible_whenNearbyDataIsEmpty() {
+        setApp()
+        openExplore()
+
+        composeTestRule.onNodeWithText("Nearby professionals")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("No professionals nearby")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Open tasks nearby")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("No open tasks nearby")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Change area").assertCountEquals(2)
+    }
+
+    @Test
+    fun browseSections_renderOfflineAndServerStates_withoutDeadRetryAction() {
+        setBrowseContent(
+            browseState = ExploreBrowseState(
+                services = ExploreBrowseStatus.Offline,
+                professionals = ExploreBrowseStatus.ServerUnavailable,
+                tasks = ExploreBrowseStatus.Offline,
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("explore_browse_services_offline").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_browse_professionals_serverunavailable")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_browse_tasks_offline")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Retry").assertCountEquals(0)
+    }
+
+    @Test
+    fun browseSections_wireRetryToTheCorrectSection() {
+        var retrySection: ExploreBrowseSection? = null
+        setBrowseContent(
+            browseState = ExploreBrowseState(
+                services = ExploreBrowseStatus.Offline,
+                professionals = ExploreBrowseStatus.ServerUnavailable,
+                tasks = ExploreBrowseStatus.Offline,
+            ),
+            onRetryBrowseSection = { retrySection = it },
+        )
+        composeTestRule.onNodeWithTag("explore_browse_professionals_action")
+            .performScrollTo()
+            .performClick()
+        assertEquals(ExploreBrowseSection.Professionals, retrySection)
+    }
+
+    @Test
+    fun browseSections_renderNeutralSkeletons_whileLoading() {
+        setBrowseContent(
+            browseState = ExploreBrowseState(
+                services = ExploreBrowseStatus.Loading,
+                professionals = ExploreBrowseStatus.Loading,
+                tasks = ExploreBrowseStatus.Loading,
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("explore_browse_services_loading").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_browse_professionals_loading")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_browse_tasks_loading")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("No professionals nearby").assertCountEquals(0)
+        composeTestRule.onAllNodesWithText("No open tasks nearby").assertCountEquals(0)
+    }
+
+    @Test
+    fun browseServices_rendersSixCategories_withoutHorizontalScroll() {
         setApp()
         openExplore()
 
@@ -116,14 +197,12 @@ class ExploreFlowTest {
             "Cleaning",
             "AC repair",
             "Home tutor",
-            "View all",
+            "Appliance repair",
         ).forEach { category ->
             composeTestRule.onNodeWithText(category).assertHasClickAction()
         }
 
         composeTestRule.onNodeWithTag("explore_browse_categories").assertIsDisplayed()
-        composeTestRule.onNodeWithText("View all").performClick()
-        composeTestRule.onNodeWithText("Appliance repair").assertHasClickAction()
     }
 
     @Test
@@ -200,39 +279,16 @@ class ExploreFlowTest {
             composeTestRule.waitForIdle()
             composeTestRule.onNodeWithText("Browse services").assertIsDisplayed()
             composeTestRule.onNodeWithTag("explore_browse_categories").assertIsDisplayed()
-
-            val firstRowTop = composeTestRule
-                .onNodeWithText("Electrician")
-                .fetchSemanticsNode()
-                .boundsInRoot
-                .top
-            assertEquals(
-                firstRowTop,
-                composeTestRule.onNodeWithText("Plumber").fetchSemanticsNode().boundsInRoot.top,
-                0.1f,
-            )
-            val secondRowTop = composeTestRule
-                .onNodeWithText("Cleaning")
-                .fetchSemanticsNode()
-                .boundsInRoot
-                .top
-            assertEquals(
-                secondRowTop,
-                composeTestRule.onNodeWithText("AC repair").fetchSemanticsNode().boundsInRoot.top,
-                0.1f,
-            )
-            assertTrue(secondRowTop > firstRowTop)
-            val thirdRowTop = composeTestRule
-                .onNodeWithText("Home tutor")
-                .fetchSemanticsNode()
-                .boundsInRoot
-                .top
-            assertEquals(
-                thirdRowTop,
-                composeTestRule.onNodeWithText("View all").fetchSemanticsNode().boundsInRoot.top,
-                0.1f,
-            )
-            assertTrue(thirdRowTop > secondRowTop)
+            listOf(
+                "Electrician",
+                "Plumber",
+                "Cleaning",
+                "AC repair",
+                "Home tutor",
+                "Appliance repair",
+            ).forEach { category ->
+                composeTestRule.onNodeWithText(category).performScrollTo().assertIsDisplayed()
+            }
         }
     }
 
@@ -1797,6 +1853,29 @@ class ExploreFlowTest {
         composeTestRule.setContent {
             AskITTheme(darkTheme = false) {
                 AskITApp(viewModel)
+            }
+        }
+    }
+
+    private fun setBrowseContent(
+        browseState: ExploreBrowseState,
+        onRetryBrowseSection: ((ExploreBrowseSection) -> Unit)? = null,
+    ) {
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                ExploreScreen(
+                    query = "",
+                    searchArea = testSearchArea(),
+                    recentSearches = emptyList(),
+                    onQueryChanged = {},
+                    onQueryCleared = {},
+                    onQuerySubmitted = {},
+                    onRecentSearchRemoved = {},
+                    onRecentSearchesCleared = {},
+                    onSearchFiltersClick = {},
+                    browseState = browseState,
+                    onRetryBrowseSection = onRetryBrowseSection,
+                )
             }
         }
     }
