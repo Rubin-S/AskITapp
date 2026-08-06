@@ -65,6 +65,9 @@ class ExploreResultStateTest {
 
         composeTestRule.onNodeWithText("Loading results…").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Loading results").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_result_professionals_loading").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_result_tasks_loading").assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("explore_result_loading_indicator").assertCountEquals(0)
         composeTestRule.onNodeWithTag("explore_result_tabs").assertIsDisplayed()
     }
 
@@ -142,19 +145,21 @@ class ExploreResultStateTest {
     }
 
     @Test
-    fun generalBlockingFailure_rendersRequiredCopyAndRetry() {
+    fun generalBlockingFailure_rendersRequiredCopyWithoutDeadRetry() {
         setExplore(ExploreResultState.Failure(ExploreResultState.FailureReason.General))
         composeTestRule.onNodeWithText("Couldn’t load results").assertIsDisplayed()
         composeTestRule.onNodeWithText("Something went wrong. Try again.").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Retry").assertHasClickAction()
+        composeTestRule.onNodeWithTag("explore_result_failure").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Retry").assertCountEquals(0)
     }
 
     @Test
-    fun offlineWithoutCache_rendersBlockingOfflineCopyAndRetry() {
+    fun offlineWithoutCache_rendersBlockingOfflineCopyWithoutDeadRetry() {
         setExplore(ExploreResultState.Failure(ExploreResultState.FailureReason.Offline))
         composeTestRule.onNodeWithText("You’re offline").assertIsDisplayed()
         composeTestRule.onNodeWithText("Connect to the internet and try again.").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Retry").assertHasClickAction()
+        composeTestRule.onNodeWithTag("explore_result_failure").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Retry").assertCountEquals(0)
     }
 
     @Test
@@ -195,7 +200,7 @@ class ExploreResultStateTest {
     }
 
     @Test
-    fun offlineCachedStatus_keepsVerifiedRowsVisibleAndOffersRetry() {
+    fun offlineCachedStatus_keepsVerifiedRowsVisibleWithoutDeadRetry() {
         setExplore(
             freshResults(status = ExploreResultState.ContentStatus.OfflineCached),
         )
@@ -203,7 +208,7 @@ class ExploreResultStateTest {
             .onNodeWithText("You’re offline. Showing previously loaded results.")
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Identity Person").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Retry").assertHasClickAction()
+        composeTestRule.onAllNodesWithText("Retry").assertCountEquals(0)
     }
 
     @Test
@@ -244,6 +249,7 @@ class ExploreResultStateTest {
                     ExploreResultState.Source.Tasks,
                 ),
             ),
+            onRetryResults = {},
         )
 
         composeTestRule
@@ -274,6 +280,7 @@ class ExploreResultStateTest {
                     ExploreResultState.Source.PeopleAndServices,
                 ),
             ),
+            onRetryResults = {},
         )
 
         composeTestRule
@@ -383,6 +390,7 @@ class ExploreResultStateTest {
         setExplore(
             state = ExploreResultState.Failure(ExploreResultState.FailureReason.Offline),
             locale = Locale.forLanguageTag("ta"),
+            onRetryResults = {},
         )
         composeTestRule.onNodeWithText("இணைய இணைப்பு இல்லை").assertIsDisplayed()
         composeTestRule.onNodeWithText("மீண்டும் முயற்சி").assertHasClickAction()
@@ -451,7 +459,7 @@ class ExploreResultStateTest {
         widthDp: Int = 360,
         fontScale: Float = 1f,
         locale: Locale = Locale.ENGLISH,
-        onRetryResults: () -> Unit = {},
+        onRetryResults: (() -> Unit)? = null,
         onEditFilters: () -> Unit = {},
     ) {
         composeTestRule.setContent {
@@ -488,7 +496,7 @@ class ExploreResultStateTest {
         state: ExploreResultState,
         query: String = "electrician",
         appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
-        onRetryResults: () -> Unit = {},
+        onRetryResults: (() -> Unit)? = null,
         onEditFilters: () -> Unit = {},
     ) {
         ExploreScreen(

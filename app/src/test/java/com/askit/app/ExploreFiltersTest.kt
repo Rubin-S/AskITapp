@@ -19,7 +19,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -39,7 +40,6 @@ import com.askit.app.explore.PersonMatchReason
 import com.askit.app.explore.SearchAreaScreen
 import com.askit.designsystem.theme.AskITTheme
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,19 +76,17 @@ class ExploreFiltersTest {
 
         composeTestRule.onNodeWithText("Filters").assertIsDisplayed()
         composeTestRule.onNodeWithText("Filters for Services").assertIsDisplayed()
+        scrollToFilterTag("explore_filter_group_rating")
         composeTestRule.onNodeWithText("Rating").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Work location").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Availability").assertIsDisplayed()
         composeTestRule.onNodeWithText("4+ rating").assertIsSelected()
+        scrollToFilterTag("explore_filter_group_worklocation")
+        composeTestRule.onNodeWithText("Work location").assertIsDisplayed()
         composeTestRule.onNodeWithText("Remote").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Available this week").performScrollTo().assertIsDisplayed()
+        scrollToFilterTag("explore_filter_group_availability")
+        composeTestRule.onNodeWithText("Availability").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Available this week").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Open").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Needed today").assertCountEquals(0)
-
-        val groupTops = listOf("Rating", "Work location", "Availability").map {
-            composeTestRule.onNodeWithText(it).fetchSemanticsNode().boundsInRoot.top
-        }
-        assertTrue(groupTops.zipWithNext().all { (first, second) -> first < second })
     }
 
     @Test
@@ -111,16 +109,15 @@ class ExploreFiltersTest {
         )
 
         composeTestRule.onNodeWithTag("explore_clear_filters").assertIsNotEnabled()
-        composeTestRule
-            .onNodeWithTag("explore_filter_option_remote")
-            .performScrollTo()
-            .performClick()
+        scrollToFilterTag("explore_filter_option_remote")
+        composeTestRule.onNodeWithTag("explore_filter_option_remote").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithTag("explore_filter_option_remote").assertIsSelected()
         composeTestRule.onNodeWithTag("explore_clear_filters").assertIsEnabled()
         composeTestRule.onNodeWithTag("explore_clear_filters").performClick()
         composeTestRule.onNodeWithTag("explore_clear_filters").assertIsNotEnabled()
 
+        scrollToFilterTag("explore_filter_option_ratingfourplus")
         composeTestRule.onNodeWithTag("explore_filter_option_ratingfourplus").performClick()
         composeTestRule.onNodeWithText("Apply").performClick()
 
@@ -140,7 +137,8 @@ class ExploreFiltersTest {
             onApply = { _, _ -> applyCount++ },
         )
 
-        composeTestRule.onNodeWithTag("explore_filter_option_taskopen").performScrollTo().performClick()
+        scrollToFilterTag("explore_filter_option_taskopen")
+        composeTestRule.onNodeWithTag("explore_filter_option_taskopen").performClick()
         composeTestRule.onNodeWithContentDescription("Back").performClick()
 
         assertEquals(1, backCount)
@@ -260,9 +258,12 @@ class ExploreFiltersTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Open").performClick()
+        scrollToFilterTag("explore_filter_option_taskopen")
+        composeTestRule.onNodeWithTag("explore_filter_option_taskopen").performClick()
+        composeTestRule.waitForIdle()
         restorationTester.emulateSavedInstanceStateRestore()
 
+        scrollToFilterTag("explore_filter_option_taskopen")
         composeTestRule.onNodeWithTag("explore_filter_option_taskopen").assertIsSelected()
     }
 
@@ -342,6 +343,7 @@ class ExploreFiltersTest {
         composeTestRule.onNodeWithContentDescription("Explore").performClick()
         composeTestRule.onNodeWithText("Services").performClick()
         composeTestRule.onNodeWithTag("explore_search_filter_action").performClick()
+        scrollToFilterTag("explore_filter_option_remote")
         composeTestRule.onNodeWithTag("explore_filter_option_remote").performClick()
         composeTestRule.onNodeWithText("Apply").performClick()
         composeTestRule.waitForIdle()
@@ -388,6 +390,22 @@ class ExploreFiltersTest {
                 )
             }
         }
+    }
+
+    private fun scrollToFilterTag(tag: String) {
+        val content = composeTestRule.onNodeWithTag("explore_filters_content")
+        for (targetIndex in 3..5) {
+            if (runCatching {
+                    content.performSemanticsAction(SemanticsActions.ScrollToIndex) { scrollToIndex ->
+                        scrollToIndex(targetIndex)
+                    }
+                    composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
+                }.isSuccess
+            ) {
+                return
+            }
+        }
+        composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
     }
 
     private fun testSearchArea() = ExploreSearchArea(

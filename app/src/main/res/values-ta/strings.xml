@@ -93,10 +93,19 @@
     <string name="explore_status_offline_cached">இணைய இணைப்பு இல்லை. முன்பு ஏற்றப்பட்ட முடிவுகள் காட்டப்படுகின்றன.</string>
     <string name="explore_status_tasks_partial_failure">பணிகளை ஏற்ற முடியவில்லை. மக்கள் மற்றும் சேவைகள் காட்டப்படுகின்றன.</string>
     <string name="explore_status_people_services_partial_failure">மக்கள் மற்றும் சேவைகளை ஏற்ற முடியவில்லை. பணிகள் காட்டப்படுகின்றன.</string>
+    <string name="explore_change_area">பகுதியை மாற்று</string>
+    <string name="explore_browse_services_empty_title">சேவைகள் எதுவும் கிடைக்கவில்லை</string>
+    <string name="explore_browse_services_empty_supporting_text">தேடல் பகுதியை மாற்றி முயற்சிக்கவும்.</string>
+    <string name="explore_browse_professionals_empty_title">அருகில் நிபுணர்கள் இல்லை</string>
+    <string name="explore_browse_professionals_empty_supporting_text">பரந்த தேடல் பகுதியை முயற்சிக்கவும்.</string>
+    <string name="explore_browse_tasks_empty_title">அருகில் திறந்த பணிகள் இல்லை</string>
+    <string name="explore_browse_tasks_empty_supporting_text">பரந்த தேடல் பகுதியை முயற்சிக்கவும்.</string>
+    <string name="explore_browse_offline_title">இணைய இணைப்பு இல்லை</string>
+    <string name="explore_browse_offline_supporting_text">இணையத்துடன் இணைத்து மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="explore_browse_server_title">சேவையகத்தை அணுக முடியவில்லை</string>
+    <string name="explore_browse_server_supporting_text">சிறிது நேரத்தில் மீண்டும் முயற்சிக்கவும்.</string>
     <plurals name="explore_additional_services">
         <item quantity="one">+%1$d கூடுதல் சேவை</item>
         <item quantity="other">+%1$d கூடுதல் சேவைகள்</item>
     </plurals>
-    <string name="explore_category_view_all">அனைத்தையும் காண்க</string>
-    <string name="explore_view_all_services">அனைத்து சேவைகளையும் காண்க</string>
 </resources>

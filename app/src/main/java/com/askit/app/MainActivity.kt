@@ -34,6 +34,8 @@ import androidx.navigation3.runtime.serialization.NavKeySerializer
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
 import com.askit.app.explore.ExploreRoute
+import com.askit.app.explore.ExploreBrowseState
+import com.askit.app.explore.ExploreBrowseSection
 import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreResultScope
@@ -89,7 +91,9 @@ fun AskITApp(
     exploreViewModel: ExploreViewModel,
     onExit: () -> Unit = {},
     resultState: ExploreResultState = ExploreResultState.Loading,
-    onRetryResults: () -> Unit = {},
+    browseState: ExploreBrowseState = ExploreBrowseState(),
+    onRetryResults: (() -> Unit)? = null,
+    onRetryBrowseSection: ((ExploreBrowseSection) -> Unit)? = null,
     availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
     selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
@@ -118,7 +122,9 @@ fun AskITApp(
                 viewModel = exploreViewModel,
                 onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) },
                 resultState = resultState,
+                browseState = browseState,
                 onRetryResults = onRetryResults,
+                onRetryBrowseSection = onRetryBrowseSection,
                 availableSortOptions = availableSortOptions,
                 selectedSortOptions = selectedSortOptions,
                 onSortChanged = onSortChanged,

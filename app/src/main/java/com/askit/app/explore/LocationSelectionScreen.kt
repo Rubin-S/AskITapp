@@ -11,7 +11,10 @@ import android.location.Location
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -27,11 +30,12 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +43,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -64,10 +69,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -384,44 +388,57 @@ fun SearchAreaScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             Surface(
-                color = MaterialTheme.colorScheme.background,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 0.dp,
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TextButton(
-                        onClick = { draftOptionalOptionNames = emptyList() },
-                        enabled = draftOptionalOptions.isNotEmpty(),
-                        modifier = Modifier.testTag("explore_clear_filters"),
+                Column {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(stringResource(R.string.explore_clear_filters))
-                    }
-                    Spacer(Modifier.size(8.dp))
-                    Button(
-                        onClick = { onApply(draft, draftOptionalOptions) },
-                        enabled = draft.isUsable && !isResolvingLocation,
-                    ) {
-                        Text(stringResource(R.string.explore_apply))
+                        TextButton(
+                            onClick = { draftOptionalOptionNames = emptyList() },
+                            enabled = draftOptionalOptions.isNotEmpty(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
+                                .testTag("explore_clear_filters"),
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.secondary,
+                                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
+                        ) {
+                            Text(stringResource(R.string.explore_clear_filters))
+                        }
+                        Spacer(Modifier.size(8.dp))
+                        Button(
+                            onClick = { onApply(draft, draftOptionalOptions) },
+                            enabled = draft.isUsable && !isResolvingLocation,
+                            modifier = Modifier.heightIn(min = 48.dp),
+                        ) {
+                            Text(stringResource(R.string.explore_apply))
+                        }
                     }
                 }
             }
         },
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("explore_filters_content"),
             contentPadding = PaddingValues(
                 start = 16.dp,
-                top = padding.calculateTopPadding() + 8.dp,
+                top = padding.calculateTopPadding() + 16.dp,
                 end = 16.dp,
-                bottom = padding.calculateBottomPadding() + 16.dp,
+                bottom = padding.calculateBottomPadding() + 24.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             item {
                 Text(
@@ -431,122 +448,162 @@ fun SearchAreaScreen(
                     ),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.semantics { heading() },
                 )
             }
-            if (filterGroups.isNotEmpty()) {
-                item {
-                    HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
-                }
-                filterGroups.forEach { (group, options) ->
-                    item(key = "explore_filter_group_${group.name}") {
-                        ExploreFilterGroupSection(
-                            group = group,
-                            options = options,
-                            selectedOptions = draftOptionalOptions,
-                            onOptionToggled = { option ->
-                                draftOptionalOptionNames = if (option.name in draftOptionalOptionNames) {
-                                    draftOptionalOptionNames.filterNot { it == option.name }
-                                } else {
-                                    draftOptionalOptionNames + option.name
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Column {
+                        Column(Modifier.padding(16.dp)) {
+                            Text(
+                                text = stringResource(R.string.explore_selected_area),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.semantics { heading() },
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = draft.displayName,
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            draft.supportingText?.let { areaSupportingText ->
+                                Text(
+                                    text = areaSupportingText,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        ListItem(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 56.dp)
+                                .clickable(
+                                    role = Role.Button,
+                                    onClickLabel = stringResource(R.string.explore_use_current_location),
+                                    onClick = ::requestCurrentLocation,
+                                ),
+                            leadingContent = {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_my_location),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                            headlineContent = { Text(stringResource(R.string.explore_use_current_location)) },
+                            trailingContent = {
+                                if (isResolvingLocation) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        strokeWidth = 2.dp,
+                                    )
                                 }
                             },
+                            colors = ListItemDefaults.colors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            ),
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        ListItem(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 56.dp)
+                                .clickable(
+                                    role = Role.Button,
+                                    onClickLabel = stringResource(R.string.explore_search_another_area),
+                                    onClick = ::openPlaceSearch,
+                                ),
+                            leadingContent = {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_location_on),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                            headlineContent = { Text(stringResource(R.string.explore_search_another_area)) },
+                            colors = ListItemDefaults.colors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            ),
                         )
                     }
                 }
             }
             item {
-                Text(
-                    text = stringResource(R.string.explore_selected_area),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = draft.displayName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                draft.supportingText?.let { areaSupportingText ->
-                    Text(
-                        text = areaSupportingText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.explore_search_distance),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .semantics { heading() },
+                        )
+                        Column(Modifier.selectableGroup()) {
+                            SEARCH_RADII_KM.forEach { radius ->
+                                val radiusDescription = stringResource(R.string.explore_within_km, radius)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 56.dp)
+                                        .selectable(
+                                            selected = radiusKm == radius,
+                                            onClick = { radiusKm = radius },
+                                            role = Role.RadioButton,
+                                        )
+                                        .semantics {
+                                            contentDescription = radiusDescription
+                                        }
+                                        .padding(horizontal = 16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    RadioButton(
+                                        selected = radiusKm == radius,
+                                        onClick = null,
+                                        colors = RadioButtonDefaults.colors(
+                                            selectedColor = MaterialTheme.colorScheme.secondary,
+                                            unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        ),
+                                    )
+                                    Spacer(Modifier.size(12.dp))
+                                    Text(
+                                        text = radiusDescription,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            item {
-                ListItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            role = Role.Button,
-                            onClickLabel = stringResource(R.string.explore_use_current_location),
-                            onClick = ::requestCurrentLocation,
-                        ),
-                    leadingContent = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_my_location),
-                            contentDescription = null,
-                        )
-                    },
-                    headlineContent = { Text(stringResource(R.string.explore_use_current_location)) },
-                    trailingContent = {
-                        if (isResolvingLocation) {
-                            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                        }
-                    },
-                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background),
-                )
-            }
-            item {
-                ListItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            role = Role.Button,
-                            onClickLabel = stringResource(R.string.explore_search_another_area),
-                            onClick = ::openPlaceSearch,
-                        ),
-                    leadingContent = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_location_on),
-                            contentDescription = null,
-                        )
-                    },
-                    headlineContent = { Text(stringResource(R.string.explore_search_another_area)) },
-                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background),
-                )
-            }
-            item {
-                Text(
-                    text = stringResource(R.string.explore_search_distance),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 16.dp),
-                )
-            }
-            items(SEARCH_RADII_KM) { radius ->
-                val radiusDescription = stringResource(R.string.explore_within_km, radius)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp)
-                        .clickable {
-                            radiusKm = radius
-                        }
-                        .semantics {
-                            role = Role.RadioButton
-                            selected = radiusKm == radius
-                            contentDescription = radiusDescription
+            filterGroups.forEach { (group, options) ->
+                item(key = "explore_filter_group_${group.name}") {
+                    ExploreFilterGroupSection(
+                        group = group,
+                        options = options,
+                        selectedOptions = draftOptionalOptions,
+                        onOptionToggled = { option ->
+                            draftOptionalOptionNames = if (option.name in draftOptionalOptionNames) {
+                                draftOptionalOptionNames.filterNot { it == option.name }
+                            } else {
+                                draftOptionalOptionNames + option.name
+                            }
                         },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(
-                        selected = radiusKm == radius,
-                        onClick = null,
                     )
-                    Text(radiusDescription)
                 }
             }
         }
@@ -561,38 +618,54 @@ private fun ExploreFilterGroupSection(
     selectedOptions: Set<ExploreFilterOption>,
     onOptionToggled: (ExploreFilterOption) -> Unit,
 ) {
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("explore_filter_group_${group.name.lowercase()}"),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Text(
-            text = stringResource(group.labelRes),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            options.forEach { option ->
-                val isSelected = option in selectedOptions
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { onOptionToggled(option) },
-                    modifier = Modifier.testTag("explore_filter_option_${option.name.lowercase()}"),
-                    label = { Text(stringResource(option.labelRes())) },
-                    leadingIcon = if (isSelected) {
-                        {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_check),
-                                contentDescription = null,
-                            )
-                        }
-                    } else {
-                        null
-                    },
-                )
+            Text(
+                text = stringResource(group.labelRes),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.semantics { heading() },
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                options.forEach { option ->
+                    val isSelected = option in selectedOptions
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { onOptionToggled(option) },
+                        modifier = Modifier.testTag("explore_filter_option_${option.name.lowercase()}"),
+                        label = { Text(stringResource(option.labelRes())) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            labelColor = MaterialTheme.colorScheme.onSurface,
+                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                        leadingIcon = if (isSelected) {
+                            {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_check),
+                                    contentDescription = null,
+                                )
+                            }
+                        } else {
+                            null
+                        },
+                    )
+                }
             }
         }
     }

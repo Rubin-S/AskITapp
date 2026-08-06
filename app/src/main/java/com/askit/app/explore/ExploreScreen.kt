@@ -4,11 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -24,22 +25,29 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldBuffer
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -49,9 +57,12 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SearchBarState
+import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
@@ -60,6 +71,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -70,13 +82,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
@@ -95,12 +110,9 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -111,6 +123,7 @@ import com.askit.designsystem.people.PersonResultItem
 import com.askit.designsystem.tasks.TaskResultItem
 import com.askit.designsystem.tasks.TaskResultStatus
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 private val EXPLORE_CATEGORIES = listOf(
@@ -122,20 +135,11 @@ private val EXPLORE_CATEGORIES = listOf(
     ExploreCategory(R.string.explore_category_appliance_repair, R.drawable.service_appliance_repair),
 )
 
-private val EXPLORE_BROWSE_CATEGORIES = EXPLORE_CATEGORIES.take(5) + ExploreCategory(
-    labelRes = R.string.explore_category_view_all,
-    artworkRes = R.drawable.ic_view_all,
-    isViewAll = true,
-)
-
 private val BROWSE_CATEGORY_SPACING = 12.dp
-private val BROWSE_CATEGORY_MIN_WIDTH = 88.dp
-private val BROWSE_CATEGORY_MAX_WIDTH = 160.dp
 
 private data class ExploreCategory(
     @StringRes val labelRes: Int,
     @DrawableRes val artworkRes: Int,
-    val isViewAll: Boolean = false,
 )
 
 data class ExplorePersonResult(
@@ -323,7 +327,9 @@ fun ExploreRoute(
     viewModel: ExploreViewModel,
     onSearchFiltersClick: () -> Unit,
     resultState: ExploreResultState = ExploreResultState.Loading,
-    onRetryResults: () -> Unit = {},
+    browseState: ExploreBrowseState = ExploreBrowseState(),
+    onRetryResults: (() -> Unit)? = null,
+    onRetryBrowseSection: ((ExploreBrowseSection) -> Unit)? = null,
     availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
     selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
@@ -347,7 +353,9 @@ fun ExploreRoute(
         onRecentSearchesCleared = viewModel::clearRecentSearches,
         onSearchFiltersClick = onSearchFiltersClick,
         resultState = resultState,
+        browseState = browseState,
         onRetryResults = onRetryResults,
+        onRetryBrowseSection = onRetryBrowseSection,
         availableSortOptions = availableSortOptions,
         selectedSortOptions = selectedSortOptions,
         onSortChanged = onSortChanged,
@@ -361,6 +369,7 @@ fun ExploreRoute(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun ExploreScreen(
     query: String,
     searchArea: ExploreSearchArea,
@@ -374,7 +383,9 @@ fun ExploreScreen(
     people: List<ExplorePersonResult> = emptyList(),
     tasks: List<ExploreTaskResult> = emptyList(),
     resultState: ExploreResultState = ExploreResultState.Loading,
-    onRetryResults: () -> Unit = {},
+    browseState: ExploreBrowseState = ExploreBrowseState(),
+    onRetryResults: (() -> Unit)? = null,
+    onRetryBrowseSection: ((ExploreBrowseSection) -> Unit)? = null,
     availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
     selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
@@ -389,8 +400,25 @@ fun ExploreScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
     val scrollState = rememberExploreScrollState()
-    var isSearchActive by remember { mutableStateOf(false) }
+    val searchBarState = rememberSearchBarState()
+    val textFieldState = rememberTextFieldState()
+    val coroutineScope = rememberCoroutineScope()
+    val latestOnQueryChanged = rememberUpdatedState(onQueryChanged)
+    val inputTransformation = remember {
+        object : InputTransformation {
+            override fun TextFieldBuffer.transformInput() {
+                latestOnQueryChanged.value(toString())
+            }
+        }
+    }
+    val isSearchActive = searchBarState.currentValue == SearchBarValue.Expanded
     val normalizedQuery = normalizeExploreQuery(query)
+
+    LaunchedEffect(query) {
+        if (textFieldState.text.toString() != query) {
+            textFieldState.setTextAndPlaceCursorAtEnd(query)
+        }
+    }
     var selectedScopeOrdinal by rememberSaveable(normalizedQuery) {
         mutableIntStateOf(ExploreResultScope.All.ordinal)
     }
@@ -440,7 +468,7 @@ fun ExploreScreen(
     fun closeSearch() {
         keyboardController?.hide()
         focusManager.clearFocus(force = true)
-        isSearchActive = false
+        coroutineScope.launch { searchBarState.animateToCollapsed() }
     }
 
     fun openFilters() {
@@ -492,47 +520,32 @@ fun ExploreScreen(
             ExploreHeader(
                 query = query,
                 searchArea = searchArea,
-                onQueryChanged = onQueryChanged,
+                textFieldState = textFieldState,
+                searchBarState = searchBarState,
+                inputTransformation = inputTransformation,
                 onQueryCleared = onQueryCleared,
                 onQuerySubmitted = onQuerySubmitted,
                 onSearchFiltersClick = ::openFilters,
                 selectedScope = selectedScope,
                 availableFilterOptions = availableFilterOptions,
                 appliedFilterOptions = appliedFilterOptions,
-                onSearchFocused = { isSearchActive = true },
                 onCloseSearch = ::closeSearch,
+                recentSearches = recentSearches,
+                onRecentSearchSelected = { recentQuery ->
+                    onQuerySubmitted(recentQuery)
+                    closeSearch()
+                },
+                onRecentSearchRemoved = onRecentSearchRemoved,
+                onRecentSearchesCleared = onRecentSearchesCleared,
+                categories = EXPLORE_CATEGORIES.map { stringResource(it.labelRes) },
+                onCategorySelected = { category ->
+                    onQuerySubmitted(category)
+                    closeSearch()
+                },
             )
         }
 
-        if (isSearchActive && normalizedQuery.isEmpty()) {
-            item(key = "search:active", contentType = "search") {
-                ActiveSearchContent(
-                    recentSearches = recentSearches,
-                    onRecentSearchSelected = { recentQuery ->
-                        onQuerySubmitted(recentQuery)
-                        closeSearch()
-                    },
-                    onRecentSearchRemoved = onRecentSearchRemoved,
-                    onRecentSearchesCleared = onRecentSearchesCleared,
-                    onCategorySelected = { category ->
-                        onQuerySubmitted(category)
-                        closeSearch()
-                    },
-                )
-            }
-        } else if (isSearchActive && normalizedQuery.isNotEmpty()) {
-            item(key = "search:typed", contentType = "search") {
-                TypedSearchSuggestions(
-                    query = normalizedQuery,
-                    recentSearches = recentSearches,
-                    categories = EXPLORE_CATEGORIES.map { stringResource(it.labelRes) },
-                    onSuggestionSelected = { suggestion ->
-                        onQuerySubmitted(suggestion)
-                        closeSearch()
-                    },
-                )
-            }
-        } else if (!isSearchActive && normalizedQuery.isNotEmpty()) {
+        if (!isSearchActive && normalizedQuery.isNotEmpty()) {
             addSubmittedSearchResults(
                 selectedScope = selectedScope,
                 normalizedResultState = normalizedSubmittedResultState,
@@ -551,17 +564,23 @@ fun ExploreScreen(
         } else if (!isSearchActive && normalizedQuery.isEmpty()) {
             item(key = "browse:categories", contentType = "browse") {
                 BrowseServices(
+                    status = browseState.services,
                     onCategorySelected = { category ->
                         onQuerySubmitted(category)
                         closeSearch()
                     },
+                    onChangeArea = ::openFilters,
+                    onRetry = onRetryBrowseSection,
                 )
             }
             addBrowseResultSections(
                 people = people,
                 tasks = tasks,
+                browseState = browseState,
                 onPersonClick = personClick,
                 onTaskClick = taskClick,
+                onChangeArea = ::openFilters,
+                onRetryBrowseSection = onRetryBrowseSection,
             )
         }
     }
@@ -572,15 +591,22 @@ fun ExploreScreen(
 private fun ExploreHeader(
     query: String,
     searchArea: ExploreSearchArea,
-    onQueryChanged: (String) -> Unit,
+    textFieldState: TextFieldState,
+    searchBarState: SearchBarState,
+    inputTransformation: InputTransformation,
     onQueryCleared: () -> Unit,
     onQuerySubmitted: (String) -> Unit,
     onSearchFiltersClick: () -> Unit,
     selectedScope: ExploreResultScope,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>>,
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>>,
-    onSearchFocused: () -> Unit,
     onCloseSearch: () -> Unit,
+    recentSearches: List<String>,
+    onRecentSearchSelected: (String) -> Unit,
+    onRecentSearchRemoved: (String) -> Unit,
+    onRecentSearchesCleared: () -> Unit,
+    categories: List<String>,
+    onCategorySelected: (String) -> Unit,
 ) {
     val appliedFilterCount = normalizeAppliedExploreFilterOptions(
         scope = selectedScope,
@@ -597,16 +623,55 @@ private fun ExploreHeader(
         )
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChanged,
+    val context = LocalContext.current
+    val inputQuery = textFieldState.text.toString()
+    val isSearchActive = searchBarState.currentValue == SearchBarValue.Expanded
+    val inputFieldColors = SearchBarDefaults.inputFieldColors(
+        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        focusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        focusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        unfocusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    val searchBarColors = SearchBarDefaults.colors(
+        containerColor = MaterialTheme.colorScheme.surface,
+        dividerColor = MaterialTheme.colorScheme.outlineVariant,
+        inputFieldColors = inputFieldColors,
+    )
+    fun inputField(isExpandedField: Boolean): @Composable () -> Unit = {
+        val isVisible = isExpandedField == isSearchActive
+        SearchBarDefaults.InputField(
+            textFieldState,
+            searchBarState,
+            onSearch = {
+                onQuerySubmitted(it)
+                onCloseSearch()
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag("explore_search_field")
-                .onFocusChanged { focusState ->
-                    if (focusState.isFocused) onSearchFocused()
-                },
+                .then(
+                    if (isVisible) {
+                        Modifier.testTag("explore_search_field")
+                    } else {
+                        Modifier.clearAndSetSemantics {}
+                    },
+                )
+                .border(
+                    width = if (isExpandedField) 2.dp else 1.dp,
+                    color = if (isExpandedField) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    shape = MaterialTheme.shapes.medium,
+                ),
+            shape = MaterialTheme.shapes.medium,
+            colors = inputFieldColors,
             placeholder = {
                 Text(
                     text = stringResource(R.string.explore_search_placeholder),
@@ -615,20 +680,37 @@ private fun ExploreHeader(
                 )
             },
             leadingIcon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_search),
-                    contentDescription = null,
-                )
+                if (isExpandedField) {
+                    IconButton(onClick = onCloseSearch) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_back),
+                            contentDescription = stringResource(R.string.explore_back),
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                } else {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_search),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
             },
             trailingIcon = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (query.isNotEmpty()) {
-                        IconButton(onClick = onQueryCleared) {
+                    if (inputQuery.isNotEmpty()) {
+                        IconButton(
+                            onClick = {
+                                textFieldState.setTextAndPlaceCursorAtEnd("")
+                                onQueryCleared()
+                            },
+                        ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_clear),
                                 contentDescription = stringResource(R.string.explore_clear_search),
+                                modifier = Modifier.size(24.dp),
                             )
                         }
                     }
@@ -661,7 +743,13 @@ private fun ExploreHeader(
                                 onClick = onSearchFiltersClick,
                                 modifier = Modifier
                                     .size(48.dp)
-                                    .testTag("explore_search_filter_action"),
+                                    .then(
+                                        if (isVisible) {
+                                            Modifier.testTag("explore_search_filter_action")
+                                        } else {
+                                            Modifier.clearAndSetSemantics {}
+                                        },
+                                    ),
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_filter_list),
@@ -673,23 +761,55 @@ private fun ExploreHeader(
                     }
                 }
             },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Search,
-            ),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    onQuerySubmitted(query)
-                    onCloseSearch()
-                },
-            ),
-            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            ),
+            inputTransformation = inputTransformation,
+        )
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        SearchBar(
+            state = searchBarState,
+            inputField = inputField(false),
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            colors = searchBarColors,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
         )
         SearchAreaSummary(searchArea)
+    }
+
+    ExpandedFullScreenSearchBar(
+        state = searchBarState,
+        inputField = inputField(true),
+        colors = searchBarColors,
+    ) {
+        CompositionLocalProvider(LocalContext provides context) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                if (normalizeExploreQuery(query).isEmpty()) {
+                    ActiveSearchContent(
+                        recentSearches = recentSearches,
+                        onRecentSearchSelected = onRecentSearchSelected,
+                        onRecentSearchRemoved = onRecentSearchRemoved,
+                        onRecentSearchesCleared = onRecentSearchesCleared,
+                        onCategorySelected = onCategorySelected,
+                    )
+                } else {
+                    TypedSearchSuggestions(
+                        query = normalizeExploreQuery(query),
+                        recentSearches = recentSearches,
+                        categories = categories,
+                        onSuggestionSelected = { suggestion ->
+                            onQuerySubmitted(suggestion)
+                            onCloseSearch()
+                        },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -722,10 +842,11 @@ private fun ActiveSearchContent(
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
 private fun BrowseServices(
+    status: ExploreBrowseStatus,
     onCategorySelected: (String) -> Unit,
+    onChangeArea: () -> Unit,
+    onRetry: ((ExploreBrowseSection) -> Unit)?,
 ) {
-    var showAllCategories by rememberSaveable { mutableStateOf(false) }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -738,69 +859,55 @@ private fun BrowseServices(
             modifier = Modifier.semantics { heading() },
         )
         Spacer(Modifier.height(12.dp))
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            val columnCount = when {
-                maxWidth >= BROWSE_CATEGORY_MIN_WIDTH * 2f + BROWSE_CATEGORY_SPACING -> 2
-                else -> 1
-            }
-            val categoryWidth = (
-                (maxWidth - BROWSE_CATEGORY_SPACING * (columnCount - 1).toFloat()) /
-                    columnCount.toFloat()
-                ).coerceAtMost(BROWSE_CATEGORY_MAX_WIDTH)
-            val categories = if (showAllCategories) {
-                EXPLORE_CATEGORIES
-            } else {
-                EXPLORE_BROWSE_CATEGORIES
-            }
-
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("explore_browse_categories"),
-                maxItemsInEachRow = columnCount,
-                horizontalArrangement = Arrangement.spacedBy(
-                    BROWSE_CATEGORY_SPACING,
-                    Alignment.CenterHorizontally,
-                ),
-                verticalArrangement = Arrangement.spacedBy(BROWSE_CATEGORY_SPACING),
-            ) {
-                categories.forEach { categoryDefinition ->
-                    val category = stringResource(categoryDefinition.labelRes)
-                    val clickLabel = if (categoryDefinition.isViewAll) {
-                        stringResource(R.string.explore_view_all_services)
-                    } else {
-                        stringResource(R.string.explore_search_category, category)
+        when (status) {
+            ExploreBrowseStatus.Available -> {
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("explore_browse_categories"),
+                    maxItemsInEachRow = 3,
+                    horizontalArrangement = Arrangement.spacedBy(BROWSE_CATEGORY_SPACING),
+                    verticalArrangement = Arrangement.spacedBy(BROWSE_CATEGORY_SPACING),
+                ) {
+                    EXPLORE_CATEGORIES.forEach { categoryDefinition ->
+                        val category = stringResource(categoryDefinition.labelRes)
+                        ServiceCategoryTile(
+                            modifier = Modifier.weight(1f),
+                            category = category,
+                            artworkRes = categoryDefinition.artworkRes,
+                            onClickLabel = stringResource(R.string.explore_search_category, category),
+                            onClick = { onCategorySelected(category) },
+                        )
                     }
-                    ServiceCategoryTile(
-                        category = category,
-                        artworkRes = categoryDefinition.artworkRes,
-                        tileWidth = categoryWidth,
-                        onClickLabel = clickLabel,
-                        onClick = {
-                            if (categoryDefinition.isViewAll) {
-                                showAllCategories = true
-                            } else {
-                                onCategorySelected(category)
-                            }
-                        },
-                    )
                 }
             }
-        }
+
+            ExploreBrowseStatus.Loading -> BrowseSectionSkeleton(ExploreBrowseSection.Services)
+
+            ExploreBrowseStatus.Empty,
+            ExploreBrowseStatus.Offline,
+            ExploreBrowseStatus.ServerUnavailable,
+            -> BrowseSectionStateCard(
+                section = ExploreBrowseSection.Services,
+                status = status,
+                onChangeArea = onChangeArea,
+                onRetry = onRetry?.let { retry -> { retry(ExploreBrowseSection.Services) } },
+            )
+            }
     }
 }
 
 @Composable
 private fun ServiceCategoryTile(
+    modifier: Modifier = Modifier,
     category: String,
     @DrawableRes artworkRes: Int,
-    tileWidth: Dp,
     onClickLabel: String,
     onClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .width(tileWidth)
+        modifier = modifier
+            .fillMaxWidth()
             .heightIn(min = 136.dp)
             .clickable(
                 role = Role.Button,
@@ -843,13 +950,271 @@ private fun ServiceCategoryTile(
     }
 }
 
+private data class BrowseSectionStateCopy(
+    @DrawableRes val iconRes: Int,
+    @StringRes val titleRes: Int,
+    @StringRes val supportingTextRes: Int,
+)
+
+@Composable
+private fun BrowseSectionStateCard(
+    section: ExploreBrowseSection,
+    status: ExploreBrowseStatus,
+    onChangeArea: (() -> Unit)?,
+    onRetry: (() -> Unit)?,
+) {
+    val effectiveStatus = status.takeUnless { it == ExploreBrowseStatus.Available }
+        ?: ExploreBrowseStatus.Empty
+    if (effectiveStatus == ExploreBrowseStatus.Loading) {
+        BrowseSectionSkeleton(section)
+        return
+    }
+
+    val copy = browseSectionStateCopy(section, effectiveStatus)
+    val isOffline = effectiveStatus == ExploreBrowseStatus.Offline
+    val isServerUnavailable = effectiveStatus == ExploreBrowseStatus.ServerUnavailable
+    val containerColor = when {
+        isOffline -> MaterialTheme.colorScheme.tertiaryContainer
+        isServerUnavailable -> MaterialTheme.colorScheme.errorContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerHigh
+    }
+    val contentColor = when {
+        isOffline -> MaterialTheme.colorScheme.onTertiaryContainer
+        isServerUnavailable -> MaterialTheme.colorScheme.onErrorContainer
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+    val supportingTextColor = when {
+        isOffline -> MaterialTheme.colorScheme.onTertiaryContainer
+        isServerUnavailable -> MaterialTheme.colorScheme.onErrorContainer
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val iconTint = when {
+        isOffline -> MaterialTheme.colorScheme.tertiary
+        isServerUnavailable -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val action = if (effectiveStatus == ExploreBrowseStatus.Empty) {
+        onChangeArea
+    } else {
+        onRetry
+    }
+    val actionLabel = if (effectiveStatus == ExploreBrowseStatus.Empty) {
+        R.string.explore_change_area
+    } else {
+        R.string.explore_retry
+    }
+    val sectionKey = section.name.lowercase(Locale.US)
+    val statusKey = effectiveStatus.name.lowercase(Locale.US)
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("explore_browse_${sectionKey}_$statusKey")
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        shape = RoundedCornerShape(16.dp),
+        color = containerColor,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(copy.iconRes),
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(64.dp),
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = stringResource(copy.titleRes),
+                    color = contentColor,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = stringResource(copy.supportingTextRes),
+                    color = supportingTextColor,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                action?.let { onAction ->
+                    TextButton(
+                        onClick = onAction,
+                        modifier = Modifier.testTag("explore_browse_${sectionKey}_action"),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = contentColor,
+                        ),
+                    ) {
+                        Text(stringResource(actionLabel))
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun browseSectionStateCopy(
+    section: ExploreBrowseSection,
+    status: ExploreBrowseStatus,
+): BrowseSectionStateCopy = when (status) {
+    ExploreBrowseStatus.Empty -> when (section) {
+        ExploreBrowseSection.Services -> BrowseSectionStateCopy(
+            iconRes = R.drawable.explore_services_empty,
+            titleRes = R.string.explore_browse_services_empty_title,
+            supportingTextRes = R.string.explore_browse_services_empty_supporting_text,
+        )
+
+        ExploreBrowseSection.Professionals -> BrowseSectionStateCopy(
+            iconRes = R.drawable.explore_professionals_empty,
+            titleRes = R.string.explore_browse_professionals_empty_title,
+            supportingTextRes = R.string.explore_browse_professionals_empty_supporting_text,
+        )
+
+        ExploreBrowseSection.Tasks -> BrowseSectionStateCopy(
+            iconRes = R.drawable.explore_tasks_empty,
+            titleRes = R.string.explore_browse_tasks_empty_title,
+            supportingTextRes = R.string.explore_browse_tasks_empty_supporting_text,
+        )
+    }
+
+    ExploreBrowseStatus.Offline -> BrowseSectionStateCopy(
+        iconRes = when (section) {
+            ExploreBrowseSection.Services -> R.drawable.explore_services_offline
+            ExploreBrowseSection.Professionals -> R.drawable.explore_professionals_offline
+            ExploreBrowseSection.Tasks -> R.drawable.explore_tasks_offline
+        },
+        titleRes = R.string.explore_browse_offline_title,
+        supportingTextRes = R.string.explore_browse_offline_supporting_text,
+    )
+
+    ExploreBrowseStatus.ServerUnavailable -> BrowseSectionStateCopy(
+        iconRes = when (section) {
+            ExploreBrowseSection.Services -> R.drawable.explore_services_server
+            ExploreBrowseSection.Professionals -> R.drawable.explore_professionals_server
+            ExploreBrowseSection.Tasks -> R.drawable.explore_tasks_server
+        },
+        titleRes = R.string.explore_browse_server_title,
+        supportingTextRes = R.string.explore_browse_server_supporting_text,
+    )
+
+    ExploreBrowseStatus.Available,
+    ExploreBrowseStatus.Loading,
+    -> error("A browse state card cannot render $status")
+}
+
+@Composable
+private fun BrowseSectionSkeleton(
+    section: ExploreBrowseSection,
+    tagPrefix: String = "explore_browse",
+) {
+    val sectionKey = section.name.lowercase(Locale.US)
+    val loadingTag = "${tagPrefix}_${sectionKey}_loading"
+    val skeletonColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val placeholderColor = MaterialTheme.colorScheme.outlineVariant
+    when (section) {
+        ExploreBrowseSection.Services -> {
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(loadingTag),
+                maxItemsInEachRow = 3,
+                horizontalArrangement = Arrangement.spacedBy(BROWSE_CATEGORY_SPACING),
+                verticalArrangement = Arrangement.spacedBy(BROWSE_CATEGORY_SPACING),
+            ) {
+                repeat(EXPLORE_CATEGORIES.size) {
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 136.dp),
+                        shape = MaterialTheme.shapes.medium,
+                        color = skeletonColor,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .background(placeholderColor, RoundedCornerShape(12.dp)),
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.72f)
+                                    .height(16.dp)
+                                    .background(placeholderColor, RoundedCornerShape(8.dp)),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        ExploreBrowseSection.Professionals,
+        ExploreBrowseSection.Tasks,
+        -> Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(loadingTag),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+        ) {
+            repeat(2) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = skeletonColor,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(placeholderColor, CircleShape),
+                        )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.62f)
+                                    .height(16.dp)
+                                    .background(placeholderColor, RoundedCornerShape(8.dp)),
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.4f)
+                                    .height(12.dp)
+                                    .background(placeholderColor, RoundedCornerShape(6.dp)),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.addSubmittedSearchResults(
     selectedScope: ExploreResultScope,
     normalizedResultState: ExploreResultState,
     orderedAppliedFilters: List<ExploreFilterOption>,
     hasVisibleResults: Boolean,
-    onRetryResults: () -> Unit,
+    onRetryResults: (() -> Unit)?,
     onEditFilters: () -> Unit,
     availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>>,
     selectedSortOptions: Map<ExploreResultScope, ExploreSortOption>,
@@ -945,8 +1310,11 @@ private fun LazyListScope.addSubmittedSearchResults(
 private fun LazyListScope.addBrowseResultSections(
     people: List<ExplorePersonResult>,
     tasks: List<ExploreTaskResult>,
+    browseState: ExploreBrowseState,
     onPersonClick: ((String) -> Unit)?,
     onTaskClick: ((String) -> Unit)?,
+    onChangeArea: () -> Unit,
+    onRetryBrowseSection: ((ExploreBrowseSection) -> Unit)?,
 ) {
     addPersonResultSection(
         sectionKey = "browse:people",
@@ -954,6 +1322,11 @@ private fun LazyListScope.addBrowseResultSections(
         sectionTag = "explore_nearby_professionals",
         people = people,
         onClick = onPersonClick,
+        browseStatus = browseState.professionals,
+        onBrowseChangeArea = onChangeArea,
+        onBrowseRetry = onRetryBrowseSection?.let { retry ->
+            { retry(ExploreBrowseSection.Professionals) }
+        },
     )
     addTaskResultSection(
         sectionKey = "browse:tasks",
@@ -961,13 +1334,18 @@ private fun LazyListScope.addBrowseResultSections(
         sectionTag = "explore_open_tasks_nearby",
         tasks = tasks,
         onClick = onTaskClick,
+        browseStatus = browseState.tasks,
+        onBrowseChangeArea = onChangeArea,
+        onBrowseRetry = onRetryBrowseSection?.let { retry ->
+            { retry(ExploreBrowseSection.Tasks) }
+        },
     )
 }
 
 private fun LazyListScope.addExploreResultBody(
     selectedScope: ExploreResultScope,
     state: ExploreResultState,
-    onRetryResults: () -> Unit,
+    onRetryResults: (() -> Unit)?,
     onEditFilters: () -> Unit,
     onPersonClick: ((String) -> Unit)?,
     onTaskClick: ((String) -> Unit)?,
@@ -975,7 +1353,7 @@ private fun LazyListScope.addExploreResultBody(
     when (state) {
         ExploreResultState.Loading -> {
             item(key = "body:loading", contentType = "progress") {
-                ExploreLoadingResultBody()
+                ExploreLoadingResultBody(selectedScope)
             }
         }
 
@@ -1082,9 +1460,12 @@ private fun LazyListScope.addPersonResultSection(
     sectionTag: String,
     people: List<ExplorePersonResult>,
     onClick: ((String) -> Unit)?,
+    browseStatus: ExploreBrowseStatus? = null,
+    onBrowseChangeArea: (() -> Unit)? = null,
+    onBrowseRetry: (() -> Unit)? = null,
 ) {
     val uniquePeople = distinctPeopleById(people)
-    if (uniquePeople.isEmpty()) return
+    if (uniquePeople.isEmpty() && browseStatus == null) return
 
     if (heading != null) {
         item(key = "section:$sectionKey", contentType = "section") {
@@ -1093,6 +1474,20 @@ private fun LazyListScope.addPersonResultSection(
                 testTag = sectionTag,
             )
         }
+    }
+    if (uniquePeople.isEmpty()) {
+        item(
+            key = "$sectionKey:state:${browseStatus?.name}",
+            contentType = "browse-state",
+        ) {
+            BrowseSectionStateCard(
+                section = ExploreBrowseSection.Professionals,
+                status = browseStatus ?: ExploreBrowseStatus.Empty,
+                onChangeArea = onBrowseChangeArea,
+                onRetry = onBrowseRetry,
+            )
+        }
+        return
     }
     addPersonResultRows(
         itemKeyPrefix = sectionKey,
@@ -1109,9 +1504,12 @@ private fun LazyListScope.addTaskResultSection(
     sectionTag: String,
     tasks: List<ExploreTaskResult>,
     onClick: ((String) -> Unit)?,
+    browseStatus: ExploreBrowseStatus? = null,
+    onBrowseChangeArea: (() -> Unit)? = null,
+    onBrowseRetry: (() -> Unit)? = null,
 ) {
     val uniqueTasks = distinctTasksById(tasks)
-    if (uniqueTasks.isEmpty()) return
+    if (uniqueTasks.isEmpty() && browseStatus == null) return
 
     if (heading != null) {
         item(key = "section:$sectionKey", contentType = "section") {
@@ -1120,6 +1518,20 @@ private fun LazyListScope.addTaskResultSection(
                 testTag = sectionTag,
             )
         }
+    }
+    if (uniqueTasks.isEmpty()) {
+        item(
+            key = "$sectionKey:state:${browseStatus?.name}",
+            contentType = "browse-state",
+        ) {
+            BrowseSectionStateCard(
+                section = ExploreBrowseSection.Tasks,
+                status = browseStatus ?: ExploreBrowseStatus.Empty,
+                onChangeArea = onBrowseChangeArea,
+                onRetry = onBrowseRetry,
+            )
+        }
+        return
     }
     addTaskResultRows(
         itemKeyPrefix = sectionKey,
@@ -1404,30 +1816,122 @@ private fun exploreRequestKey(
 }
 
 @Composable
-private fun ExploreLoadingResultBody() {
+private fun ExploreLoadingResultBody(selectedScope: ExploreResultScope) {
     val loadingDescription = stringResource(
         R.string.explore_loading_results_content_description,
     )
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 32.dp)
+            .padding(top = 24.dp)
             .testTag("explore_result_loading"),
-        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier
-                .testTag("explore_result_loading_indicator")
-                .semantics {
-                    contentDescription = loadingDescription
-                },
-        )
         Text(
             text = stringResource(R.string.explore_loading_results),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.semantics {
+                contentDescription = loadingDescription
+            },
         )
+        when (selectedScope) {
+            ExploreResultScope.All -> {
+                BrowseSectionSkeleton(
+                    section = ExploreBrowseSection.Professionals,
+                    tagPrefix = "explore_result",
+                )
+                BrowseSectionSkeleton(
+                    section = ExploreBrowseSection.Tasks,
+                    tagPrefix = "explore_result",
+                )
+            }
+
+            ExploreResultScope.People,
+            ExploreResultScope.Services,
+            -> BrowseSectionSkeleton(
+                section = ExploreBrowseSection.Professionals,
+                tagPrefix = "explore_result",
+            )
+
+            ExploreResultScope.Tasks -> BrowseSectionSkeleton(
+                section = ExploreBrowseSection.Tasks,
+                tagPrefix = "explore_result",
+            )
+        }
+    }
+}
+
+private data class ExploreResultStateCopy(
+    @DrawableRes val iconRes: Int,
+    @StringRes val titleRes: Int,
+    @StringRes val supportingTextRes: Int,
+)
+
+@Composable
+private fun ExploreResultStateCard(
+    testTag: String,
+    iconRes: Int,
+    titleRes: Int,
+    supportingTextRes: Int,
+    containerColor: Color,
+    contentColor: Color,
+    supportingTextColor: Color,
+    iconTint: Color,
+    actionLabelRes: Int? = null,
+    actionTestTag: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 32.dp)
+            .testTag(testTag)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        shape = RoundedCornerShape(16.dp),
+        color = containerColor,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(64.dp),
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = stringResource(titleRes),
+                    color = contentColor,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = stringResource(supportingTextRes),
+                    color = supportingTextColor,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                if (actionLabelRes != null && onAction != null) {
+                    TextButton(
+                        onClick = onAction,
+                        modifier = actionTestTag?.let(Modifier::testTag) ?: Modifier,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = contentColor,
+                        ),
+                    ) {
+                        Text(stringResource(actionLabelRes))
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1437,111 +1941,106 @@ private fun ExploreEmptyResultBody(
     onEditFilters: () -> Unit,
 ) {
     val isFiltered = reason == ExploreResultState.EmptyReason.Filters
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 32.dp)
-            .testTag("explore_result_empty")
-            .semantics { liveRegion = LiveRegionMode.Polite },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = stringResource(
-                if (isFiltered) {
-                    R.string.explore_empty_filters_title
-                } else {
-                    R.string.explore_empty_query_title
-                },
-            ),
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleLarge,
-        )
-        Text(
-            text = stringResource(
-                if (isFiltered) {
-                    R.string.explore_empty_filters_supporting_text
-                } else {
-                    R.string.explore_empty_query_supporting_text
-                },
-            ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        if (isFiltered) {
-            OutlinedButton(
-                onClick = onEditFilters,
-                modifier = Modifier.testTag("explore_edit_filters"),
-            ) {
-                Text(stringResource(R.string.explore_edit_filters))
-            }
-        }
-    }
+    ExploreResultStateCard(
+        testTag = "explore_result_empty",
+        iconRes = R.drawable.explore_results_empty,
+        titleRes = if (isFiltered) {
+            R.string.explore_empty_filters_title
+        } else {
+            R.string.explore_empty_query_title
+        },
+        supportingTextRes = if (isFiltered) {
+            R.string.explore_empty_filters_supporting_text
+        } else {
+            R.string.explore_empty_query_supporting_text
+        },
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        supportingTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+        actionLabelRes = R.string.explore_edit_filters.takeIf { isFiltered },
+        actionTestTag = "explore_edit_filters".takeIf { isFiltered },
+        onAction = onEditFilters.takeIf { isFiltered },
+    )
 }
 
 @Composable
 private fun ExploreFailureResultBody(
     reason: ExploreResultState.FailureReason,
-    onRetryResults: () -> Unit,
+    onRetryResults: (() -> Unit)?,
 ) {
-    val titleRes: Int
-    val supportingTextRes: Int
-    when (reason) {
+    val copy = when (reason) {
         ExploreResultState.FailureReason.General -> {
-            titleRes = R.string.explore_failure_general_title
-            supportingTextRes = R.string.explore_failure_general_supporting_text
+            ExploreResultStateCopy(
+                iconRes = R.drawable.explore_results_error,
+                titleRes = R.string.explore_failure_general_title,
+                supportingTextRes = R.string.explore_failure_general_supporting_text,
+            )
         }
 
         ExploreResultState.FailureReason.Offline -> {
-            titleRes = R.string.explore_failure_offline_title
-            supportingTextRes = R.string.explore_failure_offline_supporting_text
+            ExploreResultStateCopy(
+                iconRes = R.drawable.explore_results_offline,
+                titleRes = R.string.explore_failure_offline_title,
+                supportingTextRes = R.string.explore_failure_offline_supporting_text,
+            )
         }
 
         is ExploreResultState.FailureReason.SourceUnavailable -> when (reason.source) {
             ExploreResultState.Source.PeopleAndServices -> {
-                titleRes = R.string.explore_failure_people_services_title
-                supportingTextRes = R.string.explore_failure_people_services_supporting_text
+                ExploreResultStateCopy(
+                    iconRes = R.drawable.explore_results_server,
+                    titleRes = R.string.explore_failure_people_services_title,
+                    supportingTextRes = R.string.explore_failure_people_services_supporting_text,
+                )
             }
 
             ExploreResultState.Source.Tasks -> {
-                titleRes = R.string.explore_failure_tasks_title
-                supportingTextRes = R.string.explore_failure_tasks_supporting_text
+                ExploreResultStateCopy(
+                    iconRes = R.drawable.explore_results_server,
+                    titleRes = R.string.explore_failure_tasks_title,
+                    supportingTextRes = R.string.explore_failure_tasks_supporting_text,
+                )
             }
         }
     }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 32.dp)
-            .testTag("explore_result_failure")
-            .semantics { liveRegion = LiveRegionMode.Polite },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = stringResource(titleRes),
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleLarge,
-        )
-        Text(
-            text = stringResource(supportingTextRes),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        OutlinedButton(
-            onClick = onRetryResults,
-            modifier = Modifier.testTag("explore_retry_results"),
-        ) {
-            Text(stringResource(R.string.explore_retry))
-        }
-    }
+    val isOffline = reason == ExploreResultState.FailureReason.Offline
+    ExploreResultStateCard(
+        testTag = "explore_result_failure",
+        iconRes = copy.iconRes,
+        titleRes = copy.titleRes,
+        supportingTextRes = copy.supportingTextRes,
+        containerColor = if (isOffline) {
+            MaterialTheme.colorScheme.tertiaryContainer
+        } else {
+            MaterialTheme.colorScheme.errorContainer
+        },
+        contentColor = if (isOffline) {
+            MaterialTheme.colorScheme.onTertiaryContainer
+        } else {
+            MaterialTheme.colorScheme.onErrorContainer
+        },
+        supportingTextColor = if (isOffline) {
+            MaterialTheme.colorScheme.onTertiaryContainer
+        } else {
+            MaterialTheme.colorScheme.onErrorContainer
+        },
+        iconTint = if (isOffline) {
+            MaterialTheme.colorScheme.tertiary
+        } else {
+            MaterialTheme.colorScheme.error
+        },
+        actionLabelRes = R.string.explore_retry,
+        actionTestTag = "explore_retry_results",
+        onAction = onRetryResults,
+    )
 }
 
 @Composable
 private fun ExploreResultStatus(
     status: ExploreResultState.ContentStatus,
     actionEnabled: Boolean,
-    onAction: () -> Unit,
+    onAction: (() -> Unit)?,
 ) {
     val messageRes = when (status) {
         ExploreResultState.ContentStatus.Stale -> R.string.explore_status_stale
@@ -1578,7 +2077,7 @@ private fun ExploreResultStatus(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
             )
-            if (actionEnabled) {
+            if (actionEnabled && onAction != null) {
                 TextButton(
                     onClick = onAction,
                     modifier = Modifier.testTag("explore_result_status_action"),
