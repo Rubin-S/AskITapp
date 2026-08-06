@@ -1613,11 +1613,147 @@ class ExploreFlowTest {
         openExplore()
         searchField().performClick()
 
+        listOf(
+            R.string.explore_category_electrician,
+            R.string.explore_category_plumber,
+            R.string.explore_category_cleaning,
+            R.string.explore_category_ac_repair,
+            R.string.explore_category_home_tutor,
+            R.string.explore_category_appliance_repair,
+        ).map(ApplicationProvider.getApplicationContext<Context>().resources::getString)
+            .forEach { category ->
+                composeTestRule
+                    .onNodeWithText(category)
+                    .performScrollTo()
+                    .assertIsDisplayed()
+                    .assertHasClickAction()
+            }
+        composeTestRule.onAllNodesWithText("Browse services").assertCountEquals(0)
+        val categoryContainer = composeTestRule
+            .onNodeWithTag("explore_suggested_categories_flow")
+            .assertIsDisplayed()
+            .fetchSemanticsNode()
+        assertFalse(categoryContainer.config.contains(SemanticsActions.ScrollBy))
+
         composeTestRule.onNodeWithText("Plumber").performClick()
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Plumber").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Filters").assertCountEquals(0)
+        composeTestRule.onAllNodesWithTag("explore_suggested_categories").assertCountEquals(0)
+        assertEquals("Plumber", viewModel.uiState.value.query)
         assertEquals(listOf("Plumber"), viewModel.uiState.value.recentSearches)
+    }
+
+    @Test
+    fun suggestedCategories_wrapAtSupportedWidthsAndLargeText() {
+        val categoryLabels = listOf(
+            R.string.explore_category_electrician,
+            R.string.explore_category_plumber,
+            R.string.explore_category_cleaning,
+            R.string.explore_category_ac_repair,
+            R.string.explore_category_home_tutor,
+            R.string.explore_category_appliance_repair,
+        ).map(ApplicationProvider.getApplicationContext<Context>().resources::getString)
+
+        val contentWidth = mutableStateOf(320.dp)
+        val fontScale = mutableStateOf(1.3f)
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                CompositionLocalProvider(
+                    LocalDensity provides Density(1f, fontScale.value),
+                ) {
+                    Box(
+                        modifier = androidx.compose.ui.Modifier
+                            .width(contentWidth.value)
+                            .height(900.dp),
+                    ) {
+                        ExploreScreen(
+                            query = "",
+                            searchArea = testSearchArea(),
+                            recentSearches = emptyList(),
+                            onQueryChanged = {},
+                            onQueryCleared = {},
+                            onQuerySubmitted = {},
+                            onRecentSearchRemoved = {},
+                            onRecentSearchesCleared = {},
+                            onSearchFiltersClick = {},
+                        )
+                    }
+                }
+            }
+        }
+
+        searchField().performClick()
+        listOf(1.3f, 1.5f, 2f).forEach { scale ->
+            fontScale.value = scale
+            listOf(320, 360, 412).forEach { width ->
+                contentWidth.value = width.dp
+                composeTestRule.waitForIdle()
+                categoryLabels.forEach { category ->
+                    composeTestRule
+                        .onNodeWithText(category)
+                        .performScrollTo()
+                        .assertIsDisplayed()
+                        .assertHasClickAction()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun suggestedCategories_useTamilLabelsAndSubmitInDarkTheme() {
+        val baseContext = ApplicationProvider.getApplicationContext<Context>()
+        val tamilContext = baseContext.createConfigurationContext(
+            Configuration(baseContext.resources.configuration).apply {
+                setLocale(Locale.forLanguageTag("ta"))
+            },
+        )
+        val categoryResources = listOf(
+            R.string.explore_category_electrician,
+            R.string.explore_category_plumber,
+            R.string.explore_category_cleaning,
+            R.string.explore_category_ac_repair,
+            R.string.explore_category_home_tutor,
+            R.string.explore_category_appliance_repair,
+        )
+        val submittedQuery = mutableStateOf("")
+
+        composeTestRule.setContent {
+            CompositionLocalProvider(
+                LocalContext provides tamilContext,
+                LocalDensity provides Density(1f, 1.5f),
+            ) {
+                AskITTheme(darkTheme = true) {
+                    ExploreScreen(
+                        query = "",
+                        searchArea = testSearchArea(),
+                        recentSearches = emptyList(),
+                        onQueryChanged = {},
+                        onQueryCleared = {},
+                        onQuerySubmitted = { submittedQuery.value = it },
+                        onRecentSearchRemoved = {},
+                        onRecentSearchesCleared = {},
+                        onSearchFiltersClick = {},
+                    )
+                }
+            }
+        }
+
+        searchField().performClick()
+        val tamilCategories = categoryResources.map(tamilContext.resources::getString)
+        tamilCategories.forEach { category ->
+            composeTestRule
+                .onNodeWithText(category)
+                .performScrollTo()
+                .assertIsDisplayed()
+                .assertHasClickAction()
+        }
+
+        composeTestRule.onNodeWithText(tamilCategories.first()).performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(tamilCategories.first(), submittedQuery.value)
+        composeTestRule.onAllNodesWithTag("explore_suggested_categories").assertCountEquals(0)
     }
 
     @Test

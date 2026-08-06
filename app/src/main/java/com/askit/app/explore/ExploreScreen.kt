@@ -2559,6 +2559,7 @@ private fun RecentSearchRow(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SuggestedCategories(onCategorySelected: (String) -> Unit) {
     Column(
@@ -2572,25 +2573,18 @@ private fun SuggestedCategories(onCategorySelected: (String) -> Unit) {
             modifier = Modifier.semantics { heading() },
         )
         Spacer(Modifier.height(12.dp))
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("explore_suggested_categories_flow"),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(
-                items = EXPLORE_CATEGORIES,
-                key = { "category:${it.labelRes}" },
-                contentType = { "category" },
-            ) { categoryDefinition ->
+            EXPLORE_CATEGORIES.forEach { categoryDefinition ->
                 val category = stringResource(categoryDefinition.labelRes)
                 SuggestionChip(
                     onClick = { onCategorySelected(category) },
-                    label = {
-                        Text(
-                            text = category,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
+                    label = { Text(category) },
                 )
             }
         }
