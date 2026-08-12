@@ -43,7 +43,17 @@ import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.SearchAreaRoute
 import com.askit.app.explore.defaultExploreFilterOptions
+import com.askit.app.posttask.PostTaskDraft
+import com.askit.app.posttask.PostTaskRoute
+import com.askit.app.posttask.PostTaskViewModel
+import com.askit.app.listservice.ListServiceDraft
+import com.askit.app.listservice.ListServiceRoute
+import com.askit.app.listservice.ListServiceViewModel
+import com.askit.app.createpost.CreatePostRoute
+import com.askit.app.createpost.CreatePostViewModel
+import com.askit.app.createpost.PostDraft
 import com.askit.designsystem.navigation.AskITBottomBar
+import com.askit.designsystem.navigation.AskITCreateAction
 import com.askit.designsystem.navigation.AskITCreateSheet
 import com.askit.designsystem.navigation.AskITDestination
 import com.askit.designsystem.theme.AskITTheme
@@ -62,10 +72,37 @@ class MainActivity : ComponentActivity() {
                 }
             },
         )[ExploreViewModel::class.java]
+        val postTaskViewModel = ViewModelProvider(
+            this,
+            viewModelFactory {
+                initializer {
+                    PostTaskViewModel(createSavedStateHandle())
+                }
+            },
+        )[PostTaskViewModel::class.java]
+        val listServiceViewModel = ViewModelProvider(
+            this,
+            viewModelFactory {
+                initializer {
+                    ListServiceViewModel(createSavedStateHandle())
+                }
+            },
+        )[ListServiceViewModel::class.java]
+        val createPostViewModel = ViewModelProvider(
+            this,
+            viewModelFactory {
+                initializer {
+                    CreatePostViewModel(createSavedStateHandle())
+                }
+            },
+        )[CreatePostViewModel::class.java]
         setContent {
             AskITTheme {
                 AskITApp(
                     exploreViewModel = exploreViewModel,
+                    postTaskViewModel = postTaskViewModel,
+                    listServiceViewModel = listServiceViewModel,
+                    createPostViewModel = createPostViewModel,
                     onExit = ::finish,
                     availableFilterOptions = defaultExploreFilterOptions(),
                 )
@@ -89,6 +126,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AskITApp(
     exploreViewModel: ExploreViewModel,
+    postTaskViewModel: PostTaskViewModel? = null,
+    listServiceViewModel: ListServiceViewModel? = null,
+    createPostViewModel: CreatePostViewModel? = null,
     onExit: () -> Unit = {},
     resultState: ExploreResultState = ExploreResultState.Loading,
     browseState: ExploreBrowseState = ExploreBrowseState(),
@@ -102,6 +142,9 @@ fun AskITApp(
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
     onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
+    onPostTaskCompleted: (PostTaskDraft) -> Unit = {},
+    onListServiceCompleted: (ListServiceDraft) -> Unit = {},
+    onCreatePostCompleted: (PostDraft) -> Unit = {},
 ) {
     val viewModelAppliedFilterOptions by exploreViewModel.appliedFilterOptions.collectAsStateWithLifecycle()
     val controlledAppliedFilterOptions = if (
@@ -112,6 +155,15 @@ fun AskITApp(
         appliedFilterOptions
     }
     val controlledFiltersChanged = onFiltersChanged ?: exploreViewModel::onFiltersChanged
+    val resolvedPostTaskViewModel = postTaskViewModel ?: remember {
+        PostTaskViewModel()
+    }
+    val resolvedListServiceViewModel = listServiceViewModel ?: remember {
+        ListServiceViewModel()
+    }
+    val resolvedCreatePostViewModel = createPostViewModel ?: remember {
+        CreatePostViewModel()
+    }
     val navigationState = rememberAskITNavigationState()
     val entryProvider = entryProvider<NavKey> {
         entry<AppDestination.Home> {
@@ -143,6 +195,27 @@ fun AskITApp(
                 availableFilterOptions = availableFilterOptions,
                 appliedFilterOptions = controlledAppliedFilterOptions,
                 onFiltersChanged = controlledFiltersChanged,
+            )
+        }
+        entry<AppDestination.PostTask> {
+            PostTaskRoute(
+                viewModel = resolvedPostTaskViewModel,
+                onBack = { navigationState.pop() },
+                onCompleteDraft = onPostTaskCompleted,
+            )
+        }
+        entry<AppDestination.ListService> {
+            ListServiceRoute(
+                viewModel = resolvedListServiceViewModel,
+                onBack = { navigationState.pop() },
+                onCompleteDraft = onListServiceCompleted,
+            )
+        }
+        entry<AppDestination.CreatePost> {
+            CreatePostRoute(
+                viewModel = resolvedCreatePostViewModel,
+                onBack = { navigationState.pop() },
+                onCompleteDraft = onCreatePostCompleted,
             )
         }
         entry<AppDestination.Inbox> {
@@ -192,7 +265,22 @@ fun AskITApp(
     if (showCreateSheet) {
         AskITCreateSheet(
             onDismiss = { showCreateSheet = false },
-            onActionClick = {},
+            onActionClick = { action ->
+                when (action) {
+                    AskITCreateAction.PostTask -> {
+                        resolvedPostTaskViewModel.startNewDraft()
+                        navigationState.push(AppDestination.PostTask)
+                    }
+                    AskITCreateAction.AddService -> {
+                        resolvedListServiceViewModel.startNewDraft()
+                        navigationState.push(AppDestination.ListService)
+                    }
+                    AskITCreateAction.CreatePost -> {
+                        resolvedCreatePostViewModel.startNewDraft()
+                        navigationState.push(AppDestination.CreatePost)
+                    }
+                }
+            },
         )
     }
 }
@@ -298,6 +386,21 @@ private sealed interface AppDestination : NavKey {
     @Serializable
     data object SearchAreaDestination : AppDestination {
         override val bottomBarDestination = AskITDestination.Explore
+    }
+
+    @Serializable
+    data object PostTask : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data object ListService : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data object CreatePost : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
     }
 
     companion object {

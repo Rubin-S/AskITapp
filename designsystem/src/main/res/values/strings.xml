@@ -5,17 +5,16 @@
     <string name="nav_create">Create</string>
     <string name="nav_inbox">Inbox</string>
     <string name="nav_profile">Profile</string>
+    <string name="create_sheet_title">Create</string>
     <plurals name="nav_inbox_unread">
         <item quantity="one">Inbox, %d unread message</item>
         <item quantity="other">Inbox, %d unread messages</item>
     </plurals>
 
     <string name="create_post_task_title">Post a task</string>
-    <string name="create_post_task_supporting">Find someone for a local job</string>
-    <string name="create_add_service_title">Add a service</string>
-    <string name="create_add_service_supporting">Offer a service to nearby customers</string>
-    <string name="create_share_work_title">Share your work</string>
-    <string name="create_share_work_supporting">Show completed work or an update</string>
+    <string name="create_post_task_supporting">Find someone to help with a job or problem</string>
+    <string name="create_add_service_title">List a service</string>
+    <string name="create_add_service_supporting">Offer a service to customers</string>
 
     <string name="person_result_new">New</string>
     <string name="person_result_view_profile">View %1$s\'s profile</string>
@@ -36,4 +35,28 @@
     <string name="task_result_status_expired">Expired</string>
     <string name="task_result_status_unavailable">Unavailable</string>
     <string name="task_result_view_task">View task: %1$s</string>
+    <plurals name="task_result_photo_count">
+        <item quantity="one">%d photo</item>
+        <item quantity="other">%d photos</item>
+    </plurals>
+    <string name="task_result_photo_unavailable">Photo unavailable</string>
+    <string name="service_result_provided_by">Provided by %1$s</string>
+    <string name="service_result_view_service">View service: %1$s</string>
+    <plurals name="service_result_portfolio_count">
+        <item quantity="one">%d portfolio photo</item>
+        <item quantity="other">%d portfolio photos</item>
+    </plurals>
+    <string name="create_post_title">Create a post</string>
+    <string name="create_post_supporting">Share an update, photo, carousel, before/after, or poll</string>
+    <string name="post_feed_author_fallback">You</string>
+    <string name="post_feed_photo_content_description">Post photo</string>
+    <string name="post_feed_photo_unavailable">Photo unavailable</string>
+    <string name="post_feed_more">more</string>
+    <string name="post_feed_carousel_page">Image %1$d of %2$d</string>
+    <string name="post_feed_carousel_page_described">%1$s. Image %2$d of %3$d</string>
+    <string name="post_feed_carousel_counter">%1$d / %2$d</string>
+    <string name="post_feed_before">Before</string>
+    <string name="post_feed_after">After</string>
+    <string name="post_feed_comparison">%1$s image</string>
+    <string name="post_feed_comparison_described">%1$s image. %2$s</string>
 </resources>

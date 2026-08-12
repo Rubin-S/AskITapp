@@ -22,9 +22,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.askit.designsystem.R
@@ -33,7 +37,7 @@ import com.askit.designsystem.theme.AskITTheme
 enum class AskITCreateAction {
     PostTask,
     AddService,
-    ShareWork,
+    CreatePost,
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,8 +66,18 @@ fun AskITCreateSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(bottom = 16.dp),
         ) {
+            Text(
+                text = stringResource(R.string.create_sheet_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, top = 8.dp, end = 24.dp, bottom = 8.dp)
+                    .semantics { heading() },
+            )
             CreateRow(
                 iconRes = R.drawable.ic_task,
                 titleRes = R.string.create_post_task_title,
@@ -78,9 +92,9 @@ fun AskITCreateSheet(
             )
             CreateRow(
                 iconRes = R.drawable.ic_share_work,
-                titleRes = R.string.create_share_work_title,
-                supportingRes = R.string.create_share_work_supporting,
-                onClick = { select(AskITCreateAction.ShareWork) },
+                titleRes = R.string.create_post_title,
+                supportingRes = R.string.create_post_supporting,
+                onClick = { select(AskITCreateAction.CreatePost) },
             )
         }
     }

@@ -116,31 +116,20 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.askit.app.category.ASKIT_SERVICE_CATEGORIES
 import com.askit.app.R
-import com.askit.designsystem.people.AskITAvatar
 import com.askit.designsystem.people.PersonResultMetadata
 import com.askit.designsystem.people.PersonResultItem
+import com.askit.designsystem.services.ServiceResultItem
 import com.askit.designsystem.tasks.TaskResultItem
 import com.askit.designsystem.tasks.TaskResultStatus
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-private val EXPLORE_CATEGORIES = listOf(
-    ExploreCategory(R.string.explore_category_electrician, R.drawable.service_electrician),
-    ExploreCategory(R.string.explore_category_plumber, R.drawable.service_plumber),
-    ExploreCategory(R.string.explore_category_cleaning, R.drawable.service_cleaning),
-    ExploreCategory(R.string.explore_category_ac_repair, R.drawable.service_ac_repair),
-    ExploreCategory(R.string.explore_category_home_tutor, R.drawable.service_home_tutor),
-    ExploreCategory(R.string.explore_category_appliance_repair, R.drawable.service_appliance_repair),
-)
-
 private val BROWSE_CATEGORY_SPACING = 12.dp
 
-private data class ExploreCategory(
-    @StringRes val labelRes: Int,
-    @DrawableRes val artworkRes: Int,
-)
+private val EXPLORE_CATEGORIES = ASKIT_SERVICE_CATEGORIES
 
 data class ExplorePersonResult(
     val id: String,
@@ -187,6 +176,9 @@ data class ExploreTaskResult(
     val posterName: String,
     val postedLabel: String,
     val status: TaskResultStatus,
+    val photoModels: List<Any> = emptyList(),
+    val distanceLabel: String? = null,
+    val scopeHighlights: List<String> = emptyList(),
 )
 
 internal data class ExplorePersonRenderRow(
@@ -1603,8 +1595,18 @@ private fun LazyListScope.addServiceResultRows(
                         },
                     ),
             ) {
-                CompactServiceResultCard(
-                    result = person,
+                ServiceResultItem(
+                    serviceTitle = person.primaryService.orEmpty(),
+                    category = "",
+                    description = person.additionalServices
+                        .map(String::trim)
+                        .filter(String::isNotEmpty)
+                        .joinToString(", "),
+                    providerName = person.name,
+                    providerAvatarUrl = person.avatarUrl,
+                    priceLabel = person.priceLabel,
+                    coverageLabel = person.locationLabel,
+                    modifier = Modifier.testTag("explore_service_result_card"),
                     onClick = onClick
                         ?.takeIf { row.stableId.isNotEmpty() }
                         ?.let { click -> { click(row.stableId) } },
@@ -1630,10 +1632,10 @@ private fun LazyListScope.addTaskResultRows(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(bottom = 12.dp)
                     .then(if (index == 0 && addTopPadding) Modifier.padding(top = 24.dp) else Modifier)
                     .then(if (index == 0 && firstRowTag != null) Modifier.testTag(firstRowTag) else Modifier),
             ) {
-                if (index > 0) HorizontalDivider()
                 TaskResultItem(
                     title = task.title,
                     category = task.category,
@@ -1644,6 +1646,9 @@ private fun LazyListScope.addTaskResultRows(
                     posterName = task.posterName,
                     postedLabel = task.postedLabel,
                     status = task.status,
+                    photoModels = task.photoModels,
+                    distanceLabel = task.distanceLabel,
+                    scopeHighlights = task.scopeHighlights,
                     onClick = onClick
                         ?.takeIf {
                             task.status != TaskResultStatus.Unavailable && row.stableId.isNotEmpty()
@@ -1766,6 +1771,9 @@ private fun exploreTaskContentFingerprint(task: ExploreTaskResult): String = bui
     appendExploreKeyPart(task.posterName)
     appendExploreKeyPart(task.postedLabel)
     appendExploreKeyPart(task.status.name)
+    appendExploreKeyPart(task.photoModels.size.toString())
+    appendExploreKeyPart(task.distanceLabel)
+    appendExploreKeyParts(task.scopeHighlights)
 }
 
 private fun StringBuilder.appendExploreKeyParts(values: List<String>) {
@@ -2172,116 +2180,6 @@ private fun ExploreSortControl(
                     } else {
                         null
                     },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CompactServiceResultCard(
-    result: ExplorePersonResult,
-    onClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
-    val service = result.primaryService?.trim().orEmpty()
-    val provider = result.name.trim()
-    val status = result.statusLabel?.trim()?.takeIf(String::isNotEmpty)
-    val additionalServiceCount = result.additionalServices.count { additionalService ->
-        val normalized = additionalService.trim()
-        normalized.isNotEmpty() && !normalized.equals(service, ignoreCase = true)
-    }
-    val clickLabel = stringResource(R.string.explore_view_service, service)
-
-    val cardModifier = modifier
-        .fillMaxWidth()
-        .testTag("explore_service_result_card")
-        .then(
-            if (onClick == null) {
-                Modifier
-            } else {
-                Modifier.clickable(
-                    role = Role.Button,
-                    onClickLabel = clickLabel,
-                    onClick = onClick,
-                )
-            },
-        )
-
-    Card(
-        modifier = cardModifier,
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = service,
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CompositionLocalProvider(
-                        LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
-                    ) {
-                        AskITAvatar(
-                            avatarUrl = result.avatarUrl,
-                            avatarSize = 40.dp,
-                            fallbackIconSize = 28.dp,
-                        )
-                    }
-                }
-                Spacer(Modifier.width(8.dp))
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    Text(
-                        text = provider,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    if (status != null) {
-                        Text(
-                            text = status,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                    PersonResultMetadata(
-                        rating = result.rating,
-                        reviewCount = result.reviewCount,
-                        locationLabel = result.locationLabel,
-                        price = result.priceLabel,
-                    )
-                }
-            }
-            if (additionalServiceCount > 0) {
-                Text(
-                    text = pluralStringResource(
-                        R.plurals.explore_additional_services,
-                        additionalServiceCount,
-                        additionalServiceCount,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         }

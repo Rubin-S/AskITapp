@@ -10,12 +10,11 @@
         <item quantity="other">இன்பாக்ஸில் %d படிக்காத செய்திகள்</item>
     </plurals>
 
+    <string name="create_sheet_title">உருவாக்கு</string>
     <string name="create_post_task_title">பணியைப் பதிவிடு</string>
-    <string name="create_post_task_supporting">உள்ளூர் பணிக்கு ஒருவரைக் கண்டுபிடிக்கவும்</string>
-    <string name="create_add_service_title">சேவையைச் சேர்</string>
-    <string name="create_add_service_supporting">அருகிலுள்ள வாடிக்கையாளர்களுக்கு சேவை வழங்குங்கள்</string>
-    <string name="create_share_work_title">உங்கள் பணியைப் பகிரவும்</string>
-    <string name="create_share_work_supporting">முடித்த பணியை அல்லது புதுப்பிப்பைப் பகிரவும்</string>
+    <string name="create_post_task_supporting">ஒரு வேலை அல்லது சிக்கலுக்கு உதவ ஒருவரைக் கண்டுபிடிக்கவும்</string>
+    <string name="create_add_service_title">சேவையைப் பட்டியலிடு</string>
+    <string name="create_add_service_supporting">வாடிக்கையாளர்களுக்கு உங்கள் சேவையை வழங்குங்கள்</string>
 
     <string name="person_result_new">புதியவர்</string>
     <string name="person_result_view_profile">%1$s-ன் சுயவிவரத்தைப் பார்க்க</string>
@@ -36,4 +35,28 @@
     <string name="task_result_status_expired">காலாவதியானது</string>
     <string name="task_result_status_unavailable">கிடைக்கவில்லை</string>
     <string name="task_result_view_task">பணியைப் பார்க்கவும்: %1$s</string>
+    <plurals name="task_result_photo_count">
+        <item quantity="one">%d புகைப்படம்</item>
+        <item quantity="other">%d புகைப்படங்கள்</item>
+    </plurals>
+    <string name="task_result_photo_unavailable">புகைப்படம் கிடைக்கவில்லை</string>
+    <string name="service_result_provided_by">%1$s வழங்கும் சேவை</string>
+    <string name="service_result_view_service">சேவையைப் பார்க்கவும்: %1$s</string>
+    <plurals name="service_result_portfolio_count">
+        <item quantity="one">%d பணிப் புகைப்படம்</item>
+        <item quantity="other">%d பணிப் புகைப்படங்கள்</item>
+    </plurals>
+    <string name="create_post_title">பதிவை உருவாக்கு</string>
+    <string name="create_post_supporting">புதுப்பிப்பு, புகைப்படம், கருசல், முன்/பின் ஒப்பீடு அல்லது வாக்கெடுப்பைப் பகிரவும்</string>
+    <string name="post_feed_author_fallback">நீங்கள்</string>
+    <string name="post_feed_photo_content_description">பதிவு புகைப்படம்</string>
+    <string name="post_feed_photo_unavailable">புகைப்படம் கிடைக்கவில்லை</string>
+    <string name="post_feed_more">மேலும்</string>
+    <string name="post_feed_carousel_page">%2$d புகைப்படங்களில் %1$d</string>
+    <string name="post_feed_carousel_page_described">%1$s. %3$d புகைப்படங்களில் %2$d</string>
+    <string name="post_feed_carousel_counter">%1$d / %2$d</string>
+    <string name="post_feed_before">முன்</string>
+    <string name="post_feed_after">பின்</string>
+    <string name="post_feed_comparison">%1$s புகைப்படம்</string>
+    <string name="post_feed_comparison_described">%1$s புகைப்படம். %2$s</string>
 </resources>

@@ -105,7 +105,7 @@ class ExploreFlowTest {
         composeTestRule.onAllNodesWithText("Recent searches").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Suggested categories").assertCountEquals(0)
         composeTestRule.onNodeWithText("Browse services").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Electrician").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Electrician").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -211,7 +211,7 @@ class ExploreFlowTest {
         setApp(viewModel)
         openExplore()
 
-        composeTestRule.onNodeWithText("Electrician").performClick()
+        composeTestRule.onNodeWithText("Electrician").performScrollTo().performClick()
 
         assertEquals("Electrician", viewModel.uiState.value.query)
         assertEquals(listOf("Electrician"), viewModel.uiState.value.recentSearches)
@@ -841,15 +841,17 @@ class ExploreFlowTest {
         composeTestRule.onNodeWithText("People").assertIsSelected()
         composeTestRule.onNodeWithText("Arun Kumar").assertIsDisplayed()
         composeTestRule.onNodeWithText("Identity professional").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Both-reason person").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Both-reason person").performScrollTo().assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Service professional").assertCountEquals(0)
         composeTestRule.onAllNodesWithTag("explore_submitted_tasks").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("People and services").assertCountEquals(0)
 
         composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Services").assertIsSelected()
-        composeTestRule.onNodeWithText("Service professional").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Both-reason person").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_results_list").performScrollToIndex(3)
+        composeTestRule.onNodeWithText("Provided by Service professional").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Provided by Both-reason person").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Arun Kumar").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Identity professional").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Identity-only unrelated service").assertCountEquals(0)
@@ -863,27 +865,26 @@ class ExploreFlowTest {
     }
 
     @Test
-    fun submittedServices_useCompactServiceCards_withProviderMetadataAndOneClick() {
+    fun submittedServices_useCanonicalServiceCards_withProviderIdentityAndOneClick() {
         var selectedPersonId: String? = null
         setSubmittedContent(onPersonClick = { selectedPersonId = it })
 
         composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("explore_submitted_services").assertIsDisplayed()
         composeTestRule.onAllNodesWithTag("explore_service_result_card").assertCountEquals(2)
-        composeTestRule.onNodeWithText("Electrician").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Service professional").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Available today").assertIsDisplayed()
-        composeTestRule.onNodeWithText("4.8 (36)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Electrician").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_results_list").performScrollToIndex(3)
+        composeTestRule.onNodeWithText("Provided by Service professional").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Kallakurichi").assertCountEquals(2)
         composeTestRule.onNodeWithText("From ₹500").assertIsDisplayed()
-        composeTestRule.onNodeWithText("+2 other services").assertIsDisplayed()
-        composeTestRule.onNodeWithText("New").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Fan installation, Wiring").performScrollTo().assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Identity-only unrelated service").assertCountEquals(0)
         composeTestRule.onAllNodesWithTag("explore_submitted_people").assertCountEquals(0)
         composeTestRule.onAllNodesWithTag("explore_submitted_tasks").assertCountEquals(0)
 
-        composeTestRule.onNodeWithText("Electrician").performClick()
+        composeTestRule.onNodeWithText("Electrician").performScrollTo().performClick()
         assertEquals("service-person", selectedPersonId)
     }
 
@@ -920,7 +921,7 @@ class ExploreFlowTest {
         )
 
         composeTestRule.onNodeWithText("Services").performClick()
-        composeTestRule.onNodeWithText("Service professional").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Electrician").performScrollTo().performClick()
         assertEquals("service-person", selectedPersonId)
         assertEquals(0, submissions)
 
@@ -1331,6 +1332,7 @@ class ExploreFlowTest {
             assertTrue(bounds.right <= width.toFloat())
             val cardBounds = composeTestRule
                 .onAllNodesWithTag("explore_service_result_card")[0]
+                .performScrollTo()
                 .assertIsDisplayed()
                 .fetchSemanticsNode()
                 .boundsInRoot
@@ -1477,8 +1479,10 @@ class ExploreFlowTest {
         composeTestRule.onNodeWithText("Provider 7").assertIsDisplayed()
 
         composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.waitForIdle()
         resultsList.performScrollToIndex(6)
-        composeTestRule.onNodeWithText("Provider 5").assertIsDisplayed()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Provided by Provider 5").assertIsDisplayed()
 
         composeTestRule.onNodeWithText("People").performClick()
         composeTestRule.waitForIdle()

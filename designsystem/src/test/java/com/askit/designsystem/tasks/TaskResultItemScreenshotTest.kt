@@ -1,5 +1,9 @@
 package com.askit.designsystem.tasks
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -74,6 +78,9 @@ class TaskResultItemScreenshotTest {
             posterName = "Arun P.",
             postedLabel = "Posted 2h ago",
             status = TaskResultStatus.Open,
+            photoModels = listOf(samplePhoto()),
+            distanceLabel = "2.4 km",
+            scopeHighlights = listOf("Kitchen sink", "Provider brings materials"),
             onClick = {},
         )
     }
@@ -90,6 +97,7 @@ class TaskResultItemScreenshotTest {
             posterName = "Suresh K.",
             postedLabel = "Posted 40m ago",
             status = TaskResultStatus.Applied,
+            photoModels = listOf(samplePhoto(), samplePhoto()),
             onClick = {},
         )
     }
@@ -123,6 +131,17 @@ class TaskResultItemScreenshotTest {
             postedLabel = "Posted yesterday",
             status = TaskResultStatus.Unavailable,
             onClick = {},
+        )
+    }
+
+    private fun samplePhoto(): Bitmap = Bitmap.createBitmap(240, 160, Bitmap.Config.ARGB_8888).also {
+        Canvas(it).drawColor(Color.rgb(51, 112, 148))
+        Canvas(it).drawRect(
+            30f,
+            24f,
+            210f,
+            136f,
+            Paint().apply { color = Color.rgb(237, 176, 82) },
         )
     }
 }
