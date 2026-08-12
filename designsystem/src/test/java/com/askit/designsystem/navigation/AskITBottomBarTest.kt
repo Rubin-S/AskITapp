@@ -11,7 +11,15 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Density
 import com.askit.designsystem.theme.AskITTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -163,13 +171,95 @@ class AskITBottomBarTest {
             }
         }
 
+        composeTestRule.onNodeWithText("Create").assertIsDisplayed()
         composeTestRule.onNodeWithText("Post a task").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Add a service").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Share your work").assertIsDisplayed()
+        composeTestRule.onNodeWithText("List a service").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Create a post").assertIsDisplayed()
+        listOf(
+            "Find someone to help with a job or problem",
+            "Offer a service to customers",
+            "Share an update, photo, carousel, before/after, or poll",
+        ).forEach { supportingCopy ->
+            composeTestRule.onNodeWithText(supportingCopy).assertIsDisplayed()
+        }
+
+        val actionTitles = listOf("Post a task", "List a service", "Create a post")
+        actionTitles.forEach { title ->
+            composeTestRule.onNodeWithText(title).assertHasClickAction()
+        }
+        composeTestRule.onAllNodes(
+            SemanticsMatcher("Create action button") { node ->
+                node.config.contains(SemanticsProperties.Role) &&
+                    node.config[SemanticsProperties.Role] == Role.Button
+            },
+            useUnmergedTree = true,
+        ).assertCountEquals(3)
+        val actionPositions = actionTitles.map { title ->
+            composeTestRule.onNodeWithText(title).fetchSemanticsNode().boundsInRoot.top
+        }
+        assertTrue(actionPositions[0] < actionPositions[1])
+        assertTrue(actionPositions[1] < actionPositions[2])
+        assertTrue(
+            composeTestRule
+                .onNodeWithText("Create")
+                .fetchSemanticsNode()
+                .config
+                .contains(SemanticsProperties.Heading),
+        )
 
         composeTestRule.onNodeWithText("Post a task").performClick()
         assertTrue(dismissed)
         assertEquals(listOf(AskITCreateAction.PostTask), actions)
+    }
+
+    @Test
+    @Config(qualifiers = "ta-rIN-w360dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun createSheet_tamilUsesLocalizedHeadingActionsAndCopy() {
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                AskITCreateSheet(onDismiss = {}, onActionClick = {})
+            }
+        }
+
+        listOf(
+            "உருவாக்கு",
+            "பணியைப் பதிவிடு",
+            "சேவையைப் பட்டியலிடு",
+            "பதிவை உருவாக்கு",
+            "ஒரு வேலை அல்லது சிக்கலுக்கு உதவ ஒருவரைக் கண்டுபிடிக்கவும்",
+            "வாடிக்கையாளர்களுக்கு உங்கள் சேவையை வழங்குங்கள்",
+            "புதுப்பிப்பு, புகைப்படம், கருசல், முன்/பின் ஒப்பீடு அல்லது வாக்கெடுப்பைப் பகிரவும்",
+        ).forEach { text ->
+            composeTestRule.onNodeWithText(text).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h360dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun createSheet_largeTextKeepsAllActionsReachableInCompactHeight() {
+        val fontScale = mutableStateOf(1f)
+        composeTestRule.setContent {
+            AskITTheme(darkTheme = false) {
+                val currentDensity = LocalDensity.current
+                CompositionLocalProvider(
+                    LocalDensity provides Density(currentDensity.density, fontScale.value),
+                ) {
+                    AskITCreateSheet(onDismiss = {}, onActionClick = {})
+                }
+            }
+        }
+
+        listOf(1f, 1.3f, 1.5f, 2f).forEach { scale ->
+            composeTestRule.runOnUiThread { fontScale.value = scale }
+            composeTestRule.waitForIdle()
+            listOf("Post a task", "List a service", "Create a post").forEach { title ->
+                composeTestRule
+                    .onNodeWithText(title)
+                    .performScrollTo()
+                    .assertIsDisplayed()
+                    .assertHasClickAction()
+            }
+        }
     }
 
     private fun setBottomBar(

@@ -1,5 +1,9 @@
 package com.askit.app
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.assertIsDisplayed
@@ -349,6 +353,75 @@ class ExploreScreenshotTest {
         capture("explore_result_font_scale_200_320_light")
     }
 
+    @Test
+    fun explore_task_card_variants_light_360() {
+        setApp(
+            darkTheme = false,
+            resultState = ExploreResultState.Results(
+                people = emptyList(),
+                tasks = taskCardVariants(),
+            ),
+        )
+        openExplore()
+        capture("explore_task_card_variants_light_360")
+    }
+
+    @Test
+    fun explore_task_card_variants_dark_360() {
+        setApp(
+            darkTheme = true,
+            resultState = ExploreResultState.Results(
+                people = emptyList(),
+                tasks = taskCardVariants(),
+            ),
+        )
+        openExplore()
+        capture("explore_task_card_variants_dark_360")
+    }
+
+    @Test
+    @Config(qualifiers = "ta-rIN-w360dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_task_card_variants_tamil_360() {
+        setApp(
+            darkTheme = false,
+            resultState = ExploreResultState.Results(
+                people = emptyList(),
+                tasks = tamilTaskCardVariants(),
+            ),
+        )
+        openExplore("ஆராயுங்கள்")
+        capture("explore_task_card_variants_tamil_360")
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_task_card_variants_large_text_320() {
+        setApp(
+            darkTheme = false,
+            resultState = ExploreResultState.Results(
+                people = emptyList(),
+                tasks = taskCardVariants(),
+            ),
+            fontScale = 1.5f,
+        )
+        openExplore()
+        capture("explore_task_card_variants_large_text_320")
+    }
+
+    @Test
+    @Config(qualifiers = "w800dp-h412dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
+    fun explore_task_card_variants_landscape_800() {
+        setApp(
+            darkTheme = false,
+            resultState = ExploreResultState.Results(
+                people = emptyList(),
+                tasks = taskCardVariants(),
+            ),
+        )
+        openExplore()
+        capture("explore_task_card_variants_landscape_800")
+    }
+
     private fun setApp(
         darkTheme: Boolean,
         withHistory: Boolean = false,
@@ -496,10 +569,99 @@ class ExploreScreenshotTest {
         ),
     )
 
+    private fun taskCardVariants() = listOf(
+        ExploreTaskResult(
+            id = "photo-task",
+            title = "Repair leaking kitchen tap",
+            category = "Plumber",
+            summary = "Water is leaking around the base of the tap.",
+            budgetLabel = "₹800–₹1,500",
+            locationLabel = "Anna Nagar",
+            timingLabel = "Needed Monday",
+            posterName = "Arun P.",
+            postedLabel = "Posted 12m ago",
+            status = TaskResultStatus.Open,
+            photoModels = listOf(samplePhoto()),
+            distanceLabel = "2.4 km",
+            scopeHighlights = listOf("Kitchen sink", "Provider brings materials"),
+        ),
+        ExploreTaskResult(
+            id = "multi-photo-task",
+            title = "Furniture assembly",
+            category = "Furniture assembly",
+            summary = "Assemble a new flat-pack wardrobe in the bedroom.",
+            budgetLabel = "",
+            locationLabel = "Anna Nagar",
+            timingLabel = "Flexible",
+            posterName = "Meena S.",
+            postedLabel = "Posted 2h ago",
+            status = TaskResultStatus.Open,
+            photoModels = listOf(
+                samplePhoto(),
+                samplePhoto(),
+            ),
+            distanceLabel = "4.1 km",
+            scopeHighlights = listOf("120 × 60 cm · IKEA PAX"),
+        ),
+        ExploreTaskResult(
+            id = "text-only-task",
+            title = "Translate a two-page document",
+            category = "Translation",
+            summary = "Translate the supplied English document into Tamil.",
+            budgetLabel = "Request quotes",
+            locationLabel = "Remote",
+            timingLabel = "Flexible",
+            posterName = "Suresh K.",
+            postedLabel = "Posted yesterday",
+            status = TaskResultStatus.Applied,
+        ),
+    )
+
+    private fun tamilTaskCardVariants() = listOf(
+        ExploreTaskResult(
+            id = "tamil-photo-task",
+            title = "சமையலறை குழாயில் கசிவை சரிசெய்யவும்",
+            category = "பிளம்பர்",
+            summary = "குழாயின் அடிப்பகுதியில் தண்ணீர் கசிகிறது.",
+            budgetLabel = "₹800–₹1,500",
+            locationLabel = "அண்ணா நகர்",
+            timingLabel = "திங்கட்கிழமை தேவை",
+            posterName = "அருண் பி.",
+            postedLabel = "12 நிமிடங்களுக்கு முன்",
+            status = TaskResultStatus.Open,
+            photoModels = listOf(samplePhoto()),
+            distanceLabel = "2.4 கி.மீ.",
+            scopeHighlights = listOf("சமையலறை தொட்டி"),
+        ),
+        ExploreTaskResult(
+            id = "tamil-text-only-task",
+            title = "இரண்டு பக்க ஆவணத்தை மொழிபெயர்க்கவும்",
+            category = "மொழிபெயர்ப்பு",
+            summary = "வழங்கப்பட்ட ஆங்கில ஆவணத்தைத் தமிழில் மொழிபெயர்க்கவும்.",
+            budgetLabel = "மேற்கோள்களைக் கோரு",
+            locationLabel = "தொலைநிலை",
+            timingLabel = "நெகிழ்வானது",
+            posterName = "சுரேஷ் கே.",
+            postedLabel = "நேற்று பதிவிடப்பட்டது",
+            status = TaskResultStatus.Open,
+        ),
+    )
+
     private fun openExplore(contentDescription: String = "Explore") {
         composeTestRule.onNodeWithContentDescription(contentDescription).performClick()
         composeTestRule.mainClock.advanceTimeBy(5_000)
         composeTestRule.waitForIdle()
+    }
+
+    private fun samplePhoto(): Bitmap = Bitmap.createBitmap(240, 160, Bitmap.Config.ARGB_8888).also {
+        Canvas(it).drawColor(Color.rgb(51, 112, 148))
+        Canvas(it).drawRect(
+            30f,
+            24f,
+            210f,
+            136f,
+            Paint().apply { color = Color.rgb(237, 176, 82) },
+        )
     }
 
     private fun openSearch() {

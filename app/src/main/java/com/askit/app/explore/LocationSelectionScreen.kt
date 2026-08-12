@@ -9,6 +9,7 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.os.Build
+import androidx.annotation.StringRes
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -158,6 +159,8 @@ fun SearchAreaScreen(
     filterScope: ExploreResultScope = ExploreResultScope.All,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
+    @StringRes titleRes: Int = R.string.explore_filters_title,
+    showFilterControls: Boolean = true,
     onApply: (ExploreSearchArea, Set<ExploreFilterOption>) -> Unit,
 ) {
     var displayName by rememberSaveable(confirmedArea.displayName) { mutableStateOf(confirmedArea.displayName) }
@@ -167,11 +170,15 @@ fun SearchAreaScreen(
     var longitude by rememberSaveable(confirmedArea.displayName) { mutableStateOf(confirmedArea.longitude) }
     var radiusKm by rememberSaveable(confirmedArea.displayName) { mutableIntStateOf(confirmedArea.radiusKm) }
     var sourceName by rememberSaveable(confirmedArea.displayName) { mutableStateOf(confirmedArea.source.name) }
-    val availableOptions = remember(filterScope, availableFilterOptions[filterScope]) {
-        normalizeAvailableExploreFilterOptions(
-            scope = filterScope,
-            options = availableFilterOptions[filterScope].orEmpty(),
-        )
+    val availableOptions = remember(filterScope, availableFilterOptions[filterScope], showFilterControls) {
+        if (showFilterControls) {
+            normalizeAvailableExploreFilterOptions(
+                scope = filterScope,
+                options = availableFilterOptions[filterScope].orEmpty(),
+            )
+        } else {
+            emptyList()
+        }
     }
     val initialOptionalOptions = remember(filterScope, availableOptions, appliedFilterOptions[filterScope]) {
         normalizeAppliedExploreFilterOptions(
@@ -374,7 +381,7 @@ fun SearchAreaScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.explore_filters_title)) },
+                title = { Text(stringResource(titleRes)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -401,25 +408,33 @@ fun SearchAreaScreen(
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        TextButton(
-                            onClick = { draftOptionalOptionNames = emptyList() },
-                            enabled = draftOptionalOptions.isNotEmpty(),
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 48.dp)
-                                .testTag("explore_clear_filters"),
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.secondary,
-                                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            ),
-                        ) {
-                            Text(stringResource(R.string.explore_clear_filters))
+                        if (showFilterControls) {
+                            TextButton(
+                                onClick = { draftOptionalOptionNames = emptyList() },
+                                enabled = draftOptionalOptions.isNotEmpty(),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 48.dp)
+                                    .testTag("explore_clear_filters"),
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.secondary,
+                                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
+                            ) {
+                                Text(stringResource(R.string.explore_clear_filters))
+                            }
+                            Spacer(Modifier.size(8.dp))
                         }
-                        Spacer(Modifier.size(8.dp))
                         Button(
                             onClick = { onApply(draft, draftOptionalOptions) },
                             enabled = draft.isUsable && !isResolvingLocation,
-                            modifier = Modifier.heightIn(min = 48.dp),
+                            modifier = if (showFilterControls) {
+                                Modifier.heightIn(min = 48.dp)
+                            } else {
+                                Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
+                            },
                         ) {
                             Text(stringResource(R.string.explore_apply))
                         }
@@ -440,16 +455,18 @@ fun SearchAreaScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            item {
-                Text(
-                    text = stringResource(
-                        R.string.explore_filter_scope_caption,
-                        stringResource(filterScope.labelRes),
-                    ),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.semantics { heading() },
-                )
+            if (showFilterControls) {
+                item {
+                    Text(
+                        text = stringResource(
+                            R.string.explore_filter_scope_caption,
+                            stringResource(filterScope.labelRes),
+                        ),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                }
             }
             item {
                 Surface(
@@ -534,56 +551,58 @@ fun SearchAreaScreen(
                     }
                 }
             }
-            item {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+            if (showFilterControls) {
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     ) {
-                        Text(
-                            text = stringResource(R.string.explore_search_distance),
-                            style = MaterialTheme.typography.titleMedium,
+                        Column(
                             modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                                .semantics { heading() },
-                        )
-                        Column(Modifier.selectableGroup()) {
-                            SEARCH_RADII_KM.forEach { radius ->
-                                val radiusDescription = stringResource(R.string.explore_within_km, radius)
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 56.dp)
-                                        .selectable(
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.explore_search_distance),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .semantics { heading() },
+                            )
+                            Column(Modifier.selectableGroup()) {
+                                SEARCH_RADII_KM.forEach { radius ->
+                                    val radiusDescription = stringResource(R.string.explore_within_km, radius)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 56.dp)
+                                            .selectable(
+                                                selected = radiusKm == radius,
+                                                onClick = { radiusKm = radius },
+                                                role = Role.RadioButton,
+                                            )
+                                            .semantics {
+                                                contentDescription = radiusDescription
+                                            }
+                                            .padding(horizontal = 16.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        RadioButton(
                                             selected = radiusKm == radius,
-                                            onClick = { radiusKm = radius },
-                                            role = Role.RadioButton,
+                                            onClick = null,
+                                            colors = RadioButtonDefaults.colors(
+                                                selectedColor = MaterialTheme.colorScheme.secondary,
+                                                unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            ),
                                         )
-                                        .semantics {
-                                            contentDescription = radiusDescription
-                                        }
-                                        .padding(horizontal = 16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    RadioButton(
-                                        selected = radiusKm == radius,
-                                        onClick = null,
-                                        colors = RadioButtonDefaults.colors(
-                                            selectedColor = MaterialTheme.colorScheme.secondary,
-                                            unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        ),
-                                    )
-                                    Spacer(Modifier.size(12.dp))
-                                    Text(
-                                        text = radiusDescription,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                    )
+                                        Spacer(Modifier.size(12.dp))
+                                        Text(
+                                            text = radiusDescription,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                        )
+                                    }
                                 }
                             }
                         }

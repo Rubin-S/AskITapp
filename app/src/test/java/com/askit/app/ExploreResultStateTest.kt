@@ -22,6 +22,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
@@ -90,8 +91,10 @@ class ExploreResultStateTest {
         composeTestRule.onAllNodesWithText("Service Person").assertCountEquals(0)
 
         composeTestRule.onNodeWithText("Services").performClick()
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Electrician").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Service Person").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("explore_results_list").performScrollToIndex(3)
+        composeTestRule.onNodeWithText("Provided by Service Person").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Identity Person").assertCountEquals(0)
 
         composeTestRule.onAllNodesWithText("Tasks")[0].performClick()

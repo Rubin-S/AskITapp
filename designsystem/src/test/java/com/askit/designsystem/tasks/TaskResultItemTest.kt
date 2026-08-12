@@ -1,6 +1,10 @@
 package com.askit.designsystem.tasks
 
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
@@ -16,6 +20,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
@@ -46,20 +51,12 @@ class TaskResultItemTest {
             .onNodeWithText("Computer repair", useUnmergedTree = true)
             .assertIsDisplayed()
         composeTestRule
-            .onNodeWithText("Open", useUnmergedTree = true)
-            .assertIsDisplayed()
-        composeTestRule
             .onNodeWithText("Laptop only charges when the cable is held at an angle.")
             .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithText(
-                "Budget range · Kallakurichi · Needed Monday",
-                useUnmergedTree = true,
-            )
-            .assertIsDisplayed()
-        composeTestRule
-            .onNodeWithText("Arun P. · Posted 2h ago", useUnmergedTree = true)
-            .assertIsDisplayed()
+        listOf("Budget range", "Kallakurichi", "Needed Monday", "Arun P.", "Posted 2h ago")
+            .forEach { value ->
+                composeTestRule.onNodeWithText(value, useUnmergedTree = true).assertIsDisplayed()
+            }
     }
 
     @Test
@@ -86,9 +83,11 @@ class TaskResultItemTest {
         }
 
         listOf("Open", "Applied", "Filled", "Closed", "Expired", "Unavailable").forEach {
-            composeTestRule
-                .onNodeWithText(it, useUnmergedTree = true)
-                .assertExists()
+            if (it == "Open") {
+                composeTestRule.onAllNodesWithText(it, useUnmergedTree = true).assertCountEquals(0)
+            } else {
+                composeTestRule.onNodeWithText(it, useUnmergedTree = true).assertExists()
+            }
         }
     }
 
@@ -116,12 +115,25 @@ class TaskResultItemTest {
             postedLabel = "Posted 2h ago",
         )
 
-        composeTestRule
-            .onNodeWithText("Open", useUnmergedTree = true)
-            .assertIsDisplayed()
         composeTestRule.onNodeWithText("Kallakurichi").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Arun P. · Posted 2h ago").assertIsDisplayed()
-        composeTestRule.onAllNodesWithText("\u00B7", substring = true).assertCountEquals(1)
+        composeTestRule.onNodeWithText("Arun P.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Posted 2h ago").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("\u00B7", substring = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun photos_areProminentAndExposeCount() {
+        setItem(photoModels = listOf(samplePhoto(), samplePhoto()))
+
+        composeTestRule.onNodeWithContentDescription("2 photos").assertIsDisplayed()
+    }
+
+    @Test
+    fun noPhotos_omitMediaRegion() {
+        setItem(photoModels = emptyList())
+
+        composeTestRule.onAllNodesWithText("2 photos").assertCountEquals(0)
+        composeTestRule.onNodeWithText("Repair laptop charging port").assertIsDisplayed()
     }
 
     @Test
@@ -242,7 +254,7 @@ class TaskResultItemTest {
         }
         composeTestRule
             .onAllNodesWithText("Open", useUnmergedTree = true)
-            .assertCountEquals(4)
+            .assertCountEquals(0)
     }
 
     @Test
@@ -300,6 +312,7 @@ class TaskResultItemTest {
         posterName: String = "Arun P.",
         postedLabel: String = "Posted 2h ago",
         status: TaskResultStatus = TaskResultStatus.Open,
+        photoModels: List<Any> = emptyList(),
         onClick: (() -> Unit)? = {},
     ) {
         composeTestRule.setContent {
@@ -315,10 +328,22 @@ class TaskResultItemTest {
                         posterName = posterName,
                         postedLabel = postedLabel,
                         status = status,
+                        photoModels = photoModels,
                         onClick = onClick,
                     )
                 }
             }
         }
+    }
+
+    private fun samplePhoto(): Bitmap = Bitmap.createBitmap(160, 120, Bitmap.Config.ARGB_8888).also {
+        Canvas(it).drawColor(Color.rgb(51, 112, 148))
+        Canvas(it).drawRect(
+            20f,
+            20f,
+            140f,
+            100f,
+            Paint().apply { color = Color.rgb(237, 176, 82) },
+        )
     }
 }
