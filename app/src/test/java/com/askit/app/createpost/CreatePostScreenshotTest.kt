@@ -32,11 +32,11 @@ class CreatePostScreenshotTest {
     @Test
     fun poll_preview_dark_360() {
         val viewModel = CreatePostViewModel(SavedStateHandle()).also {
-            it.selectType(PostType.POLL)
+            it.updateTextBody("Choose the finish for the next project.")
+            it.addPoll()
             it.updatePollQuestion("Which finish looks better?")
             it.updatePollOption(0, "Matte black")
             it.updatePollOption(1, "Natural wood")
-            it.updatePollDescription("Choose the finish for the next project.")
             it.preview()
         }
         capture(
@@ -50,8 +50,7 @@ class CreatePostScreenshotTest {
     @Config(qualifiers = "ta-rIN-w360dp-h800dp-normal-long-notround-any-xxxhdpi-keyshidden-nonav")
     fun carousel_editor_tamil_360() {
         val viewModel = CreatePostViewModel(SavedStateHandle()).also {
-            it.selectType(PostType.CAROUSEL)
-            it.updateCarouselCaption("முடித்த பணியின் படிகள்")
+            it.updateTextBody("முடித்த பணியின் படிகள்")
         }
         capture(
             viewModel = viewModel,

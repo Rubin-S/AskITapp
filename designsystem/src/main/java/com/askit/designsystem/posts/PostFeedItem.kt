@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -37,13 +36,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
@@ -62,36 +56,32 @@ data class PostFeedMedia(
     val contentDescription: String? = null,
 )
 
-sealed interface PostFeedContent {
-    data class Text(
-        val body: String,
-    ) : PostFeedContent
-
+sealed interface PostFeedMediaContent {
     data class Photo(
         val image: PostFeedMedia,
-        val caption: String? = null,
-    ) : PostFeedContent
+    ) : PostFeedMediaContent
 
     data class Carousel(
         val items: List<PostFeedMedia>,
-        val caption: String? = null,
-    ) : PostFeedContent
+    ) : PostFeedMediaContent
 
     data class BeforeAfter(
         val before: PostFeedMedia,
         val after: PostFeedMedia,
-        val caption: String? = null,
-        val beforeNote: String? = null,
-        val afterNote: String? = null,
-    ) : PostFeedContent
-
-    data class Poll(
-        val question: String,
-        val options: List<String>,
-        val closingSummary: String,
-        val description: String? = null,
-    ) : PostFeedContent
+    ) : PostFeedMediaContent
 }
+
+data class PostFeedPoll(
+    val question: String,
+    val options: List<String>,
+    val closingSummary: String,
+)
+
+data class PostFeedContent(
+    val media: PostFeedMediaContent? = null,
+    val body: String? = null,
+    val poll: PostFeedPoll? = null,
+)
 
 /**
  * The canonical flat social Post renderer used by creation Preview and future Home content.
@@ -119,41 +109,20 @@ fun PostFeedItem(
             author = author.copy(displayName = displayName),
             locationLabel = location,
         )
-        when (content) {
-            is PostFeedContent.Text -> TextPostBody(content.body)
-            is PostFeedContent.Photo -> {
-                PostImageMedia(
-                    media = content.image,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 6.dp),
-                )
-                PostCaption(
-                    authorName = displayName,
-                    caption = content.caption,
-                )
-            }
-            is PostFeedContent.Carousel -> {
-                CarouselPostBody(
-                    items = content.items,
-                    caption = content.caption,
-                )
-                PostCaption(
-                    authorName = displayName,
-                    caption = content.caption,
-                    showOnlyIfNotRendered = true,
-                )
-            }
-            is PostFeedContent.BeforeAfter -> {
-                BeforeAfterPostBody(content)
-                PostCaption(
-                    authorName = displayName,
-                    caption = content.caption,
-                    showOnlyIfNotRendered = true,
-                )
-            }
-            is PostFeedContent.Poll -> PollPostBody(content)
+        when (val media = content.media) {
+            is PostFeedMediaContent.Photo -> PostImageMedia(
+                media = media.image,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            is PostFeedMediaContent.Carousel -> CarouselPostBody(items = media.items)
+            is PostFeedMediaContent.BeforeAfter -> BeforeAfterSlider(
+                before = media.before,
+                after = media.after,
+            )
+            null -> Unit
         }
+        content.body?.let { TextPostBody(it) }
+        content.poll?.let { PollPostBody(it) }
         Spacer(Modifier.size(4.dp))
     }
 }
@@ -287,7 +256,6 @@ private fun PostImageMedia(
 @Composable
 private fun CarouselPostBody(
     items: List<PostFeedMedia>,
-    caption: String?,
 ) {
     if (items.isEmpty()) return
     val pagerState = rememberPagerState(pageCount = { items.size })
@@ -298,9 +266,7 @@ private fun CarouselPostBody(
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 6.dp),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             HorizontalPager(
                 state = pagerState,
@@ -365,101 +331,11 @@ private fun CarouselPostBody(
                 )
             }
         }
-        if (!caption.isNullOrBlank()) {
-            Spacer(Modifier.size(1.dp))
-        }
     }
 }
 
 @Composable
-private fun BeforeAfterPostBody(content: PostFeedContent.BeforeAfter) {
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val sideBySide = maxWidth >= 480.dp
-        if (sideBySide) {
-            Row(
-                modifier = Modifier.padding(horizontal = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                ComparisonMedia(
-                    label = stringResource(R.string.post_feed_before),
-                    media = content.before,
-                    modifier = Modifier.weight(1f),
-                )
-                ComparisonMedia(
-                    label = stringResource(R.string.post_feed_after),
-                    media = content.after,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        } else {
-            Column(
-                modifier = Modifier.padding(horizontal = 6.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                ComparisonMedia(
-                    label = stringResource(R.string.post_feed_before),
-                    media = content.before,
-                )
-                ComparisonMedia(
-                    label = stringResource(R.string.post_feed_after),
-                    media = content.after,
-                )
-            }
-        }
-    }
-    val notes = listOf(
-        stringResource(R.string.post_feed_before) to content.beforeNote,
-        stringResource(R.string.post_feed_after) to content.afterNote,
-    ).filter { (_, note) -> !note.isNullOrBlank() }
-    if (notes.isNotEmpty()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            notes.forEach { (label, note) ->
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append("$label: ") }
-                        append(note.orEmpty())
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ComparisonMedia(
-    label: String,
-    media: PostFeedMedia,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.semantics { heading() },
-        )
-        PostImageMedia(
-            media = media.copy(
-                contentDescription = media.contentDescription?.let {
-                    stringResource(R.string.post_feed_comparison_described, label, it)
-                } ?: stringResource(R.string.post_feed_comparison, label),
-            ),
-        )
-    }
-}
-
-@Composable
-private fun PollPostBody(content: PostFeedContent.Poll) {
+private fun PollPostBody(content: PostFeedPoll) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -488,58 +364,10 @@ private fun PollPostBody(content: PostFeedContent.Poll) {
                 )
             }
         }
-        content.description?.trim()?.takeIf(String::isNotEmpty)?.let { description ->
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
         Text(
             text = content.closingSummary,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-    }
-}
-
-@Composable
-private fun PostCaption(
-    authorName: String,
-    caption: String?,
-    showOnlyIfNotRendered: Boolean = false,
-) {
-    if (showOnlyIfNotRendered && caption.isNullOrBlank()) return
-    val visibleCaption = caption?.trim()?.takeIf(String::isNotEmpty) ?: return
-    var expanded by rememberSaveable(visibleCaption) { mutableStateOf(false) }
-    var hasOverflow by remember(visibleCaption) { mutableStateOf(false) }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            text = buildAnnotatedString {
-                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(authorName) }
-                append(" ")
-                append(visibleCaption)
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = if (expanded) Int.MAX_VALUE else 5,
-            overflow = TextOverflow.Ellipsis,
-            onTextLayout = { hasOverflow = it.hasVisualOverflow },
-            modifier = Modifier.testTag("post_feed_caption"),
-        )
-        if (hasOverflow && !expanded) {
-            TextButton(
-                onClick = { expanded = true },
-                modifier = Modifier.heightIn(min = 48.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-            ) {
-                Text(stringResource(R.string.post_feed_more))
-            }
-        }
     }
 }

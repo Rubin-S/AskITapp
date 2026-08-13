@@ -6,23 +6,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-enum class PostType {
-    TEXT,
-    PHOTO,
-    CAROUSEL,
-    BEFORE_AFTER,
-    POLL,
-}
-
 enum class CreatePostScreenMode {
     EDITING,
     PREVIEW,
 }
 
+enum class PostMediaLayout {
+    GALLERY,
+    BEFORE_AFTER,
+}
+
 enum class PostValidationField {
-    TEXT_BODY,
-    PHOTO,
-    CAROUSEL,
+    CONTENT,
     BEFORE_PHOTO,
     AFTER_PHOTO,
     POLL_QUESTION,
@@ -59,66 +54,26 @@ data class PostMediaDraft(
     val imageDescription: String = "",
 )
 
-data class PostCarouselItem(
-    val uri: String? = null,
-    val imageDescription: String = "",
+data class PostPollDraft(
+    val question: String = "",
+    val options: List<String> = listOf("", ""),
+    val closingRule: PostPollClosingRule = PostPollClosingRule.AFTER_24_HOURS,
+    val closingAtMillis: Long? = null,
 )
 
-sealed interface PostContentDraft {
-    val type: PostType
-
-    data class Text(
-        val body: String = "",
-    ) : PostContentDraft {
-        override val type: PostType = PostType.TEXT
-    }
-
-    data class Photo(
-        val uri: String? = null,
-        val caption: String = "",
-        val imageDescription: String = "",
-    ) : PostContentDraft {
-        override val type: PostType = PostType.PHOTO
-    }
-
-    data class Carousel(
-        val items: List<PostCarouselItem> = emptyList(),
-        val caption: String = "",
-    ) : PostContentDraft {
-        override val type: PostType = PostType.CAROUSEL
-    }
-
-    data class BeforeAfter(
-        val before: PostMediaDraft = PostMediaDraft(),
-        val after: PostMediaDraft = PostMediaDraft(),
-        val caption: String = "",
-        val beforeNote: String = "",
-        val afterNote: String = "",
-    ) : PostContentDraft {
-        override val type: PostType = PostType.BEFORE_AFTER
-    }
-
-    data class Poll(
-        val question: String = "",
-        val options: List<String> = listOf("", ""),
-        val description: String = "",
-        val closingRule: PostPollClosingRule = PostPollClosingRule.AFTER_24_HOURS,
-        val closingAtMillis: Long? = null,
-    ) : PostContentDraft {
-        override val type: PostType = PostType.POLL
-    }
-}
-
 data class PostDraft(
+    val photos: List<PostMediaDraft> = emptyList(),
+    val mediaLayout: PostMediaLayout = PostMediaLayout.GALLERY,
+    val body: String = "",
+    val poll: PostPollDraft? = null,
     val location: PostPublicLocation? = null,
-    val content: PostContentDraft,
-) {
-    val type: PostType
-        get() = content.type
-}
+)
 
 data class CreatePostFormState(
-    val content: PostContentDraft = PostContentDraft.Text(),
+    val photos: List<PostMediaDraft> = emptyList(),
+    val mediaLayout: PostMediaLayout = PostMediaLayout.GALLERY,
+    val body: String = "",
+    val poll: PostPollDraft? = null,
     val location: PostPublicLocation? = null,
     val expandedDisclosures: Set<PostDisclosure> = emptySet(),
     val selectedCarouselIndex: Int = 0,
@@ -138,190 +93,127 @@ class CreatePostViewModel(
         setState(CreatePostFormState())
     }
 
-    /** Returns true when the caller must confirm type-specific data loss. */
-    fun selectType(type: PostType): Boolean {
-        val current = _formState.value
-        if (current.content.type == type) return false
-        if (current.content.hasMeaningfulChanges) return true
-        changeType(type)
-        return false
-    }
+    fun updateTextBody(value: String) = update { copy(body = value) }
 
-    fun confirmTypeChange(type: PostType) {
-        if (_formState.value.content.type != type) changeType(type)
-    }
-
-    fun updateTextBody(value: String) = update { copy(content = PostContentDraft.Text(value)) }
-
-    fun setPhoto(uri: String?) = update {
-        val current = content as? PostContentDraft.Photo ?: return@update this
-        copy(
-            content = current.copy(
-                uri = uri,
-                imageDescription = if (uri == null || uri != current.uri) "" else current.imageDescription,
-            ),
-        )
-    }
-
-    fun removePhoto() = update {
-        val current = content as? PostContentDraft.Photo ?: return@update this
-        copy(content = current.copy(uri = null, imageDescription = ""))
-    }
-
-    fun updatePhotoCaption(value: String) = update {
-        val current = content as? PostContentDraft.Photo ?: return@update this
-        copy(content = current.copy(caption = value))
-    }
-
-    fun updatePhotoImageDescription(value: String) = update {
-        val current = content as? PostContentDraft.Photo ?: return@update this
-        copy(content = current.copy(imageDescription = value))
-    }
-
-    fun addCarouselMedia(uris: List<String>) {
-        val current = _formState.value
-        val content = current.content as? PostContentDraft.Carousel ?: return
-        val added = uris.map(String::trim).filter(String::isNotEmpty)
-        val items = (content.items + added.map { PostCarouselItem(uri = it) })
-            .distinctBy(PostCarouselItem::uri)
-            .take(MAX_CAROUSEL_ITEMS)
-        setState(
-            current.copy(
-                content = content.copy(items = items),
-                selectedCarouselIndex = items.lastIndex.coerceAtLeast(0),
-            ),
-        )
-    }
-
-    fun selectCarouselItem(index: Int) {
-        val content = _formState.value.content as? PostContentDraft.Carousel ?: return
-        if (index in content.items.indices) update { copy(selectedCarouselIndex = index) }
-    }
-
-    fun removeCarouselMedia(index: Int) {
-        val current = _formState.value
-        val content = current.content as? PostContentDraft.Carousel ?: return
-        if (index !in content.items.indices) return
-        val items = content.items.toMutableList().also { it.removeAt(index) }
-        setState(
-            current.copy(
-                content = content.copy(items = items),
-                selectedCarouselIndex = current.selectedCarouselIndex
-                    .coerceAtMost(items.lastIndex.coerceAtLeast(0)),
-            ),
-        )
-    }
-
-    fun moveCarouselItem(index: Int, direction: Int) {
-        val current = _formState.value
-        val content = current.content as? PostContentDraft.Carousel ?: return
-        val target = index + direction
-        if (index !in content.items.indices || target !in content.items.indices) return
-        val items = content.items.toMutableList()
-        val moved = items.removeAt(index)
-        items.add(target, moved)
-        val selectedIndex = when (current.selectedCarouselIndex) {
-            index -> target
-            target -> index
-            else -> current.selectedCarouselIndex
-        }
-        setState(current.copy(content = content.copy(items = items), selectedCarouselIndex = selectedIndex))
-    }
-
-    fun updateCarouselItemDescription(index: Int, value: String) {
+    fun addPhotos(uris: List<String>) {
+        val added = uris.map(String::trim).filter(String::isNotEmpty).map { PostMediaDraft(uri = it) }
         update {
-            val current = content as? PostContentDraft.Carousel ?: return@update this
-            if (index !in current.items.indices) return@update this
+            val photos = (photos + added)
+                .distinctBy(PostMediaDraft::uri)
+                .take(MAX_POST_PHOTOS)
             copy(
-                content = current.copy(
-                    items = current.items.mapIndexed { itemIndex, item ->
-                        if (itemIndex == index) item.copy(imageDescription = value) else item
-                    },
-                ),
+                photos = photos,
+                selectedCarouselIndex = photos.lastIndex.coerceAtLeast(0),
             )
         }
     }
 
-    fun updateCarouselCaption(value: String) = update {
-        val current = content as? PostContentDraft.Carousel ?: return@update this
-        copy(content = current.copy(caption = value))
+    fun setPhotoAt(index: Int, uri: String?) = update {
+        val next = photos.toMutableList()
+        while (next.size <= index) next.add(PostMediaDraft())
+        val previous = next[index]
+        next[index] = PostMediaDraft(
+            uri = uri,
+            imageDescription = if (uri == null || uri != previous.uri) "" else previous.imageDescription,
+        )
+        copy(photos = next.take(MAX_POST_PHOTOS), selectedCarouselIndex = index)
     }
 
-    fun setBeforePhoto(uri: String?) = update {
-        val current = content as? PostContentDraft.BeforeAfter ?: return@update this
-        copy(content = current.copy(before = PostMediaDraft(uri = uri)))
+    fun removePhotoAt(index: Int) = update {
+        if (index !in photos.indices) return@update this
+        val next = photos.toMutableList().also { it.removeAt(index) }
+        copy(
+            photos = next,
+            selectedCarouselIndex = selectedCarouselIndex.coerceAtMost(next.lastIndex.coerceAtLeast(0)),
+        )
     }
 
-    fun setAfterPhoto(uri: String?) = update {
-        val current = content as? PostContentDraft.BeforeAfter ?: return@update this
-        copy(content = current.copy(after = PostMediaDraft(uri = uri)))
+    fun selectPhoto(index: Int) = update {
+        if (index in photos.indices) copy(selectedCarouselIndex = index) else this
     }
 
-    fun removeBeforePhoto() = setBeforePhoto(null)
-
-    fun removeAfterPhoto() = setAfterPhoto(null)
-
-    fun updateBeforeImageDescription(value: String) = update {
-        val current = content as? PostContentDraft.BeforeAfter ?: return@update this
-        copy(content = current.copy(before = current.before.copy(imageDescription = value)))
+    fun movePhoto(index: Int, direction: Int) = update {
+        val target = index + direction
+        if (index !in photos.indices || target !in photos.indices) return@update this
+        val next = photos.toMutableList()
+        val moved = next.removeAt(index)
+        next.add(target, moved)
+        val selected = when (selectedCarouselIndex) {
+            index -> target
+            target -> index
+            else -> selectedCarouselIndex
+        }
+        copy(photos = next, selectedCarouselIndex = selected)
     }
 
-    fun updateAfterImageDescription(value: String) = update {
-        val current = content as? PostContentDraft.BeforeAfter ?: return@update this
-        copy(content = current.copy(after = current.after.copy(imageDescription = value)))
+    fun updatePhotoDescription(index: Int, value: String) = update {
+        if (index !in photos.indices) return@update this
+        copy(
+            photos = photos.mapIndexed { photoIndex, photo ->
+                if (photoIndex == index) photo.copy(imageDescription = value) else photo
+            },
+        )
     }
 
-    fun updateBeforeAfterCaption(value: String) = update {
-        val current = content as? PostContentDraft.BeforeAfter ?: return@update this
-        copy(content = current.copy(caption = value))
+    fun setMediaLayout(layout: PostMediaLayout) = update {
+        if (layout == mediaLayout) return@update this
+        val nextPhotos = when (layout) {
+            PostMediaLayout.GALLERY -> photos.filter { !it.uri.isNullOrBlank() }
+            PostMediaLayout.BEFORE_AFTER -> {
+                val kept = photos.filter { !it.uri.isNullOrBlank() }
+                if (kept.size >= 2) kept else kept + List(2 - kept.size) { PostMediaDraft() }
+            }
+        }
+        copy(
+            mediaLayout = layout,
+            photos = nextPhotos,
+            selectedCarouselIndex = 0,
+        )
     }
 
-    fun updateBeforeNote(value: String) = update {
-        val current = content as? PostContentDraft.BeforeAfter ?: return@update this
-        copy(content = current.copy(beforeNote = value))
-    }
+    fun addPoll() = update { if (poll == null) copy(poll = PostPollDraft()) else this }
 
-    fun updateAfterNote(value: String) = update {
-        val current = content as? PostContentDraft.BeforeAfter ?: return@update this
-        copy(content = current.copy(afterNote = value))
-    }
+    fun removePoll() = update { copy(poll = null) }
 
     fun updatePollQuestion(value: String) = update {
-        val current = content as? PostContentDraft.Poll ?: return@update this
-        copy(content = current.copy(question = value))
+        val current = poll ?: return@update this
+        copy(poll = current.copy(question = value))
     }
 
     fun updatePollOption(index: Int, value: String) = update {
-        val current = content as? PostContentDraft.Poll ?: return@update this
+        val current = poll ?: return@update this
         if (index !in current.options.indices) return@update this
-        copy(content = current.copy(options = current.options.mapIndexed { optionIndex, option ->
-            if (optionIndex == index) value else option
-        }))
+        copy(
+            poll = current.copy(
+                options = current.options.mapIndexed { optionIndex, option ->
+                    if (optionIndex == index) value else option
+                },
+            ),
+        )
     }
 
     fun addPollOption() = update {
-        val current = content as? PostContentDraft.Poll ?: return@update this
+        val current = poll ?: return@update this
         if (current.options.size >= MAX_POLL_OPTIONS) return@update this
-        copy(content = current.copy(options = current.options + ""))
+        copy(poll = current.copy(options = current.options + ""))
     }
 
     fun removePollOption(index: Int) = update {
-        val current = content as? PostContentDraft.Poll ?: return@update this
+        val current = poll ?: return@update this
         if (current.options.size <= MIN_POLL_OPTIONS || index !in current.options.indices) {
             return@update this
         }
-        copy(content = current.copy(options = current.options.toMutableList().also { it.removeAt(index) }))
-    }
-
-    fun updatePollDescription(value: String) = update {
-        val current = content as? PostContentDraft.Poll ?: return@update this
-        copy(content = current.copy(description = value))
+        copy(
+            poll = current.copy(
+                options = current.options.toMutableList().also { it.removeAt(index) },
+            ),
+        )
     }
 
     fun setPollClosingRule(rule: PostPollClosingRule, closingAtMillis: Long? = null) = update {
-        val current = content as? PostContentDraft.Poll ?: return@update this
+        val current = poll ?: return@update this
         copy(
-            content = current.copy(
+            poll = current.copy(
                 closingRule = rule,
                 closingAtMillis = closingAtMillis.takeIf { rule == PostPollClosingRule.CUSTOM_DATE },
             ),
@@ -359,7 +251,7 @@ class CreatePostViewModel(
         if (_formState.value.hasAttemptedPreview) validate(_formState.value) else emptySet()
 
     fun pollOptionError(index: Int): PollOptionError? {
-        val poll = _formState.value.content as? PostContentDraft.Poll ?: return null
+        val poll = _formState.value.poll ?: return null
         if (index !in poll.options.indices) return null
         val option = poll.options[index].trim()
         if (option.isEmpty()) return PollOptionError.EMPTY
@@ -379,10 +271,6 @@ class CreatePostViewModel(
     val isDirty: Boolean
         get() = _formState.value.hasMeaningfulChanges
 
-    private fun changeType(type: PostType) {
-        setState(_formState.value.copy(content = emptyContent(type), selectedCarouselIndex = 0))
-    }
-
     private fun update(transform: CreatePostFormState.() -> CreatePostFormState) {
         setState(_formState.value.transform())
     }
@@ -394,8 +282,15 @@ class CreatePostViewModel(
 
     private fun persist(state: CreatePostFormState) {
         val handle = savedStateHandle ?: return
-        clearContentKeys(handle)
-        handle[CONTENT_TYPE_KEY] = state.content.type.name
+        handle[MEDIA_LAYOUT_KEY] = state.mediaLayout.name
+        handle[PHOTO_URIS_KEY] = ArrayList(state.photos.map { it.uri.orEmpty() })
+        handle[PHOTO_DESCRIPTIONS_KEY] = ArrayList(state.photos.map(PostMediaDraft::imageDescription))
+        handle[TEXT_BODY_KEY] = state.body
+        handle[HAS_POLL_KEY] = state.poll != null
+        handle[POLL_QUESTION_KEY] = state.poll?.question
+        handle[POLL_OPTIONS_KEY] = state.poll?.let { ArrayList(it.options) }
+        handle[POLL_CLOSING_RULE_KEY] = state.poll?.closingRule?.name
+        handle[POLL_CLOSING_AT_KEY] = state.poll?.closingAtMillis
         handle[LOCATION_LABEL_KEY] = state.location?.publicAreaLabel
         handle[LOCATION_PLACE_ID_KEY] = state.location?.placeId
         handle[LOCATION_LATITUDE_KEY] = state.location?.latitude
@@ -405,81 +300,31 @@ class CreatePostViewModel(
         handle[ATTEMPTED_KEY] = state.hasAttemptedPreview
         handle[PREVIEW_ATTEMPT_KEY] = state.previewAttempt
         handle[SCREEN_MODE_KEY] = state.screenMode.name
-        when (val content = state.content) {
-            is PostContentDraft.Text -> handle[TEXT_BODY_KEY] = content.body
-            is PostContentDraft.Photo -> {
-                handle[PHOTO_URI_KEY] = content.uri
-                handle[PHOTO_CAPTION_KEY] = content.caption
-                handle[PHOTO_DESCRIPTION_KEY] = content.imageDescription
-            }
-            is PostContentDraft.Carousel -> {
-                handle[CAROUSEL_URIS_KEY] = ArrayList(content.items.mapNotNull(PostCarouselItem::uri))
-                handle[CAROUSEL_DESCRIPTIONS_KEY] = ArrayList(content.items.map { it.imageDescription })
-                handle[CAROUSEL_CAPTION_KEY] = content.caption
-            }
-            is PostContentDraft.BeforeAfter -> {
-                handle[BEFORE_URI_KEY] = content.before.uri
-                handle[BEFORE_DESCRIPTION_KEY] = content.before.imageDescription
-                handle[AFTER_URI_KEY] = content.after.uri
-                handle[AFTER_DESCRIPTION_KEY] = content.after.imageDescription
-                handle[BEFORE_AFTER_CAPTION_KEY] = content.caption
-                handle[BEFORE_NOTE_KEY] = content.beforeNote
-                handle[AFTER_NOTE_KEY] = content.afterNote
-            }
-            is PostContentDraft.Poll -> {
-                handle[POLL_QUESTION_KEY] = content.question
-                handle[POLL_OPTIONS_KEY] = ArrayList(content.options)
-                handle[POLL_DESCRIPTION_KEY] = content.description
-                handle[POLL_CLOSING_RULE_KEY] = content.closingRule.name
-                handle[POLL_CLOSING_AT_KEY] = content.closingAtMillis
-            }
-        }
     }
 
     private fun restoreState(): CreatePostFormState {
         val handle = savedStateHandle ?: return CreatePostFormState()
-        val type = handle.get<String>(CONTENT_TYPE_KEY).toEnumOrNull<PostType>() ?: PostType.TEXT
-        val content = when (type) {
-            PostType.TEXT -> PostContentDraft.Text(handle.get<String>(TEXT_BODY_KEY).orEmpty())
-            PostType.PHOTO -> PostContentDraft.Photo(
-                uri = handle.get<String>(PHOTO_URI_KEY),
-                caption = handle.get<String>(PHOTO_CAPTION_KEY).orEmpty(),
-                imageDescription = handle.get<String>(PHOTO_DESCRIPTION_KEY).orEmpty(),
+        val uris = readStringList(handle, PHOTO_URIS_KEY)
+        val descriptions = readStringList(handle, PHOTO_DESCRIPTIONS_KEY)
+        val photos = uris.mapIndexed { index, uri ->
+            PostMediaDraft(
+                uri = uri.takeIf(String::isNotBlank),
+                imageDescription = descriptions.getOrNull(index).orEmpty(),
             )
-            PostType.CAROUSEL -> {
-                val uris = readStringList(handle, CAROUSEL_URIS_KEY)
-                val descriptions = readStringList(handle, CAROUSEL_DESCRIPTIONS_KEY)
-                PostContentDraft.Carousel(
-                    items = uris.mapIndexed { index, uri ->
-                        PostCarouselItem(uri = uri, imageDescription = descriptions.getOrNull(index).orEmpty())
-                    },
-                    caption = handle.get<String>(CAROUSEL_CAPTION_KEY).orEmpty(),
-                )
-            }
-            PostType.BEFORE_AFTER -> PostContentDraft.BeforeAfter(
-                before = PostMediaDraft(
-                    uri = handle.get<String>(BEFORE_URI_KEY),
-                    imageDescription = handle.get<String>(BEFORE_DESCRIPTION_KEY).orEmpty(),
-                ),
-                after = PostMediaDraft(
-                    uri = handle.get<String>(AFTER_URI_KEY),
-                    imageDescription = handle.get<String>(AFTER_DESCRIPTION_KEY).orEmpty(),
-                ),
-                caption = handle.get<String>(BEFORE_AFTER_CAPTION_KEY).orEmpty(),
-                beforeNote = handle.get<String>(BEFORE_NOTE_KEY).orEmpty(),
-                afterNote = handle.get<String>(AFTER_NOTE_KEY).orEmpty(),
-            )
-            PostType.POLL -> PostContentDraft.Poll(
+        }
+        val poll = if (handle.get<Boolean>(HAS_POLL_KEY) == true) {
+            PostPollDraft(
                 question = handle.get<String>(POLL_QUESTION_KEY).orEmpty(),
                 options = readStringList(handle, POLL_OPTIONS_KEY)
                     .ifEmpty { listOf("", "") }
                     .take(MAX_POLL_OPTIONS),
-                description = handle.get<String>(POLL_DESCRIPTION_KEY).orEmpty(),
                 closingRule = handle.get<String>(POLL_CLOSING_RULE_KEY)
                     .toEnumOrNull<PostPollClosingRule>()
                     ?: PostPollClosingRule.AFTER_24_HOURS,
                 closingAtMillis = handle.get<Long>(POLL_CLOSING_AT_KEY),
             )
+        } else {
+            null
         }
         val location = handle.get<String>(LOCATION_LABEL_KEY)?.takeIf(String::isNotBlank)?.let {
             PostPublicLocation(
@@ -490,7 +335,12 @@ class CreatePostViewModel(
             )
         }
         return CreatePostFormState(
-            content = content,
+            photos = photos,
+            mediaLayout = handle.get<String>(MEDIA_LAYOUT_KEY)
+                .toEnumOrNull<PostMediaLayout>()
+                ?: PostMediaLayout.GALLERY,
+            body = handle.get<String>(TEXT_BODY_KEY).orEmpty(),
+            poll = poll,
             location = location,
             expandedDisclosures = readStringList(handle, EXPANDED_KEY)
                 .mapNotNull { it.toEnumOrNull<PostDisclosure>() }
@@ -504,11 +354,13 @@ class CreatePostViewModel(
         )
     }
 
-    private companion object {
-        const val MAX_CAROUSEL_ITEMS = 10
+    internal companion object {
+        const val MAX_POST_PHOTOS = 10
         const val MIN_POLL_OPTIONS = 2
         const val MAX_POLL_OPTIONS = 6
-        const val CONTENT_TYPE_KEY = "create_post_content_type"
+        const val MEDIA_LAYOUT_KEY = "create_post_media_layout"
+        const val PHOTO_URIS_KEY = "create_post_photo_uris"
+        const val PHOTO_DESCRIPTIONS_KEY = "create_post_photo_descriptions"
         const val LOCATION_LABEL_KEY = "create_post_location_label"
         const val LOCATION_PLACE_ID_KEY = "create_post_location_place_id"
         const val LOCATION_LATITUDE_KEY = "create_post_location_latitude"
@@ -519,146 +371,78 @@ class CreatePostViewModel(
         const val PREVIEW_ATTEMPT_KEY = "create_post_preview_attempt"
         const val SCREEN_MODE_KEY = "create_post_screen_mode"
         const val TEXT_BODY_KEY = "create_post_text_body"
-        const val PHOTO_URI_KEY = "create_post_photo_uri"
-        const val PHOTO_CAPTION_KEY = "create_post_photo_caption"
-        const val PHOTO_DESCRIPTION_KEY = "create_post_photo_description"
-        const val CAROUSEL_URIS_KEY = "create_post_carousel_uris"
-        const val CAROUSEL_DESCRIPTIONS_KEY = "create_post_carousel_descriptions"
-        const val CAROUSEL_CAPTION_KEY = "create_post_carousel_caption"
-        const val BEFORE_URI_KEY = "create_post_before_uri"
-        const val BEFORE_DESCRIPTION_KEY = "create_post_before_description"
-        const val AFTER_URI_KEY = "create_post_after_uri"
-        const val AFTER_DESCRIPTION_KEY = "create_post_after_description"
-        const val BEFORE_AFTER_CAPTION_KEY = "create_post_before_after_caption"
-        const val BEFORE_NOTE_KEY = "create_post_before_note"
-        const val AFTER_NOTE_KEY = "create_post_after_note"
+        const val HAS_POLL_KEY = "create_post_has_poll"
         const val POLL_QUESTION_KEY = "create_post_poll_question"
         const val POLL_OPTIONS_KEY = "create_post_poll_options"
-        const val POLL_DESCRIPTION_KEY = "create_post_poll_description"
         const val POLL_CLOSING_RULE_KEY = "create_post_poll_closing_rule"
         const val POLL_CLOSING_AT_KEY = "create_post_poll_closing_at"
-
-        fun clearContentKeys(handle: SavedStateHandle) {
-            listOf(
-                TEXT_BODY_KEY,
-                PHOTO_URI_KEY,
-                PHOTO_CAPTION_KEY,
-                PHOTO_DESCRIPTION_KEY,
-                CAROUSEL_URIS_KEY,
-                CAROUSEL_DESCRIPTIONS_KEY,
-                CAROUSEL_CAPTION_KEY,
-                BEFORE_URI_KEY,
-                BEFORE_DESCRIPTION_KEY,
-                AFTER_URI_KEY,
-                AFTER_DESCRIPTION_KEY,
-                BEFORE_AFTER_CAPTION_KEY,
-                BEFORE_NOTE_KEY,
-                AFTER_NOTE_KEY,
-                POLL_QUESTION_KEY,
-                POLL_OPTIONS_KEY,
-                POLL_DESCRIPTION_KEY,
-                POLL_CLOSING_RULE_KEY,
-                POLL_CLOSING_AT_KEY,
-            ).forEach { key -> handle.remove<Any?>(key) }
-        }
 
         fun readStringList(handle: SavedStateHandle, key: String): List<String> =
             handle.get<ArrayList<String>>(key)?.toList().orEmpty()
     }
 }
 
-private fun emptyContent(type: PostType): PostContentDraft = when (type) {
-    PostType.TEXT -> PostContentDraft.Text()
-    PostType.PHOTO -> PostContentDraft.Photo()
-    PostType.CAROUSEL -> PostContentDraft.Carousel()
-    PostType.BEFORE_AFTER -> PostContentDraft.BeforeAfter()
-    PostType.POLL -> PostContentDraft.Poll()
-}
+private val CreatePostFormState.hasMeaningfulChanges: Boolean
+    get() = photos.any { !it.uri.isNullOrBlank() || it.imageDescription.isNotBlank() } ||
+        body.isNotBlank() ||
+        poll.hasMeaningfulChanges ||
+        location != null
 
-private val PostContentDraft.hasMeaningfulChanges: Boolean
-    get() = when (this) {
-        is PostContentDraft.Text -> body.isNotBlank()
-        is PostContentDraft.Photo -> uri != null || caption.isNotBlank() || imageDescription.isNotBlank()
-        is PostContentDraft.Carousel -> items.isNotEmpty() || caption.isNotBlank() ||
-            items.any { it.imageDescription.isNotBlank() }
-        is PostContentDraft.BeforeAfter -> before.uri != null || after.uri != null ||
-            caption.isNotBlank() || beforeNote.isNotBlank() || afterNote.isNotBlank() ||
-            before.imageDescription.isNotBlank() || after.imageDescription.isNotBlank()
-        is PostContentDraft.Poll -> question.isNotBlank() || options.any(String::isNotBlank) ||
-            description.isNotBlank() || closingRule != PostPollClosingRule.AFTER_24_HOURS
+private val PostPollDraft?.hasMeaningfulChanges: Boolean
+    get() {
+        val poll = this ?: return false
+        return poll.question.isNotBlank() ||
+            poll.options.any(String::isNotBlank) ||
+            poll.closingRule != PostPollClosingRule.AFTER_24_HOURS
     }
 
-private val CreatePostFormState.hasMeaningfulChanges: Boolean
-    get() = content.hasMeaningfulChanges || location != null
-
 private fun validate(state: CreatePostFormState): Set<PostValidationField> = buildSet {
-    when (val content = state.content) {
-        is PostContentDraft.Text -> if (content.body.isBlank()) add(PostValidationField.TEXT_BODY)
-        is PostContentDraft.Photo -> if (content.uri.isNullOrBlank()) add(PostValidationField.PHOTO)
-        is PostContentDraft.Carousel -> if (
-            content.items.size !in 2..10 || content.items.any { it.uri.isNullOrBlank() }
+    val hasMedia = state.filledPhotos().isNotEmpty()
+    val hasBody = state.body.isNotBlank()
+    val hasPoll = state.poll != null
+    if (!hasMedia && !hasBody && !hasPoll) add(PostValidationField.CONTENT)
+    if (state.mediaLayout == PostMediaLayout.BEFORE_AFTER) {
+        if (state.photos.getOrNull(0)?.uri.isNullOrBlank()) add(PostValidationField.BEFORE_PHOTO)
+        if (state.photos.getOrNull(1)?.uri.isNullOrBlank()) add(PostValidationField.AFTER_PHOTO)
+    }
+    val poll = state.poll
+    if (poll != null) {
+        if (poll.question.isBlank()) add(PostValidationField.POLL_QUESTION)
+        if (poll.options.size !in MIN_POLL_OPTIONS..MAX_POLL_OPTIONS || poll.options.any(String::isBlank)) {
+            add(PostValidationField.POLL_OPTIONS)
+        } else if (poll.options.map { it.trim().lowercase() }.toSet().size != poll.options.size) {
+            add(PostValidationField.POLL_OPTIONS)
+        }
+        if (
+            poll.closingRule == PostPollClosingRule.CUSTOM_DATE &&
+            (poll.closingAtMillis == null || poll.closingAtMillis <= System.currentTimeMillis())
         ) {
-            add(PostValidationField.CAROUSEL)
-        }
-        is PostContentDraft.BeforeAfter -> {
-            if (content.before.uri.isNullOrBlank()) add(PostValidationField.BEFORE_PHOTO)
-            if (content.after.uri.isNullOrBlank()) add(PostValidationField.AFTER_PHOTO)
-        }
-        is PostContentDraft.Poll -> {
-            if (content.question.isBlank()) add(PostValidationField.POLL_QUESTION)
-            if (content.options.size !in 2..6 || content.options.any(String::isBlank)) {
-                add(PostValidationField.POLL_OPTIONS)
-            } else if (content.options.map(String::trim).map(String::lowercase).toSet().size != content.options.size) {
-                add(PostValidationField.POLL_OPTIONS)
-            }
-            if (
-                content.closingRule == PostPollClosingRule.CUSTOM_DATE &&
-                (content.closingAtMillis == null || content.closingAtMillis <= System.currentTimeMillis())
-            ) {
-                add(PostValidationField.POLL_CLOSING)
-            }
+            add(PostValidationField.POLL_CLOSING)
         }
     }
 }
 
 private fun CreatePostFormState.toDraft(): PostDraft = PostDraft(
-    location = location?.takeIf { it.publicAreaLabel.isNotBlank() },
-    content = when (val value = content) {
-        is PostContentDraft.Text -> value.copy(body = value.body.trim())
-        is PostContentDraft.Photo -> value.copy(
-            uri = requireNotNull(value.uri).trim(),
-            caption = value.caption.trim(),
-            imageDescription = value.imageDescription.trim(),
-        )
-        is PostContentDraft.Carousel -> value.copy(
-            items = value.items.map { item ->
-                item.copy(
-                    uri = requireNotNull(item.uri).trim(),
-                    imageDescription = item.imageDescription.trim(),
-                )
-            },
-            caption = value.caption.trim(),
-        )
-        is PostContentDraft.BeforeAfter -> value.copy(
-            before = value.before.copy(
-                uri = requireNotNull(value.before.uri).trim(),
-                imageDescription = value.before.imageDescription.trim(),
-            ),
-            after = value.after.copy(
-                uri = requireNotNull(value.after.uri).trim(),
-                imageDescription = value.after.imageDescription.trim(),
-            ),
-            caption = value.caption.trim(),
-            beforeNote = value.beforeNote.trim(),
-            afterNote = value.afterNote.trim(),
-        )
-        is PostContentDraft.Poll -> value.copy(
-            question = value.question.trim(),
-            options = value.options.map(String::trim),
-            description = value.description.trim(),
+    photos = filledPhotos().map { photo ->
+        photo.copy(
+            uri = requireNotNull(photo.uri).trim(),
+            imageDescription = photo.imageDescription.trim(),
         )
     },
+    mediaLayout = mediaLayout,
+    body = body.trim(),
+    poll = poll?.copy(
+        question = poll.question.trim(),
+        options = poll.options.map(String::trim),
+    ),
+    location = location?.takeIf { it.publicAreaLabel.isNotBlank() },
 )
+
+private fun CreatePostFormState.filledPhotos(): List<PostMediaDraft> =
+    photos.filter { !it.uri.isNullOrBlank() }
+
+private const val MIN_POLL_OPTIONS = CreatePostViewModel.MIN_POLL_OPTIONS
+private const val MAX_POLL_OPTIONS = CreatePostViewModel.MAX_POLL_OPTIONS
 
 private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? =
     this?.let { value -> enumValues<T>().firstOrNull { it.name == value } }

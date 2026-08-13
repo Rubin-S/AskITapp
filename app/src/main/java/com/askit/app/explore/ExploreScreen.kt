@@ -505,7 +505,7 @@ fun ExploreScreen(
             .imePadding()
             .testTag("explore_results_list"),
         state = listState,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.Top,
     ) {
         item(key = "header:explore", contentType = "header") {
@@ -767,7 +767,7 @@ private fun ExploreHeader(
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
         )
-        SearchAreaSummary(searchArea)
+        SearchAreaSummary(searchArea, onSearchFiltersClick)
     }
 
     ExpandedFullScreenSearchBar(
@@ -2490,7 +2490,10 @@ private fun SuggestedCategories(onCategorySelected: (String) -> Unit) {
 }
 
 @Composable
-private fun SearchAreaSummary(searchArea: ExploreSearchArea) {
+private fun SearchAreaSummary(
+    searchArea: ExploreSearchArea,
+    onSearchFiltersClick: () -> Unit,
+) {
     val radius = pluralStringResource(
         R.plurals.explore_radius_km,
         searchArea.radiusKm,
@@ -2501,6 +2504,12 @@ private fun SearchAreaSummary(searchArea: ExploreSearchArea) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.explore_filters_tooltip),
+                onClick = onSearchFiltersClick,
+            )
+            .testTag("explore_location_summary")
             .padding(top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -2519,9 +2528,7 @@ private fun SearchAreaSummary(searchArea: ExploreSearchArea) {
             ),
             color = contentColor,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .weight(1f)
-                .testTag("explore_location_summary"),
+            modifier = Modifier.weight(1f),
         )
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -50,6 +51,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -307,18 +309,52 @@ private fun ListServiceScreen(
                 },
             )
         },
+        bottomBar = {
+            Surface(color = MaterialTheme.colorScheme.surface) {
+                Column(Modifier.navigationBarsPadding()) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Button(
+                        onClick = {
+                            if (state.screenMode == ListServiceScreenMode.REVIEW) {
+                                viewModel.buildValidatedDraft()?.let(onCompleteDraft)
+                            } else {
+                                keyboardController?.hide()
+                                viewModel.review()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .heightIn(min = 52.dp)
+                            .testTag(
+                                if (state.screenMode == ListServiceScreenMode.REVIEW) {
+                                    "list_service_complete"
+                                } else {
+                                    "list_service_review"
+                                },
+                            ),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (state.screenMode == ListServiceScreenMode.REVIEW) {
+                                    R.string.list_service_complete_draft
+                                } else {
+                                    R.string.list_service_review
+                                },
+                            ),
+                        )
+                    }
+                }
+            }
+        },
     ) { padding ->
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding)
                 .imePadding(),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                top = padding.calculateTopPadding() + 16.dp,
-                end = 16.dp,
-                bottom = padding.calculateBottomPadding() + 24.dp,
-            ),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
@@ -330,9 +366,6 @@ private fun ListServiceScreen(
                         ListServiceReview(
                             state = state,
                             onEdit = viewModel::edit,
-                            onComplete = {
-                                viewModel.buildValidatedDraft()?.let(onCompleteDraft)
-                            },
                         )
                     } else {
                         ListServiceForm(
@@ -357,10 +390,6 @@ private fun ListServiceScreen(
                                 photoPickerLauncher.launch(
                                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                                 )
-                            },
-                            onReview = {
-                                keyboardController?.hide()
-                                viewModel.review()
                             },
                         )
                     }
@@ -392,7 +421,6 @@ private fun ListServiceForm(
     onOpenCustomerLocationPicker: () -> Unit,
     onOpenProviderLocationPicker: () -> Unit,
     onPickPhotos: () -> Unit,
-    onReview: () -> Unit,
 ) {
     val contentModifier = Modifier
         .then(modifier)
@@ -458,6 +486,7 @@ private fun ListServiceForm(
                 expanded = categoryMenuExpanded,
                 onDismissRequest = { categoryMenuExpanded = false },
                 modifier = Modifier.testTag("list_service_category_menu"),
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
                 ASKIT_SERVICE_CATEGORIES.forEach { category ->
                     DropdownMenuItem(
@@ -724,15 +753,6 @@ private fun ListServiceForm(
             ListServiceMoreDetailsEditor(state = state, viewModel = viewModel)
         }
 
-        Button(
-            onClick = onReview,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 52.dp)
-                .testTag("list_service_review"),
-        ) {
-            Text(stringResource(R.string.list_service_review))
-        }
     }
 }
 
@@ -1058,7 +1078,6 @@ private fun ListServiceReview(
     modifier: Modifier = Modifier,
     state: ListServiceFormState,
     onEdit: () -> Unit,
-    onComplete: () -> Unit,
 ) {
     val category = serviceCategoryLabel(state)
     val deliveryLabels = serviceDeliveryLabels(state)
@@ -1174,15 +1193,6 @@ private fun ListServiceReview(
                 .testTag("list_service_edit"),
         ) {
             Text(stringResource(R.string.list_service_edit))
-        }
-        Button(
-            onClick = onComplete,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 52.dp)
-                .testTag("list_service_complete"),
-        ) {
-            Text(stringResource(R.string.list_service_complete_draft))
         }
     }
 }

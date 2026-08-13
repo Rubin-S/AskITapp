@@ -7,17 +7,13 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -35,7 +32,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
@@ -44,12 +40,14 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -90,10 +88,13 @@ import com.askit.app.explore.SearchAreaScreen
 import com.askit.app.media.persistPhotoPickerReadAccess
 import com.askit.designsystem.people.AskITAvatar
 import com.askit.designsystem.R as DesignR
+import com.askit.designsystem.posts.BeforeAfterSlider
 import com.askit.designsystem.posts.PostFeedAuthor
 import com.askit.designsystem.posts.PostFeedContent
 import com.askit.designsystem.posts.PostFeedItem
 import com.askit.designsystem.posts.PostFeedMedia
+import com.askit.designsystem.posts.PostFeedMediaContent
+import com.askit.designsystem.posts.PostFeedPoll
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
@@ -194,11 +195,7 @@ fun CreatePostRoute(
     }
 }
 
-@OptIn(
-    ExperimentalFoundationApi::class,
-    ExperimentalLayoutApi::class,
-    ExperimentalMaterial3Api::class,
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CreatePostScreen(
     viewModel: CreatePostViewModel,
@@ -211,14 +208,11 @@ private fun CreatePostScreen(
     val listState = rememberLazyListState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val contentResolver = LocalContext.current.contentResolver
-    var pendingType by rememberSaveable { mutableStateOf<PostType?>(null) }
     var showClosingDatePicker by rememberSaveable { mutableStateOf(false) }
+    var beforeAfterSlot by rememberSaveable { mutableStateOf<BeforeAfterSlot?>(null) }
 
+    val mediaBringIntoView = remember { BringIntoViewRequester() }
     val bodyBringIntoView = remember { BringIntoViewRequester() }
-    val photoBringIntoView = remember { BringIntoViewRequester() }
-    val carouselBringIntoView = remember { BringIntoViewRequester() }
-    val beforeBringIntoView = remember { BringIntoViewRequester() }
-    val afterBringIntoView = remember { BringIntoViewRequester() }
     val pollQuestionBringIntoView = remember { BringIntoViewRequester() }
     val pollOptionsBringIntoView = remember { BringIntoViewRequester() }
     val bodyFocusRequester = remember { FocusRequester() }
@@ -227,14 +221,13 @@ private fun CreatePostScreen(
     LaunchedEffect(state.previewAttempt) {
         if (state.screenMode == CreatePostScreenMode.EDITING && validationErrors.isNotEmpty()) {
             when (firstInvalidField(validationErrors)) {
-                PostValidationField.TEXT_BODY -> {
+                PostValidationField.CONTENT -> {
                     bodyBringIntoView.bringIntoView()
                     bodyFocusRequester.requestFocus()
                 }
-                PostValidationField.PHOTO -> photoBringIntoView.bringIntoView()
-                PostValidationField.CAROUSEL -> carouselBringIntoView.bringIntoView()
-                PostValidationField.BEFORE_PHOTO -> beforeBringIntoView.bringIntoView()
-                PostValidationField.AFTER_PHOTO -> afterBringIntoView.bringIntoView()
+                PostValidationField.BEFORE_PHOTO,
+                PostValidationField.AFTER_PHOTO,
+                -> mediaBringIntoView.bringIntoView()
                 PostValidationField.POLL_QUESTION -> {
                     pollQuestionBringIntoView.bringIntoView()
                     pollQuestionFocusRequester.requestFocus()
@@ -245,32 +238,27 @@ private fun CreatePostScreen(
         }
     }
 
-    val singlePhotoPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-    ) { uri ->
-        if (uri != null) {
-            persistPhotoPickerReadAccess(contentResolver, listOf(uri))
-            viewModel.setPhoto(uri.toString())
-        }
-    }
-    val carouselPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(MAX_CAROUSEL_ITEMS),
+    val galleryPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(MAX_POST_PHOTOS),
     ) { uris ->
         if (uris.isNotEmpty()) {
             persistPhotoPickerReadAccess(contentResolver, uris)
-            viewModel.addCarouselMedia(uris.map(Uri::toString))
+            viewModel.addPhotos(uris.map(Uri::toString))
         }
     }
-    var beforeAfterSlot by rememberSaveable { mutableStateOf<BeforeAfterSlot?>(null) }
-    val beforeAfterPicker = rememberLauncherForActivityResult(
+    val slotPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri ->
         if (uri != null) {
             persistPhotoPickerReadAccess(contentResolver, listOf(uri))
             when (beforeAfterSlot) {
-                BeforeAfterSlot.BEFORE -> viewModel.setBeforePhoto(uri.toString())
-                BeforeAfterSlot.AFTER -> viewModel.setAfterPhoto(uri.toString())
-                null -> Unit
+                BeforeAfterSlot.BEFORE -> viewModel.setPhotoAt(0, uri.toString())
+                BeforeAfterSlot.AFTER -> viewModel.setPhotoAt(1, uri.toString())
+                BeforeAfterSlot.REPLACE -> {
+                    val index = state.selectedCarouselIndex
+                    viewModel.setPhotoAt(index, uri.toString())
+                }
+                null -> viewModel.addPhotos(listOf(uri.toString()))
             }
         }
         beforeAfterSlot = null
@@ -287,7 +275,7 @@ private fun CreatePostScreen(
                             if (state.screenMode == CreatePostScreenMode.PREVIEW) {
                                 R.string.create_post_preview_title
                             } else {
-                            R.string.create_post_screen_title
+                                R.string.create_post_screen_title
                             },
                         ),
                     )
@@ -323,105 +311,76 @@ private fun CreatePostScreen(
                 },
             )
         },
+        bottomBar = {
+            if (state.screenMode == CreatePostScreenMode.PREVIEW) {
+                Surface(color = MaterialTheme.colorScheme.surface) {
+                    Column(Modifier.navigationBarsPadding()) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Button(
+                            onClick = { viewModel.buildValidatedDraft()?.let(onCompleteDraft) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                                .heightIn(min = 52.dp)
+                                .testTag("create_post_complete"),
+                        ) {
+                            Text(stringResource(R.string.create_post_complete_draft))
+                        }
+                    }
+                }
+            }
+        },
     ) { padding ->
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding)
                 .imePadding()
                 .testTag("create_post_content"),
             contentPadding = PaddingValues(
-                start = if (state.screenMode == CreatePostScreenMode.PREVIEW) 0.dp else 16.dp,
-                top = padding.calculateTopPadding() + 16.dp,
-                end = if (state.screenMode == CreatePostScreenMode.PREVIEW) 0.dp else 16.dp,
-                bottom = padding.calculateBottomPadding() + 24.dp,
+                horizontal = if (state.screenMode == CreatePostScreenMode.PREVIEW) 0.dp else 16.dp,
+                vertical = 16.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
                 if (state.screenMode == CreatePostScreenMode.PREVIEW) {
-                    CreatePostPreview(
-                        state = state,
-                        onEdit = viewModel::edit,
-                        onComplete = {
-                            viewModel.buildValidatedDraft()?.let(onCompleteDraft)
-                        },
-                    )
+                    CreatePostPreview(state = state, onEdit = viewModel::edit)
                 } else {
                     CreatePostEditor(
                         viewModel = viewModel,
                         state = state,
                         validationErrors = validationErrors,
+                        mediaBringIntoView = mediaBringIntoView,
                         bodyBringIntoView = bodyBringIntoView,
-                        photoBringIntoView = photoBringIntoView,
-                        carouselBringIntoView = carouselBringIntoView,
-                        beforeBringIntoView = beforeBringIntoView,
-                        afterBringIntoView = afterBringIntoView,
                         pollQuestionBringIntoView = pollQuestionBringIntoView,
                         pollOptionsBringIntoView = pollOptionsBringIntoView,
                         bodyFocusRequester = bodyFocusRequester,
                         pollQuestionFocusRequester = pollQuestionFocusRequester,
                         onOpenLocationPicker = onOpenLocationPicker,
-                        onPickSinglePhoto = {
-                            singlePhotoPicker.launch(
+                        onPickGallery = {
+                            galleryPicker.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                             )
                         },
-                        onPickCarouselPhotos = {
-                            carouselPicker.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                            )
-                        },
-                        onPickBeforePhoto = {
-                            beforeAfterSlot = BeforeAfterSlot.BEFORE
-                            beforeAfterPicker.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                            )
-                        },
-                        onPickAfterPhoto = {
-                            beforeAfterSlot = BeforeAfterSlot.AFTER
-                            beforeAfterPicker.launch(
+                        onPickSlot = { slot ->
+                            beforeAfterSlot = slot
+                            slotPicker.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                             )
                         },
                         onOpenClosingDatePicker = { showClosingDatePicker = true },
-                        onTypeChangeRequested = { type ->
-                            if (viewModel.selectType(type)) {
-                                pendingType = type
-                            }
-                        },
                     )
                 }
             }
         }
     }
 
-    pendingType?.let { type ->
-        AlertDialog(
-            onDismissRequest = { pendingType = null },
-            title = { Text(stringResource(R.string.create_post_change_type_title)) },
-            text = { Text(changeTypeMessage(type)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.confirmTypeChange(type)
-                        pendingType = null
-                    },
-                ) {
-                    Text(stringResource(R.string.create_post_change_type))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingType = null }) {
-                    Text(stringResource(R.string.create_post_keep_editing))
-                }
-            },
-        )
-    }
-
     if (showClosingDatePicker) {
-        val poll = state.content as? PostContentDraft.Poll
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = poll?.closingAtMillis)
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = state.poll?.closingAtMillis,
+        )
         DatePickerDialog(
             onDismissRequest = { showClosingDatePicker = false },
             confirmButton = {
@@ -451,111 +410,102 @@ private fun CreatePostScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CreatePostEditor(
     viewModel: CreatePostViewModel,
     state: CreatePostFormState,
     validationErrors: Set<PostValidationField>,
+    mediaBringIntoView: BringIntoViewRequester,
     bodyBringIntoView: BringIntoViewRequester,
-    photoBringIntoView: BringIntoViewRequester,
-    carouselBringIntoView: BringIntoViewRequester,
-    beforeBringIntoView: BringIntoViewRequester,
-    afterBringIntoView: BringIntoViewRequester,
     pollQuestionBringIntoView: BringIntoViewRequester,
     pollOptionsBringIntoView: BringIntoViewRequester,
     bodyFocusRequester: FocusRequester,
     pollQuestionFocusRequester: FocusRequester,
     onOpenLocationPicker: () -> Unit,
-    onPickSinglePhoto: () -> Unit,
-    onPickCarouselPhotos: () -> Unit,
-    onPickBeforePhoto: () -> Unit,
-    onPickAfterPhoto: () -> Unit,
+    onPickGallery: () -> Unit,
+    onPickSlot: (BeforeAfterSlot) -> Unit,
     onOpenClosingDatePicker: () -> Unit,
-    onTypeChangeRequested: (PostType) -> Unit,
 ) {
-    val contentModifier = Modifier
-        .fillMaxWidth()
-        .widthIn(max = 640.dp)
-
     Column(
-        modifier = contentModifier,
+        modifier = Modifier
+            .fillMaxWidth()
+            .widthIn(max = 640.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         CreatePostIdentity()
-        PostTypeSelector(
-            selectedType = state.content.type,
-            onTypeSelected = onTypeChangeRequested,
+        PostLocationEditor(
+            location = state.location,
+            onAddOrChange = onOpenLocationPicker,
+            onRemove = viewModel::removeLocation,
         )
-        when (val content = state.content) {
-            is PostContentDraft.Text -> TextPostEditor(
-                content = content,
-                isError = PostValidationField.TEXT_BODY in validationErrors,
-                bringIntoViewRequester = bodyBringIntoView,
-                focusRequester = bodyFocusRequester,
-                onBodyChange = viewModel::updateTextBody,
-            )
-            is PostContentDraft.Photo -> PhotoPostEditor(
-                content = content,
-                isError = PostValidationField.PHOTO in validationErrors,
-                isDescriptionExpanded = PostDisclosure.PHOTO_DESCRIPTION in state.expandedDisclosures,
-                bringIntoViewRequester = photoBringIntoView,
-                onPickPhoto = onPickSinglePhoto,
-                onRemovePhoto = viewModel::removePhoto,
-                onReplacePhoto = onPickSinglePhoto,
-                onCaptionChange = viewModel::updatePhotoCaption,
-                onDescriptionChange = viewModel::updatePhotoImageDescription,
-                onToggleDescription = { viewModel.toggleDisclosure(PostDisclosure.PHOTO_DESCRIPTION) },
-            )
-            is PostContentDraft.Carousel -> CarouselPostEditor(
-                content = content,
-                selectedIndex = state.selectedCarouselIndex,
-                isError = PostValidationField.CAROUSEL in validationErrors,
-                isDescriptionExpanded = PostDisclosure.CAROUSEL_DESCRIPTION in state.expandedDisclosures,
-                bringIntoViewRequester = carouselBringIntoView,
-                onPickPhotos = onPickCarouselPhotos,
-                onSelectItem = viewModel::selectCarouselItem,
-                onRemoveItem = viewModel::removeCarouselMedia,
-                onMoveItem = viewModel::moveCarouselItem,
-                onDescriptionChange = viewModel::updateCarouselItemDescription,
-                onCaptionChange = viewModel::updateCarouselCaption,
-                onToggleDescription = { viewModel.toggleDisclosure(PostDisclosure.CAROUSEL_DESCRIPTION) },
-            )
-            is PostContentDraft.BeforeAfter -> BeforeAfterPostEditor(
-                content = content,
-                isBeforeError = PostValidationField.BEFORE_PHOTO in validationErrors,
-                isAfterError = PostValidationField.AFTER_PHOTO in validationErrors,
-                beforeDescriptionExpanded = PostDisclosure.BEFORE_DESCRIPTION in state.expandedDisclosures,
-                afterDescriptionExpanded = PostDisclosure.AFTER_DESCRIPTION in state.expandedDisclosures,
-                beforeBringIntoViewRequester = beforeBringIntoView,
-                afterBringIntoViewRequester = afterBringIntoView,
-                onPickBefore = onPickBeforePhoto,
-                onPickAfter = onPickAfterPhoto,
-                onRemoveBefore = viewModel::removeBeforePhoto,
-                onRemoveAfter = viewModel::removeAfterPhoto,
-                onBeforeDescriptionChange = viewModel::updateBeforeImageDescription,
-                onAfterDescriptionChange = viewModel::updateAfterImageDescription,
-                onToggleBeforeDescription = { viewModel.toggleDisclosure(PostDisclosure.BEFORE_DESCRIPTION) },
-                onToggleAfterDescription = { viewModel.toggleDisclosure(PostDisclosure.AFTER_DESCRIPTION) },
-                onCaptionChange = viewModel::updateBeforeAfterCaption,
-                onBeforeNoteChange = viewModel::updateBeforeNote,
-                onAfterNoteChange = viewModel::updateAfterNote,
-            )
-            is PostContentDraft.Poll -> PollPostEditor(
+        MediaSection(
+            state = state,
+            validationErrors = validationErrors,
+            bringIntoViewRequester = mediaBringIntoView,
+            onPickGallery = onPickGallery,
+            onPickSlot = onPickSlot,
+            onToggleLayout = {
+                viewModel.setMediaLayout(
+                    if (state.mediaLayout == PostMediaLayout.BEFORE_AFTER) {
+                        PostMediaLayout.GALLERY
+                    } else {
+                        PostMediaLayout.BEFORE_AFTER
+                    },
+                )
+            },
+            onSelect = viewModel::selectPhoto,
+            onRemove = viewModel::removePhotoAt,
+            onClearSlot = { index -> viewModel.setPhotoAt(index, null) },
+            onMove = viewModel::movePhoto,
+            onDescriptionChange = viewModel::updatePhotoDescription,
+            onToggleDisclosure = viewModel::toggleDisclosure,
+        )
+        OutlinedTextField(
+            value = state.body,
+            onValueChange = viewModel::updateTextBody,
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewRequester(bodyBringIntoView)
+                .focusRequester(bodyFocusRequester)
+                .testTag("create_post_text_body"),
+            label = { Text(stringResource(R.string.create_post_whats_on_your_mind)) },
+            supportingText = {
+                if (PostValidationField.CONTENT in validationErrors) {
+                    Text(stringResource(R.string.create_post_error_content))
+                }
+            },
+            isError = PostValidationField.CONTENT in validationErrors,
+            minLines = 4,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
+        )
+        if (state.poll == null) {
+            TextButton(
+                onClick = viewModel::addPoll,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .testTag("create_post_add_poll"),
+            ) {
+                Text(stringResource(R.string.create_post_add_poll))
+            }
+        } else {
+            PollPostEditor(
                 viewModel = viewModel,
-                content = content,
+                content = state.poll,
                 validationErrors = validationErrors,
                 questionBringIntoViewRequester = pollQuestionBringIntoView,
                 optionsBringIntoViewRequester = pollOptionsBringIntoView,
                 questionFocusRequester = pollQuestionFocusRequester,
                 onOpenClosingDatePicker = onOpenClosingDatePicker,
             )
+            TextButton(
+                onClick = viewModel::removePoll,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .testTag("create_post_remove_poll"),
+            ) {
+                Text(stringResource(R.string.create_post_remove_poll))
+            }
         }
-        PostLocationEditor(
-            location = state.location,
-            onAddOrChange = onOpenLocationPicker,
-            onRemove = viewModel::removeLocation,
-        )
     }
 }
 
@@ -595,91 +545,20 @@ private fun CreatePostIdentity() {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PostTypeSelector(
-    selectedType: PostType,
-    onTypeSelected: (PostType) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectableGroup(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.create_post_type),
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.semantics { heading() },
-        )
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            PostType.entries.forEach { type ->
-                val selected = selectedType == type
-                FilterChip(
-                    selected = selected,
-                    onClick = { onTypeSelected(type) },
-                    label = { Text(postTypeLabel(type)) },
-                    leadingIcon = if (selected) {
-                        {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_check),
-                                contentDescription = null,
-                            )
-                        }
-                    } else {
-                        null
-                    },
-                    modifier = Modifier
-                        .heightIn(min = 48.dp)
-                        .testTag("create_post_type_${type.name.lowercase()}"),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TextPostEditor(
-    content: PostContentDraft.Text,
-    isError: Boolean,
+private fun MediaSection(
+    state: CreatePostFormState,
+    validationErrors: Set<PostValidationField>,
     bringIntoViewRequester: BringIntoViewRequester,
-    focusRequester: FocusRequester,
-    onBodyChange: (String) -> Unit,
-) {
-    OutlinedTextField(
-        value = content.body,
-        onValueChange = onBodyChange,
-        modifier = Modifier
-            .fillMaxWidth()
-            .bringIntoViewRequester(bringIntoViewRequester)
-            .focusRequester(focusRequester)
-            .testTag("create_post_text_body"),
-        label = { Text(stringResource(R.string.create_post_whats_on_your_mind)) },
-        supportingText = {
-            if (isError) Text(stringResource(R.string.create_post_error_text))
-        },
-        isError = isError,
-        minLines = 6,
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
-    )
-}
-
-@Composable
-private fun PhotoPostEditor(
-    content: PostContentDraft.Photo,
-    isError: Boolean,
-    isDescriptionExpanded: Boolean,
-    bringIntoViewRequester: BringIntoViewRequester,
-    onPickPhoto: () -> Unit,
-    onRemovePhoto: () -> Unit,
-    onReplacePhoto: () -> Unit,
-    onCaptionChange: (String) -> Unit,
-    onDescriptionChange: (String) -> Unit,
-    onToggleDescription: () -> Unit,
+    onPickGallery: () -> Unit,
+    onPickSlot: (BeforeAfterSlot) -> Unit,
+    onToggleLayout: () -> Unit,
+    onSelect: (Int) -> Unit,
+    onRemove: (Int) -> Unit,
+    onClearSlot: (Int) -> Unit,
+    onMove: (Int, Int) -> Unit,
+    onDescriptionChange: (Int, String) -> Unit,
+    onToggleDisclosure: (PostDisclosure) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -687,385 +566,306 @@ private fun PhotoPostEditor(
             .bringIntoViewRequester(bringIntoViewRequester),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (content.uri.isNullOrBlank()) {
-            EmptyMediaPrompt(
-                title = R.string.create_post_photo_empty_title,
-                buttonLabel = R.string.create_post_add_photo,
-                onClick = onPickPhoto,
-                testTag = "create_post_add_photo",
+        FilterChip(
+            selected = state.mediaLayout == PostMediaLayout.BEFORE_AFTER,
+            onClick = onToggleLayout,
+            label = { Text(stringResource(R.string.create_post_before_after)) },
+            modifier = Modifier
+                .heightIn(min = 48.dp)
+                .testTag("create_post_before_after_chip"),
+        )
+        if (state.mediaLayout == PostMediaLayout.BEFORE_AFTER) {
+            BeforeAfterEditor(
+                photos = state.photos,
+                validationErrors = validationErrors,
+                beforeDescriptionExpanded = PostDisclosure.BEFORE_DESCRIPTION in state.expandedDisclosures,
+                afterDescriptionExpanded = PostDisclosure.AFTER_DESCRIPTION in state.expandedDisclosures,
+                onPickSlot = onPickSlot,
+                onRemove = onClearSlot,
+                onDescriptionChange = onDescriptionChange,
+                onToggleBeforeDescription = { onToggleDisclosure(PostDisclosure.BEFORE_DESCRIPTION) },
+                onToggleAfterDescription = { onToggleDisclosure(PostDisclosure.AFTER_DESCRIPTION) },
             )
-            if (isError) PostError(R.string.create_post_error_photo)
         } else {
-            ComposerImage(
-                uri = content.uri,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 220.dp, max = 480.dp),
-                contentDescription = content.imageDescription.ifBlank {
-                    stringResource(R.string.create_post_photo_content_description)
+            GalleryEditor(
+                photos = state.photos,
+                selectedIndex = state.selectedCarouselIndex,
+                isDescriptionExpanded = PostDisclosure.CAROUSEL_DESCRIPTION in state.expandedDisclosures ||
+                    PostDisclosure.PHOTO_DESCRIPTION in state.expandedDisclosures,
+                onPickGallery = onPickGallery,
+                onPickReplace = { onPickSlot(BeforeAfterSlot.REPLACE) },
+                onSelect = onSelect,
+                onRemove = onRemove,
+                onMove = onMove,
+                onDescriptionChange = onDescriptionChange,
+                onToggleDescription = {
+                    onToggleDisclosure(
+                        if (state.photos.size > 1) {
+                            PostDisclosure.CAROUSEL_DESCRIPTION
+                        } else {
+                            PostDisclosure.PHOTO_DESCRIPTION
+                        },
+                    )
                 },
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                TextButton(
-                    onClick = onReplacePhoto,
-                    modifier = Modifier
-                        .heightIn(min = 48.dp)
-                        .testTag("create_post_replace_photo"),
-                ) {
-                    Text(stringResource(R.string.create_post_replace))
-                }
-                TextButton(
-                    onClick = onRemovePhoto,
-                    modifier = Modifier
-                        .heightIn(min = 48.dp)
-                        .testTag("create_post_remove_photo"),
-                ) {
-                    Text(stringResource(R.string.create_post_remove))
-                }
-            }
         }
-        OutlinedTextField(
-            value = content.caption,
-            onValueChange = onCaptionChange,
+    }
+}
+
+@Composable
+private fun GalleryEditor(
+    photos: List<PostMediaDraft>,
+    selectedIndex: Int,
+    isDescriptionExpanded: Boolean,
+    onPickGallery: () -> Unit,
+    onPickReplace: () -> Unit,
+    onSelect: (Int) -> Unit,
+    onRemove: (Int) -> Unit,
+    onMove: (Int, Int) -> Unit,
+    onDescriptionChange: (Int, String) -> Unit,
+    onToggleDescription: () -> Unit,
+) {
+    if (photos.isEmpty()) {
+        EmptyMediaPrompt(
+            title = R.string.create_post_photos_empty_title,
+            buttonLabel = R.string.create_post_add_photos,
+            onClick = onPickGallery,
+            testTag = "create_post_add_photos",
+        )
+        return
+    }
+    val selected = selectedIndex.coerceIn(0, photos.lastIndex)
+    val selectedItem = photos[selected]
+    if (photos.size == 1) {
+        ComposerImage(
+            uri = selectedItem.uri,
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag("create_post_photo_caption"),
-            label = { Text(stringResource(R.string.create_post_caption_optional)) },
-            minLines = 3,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
+                .heightIn(min = 220.dp, max = 480.dp),
+            contentDescription = selectedItem.imageDescription.ifBlank {
+                stringResource(R.string.create_post_photo_content_description)
+            },
         )
-        DisclosureButton(
-            expanded = isDescriptionExpanded,
-            collapsedLabel = R.string.create_post_add_image_description,
-            expandedLabel = R.string.create_post_hide_image_description,
-            onClick = onToggleDescription,
-            testTag = "create_post_photo_description_toggle",
-        )
-        if (isDescriptionExpanded) {
-            OutlinedTextField(
-                value = content.imageDescription,
-                onValueChange = onDescriptionChange,
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(
+                onClick = onPickReplace,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("create_post_photo_description"),
-                label = { Text(stringResource(R.string.create_post_image_description_optional)) },
-                supportingText = {
-                    Text(stringResource(R.string.create_post_image_description_helper))
-                },
-                minLines = 3,
-            )
-        }
-    }
-}
-
-@Composable
-private fun CarouselPostEditor(
-    content: PostContentDraft.Carousel,
-    selectedIndex: Int,
-    isError: Boolean,
-    isDescriptionExpanded: Boolean,
-    bringIntoViewRequester: BringIntoViewRequester,
-    onPickPhotos: () -> Unit,
-    onSelectItem: (Int) -> Unit,
-    onRemoveItem: (Int) -> Unit,
-    onMoveItem: (Int, Int) -> Unit,
-    onDescriptionChange: (Int, String) -> Unit,
-    onCaptionChange: (String) -> Unit,
-    onToggleDescription: () -> Unit,
-) {
-    val selected = selectedIndex.coerceIn(0, content.items.lastIndex.coerceAtLeast(0))
-    val selectedItem = content.items.getOrNull(selected)
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .bringIntoViewRequester(bringIntoViewRequester),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (content.items.isEmpty()) {
-            EmptyMediaPrompt(
-                title = R.string.create_post_carousel_empty_title,
-                buttonLabel = R.string.create_post_add_photos,
-                onClick = onPickPhotos,
-                testTag = "create_post_add_carousel_photos",
-            )
-        } else {
-            Text(
-                text = pluralStringResource(
-                    R.plurals.create_post_carousel_count,
-                    content.items.size,
-                    content.items.size,
-                ),
-                style = MaterialTheme.typography.titleSmall,
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .testTag("create_post_carousel_thumbnails"),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .heightIn(min = 48.dp)
+                    .testTag("create_post_replace_photo"),
             ) {
-                content.items.forEachIndexed { index, item ->
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(MaterialTheme.shapes.small)
-                            .border(
-                                BorderStroke(
-                                    width = if (index == selected) 2.dp else 1.dp,
-                                    color = if (index == selected) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.outlineVariant
-                                    },
-                                ),
-                                MaterialTheme.shapes.small,
-                            )
-                            .clickable(
-                                role = Role.Button,
-                                onClickLabel = stringResource(
-                                    R.string.create_post_select_image,
-                                    index + 1,
-                                ),
-                                onClick = { onSelectItem(index) },
-                            )
-                            .testTag("create_post_carousel_thumbnail_$index"),
-                    ) {
-                        ComposerImage(
-                            uri = item.uri,
-                            contentDescription = stringResource(
-                                R.string.create_post_image_description_number,
-                                index + 1,
-                            ),
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                        Text(
-                            text = (index + 1).toString(),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.inverseOnSurface,
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .background(
-                                    MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.9f),
-                                    MaterialTheme.shapes.small,
-                                )
-                                .padding(horizontal = 6.dp, vertical = 3.dp),
-                        )
-                    }
-                }
+                Text(stringResource(R.string.create_post_replace))
             }
-            selectedItem?.let { item ->
-                Text(
-                    text = stringResource(
-                        R.string.create_post_image_position,
-                        selected + 1,
-                        content.items.size,
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                ComposerImage(
-                    uri = item.uri,
+            TextButton(
+                onClick = { onRemove(0) },
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .testTag("create_post_remove_photo"),
+            ) {
+                Text(stringResource(R.string.create_post_remove))
+            }
+        }
+    } else {
+        Text(
+            text = pluralStringResource(
+                R.plurals.create_post_carousel_count,
+                photos.size,
+                photos.size,
+            ),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .testTag("create_post_carousel_thumbnails"),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            photos.forEachIndexed { index, item ->
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 220.dp, max = 480.dp),
-                    contentDescription = stringResource(
-                        R.string.create_post_image_description_number,
-                        selected + 1,
-                    ),
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        .size(80.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .border(
+                            BorderStroke(
+                                width = if (index == selected) 2.dp else 1.dp,
+                                color = if (index == selected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant
+                                },
+                            ),
+                            MaterialTheme.shapes.small,
+                        )
+                        .clickable(
+                            role = Role.Button,
+                            onClickLabel = stringResource(R.string.create_post_select_image, index + 1),
+                            onClick = { onSelect(index) },
+                        )
+                        .testTag("create_post_carousel_thumbnail_$index"),
                 ) {
-                    TextButton(
-                        onClick = { onMoveItem(selected, -1) },
-                        enabled = selected > 0,
-                        modifier = Modifier
-                            .heightIn(min = 48.dp)
-                            .testTag("create_post_carousel_move_earlier"),
-                    ) {
-                        Text(stringResource(R.string.create_post_move_earlier))
-                    }
-                    TextButton(
-                        onClick = { onMoveItem(selected, 1) },
-                        enabled = selected < content.items.lastIndex,
-                        modifier = Modifier
-                            .heightIn(min = 48.dp)
-                            .testTag("create_post_carousel_move_later"),
-                    ) {
-                        Text(stringResource(R.string.create_post_move_later))
-                    }
-                    TextButton(
-                        onClick = { onRemoveItem(selected) },
-                        modifier = Modifier
-                            .heightIn(min = 48.dp)
-                            .testTag("create_post_carousel_remove"),
-                    ) {
-                        Text(stringResource(R.string.create_post_remove))
-                    }
-                }
-                DisclosureButton(
-                    expanded = isDescriptionExpanded,
-                    collapsedLabel = R.string.create_post_add_image_description,
-                    expandedLabel = R.string.create_post_hide_image_description,
-                    onClick = onToggleDescription,
-                    testTag = "create_post_carousel_description_toggle",
-                )
-                if (isDescriptionExpanded) {
-                    OutlinedTextField(
-                        value = item.imageDescription,
-                        onValueChange = { onDescriptionChange(selected, it) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("create_post_carousel_description"),
-                        label = {
-                            Text(
-                                stringResource(
-                                    R.string.create_post_image_description_number,
-                                    selected + 1,
-                                ),
-                            )
-                        },
-                        minLines = 3,
+                    ComposerImage(
+                        uri = item.uri,
+                        contentDescription = stringResource(
+                            R.string.create_post_image_description_number,
+                            index + 1,
+                        ),
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
         }
-        if (content.items.size < MAX_CAROUSEL_ITEMS) {
-            OutlinedButton(
-                onClick = onPickPhotos,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp)
-                    .testTag("create_post_add_more_carousel_photos"),
-            ) {
-                Text(stringResource(R.string.create_post_add_photos))
-            }
-        }
-        if (isError) PostError(R.string.create_post_error_carousel)
-        OutlinedTextField(
-            value = content.caption,
-            onValueChange = onCaptionChange,
+        ComposerImage(
+            uri = selectedItem.uri,
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag("create_post_carousel_caption"),
-            label = { Text(stringResource(R.string.create_post_caption_optional)) },
+                .heightIn(min = 220.dp, max = 480.dp),
+            contentDescription = stringResource(
+                R.string.create_post_image_description_number,
+                selected + 1,
+            ),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            TextButton(
+                onClick = { onMove(selected, -1) },
+                enabled = selected > 0,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .testTag("create_post_carousel_move_earlier"),
+            ) {
+                Text(stringResource(R.string.create_post_move_earlier))
+            }
+            TextButton(
+                onClick = { onMove(selected, 1) },
+                enabled = selected < photos.lastIndex,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .testTag("create_post_carousel_move_later"),
+            ) {
+                Text(stringResource(R.string.create_post_move_later))
+            }
+            TextButton(
+                onClick = { onRemove(selected) },
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .testTag("create_post_carousel_remove"),
+            ) {
+                Text(stringResource(R.string.create_post_remove))
+            }
+        }
+    }
+    if (photos.size < MAX_POST_PHOTOS) {
+        OutlinedButton(
+            onClick = onPickGallery,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .testTag("create_post_add_more_carousel_photos"),
+        ) {
+            Text(stringResource(R.string.create_post_add_photos))
+        }
+    }
+    DisclosureButton(
+        expanded = isDescriptionExpanded,
+        collapsedLabel = R.string.create_post_add_image_description,
+        expandedLabel = R.string.create_post_hide_image_description,
+        onClick = onToggleDescription,
+        testTag = if (photos.size > 1) {
+            "create_post_carousel_description_toggle"
+        } else {
+            "create_post_photo_description_toggle"
+        },
+    )
+    if (isDescriptionExpanded) {
+        OutlinedTextField(
+            value = selectedItem.imageDescription,
+            onValueChange = { onDescriptionChange(selected, it) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(
+                    if (photos.size > 1) "create_post_carousel_description" else "create_post_photo_description",
+                ),
+            label = { Text(stringResource(R.string.create_post_image_description_optional)) },
+            supportingText = { Text(stringResource(R.string.create_post_image_description_helper)) },
             minLines = 3,
         )
     }
 }
 
 @Composable
-private fun BeforeAfterPostEditor(
-    content: PostContentDraft.BeforeAfter,
-    isBeforeError: Boolean,
-    isAfterError: Boolean,
+private fun BeforeAfterEditor(
+    photos: List<PostMediaDraft>,
+    validationErrors: Set<PostValidationField>,
     beforeDescriptionExpanded: Boolean,
     afterDescriptionExpanded: Boolean,
-    beforeBringIntoViewRequester: BringIntoViewRequester,
-    afterBringIntoViewRequester: BringIntoViewRequester,
-    onPickBefore: () -> Unit,
-    onPickAfter: () -> Unit,
-    onRemoveBefore: () -> Unit,
-    onRemoveAfter: () -> Unit,
-    onBeforeDescriptionChange: (String) -> Unit,
-    onAfterDescriptionChange: (String) -> Unit,
+    onPickSlot: (BeforeAfterSlot) -> Unit,
+    onRemove: (Int) -> Unit,
+    onDescriptionChange: (Int, String) -> Unit,
     onToggleBeforeDescription: () -> Unit,
     onToggleAfterDescription: () -> Unit,
-    onCaptionChange: (String) -> Unit,
-    onBeforeNoteChange: (String) -> Unit,
-    onAfterNoteChange: (String) -> Unit,
 ) {
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val sideBySide = maxWidth >= 480.dp
-        if (sideBySide) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                BeforeAfterSlotEditor(
-                    label = R.string.create_post_before,
-                    content = content.before,
-                    isError = isBeforeError,
-                    isDescriptionExpanded = beforeDescriptionExpanded,
-                    bringIntoViewRequester = beforeBringIntoViewRequester,
-                    onPick = onPickBefore,
-                    onRemove = onRemoveBefore,
-                    onDescriptionChange = onBeforeDescriptionChange,
-                    onToggleDescription = onToggleBeforeDescription,
-                    modifier = Modifier.weight(1f),
-                    testTag = "create_post_before_slot",
-                )
-                BeforeAfterSlotEditor(
-                    label = R.string.create_post_after,
-                    content = content.after,
-                    isError = isAfterError,
-                    isDescriptionExpanded = afterDescriptionExpanded,
-                    bringIntoViewRequester = afterBringIntoViewRequester,
-                    onPick = onPickAfter,
-                    onRemove = onRemoveAfter,
-                    onDescriptionChange = onAfterDescriptionChange,
-                    onToggleDescription = onToggleAfterDescription,
-                    modifier = Modifier.weight(1f),
-                    testTag = "create_post_after_slot",
-                )
-            }
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                BeforeAfterSlotEditor(
-                    label = R.string.create_post_before,
-                    content = content.before,
-                    isError = isBeforeError,
-                    isDescriptionExpanded = beforeDescriptionExpanded,
-                    bringIntoViewRequester = beforeBringIntoViewRequester,
-                    onPick = onPickBefore,
-                    onRemove = onRemoveBefore,
-                    onDescriptionChange = onBeforeDescriptionChange,
-                    onToggleDescription = onToggleBeforeDescription,
-                    testTag = "create_post_before_slot",
-                )
-                BeforeAfterSlotEditor(
-                    label = R.string.create_post_after,
-                    content = content.after,
-                    isError = isAfterError,
-                    isDescriptionExpanded = afterDescriptionExpanded,
-                    bringIntoViewRequester = afterBringIntoViewRequester,
-                    onPick = onPickAfter,
-                    onRemove = onRemoveAfter,
-                    onDescriptionChange = onAfterDescriptionChange,
-                    onToggleDescription = onToggleAfterDescription,
-                    testTag = "create_post_after_slot",
-                )
-            }
-        }
+    val before = photos.getOrNull(0) ?: PostMediaDraft()
+    val after = photos.getOrNull(1) ?: PostMediaDraft()
+    if (!before.uri.isNullOrBlank() && !after.uri.isNullOrBlank()) {
+        BeforeAfterSlider(
+            before = PostFeedMedia(
+                model = before.uri,
+                contentDescription = before.imageDescription.trim().takeIf(String::isNotEmpty),
+            ),
+            after = PostFeedMedia(
+                model = after.uri,
+                contentDescription = after.imageDescription.trim().takeIf(String::isNotEmpty),
+            ),
+        )
+        BeforeAfterSlotEditor(
+            label = R.string.create_post_before,
+            content = before,
+            isError = false,
+            isDescriptionExpanded = beforeDescriptionExpanded,
+            onPick = { onPickSlot(BeforeAfterSlot.BEFORE) },
+            onRemove = { onRemove(0) },
+            onDescriptionChange = { onDescriptionChange(0, it) },
+            onToggleDescription = onToggleBeforeDescription,
+            showImage = false,
+            testTag = "create_post_before_slot",
+        )
+        BeforeAfterSlotEditor(
+            label = R.string.create_post_after,
+            content = after,
+            isError = false,
+            isDescriptionExpanded = afterDescriptionExpanded,
+            onPick = { onPickSlot(BeforeAfterSlot.AFTER) },
+            onRemove = { onRemove(1) },
+            onDescriptionChange = { onDescriptionChange(1, it) },
+            onToggleDescription = onToggleAfterDescription,
+            showImage = false,
+            testTag = "create_post_after_slot",
+        )
+        return
     }
-    OutlinedTextField(
-        value = content.caption,
-        onValueChange = onCaptionChange,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("create_post_before_after_caption"),
-        label = { Text(stringResource(R.string.create_post_caption_optional)) },
-        minLines = 3,
-    )
-    OutlinedTextField(
-        value = content.beforeNote,
-        onValueChange = onBeforeNoteChange,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("create_post_before_note"),
-        label = { Text(stringResource(R.string.create_post_before_note_optional)) },
-        minLines = 2,
-    )
-    OutlinedTextField(
-        value = content.afterNote,
-        onValueChange = onAfterNoteChange,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("create_post_after_note"),
-        label = { Text(stringResource(R.string.create_post_after_note_optional)) },
-        minLines = 2,
-    )
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        BeforeAfterSlotEditor(
+            label = R.string.create_post_before,
+            content = before,
+            isError = PostValidationField.BEFORE_PHOTO in validationErrors,
+            isDescriptionExpanded = beforeDescriptionExpanded,
+            onPick = { onPickSlot(BeforeAfterSlot.BEFORE) },
+            onRemove = { onRemove(0) },
+            onDescriptionChange = { onDescriptionChange(0, it) },
+            onToggleDescription = onToggleBeforeDescription,
+            testTag = "create_post_before_slot",
+        )
+        BeforeAfterSlotEditor(
+            label = R.string.create_post_after,
+            content = after,
+            isError = PostValidationField.AFTER_PHOTO in validationErrors,
+            isDescriptionExpanded = afterDescriptionExpanded,
+            onPick = { onPickSlot(BeforeAfterSlot.AFTER) },
+            onRemove = { onRemove(1) },
+            onDescriptionChange = { onDescriptionChange(1, it) },
+            onToggleDescription = onToggleAfterDescription,
+            testTag = "create_post_after_slot",
+        )
+    }
 }
 
 @Composable
@@ -1074,18 +874,16 @@ private fun BeforeAfterSlotEditor(
     content: PostMediaDraft,
     isError: Boolean,
     isDescriptionExpanded: Boolean,
-    bringIntoViewRequester: BringIntoViewRequester,
     onPick: () -> Unit,
     onRemove: () -> Unit,
     onDescriptionChange: (String) -> Unit,
     onToggleDescription: () -> Unit,
     modifier: Modifier = Modifier,
+    showImage: Boolean = true,
     testTag: String,
 ) {
     Column(
-        modifier = modifier
-            .bringIntoViewRequester(bringIntoViewRequester)
-            .testTag(testTag),
+        modifier = modifier.testTag(testTag),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
@@ -1103,47 +901,37 @@ private fun BeforeAfterSlotEditor(
                 Text(stringResource(R.string.create_post_add_photo))
             }
             if (isError) {
-                val errorMessage = stringResource(
+                PostError(
                     if (label == R.string.create_post_before) {
                         R.string.create_post_error_before
                     } else {
                         R.string.create_post_error_after
                     },
                 )
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.semantics { error(errorMessage) },
-                )
             }
         } else {
-            ComposerImage(
-                uri = content.uri,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 220.dp, max = 480.dp),
-                contentDescription = content.imageDescription.ifBlank {
-                    stringResource(
-                        if (label == R.string.create_post_before) {
-                            R.string.create_post_before_content_description
-                        } else {
-                            R.string.create_post_after_content_description
-                        },
-                    )
-                },
-            )
+            if (showImage) {
+                ComposerImage(
+                    uri = content.uri,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 220.dp, max = 480.dp),
+                    contentDescription = content.imageDescription.ifBlank {
+                        stringResource(
+                            if (label == R.string.create_post_before) {
+                                R.string.create_post_before_content_description
+                            } else {
+                                R.string.create_post_after_content_description
+                            },
+                        )
+                    },
+                )
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(
-                    onClick = onPick,
-                    modifier = Modifier.heightIn(min = 48.dp),
-                ) {
+                TextButton(onClick = onPick, modifier = Modifier.heightIn(min = 48.dp)) {
                     Text(stringResource(R.string.create_post_replace))
                 }
-                TextButton(
-                    onClick = onRemove,
-                    modifier = Modifier.heightIn(min = 48.dp),
-                ) {
+                TextButton(onClick = onRemove, modifier = Modifier.heightIn(min = 48.dp)) {
                     Text(stringResource(R.string.create_post_remove))
                 }
             }
@@ -1170,7 +958,7 @@ private fun BeforeAfterSlotEditor(
 @Composable
 private fun PollPostEditor(
     viewModel: CreatePostViewModel,
-    content: PostContentDraft.Poll,
+    content: PostPollDraft,
     validationErrors: Set<PostValidationField>,
     questionBringIntoViewRequester: BringIntoViewRequester,
     optionsBringIntoViewRequester: BringIntoViewRequester,
@@ -1214,9 +1002,7 @@ private fun PollPostEditor(
                         modifier = Modifier
                             .weight(1f)
                             .testTag("create_post_poll_option_$index"),
-                        label = {
-                            Text(stringResource(R.string.create_post_poll_option, index + 1))
-                        },
+                        label = { Text(stringResource(R.string.create_post_poll_option, index + 1)) },
                         supportingText = {
                             when (optionError) {
                                 PollOptionError.EMPTY -> Text(stringResource(R.string.create_post_error_poll_answer))
@@ -1224,8 +1010,7 @@ private fun PollPostEditor(
                                 null -> Unit
                             }
                         },
-                        isError = optionError != null &&
-                            PostValidationField.POLL_OPTIONS in validationErrors,
+                        isError = optionError != null && PostValidationField.POLL_OPTIONS in validationErrors,
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Next,
@@ -1251,11 +1036,6 @@ private fun PollPostEditor(
                 }
             }
         }
-        if (PostValidationField.POLL_OPTIONS in validationErrors &&
-            content.options.size < 2
-        ) {
-            PostError(R.string.create_post_error_poll_options)
-        }
         if (content.options.size < MAX_POLL_OPTIONS) {
             TextButton(
                 onClick = viewModel::addPollOption,
@@ -1266,15 +1046,6 @@ private fun PollPostEditor(
                 Text(stringResource(R.string.create_post_add_option))
             }
         }
-        OutlinedTextField(
-            value = content.description,
-            onValueChange = viewModel::updatePollDescription,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("create_post_poll_description"),
-            label = { Text(stringResource(R.string.create_post_description_optional)) },
-            minLines = 3,
-        )
         Text(
             text = pollClosingSummary(content),
             style = MaterialTheme.typography.bodyMedium,
@@ -1361,7 +1132,6 @@ private fun PostLocationEditor(
 private fun CreatePostPreview(
     state: CreatePostFormState,
     onEdit: () -> Unit,
-    onComplete: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1372,7 +1142,7 @@ private fun CreatePostPreview(
                 displayName = stringResource(R.string.create_post_you),
             ),
             locationLabel = state.location?.publicAreaLabel,
-            content = state.content.toFeedContent(),
+            content = state.toFeedContent(),
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("create_post_preview_feed_item"),
@@ -1381,7 +1151,6 @@ private fun CreatePostPreview(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             OutlinedButton(
                 onClick = onEdit,
@@ -1391,15 +1160,6 @@ private fun CreatePostPreview(
                     .testTag("create_post_edit"),
             ) {
                 Text(stringResource(R.string.create_post_edit))
-            }
-            Button(
-                onClick = onComplete,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 52.dp)
-                    .testTag("create_post_complete"),
-            ) {
-                Text(stringResource(R.string.create_post_complete_draft))
             }
         }
     }
@@ -1492,29 +1252,7 @@ private fun PostError(@StringRes message: Int) {
 }
 
 @Composable
-private fun postTypeLabel(type: PostType): String = stringResource(
-    when (type) {
-        PostType.TEXT -> R.string.create_post_type_text
-        PostType.PHOTO -> R.string.create_post_type_photo
-        PostType.CAROUSEL -> R.string.create_post_type_carousel
-        PostType.BEFORE_AFTER -> R.string.create_post_type_before_after
-        PostType.POLL -> R.string.create_post_type_poll
-    },
-)
-
-@Composable
-private fun changeTypeMessage(type: PostType): String = stringResource(
-    when (type) {
-        PostType.TEXT -> R.string.create_post_change_to_text_message
-        PostType.PHOTO -> R.string.create_post_change_to_photo_message
-        PostType.CAROUSEL -> R.string.create_post_change_to_carousel_message
-        PostType.BEFORE_AFTER -> R.string.create_post_change_to_before_after_message
-        PostType.POLL -> R.string.create_post_change_to_poll_message
-    },
-)
-
-@Composable
-private fun pollClosingSummary(content: PostContentDraft.Poll): String = when (content.closingRule) {
+private fun pollClosingSummary(content: PostPollDraft): String = when (content.closingRule) {
     PostPollClosingRule.AFTER_24_HOURS -> stringResource(R.string.create_post_closes_24_hours)
     PostPollClosingRule.CUSTOM_DATE -> content.closingAtMillis?.let { millis ->
         stringResource(R.string.create_post_closes_on, formatDate(millis))
@@ -1522,51 +1260,41 @@ private fun pollClosingSummary(content: PostContentDraft.Poll): String = when (c
 }
 
 @Composable
-private fun PostContentDraft.toFeedContent(): PostFeedContent = when (this) {
-    is PostContentDraft.Text -> PostFeedContent.Text(body = body.trim())
-    is PostContentDraft.Photo -> PostFeedContent.Photo(
-        image = PostFeedMedia(
-            model = uri.orEmpty(),
-            contentDescription = imageDescription.trim().takeIf(String::isNotEmpty),
-        ),
-        caption = caption.trim().takeIf(String::isNotEmpty),
-    )
-    is PostContentDraft.Carousel -> PostFeedContent.Carousel(
-        items = items.mapNotNull { item ->
-            item.uri?.takeIf(String::isNotEmpty)?.let { uri ->
-                PostFeedMedia(
-                    model = uri,
-                    contentDescription = item.imageDescription.trim().takeIf(String::isNotEmpty),
-                )
-            }
-        },
-        caption = caption.trim().takeIf(String::isNotEmpty),
-    )
-    is PostContentDraft.BeforeAfter -> PostFeedContent.BeforeAfter(
-        before = PostFeedMedia(
-            model = before.uri.orEmpty(),
-            contentDescription = before.imageDescription.trim().takeIf(String::isNotEmpty),
-        ),
-        after = PostFeedMedia(
-            model = after.uri.orEmpty(),
-            contentDescription = after.imageDescription.trim().takeIf(String::isNotEmpty),
-        ),
-        caption = caption.trim().takeIf(String::isNotEmpty),
-        beforeNote = beforeNote.trim().takeIf(String::isNotEmpty),
-        afterNote = afterNote.trim().takeIf(String::isNotEmpty),
-    )
-    is PostContentDraft.Poll -> PostFeedContent.Poll(
-        question = question.trim(),
-        options = options.map(String::trim),
-        description = description.trim().takeIf(String::isNotEmpty),
-        closingSummary = pollClosingSummary(this),
+private fun CreatePostFormState.toFeedContent(): PostFeedContent {
+    val filled = photos.filter { !it.uri.isNullOrBlank() }
+    val media = when {
+        mediaLayout == PostMediaLayout.BEFORE_AFTER && filled.size >= 2 ->
+            PostFeedMediaContent.BeforeAfter(
+                before = filled[0].toFeedMedia(),
+                after = filled[1].toFeedMedia(),
+            )
+        filled.size >= 2 -> PostFeedMediaContent.Carousel(
+            items = filled.map { it.toFeedMedia() },
+        )
+        filled.size == 1 -> PostFeedMediaContent.Photo(filled[0].toFeedMedia())
+        else -> null
+    }
+    val pollContent = poll?.let { draft ->
+        PostFeedPoll(
+            question = draft.question.trim(),
+            options = draft.options.map(String::trim),
+            closingSummary = pollClosingSummary(draft),
+        )
+    }
+    return PostFeedContent(
+        media = media,
+        body = body.trim().takeIf(String::isNotEmpty),
+        poll = pollContent,
     )
 }
 
+private fun PostMediaDraft.toFeedMedia(): PostFeedMedia = PostFeedMedia(
+    model = uri.orEmpty(),
+    contentDescription = imageDescription.trim().takeIf(String::isNotEmpty),
+)
+
 private fun firstInvalidField(errors: Set<PostValidationField>): PostValidationField = listOf(
-    PostValidationField.TEXT_BODY,
-    PostValidationField.PHOTO,
-    PostValidationField.CAROUSEL,
+    PostValidationField.CONTENT,
     PostValidationField.BEFORE_PHOTO,
     PostValidationField.AFTER_PHOTO,
     PostValidationField.POLL_QUESTION,
@@ -1580,8 +1308,9 @@ private fun formatDate(millis: Long): String =
 private enum class BeforeAfterSlot {
     BEFORE,
     AFTER,
+    REPLACE,
 }
 
-private const val MAX_CAROUSEL_ITEMS = 10
-private const val MAX_POLL_OPTIONS = 6
+private const val MAX_POST_PHOTOS = CreatePostViewModel.MAX_POST_PHOTOS
+private const val MAX_POLL_OPTIONS = CreatePostViewModel.MAX_POLL_OPTIONS
 private const val DAY_MILLIS = 24 * 60 * 60 * 1000L

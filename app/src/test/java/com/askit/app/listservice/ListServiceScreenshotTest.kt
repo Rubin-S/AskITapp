@@ -8,7 +8,6 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import androidx.lifecycle.SavedStateHandle
-import com.askit.app.R
 import com.askit.designsystem.theme.AskITTheme
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -133,12 +132,6 @@ class ListServiceScreenshotTest {
             viewModel.selectPricingMode(ListServicePricingMode.RANGE)
             viewModel.updateMinimumPrice("800")
             viewModel.updateMaximumPrice("1500")
-            viewModel.setPortfolioUris(
-                listOf(
-                    "android.resource://com.askit.app/${R.drawable.explore_results_empty}",
-                    "android.resource://com.askit.app/${R.drawable.explore_results_server}",
-                ),
-            )
             viewModel.toggleOptionalSection(ListServiceOptionalSection.MORE_DETAILS)
             viewModel.updateAvailability("Weekday evenings")
             viewModel.updateExperience("8 years")

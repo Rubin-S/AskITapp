@@ -60,12 +60,12 @@ class PostTaskRouteContractTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("post_task_edit").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
         composeTestRule
             .onNodeWithTag("post_task_title")
-            .performScrollTo()
             .performTextInput("edited ")
-        composeTestRule.onNodeWithTag("post_task_review").performScrollTo().performClick()
-        composeTestRule.onNodeWithTag("post_task_complete").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("post_task_review").performClick()
+        composeTestRule.onNodeWithTag("post_task_complete").performClick()
 
         assertEquals(1, completionCount)
         assertEquals(POST_TASK_OTHER_CATEGORY_ID, emittedDraft?.categoryId)

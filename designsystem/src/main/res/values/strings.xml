@@ -5,6 +5,13 @@
     <string name="nav_create">Create</string>
     <string name="nav_inbox">Inbox</string>
     <string name="nav_profile">Profile</string>
+    <string name="empty_home_title">Nothing here yet</string>
+    <string name="empty_home_supporting">Post a task, list a service, or share an update with people nearby.</string>
+    <string name="empty_home_action">Get started</string>
+    <string name="empty_inbox_title">No messages</string>
+    <string name="empty_inbox_supporting">When someone replies to a task or service, it will show up here.</string>
+    <string name="empty_profile_title">Your profile</string>
+    <string name="empty_profile_supporting">Your name, work, and listings will live here once you add them.</string>
     <string name="create_sheet_title">Create</string>
     <plurals name="nav_inbox_unread">
         <item quantity="one">Inbox, %d unread message</item>
@@ -57,6 +64,5 @@
     <string name="post_feed_carousel_counter">%1$d / %2$d</string>
     <string name="post_feed_before">Before</string>
     <string name="post_feed_after">After</string>
-    <string name="post_feed_comparison">%1$s image</string>
-    <string name="post_feed_comparison_described">%1$s image. %2$s</string>
+    <string name="post_feed_before_after_slider">Before and after comparison. Drag to reveal.</string>
 </resources>

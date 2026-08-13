@@ -47,7 +47,7 @@ class CreatePostRouteContractTest {
 
         composeTestRule.onNodeWithText("Create post").assertIsDisplayed()
         composeTestRule.onNodeWithTag("create_post_preview_top").performClick()
-        composeTestRule.onNodeWithText("Write something for your post.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Add a photo, write something, or add a poll.").assertIsDisplayed()
         composeTestRule.onNodeWithTag("create_post_text_body")
             .performTextInput("A multiline\ncommunity update")
         composeTestRule.onNodeWithTag("create_post_preview_top").performClick()
@@ -64,15 +64,13 @@ class CreatePostRouteContractTest {
         composeTestRule.onNodeWithTag("create_post_complete").performClick()
 
         assertEquals(1, completionCount)
-        assertTrue(completed?.content is PostContentDraft.Text)
-        assertEquals(
-            "editedA multiline\ncommunity update",
-            (completed?.content as PostContentDraft.Text).body,
-        )
+        assertEquals("editedA multiline\ncommunity update", completed?.body)
+        assertTrue(completed?.photos.isNullOrEmpty())
+        assertEquals(null, completed?.poll)
     }
 
     @Test
-    fun typeSelector_startsWithText_andSwitchesEmptyDraftImmediately() {
+    fun editor_showsMediaTextAndPollTogether() {
         val viewModel = CreatePostViewModel(SavedStateHandle())
         composeTestRule.setContent {
             AskITTheme(darkTheme = false) {
@@ -80,8 +78,10 @@ class CreatePostRouteContractTest {
             }
         }
 
-        composeTestRule.onNodeWithTag("create_post_type_text").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("create_post_type_photo").performClick()
-        composeTestRule.onNodeWithText("Add a photo to your post").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("create_post_add_photos").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("create_post_text_body").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("create_post_add_poll").performClick()
+        composeTestRule.onNodeWithTag("create_post_poll_question").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("create_post_before_after_chip").assertIsDisplayed()
     }
 }

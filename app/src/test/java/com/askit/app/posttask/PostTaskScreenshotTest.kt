@@ -214,6 +214,7 @@ class PostTaskScreenshotTest {
         composeTestRule
             .onNodeWithTag("post_task_provider_preview_card")
             .performScrollTo()
+        composeTestRule.mainClock.advanceTimeBy(1_000)
         composeTestRule.waitForIdle()
         capture(name)
     }

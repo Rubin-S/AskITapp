@@ -33,8 +33,8 @@ class PostFeedItemScreenshotTest {
     fun text_light() = captureVariant(
         darkTheme = false,
         fileName = "post_feed_text_light_360",
-        content = PostFeedContent.Text(
-            "A neighbourhood update with a useful paragraph that remains readable without social controls.",
+        content = PostFeedContent(
+            body = "A neighbourhood update with a useful paragraph that remains readable without social controls.",
         ),
     )
 
@@ -42,16 +42,16 @@ class PostFeedItemScreenshotTest {
     fun text_dark() = captureVariant(
         darkTheme = true,
         fileName = "post_feed_text_dark_360",
-        content = PostFeedContent.Text("A dark-theme community update."),
+        content = PostFeedContent(body = "A dark-theme community update."),
     )
 
     @Test
     fun photo_light() = captureVariant(
         darkTheme = false,
         fileName = "post_feed_photo_light_360",
-        content = PostFeedContent.Photo(
-            image = media("A repaired tap"),
-            caption = "The finished repair is ready for the customer.",
+        content = PostFeedContent(
+            media = PostFeedMediaContent.Photo(media("A repaired tap")),
+            body = "The finished repair is ready for the customer.",
         ),
     )
 
@@ -59,9 +59,9 @@ class PostFeedItemScreenshotTest {
     fun photo_dark() = captureVariant(
         darkTheme = true,
         fileName = "post_feed_photo_dark_360",
-        content = PostFeedContent.Photo(
-            image = media("A repaired tap"),
-            caption = "The finished repair is ready for the customer.",
+        content = PostFeedContent(
+            media = PostFeedMediaContent.Photo(media("A repaired tap")),
+            body = "The finished repair is ready for the customer.",
         ),
     )
 
@@ -69,9 +69,11 @@ class PostFeedItemScreenshotTest {
     fun carousel_light() = captureVariant(
         darkTheme = false,
         fileName = "post_feed_carousel_light_360",
-        content = PostFeedContent.Carousel(
-            items = listOf(media("A blue tool box"), media("A repaired tap"), media("Clean fittings")),
-            caption = "Three steps from inspection to finish.",
+        content = PostFeedContent(
+            media = PostFeedMediaContent.Carousel(
+                items = listOf(media("A blue tool box"), media("A repaired tap"), media("Clean fittings")),
+            ),
+            body = "Three steps from inspection to finish.",
         ),
     )
 
@@ -79,8 +81,10 @@ class PostFeedItemScreenshotTest {
     fun carousel_dark() = captureVariant(
         darkTheme = true,
         fileName = "post_feed_carousel_dark_360",
-        content = PostFeedContent.Carousel(
-            items = listOf(media("A blue tool box"), media("A repaired tap")),
+        content = PostFeedContent(
+            media = PostFeedMediaContent.Carousel(
+                items = listOf(media("A blue tool box"), media("A repaired tap")),
+            ),
         ),
     )
 
@@ -88,12 +92,12 @@ class PostFeedItemScreenshotTest {
     fun before_after_light() = captureVariant(
         darkTheme = false,
         fileName = "post_feed_before_after_light_360",
-        content = PostFeedContent.BeforeAfter(
-            before = media("Before the repair"),
-            after = media("After the repair"),
-            caption = "A clear before and after comparison.",
-            beforeNote = "Leaking joint",
-            afterNote = "New sealed joint",
+        content = PostFeedContent(
+            media = PostFeedMediaContent.BeforeAfter(
+                before = media("Before the repair"),
+                after = media("After the repair"),
+            ),
+            body = "A clear before and after comparison.",
         ),
     )
 
@@ -101,9 +105,11 @@ class PostFeedItemScreenshotTest {
     fun before_after_dark() = captureVariant(
         darkTheme = true,
         fileName = "post_feed_before_after_dark_360",
-        content = PostFeedContent.BeforeAfter(
-            before = media("Before the repair"),
-            after = media("After the repair"),
+        content = PostFeedContent(
+            media = PostFeedMediaContent.BeforeAfter(
+                before = media("Before the repair"),
+                after = media("After the repair"),
+            ),
         ),
     )
 
@@ -111,11 +117,13 @@ class PostFeedItemScreenshotTest {
     fun poll_light() = captureVariant(
         darkTheme = false,
         fileName = "post_feed_poll_light_360",
-        content = PostFeedContent.Poll(
-            question = "Which finish looks better?",
-            options = listOf("Matte black", "Natural wood", "White"),
-            description = "Choose the finish for the next project.",
-            closingSummary = "Closes 24 hours after posting",
+        content = PostFeedContent(
+            poll = PostFeedPoll(
+                question = "Which finish looks better?",
+                options = listOf("Matte black", "Natural wood", "White"),
+                closingSummary = "Closes 24 hours after posting",
+            ),
+            body = "Choose the finish for the next project.",
         ),
     )
 
@@ -123,10 +131,12 @@ class PostFeedItemScreenshotTest {
     fun poll_dark() = captureVariant(
         darkTheme = true,
         fileName = "post_feed_poll_dark_360",
-        content = PostFeedContent.Poll(
-            question = "Which finish looks better?",
-            options = listOf("Matte black", "Natural wood"),
-            closingSummary = "Closes 24 hours after posting",
+        content = PostFeedContent(
+            poll = PostFeedPoll(
+                question = "Which finish looks better?",
+                options = listOf("Matte black", "Natural wood"),
+                closingSummary = "Closes 24 hours after posting",
+            ),
         ),
     )
 
@@ -135,8 +145,10 @@ class PostFeedItemScreenshotTest {
     fun carousel_narrow() = captureVariant(
         darkTheme = false,
         fileName = "post_feed_carousel_narrow_320",
-        content = PostFeedContent.Carousel(
-            items = listOf(media("A blue tool box"), media("A repaired tap")),
+        content = PostFeedContent(
+            media = PostFeedMediaContent.Carousel(
+                items = listOf(media("A blue tool box"), media("A repaired tap")),
+            ),
         ),
         contentWidth = 320.dp,
     )
@@ -146,9 +158,11 @@ class PostFeedItemScreenshotTest {
     fun before_after_wide() = captureVariant(
         darkTheme = false,
         fileName = "post_feed_before_after_wide_800",
-        content = PostFeedContent.BeforeAfter(
-            before = media("Before the repair"),
-            after = media("After the repair"),
+        content = PostFeedContent(
+            media = PostFeedMediaContent.BeforeAfter(
+                before = media("Before the repair"),
+                after = media("After the repair"),
+            ),
         ),
         contentWidth = 800.dp,
     )
@@ -158,10 +172,27 @@ class PostFeedItemScreenshotTest {
     fun poll_tamil() = captureVariant(
         darkTheme = false,
         fileName = "post_feed_poll_tamil_360",
-        content = PostFeedContent.Poll(
-            question = "Which finish looks better?",
-            options = listOf("Matte black", "Natural wood"),
-            closingSummary = "Closes 24 hours after posting",
+        content = PostFeedContent(
+            poll = PostFeedPoll(
+                question = "Which finish looks better?",
+                options = listOf("Matte black", "Natural wood"),
+                closingSummary = "Closes 24 hours after posting",
+            ),
+        ),
+    )
+
+    @Test
+    fun unified_photo_text_poll_dark() = captureVariant(
+        darkTheme = true,
+        fileName = "post_feed_unified_dark_360",
+        content = PostFeedContent(
+            media = PostFeedMediaContent.Photo(media("A repaired tap")),
+            body = "The finished repair is ready for the customer.",
+            poll = PostFeedPoll(
+                question = "Which finish looks better?",
+                options = listOf("Matte black", "Natural wood"),
+                closingSummary = "Closes 24 hours after posting",
+            ),
         ),
     )
 

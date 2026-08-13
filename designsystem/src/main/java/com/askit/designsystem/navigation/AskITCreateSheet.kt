@@ -59,7 +59,7 @@ fun AskITCreateSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
     ) {
@@ -131,7 +131,9 @@ private fun CreateRow(
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         },
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
