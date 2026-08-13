@@ -43,7 +43,7 @@ class PostTaskFlowTest {
     fun requiredReview_keepsInput_andShowsActionableErrors() {
         openPostTask()
         composeTestRule.onNodeWithTag("post_task_title").performTextInput("Repair the tap")
-        composeTestRule.onNodeWithTag("post_task_review").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("post_task_review").performClick()
 
         composeTestRule.onNodeWithText("Choose a category.").assertIsDisplayed()
         composeTestRule.onNodeWithText("Describe the work you need.").assertIsDisplayed()
@@ -58,7 +58,9 @@ class PostTaskFlowTest {
         composeTestRule.onNodeWithTag("post_task_details").performTextInput("The kitchen tap is leaking.")
         composeTestRule.onNodeWithTag("post_task_work_mode_remote").performScrollTo().performClick()
         composeTestRule.onNodeWithTag("post_task_timing_asap").performScrollTo().performClick()
-        composeTestRule.onNodeWithTag("post_task_review").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("post_task_review").performClick()
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Review your task").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Repair the tap").assertCountEquals(2)
@@ -83,7 +85,9 @@ class PostTaskFlowTest {
             .performTextInput("Please assemble the new wardrobe.")
         composeTestRule.onNodeWithTag("post_task_work_mode_remote").performScrollTo().performClick()
         composeTestRule.onNodeWithTag("post_task_timing_asap").performScrollTo().performClick()
-        composeTestRule.onNodeWithTag("post_task_review").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("post_task_review").performClick()
+        composeTestRule.waitForIdle()
 
         composeTestRule.onAllNodesWithText("Furniture assembly").assertCountEquals(2)
         composeTestRule.onNodeWithTag("post_task_edit").performScrollTo().performClick()

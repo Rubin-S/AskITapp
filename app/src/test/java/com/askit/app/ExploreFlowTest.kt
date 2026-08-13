@@ -1891,7 +1891,7 @@ class ExploreFlowTest {
             )
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Kallakurichi · 10 km").assertIsDisplayed()
-        assertFalse(summary().fetchSemanticsNode().config.contains(SemanticsActions.OnClick))
+        assertTrue(summary().fetchSemanticsNode().config.contains(SemanticsActions.OnClick))
         composeTestRule.onAllNodesWithText("Near Kallakurichi").assertCountEquals(0)
         composeTestRule.onAllNodesWithText("Within 10 km").assertCountEquals(0)
         composeTestRule.onAllNodesWithContentDescription("Change search area").assertCountEquals(0)

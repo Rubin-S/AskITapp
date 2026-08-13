@@ -5,6 +5,13 @@
     <string name="nav_create">உருவாக்கு</string>
     <string name="nav_inbox">இன்பாக்ஸ்</string>
     <string name="nav_profile">சுயவிவரம்</string>
+    <string name="empty_home_title">இங்கே இன்னும் ஒன்றும் இல்லை</string>
+    <string name="empty_home_supporting">ஒரு பணியைப் பதிவிடவும், சேவையைப் பட்டியலிடவும், அல்லது அருகிலுள்ளவர்களுடன் ஒரு புதுப்பிப்பைப் பகிரவும்.</string>
+    <string name="empty_home_action">தொடங்குங்கள்</string>
+    <string name="empty_inbox_title">செய்திகள் இல்லை</string>
+    <string name="empty_inbox_supporting">யாராவது ஒரு பணி அல்லது சேவைக்கு பதிலளித்தால், அது இங்கே தோன்றும்.</string>
+    <string name="empty_profile_title">உங்கள் சுயவிவரம்</string>
+    <string name="empty_profile_supporting">நீங்கள் சேர்த்த பிறகு உங்கள் பெயர், பணி, பட்டியல்கள் இங்கே இருக்கும்.</string>
     <plurals name="nav_inbox_unread">
         <item quantity="one">இன்பாக்ஸில் %d படிக்காத செய்தி</item>
         <item quantity="other">இன்பாக்ஸில் %d படிக்காத செய்திகள்</item>
@@ -57,6 +64,5 @@
     <string name="post_feed_carousel_counter">%1$d / %2$d</string>
     <string name="post_feed_before">முன்</string>
     <string name="post_feed_after">பின்</string>
-    <string name="post_feed_comparison">%1$s புகைப்படம்</string>
-    <string name="post_feed_comparison_described">%1$s புகைப்படம். %2$s</string>
+    <string name="post_feed_before_after_slider">முன் மற்றும் பின் ஒப்பீடு. இழுத்துப் பார்க்கவும்.</string>
 </resources>

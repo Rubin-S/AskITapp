@@ -78,14 +78,9 @@ class AskITBottomBarTest {
     }
 
     @Test
-    fun noVisibleNavigationLabels() {
+    fun selectedDestination_showsItsLabel() {
         setBottomBar(selected = AskITDestination.Home)
-        // Labels are not composed as visible text; only tooltips show after long-press.
-        composeTestRule.onAllNodesWithText("Home").assertCountEquals(0)
-        composeTestRule.onAllNodesWithText("Explore").assertCountEquals(0)
-        composeTestRule.onAllNodesWithText("Inbox").assertCountEquals(0)
-        composeTestRule.onAllNodesWithText("Profile").assertCountEquals(0)
-        composeTestRule.onAllNodesWithText("Create").assertCountEquals(0)
+        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
     }
 
     @Test
@@ -95,7 +90,7 @@ class AskITBottomBarTest {
             composeTestRule
                 .onNodeWithContentDescription(name)
                 .performTouchInput { longClick() }
-            composeTestRule.onNodeWithText(name).assertIsDisplayed()
+            composeTestRule.onAllNodesWithText(name)[0].assertIsDisplayed()
         }
     }
 

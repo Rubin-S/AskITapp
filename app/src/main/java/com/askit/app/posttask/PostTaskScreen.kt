@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -49,6 +50,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -275,18 +277,52 @@ private fun PostTaskScreen(
                 },
             )
         },
+        bottomBar = {
+            Surface(color = MaterialTheme.colorScheme.surface) {
+                Column(Modifier.navigationBarsPadding()) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Button(
+                        onClick = {
+                            if (state.screenMode == PostTaskScreenMode.REVIEW) {
+                                viewModel.buildValidatedDraft()?.let(onCompleteDraft)
+                            } else {
+                                keyboardController?.hide()
+                                viewModel.review()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .heightIn(min = 52.dp)
+                            .testTag(
+                                if (state.screenMode == PostTaskScreenMode.REVIEW) {
+                                    "post_task_complete"
+                                } else {
+                                    "post_task_review"
+                                },
+                            ),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (state.screenMode == PostTaskScreenMode.REVIEW) {
+                                    R.string.post_task_complete_draft
+                                } else {
+                                    R.string.post_task_review_task
+                                },
+                            ),
+                        )
+                    }
+                }
+            }
+        },
     ) { padding ->
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding)
                 .imePadding(),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                top = padding.calculateTopPadding() + 16.dp,
-                end = 16.dp,
-                bottom = padding.calculateBottomPadding() + 24.dp,
-            ),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
@@ -298,9 +334,6 @@ private fun PostTaskScreen(
                         PostTaskReview(
                             state = state,
                             onEdit = viewModel::edit,
-                            onComplete = {
-                                viewModel.buildValidatedDraft()?.let(onCompleteDraft)
-                            },
                         )
                     } else {
                         PostTaskForm(
@@ -328,10 +361,6 @@ private fun PostTaskScreen(
                                 )
                             },
                             onRemovePhoto = viewModel::removePhoto,
-                            onReview = {
-                                keyboardController?.hide()
-                                viewModel.review()
-                            },
                             onUpdateTitle = viewModel::updateTitle,
                             onUpdateDetails = viewModel::updateDetails,
                         )
@@ -397,7 +426,6 @@ private fun PostTaskForm(
     onOpenDatePicker: () -> Unit,
     onPickPhotos: () -> Unit,
     onRemovePhoto: (String) -> Unit,
-    onReview: () -> Unit,
     onUpdateTitle: (String) -> Unit,
     onUpdateDetails: (String) -> Unit,
 ) {
@@ -465,6 +493,7 @@ private fun PostTaskForm(
                 expanded = categoryMenuExpanded,
                 onDismissRequest = { categoryMenuExpanded = false },
                 modifier = Modifier.testTag("post_task_category_menu"),
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
                 ASKIT_SERVICE_CATEGORIES.forEach { category ->
                     DropdownMenuItem(
@@ -899,17 +928,6 @@ private fun PostTaskForm(
                 )
             }
         }
-
-        Spacer(Modifier.height(8.dp))
-        Button(
-            onClick = onReview,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 52.dp)
-                .testTag("post_task_review"),
-        ) {
-            Text(stringResource(R.string.post_task_review_task))
-        }
     }
 }
 
@@ -974,7 +992,6 @@ private fun PostTaskReview(
     modifier: Modifier = Modifier,
     state: PostTaskFormState,
     onEdit: () -> Unit,
-    onComplete: () -> Unit,
 ) {
     val category = ASKIT_SERVICE_CATEGORIES.firstOrNull { it.id == state.categoryId }
     val categoryLabel = when {
@@ -1186,15 +1203,6 @@ private fun PostTaskReview(
                 .testTag("post_task_edit"),
         ) {
             Text(stringResource(R.string.post_task_edit))
-        }
-        Button(
-            onClick = onComplete,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 52.dp)
-                .testTag("post_task_complete"),
-        ) {
-            Text(stringResource(R.string.post_task_complete_draft))
         }
     }
 }

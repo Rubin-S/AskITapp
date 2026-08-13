@@ -12,7 +12,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTouchInput
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -138,7 +137,6 @@ class ExploreScreenshotTest {
         setApp(darkTheme = false, typedQuery = true)
         openExplore()
         openSearch()
-        composeTestRule.onNodeWithTag("explore_location_summary").performTouchInput { click() }
         capture("explore_typed_suggestions_light")
     }
 
@@ -147,7 +145,6 @@ class ExploreScreenshotTest {
         setApp(darkTheme = true, typedQuery = true)
         openExplore()
         openSearch()
-        composeTestRule.onNodeWithTag("explore_location_summary").performTouchInput { click() }
         capture("explore_typed_suggestions_dark")
     }
 

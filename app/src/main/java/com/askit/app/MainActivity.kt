@@ -15,7 +15,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.runtime.setValue
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,6 +55,7 @@ import com.askit.app.listservice.ListServiceViewModel
 import com.askit.app.createpost.CreatePostRoute
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.createpost.PostDraft
+import com.askit.designsystem.empty.AskITEmptyState
 import com.askit.designsystem.navigation.AskITBottomBar
 import com.askit.designsystem.navigation.AskITCreateAction
 import com.askit.designsystem.navigation.AskITCreateSheet
@@ -105,6 +109,7 @@ class MainActivity : ComponentActivity() {
                     createPostViewModel = createPostViewModel,
                     onExit = ::finish,
                     availableFilterOptions = defaultExploreFilterOptions(),
+                    treatUnresolvedSearchAsEmpty = true,
                 )
             }
         }
@@ -145,6 +150,7 @@ fun AskITApp(
     onPostTaskCompleted: (PostTaskDraft) -> Unit = {},
     onListServiceCompleted: (ListServiceDraft) -> Unit = {},
     onCreatePostCompleted: (PostDraft) -> Unit = {},
+    treatUnresolvedSearchAsEmpty: Boolean = false,
 ) {
     val viewModelAppliedFilterOptions by exploreViewModel.appliedFilterOptions.collectAsStateWithLifecycle()
     val controlledAppliedFilterOptions = if (
@@ -165,15 +171,34 @@ fun AskITApp(
         CreatePostViewModel()
     }
     val navigationState = rememberAskITNavigationState()
+    var showCreateSheet by rememberSaveable { mutableStateOf(false) }
     val entryProvider = entryProvider<NavKey> {
         entry<AppDestination.Home> {
-            EmptyRootDestination()
+            EmptyRootDestination(
+                iconRes = com.askit.designsystem.R.drawable.ic_home_outlined,
+                titleRes = com.askit.designsystem.R.string.empty_home_title,
+                supportingRes = com.askit.designsystem.R.string.empty_home_supporting,
+                actionRes = com.askit.designsystem.R.string.empty_home_action,
+                onAction = { showCreateSheet = true },
+            )
         }
         entry<AppDestination.Explore> {
+            val exploreQuery by exploreViewModel.uiState.collectAsStateWithLifecycle()
+            val resolvedResultState =
+                if (
+                    treatUnresolvedSearchAsEmpty &&
+                    onRetryResults == null &&
+                    resultState is ExploreResultState.Loading &&
+                    exploreQuery.query.isNotBlank()
+                ) {
+                    ExploreResultState.Empty(ExploreResultState.EmptyReason.Query)
+                } else {
+                    resultState
+                }
             ExploreRoute(
                 viewModel = exploreViewModel,
                 onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) },
-                resultState = resultState,
+                resultState = resolvedResultState,
                 browseState = browseState,
                 onRetryResults = onRetryResults,
                 onRetryBrowseSection = onRetryBrowseSection,
@@ -219,13 +244,20 @@ fun AskITApp(
             )
         }
         entry<AppDestination.Inbox> {
-            EmptyRootDestination()
+            EmptyRootDestination(
+                iconRes = com.askit.designsystem.R.drawable.ic_inbox_outlined,
+                titleRes = com.askit.designsystem.R.string.empty_inbox_title,
+                supportingRes = com.askit.designsystem.R.string.empty_inbox_supporting,
+            )
         }
         entry<AppDestination.Profile> {
-            EmptyRootDestination()
+            EmptyRootDestination(
+                iconRes = com.askit.designsystem.R.drawable.ic_person,
+                titleRes = com.askit.designsystem.R.string.empty_profile_title,
+                supportingRes = com.askit.designsystem.R.string.empty_profile_supporting,
+            )
         }
     }
-    var showCreateSheet by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -421,9 +453,23 @@ private val TOP_LEVEL_ROUTES = listOf(
 )
 
 @Composable
-private fun EmptyRootDestination() {
+private fun EmptyRootDestination(
+    @DrawableRes iconRes: Int,
+    @StringRes titleRes: Int,
+    @StringRes supportingRes: Int,
+    @StringRes actionRes: Int? = null,
+    onAction: (() -> Unit)? = null,
+) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
-    ) {}
+    ) {
+        AskITEmptyState(
+            iconRes = iconRes,
+            title = stringResource(titleRes),
+            supporting = stringResource(supportingRes),
+            actionLabel = actionRes?.let { stringResource(it) },
+            onAction = onAction,
+        )
+    }
 }

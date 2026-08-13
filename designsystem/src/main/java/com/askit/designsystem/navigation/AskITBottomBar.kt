@@ -62,7 +62,7 @@ fun AskITBottomBar(
 
     NavigationBar(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
     ) {
@@ -106,7 +106,8 @@ private fun RowScope.NavSlot(
         selected = selected,
         onClick = onClick,
         icon = { LongPressTooltip(label, content = icon) },
-        label = null,
+        label = { Text(label) },
+        alwaysShowLabel = false,
         colors = destinationColors(),
         modifier = Modifier.semantics { this.contentDescription = contentDescription },
     )
@@ -261,7 +262,9 @@ private fun RowScope.CreateSlot(onClick: () -> Unit) {
 @Composable
 private fun destinationColors() = NavigationBarItemDefaults.colors(
     selectedIconColor = MaterialTheme.colorScheme.onSurface,
+    selectedTextColor = MaterialTheme.colorScheme.onSurface,
     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
     indicatorColor = Color.Transparent,
 )
 

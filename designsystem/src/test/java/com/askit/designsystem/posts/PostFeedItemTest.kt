@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -56,12 +57,10 @@ class PostFeedItemTest {
         )
         composeTestRule.onNodeWithContentDescription("Image 1 of 3", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithTag("post_list").performScrollToNode(
-            hasText("Before", substring = true),
+            hasTestTag("post_feed_before_after_slider"),
         )
+        composeTestRule.onNodeWithTag("post_feed_before_after_slider").assertIsDisplayed()
         composeTestRule.onNodeWithText("Before", substring = true).assertIsDisplayed()
-        composeTestRule.onNodeWithTag("post_list").performScrollToNode(
-            hasText("After", substring = true),
-        )
         composeTestRule.onNodeWithText("After", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithTag("post_list").performScrollToNode(
             hasText("Which finish looks better?", substring = true),
@@ -81,10 +80,12 @@ class PostFeedItemTest {
             AskITTheme {
                 PostFeedItem(
                     author = PostFeedAuthor("You"),
-                    content = PostFeedContent.Carousel(
-                        items = listOf(
-                            PostFeedMedia(samplePhoto(), "A blue tool box"),
-                            PostFeedMedia(samplePhoto(), "A repaired tap"),
+                    content = PostFeedContent(
+                        media = PostFeedMediaContent.Carousel(
+                            items = listOf(
+                                PostFeedMedia(samplePhoto(), "A blue tool box"),
+                                PostFeedMedia(samplePhoto(), "A repaired tap"),
+                            ),
                         ),
                     ),
                 )
@@ -108,26 +109,28 @@ class PostFeedItemTest {
                 PostFeedItem(
                 author = PostFeedAuthor("You"),
                 locationLabel = "Karaikal",
-                content = PostFeedContent.Text("A community update"),
+                content = PostFeedContent(body = "A community update"),
                 )
             }
             item {
                 PostFeedItem(
                 author = PostFeedAuthor("You"),
-                content = PostFeedContent.Photo(
-                    image = PostFeedMedia(samplePhoto()),
-                    caption = "A photo caption",
+                content = PostFeedContent(
+                    media = PostFeedMediaContent.Photo(PostFeedMedia(samplePhoto())),
+                    body = "A photo caption",
                 ),
                 )
             }
             item {
                 PostFeedItem(
                 author = PostFeedAuthor("You"),
-                content = PostFeedContent.Carousel(
-                    items = listOf(
-                        PostFeedMedia(samplePhoto()),
-                        PostFeedMedia(samplePhoto()),
-                        PostFeedMedia(samplePhoto()),
+                content = PostFeedContent(
+                    media = PostFeedMediaContent.Carousel(
+                        items = listOf(
+                            PostFeedMedia(samplePhoto()),
+                            PostFeedMedia(samplePhoto()),
+                            PostFeedMedia(samplePhoto()),
+                        ),
                     ),
                 ),
                 )
@@ -135,19 +138,23 @@ class PostFeedItemTest {
             item {
                 PostFeedItem(
                 author = PostFeedAuthor("You"),
-                content = PostFeedContent.BeforeAfter(
-                    before = PostFeedMedia(samplePhoto()),
-                    after = PostFeedMedia(samplePhoto()),
+                content = PostFeedContent(
+                    media = PostFeedMediaContent.BeforeAfter(
+                        before = PostFeedMedia(samplePhoto()),
+                        after = PostFeedMedia(samplePhoto()),
+                    ),
                 ),
                 )
             }
             item {
                 PostFeedItem(
                 author = PostFeedAuthor("You"),
-                content = PostFeedContent.Poll(
-                    question = "Which finish looks better?",
-                    options = listOf("Matte black", "Natural wood"),
-                    closingSummary = "Closes 24 hours after posting",
+                content = PostFeedContent(
+                    poll = PostFeedPoll(
+                        question = "Which finish looks better?",
+                        options = listOf("Matte black", "Natural wood"),
+                        closingSummary = "Closes 24 hours after posting",
+                    ),
                 ),
                 )
             }

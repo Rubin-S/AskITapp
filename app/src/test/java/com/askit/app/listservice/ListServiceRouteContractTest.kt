@@ -66,15 +66,12 @@ class ListServiceRouteContractTest {
         assertFalse(previewText.contains("+91"))
 
         composeTestRule.onNodeWithTag("list_service_edit").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
         composeTestRule
             .onNodeWithTag("list_service_title_field")
-            .performScrollTo()
             .performTextInput("edited ")
-        composeTestRule.onNodeWithTag("list_service_review").performScrollTo().performClick()
-        composeTestRule
-            .onNodeWithTag("list_service_complete", useUnmergedTree = true)
-            .performScrollTo()
-            .performClick()
+        composeTestRule.onNodeWithTag("list_service_review").performClick()
+        composeTestRule.onNodeWithTag("list_service_complete").performClick()
         assertEquals(1, completionCount)
         assertEquals(LIST_SERVICE_OTHER_CATEGORY_ID, emittedDraft?.categoryId)
         assertEquals("Furniture assembly", emittedDraft?.customCategory)
