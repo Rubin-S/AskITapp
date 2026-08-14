@@ -7,6 +7,10 @@ export ANDROID_HOME="${ANDROID_HOME:-/opt/android-sdk}"
 export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
 export PATH="$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
 
+cat > local.properties <<EOF
+sdk.dir=${ANDROID_HOME}
+EOF
+
 chmod +x ./gradlew
 
 # Warm Gradle and download Android dependencies without running tests.
