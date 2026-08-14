@@ -65,4 +65,9 @@
     <string name="post_feed_before">முன்</string>
     <string name="post_feed_after">பின்</string>
     <string name="post_feed_before_after_slider">முன் மற்றும் பின் ஒப்பீடு. இழுத்துப் பார்க்கவும்.</string>
+
+    <string name="discard_dialog_title">இந்த வரைவை நிராகரிக்கவா?</string>
+    <string name="discard_dialog_message">உங்கள் மாற்றங்கள் இழக்கப்படும்.</string>
+    <string name="discard_dialog_keep_editing">தொடர்ந்து திருத்து</string>
+    <string name="discard_dialog_discard">நிராகரி</string>
 </resources>

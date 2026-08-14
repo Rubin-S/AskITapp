@@ -65,4 +65,9 @@
     <string name="post_feed_before">Before</string>
     <string name="post_feed_after">After</string>
     <string name="post_feed_before_after_slider">Before and after comparison. Drag to reveal.</string>
+
+    <string name="discard_dialog_title">Discard this draft?</string>
+    <string name="discard_dialog_message">Your changes will be lost.</string>
+    <string name="discard_dialog_keep_editing">Keep editing</string>
+    <string name="discard_dialog_discard">Discard</string>
 </resources>

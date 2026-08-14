@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -230,9 +231,34 @@ class CreationNavigationLifecycleTest {
         assertHome()
     }
 
+    @Test
+    fun fab_opensStoryCapture_andOverflowOpensCreateSheet() {
+        openStory()
+        composeTestRule.onAllNodesWithContentDescription("Create").assertCountEquals(0)
+        composeTestRule.onNodeWithContentDescription("Close story").performClick()
+        assertHome()
+
+        openStory()
+        composeTestRule.onNodeWithContentDescription("Create a task, service, or post").performClick()
+        composeTestRule.onNodeWithText("Post a task").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Close sheet").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("story_capture").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Close story").performClick()
+        assertHome()
+    }
+
     private fun openCreateSheet() {
-        composeTestRule.onNodeWithContentDescription("Create").performClick()
+        if (composeTestRule.onAllNodesWithTag("story_capture").fetchSemanticsNodes().isEmpty()) {
+            openStory()
+        }
+        composeTestRule.onNodeWithContentDescription("Create a task, service, or post").performClick()
         composeTestRule.onNodeWithText("Create").assertIsDisplayed()
+    }
+
+    private fun openStory() {
+        composeTestRule.onNodeWithContentDescription("Create").performClick()
+        composeTestRule.onNodeWithTag("story_capture").assertIsDisplayed()
     }
 
     private fun openTask() {

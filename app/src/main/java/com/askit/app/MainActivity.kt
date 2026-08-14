@@ -55,6 +55,9 @@ import com.askit.app.listservice.ListServiceViewModel
 import com.askit.app.createpost.CreatePostRoute
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.createpost.PostDraft
+import com.askit.app.story.StoryDraft
+import com.askit.app.story.StoryRoute
+import com.askit.app.story.StoryViewModel
 import com.askit.designsystem.empty.AskITEmptyState
 import com.askit.designsystem.navigation.AskITBottomBar
 import com.askit.designsystem.navigation.AskITCreateAction
@@ -100,6 +103,14 @@ class MainActivity : ComponentActivity() {
                 }
             },
         )[CreatePostViewModel::class.java]
+        val storyViewModel = ViewModelProvider(
+            this,
+            viewModelFactory {
+                initializer {
+                    StoryViewModel(createSavedStateHandle())
+                }
+            },
+        )[StoryViewModel::class.java]
         setContent {
             AskITTheme {
                 AskITApp(
@@ -107,6 +118,7 @@ class MainActivity : ComponentActivity() {
                     postTaskViewModel = postTaskViewModel,
                     listServiceViewModel = listServiceViewModel,
                     createPostViewModel = createPostViewModel,
+                    storyViewModel = storyViewModel,
                     onExit = ::finish,
                     availableFilterOptions = defaultExploreFilterOptions(),
                     treatUnresolvedSearchAsEmpty = true,
@@ -134,6 +146,7 @@ fun AskITApp(
     postTaskViewModel: PostTaskViewModel? = null,
     listServiceViewModel: ListServiceViewModel? = null,
     createPostViewModel: CreatePostViewModel? = null,
+    storyViewModel: StoryViewModel? = null,
     onExit: () -> Unit = {},
     resultState: ExploreResultState = ExploreResultState.Loading,
     browseState: ExploreBrowseState = ExploreBrowseState(),
@@ -150,6 +163,7 @@ fun AskITApp(
     onPostTaskCompleted: (PostTaskDraft) -> Unit = {},
     onListServiceCompleted: (ListServiceDraft) -> Unit = {},
     onCreatePostCompleted: (PostDraft) -> Unit = {},
+    onStoryCompleted: (StoryDraft) -> Unit = {},
     treatUnresolvedSearchAsEmpty: Boolean = false,
 ) {
     val viewModelAppliedFilterOptions by exploreViewModel.appliedFilterOptions.collectAsStateWithLifecycle()
@@ -170,6 +184,9 @@ fun AskITApp(
     val resolvedCreatePostViewModel = createPostViewModel ?: remember {
         CreatePostViewModel()
     }
+    val resolvedStoryViewModel = storyViewModel ?: remember {
+        StoryViewModel()
+    }
     val navigationState = rememberAskITNavigationState()
     var showCreateSheet by rememberSaveable { mutableStateOf(false) }
     val entryProvider = entryProvider<NavKey> {
@@ -179,7 +196,7 @@ fun AskITApp(
                 titleRes = com.askit.designsystem.R.string.empty_home_title,
                 supportingRes = com.askit.designsystem.R.string.empty_home_supporting,
                 actionRes = com.askit.designsystem.R.string.empty_home_action,
-                onAction = { showCreateSheet = true },
+                onAction = { navigationState.push(AppDestination.Story) },
             )
         }
         entry<AppDestination.Explore> {
@@ -243,6 +260,14 @@ fun AskITApp(
                 onCompleteDraft = onCreatePostCompleted,
             )
         }
+        entry<AppDestination.Story> {
+            StoryRoute(
+                viewModel = resolvedStoryViewModel,
+                onBack = { navigationState.pop() },
+                onCompleteDraft = onStoryCompleted,
+                onOpenCreateSheet = { showCreateSheet = true },
+            )
+        }
         entry<AppDestination.Inbox> {
             EmptyRootDestination(
                 iconRes = com.askit.designsystem.R.drawable.ic_inbox_outlined,
@@ -271,7 +296,7 @@ fun AskITApp(
                     onDestinationClick = { destination ->
                         navigationState.navigate(AppDestination.fromBottomBarDestination(destination))
                     },
-                    onCreateClick = { showCreateSheet = true },
+                    onCreateClick = { navigationState.push(AppDestination.Story) },
                 )
             }
         },
@@ -298,6 +323,9 @@ fun AskITApp(
         AskITCreateSheet(
             onDismiss = { showCreateSheet = false },
             onActionClick = { action ->
+                if (!navigationState.isAtRoot) {
+                    navigationState.pop()
+                }
                 when (action) {
                     AskITCreateAction.PostTask -> {
                         resolvedPostTaskViewModel.startNewDraft()
@@ -432,6 +460,11 @@ private sealed interface AppDestination : NavKey {
 
     @Serializable
     data object CreatePost : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data object Story : AppDestination {
         override val bottomBarDestination = AskITDestination.Home
     }
 
