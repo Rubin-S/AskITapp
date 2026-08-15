@@ -8,6 +8,10 @@
         android:name="android.permission.ACCESS_FINE_LOCATION"
         tools:node="remove" />
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_askit_launcher"
@@ -17,6 +21,15 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${PLACES_API_KEY}" />
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
         <activity
             android:name=".MainActivity"
             android:exported="true">
