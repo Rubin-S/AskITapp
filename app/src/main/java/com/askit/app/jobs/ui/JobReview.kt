@@ -40,6 +40,7 @@ fun JobReview(
     jobId: String,
     store: JobsStore,
     onFinished: () -> Unit,
+    onReviewSubmitted: (rating: Int, comment: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     var wouldAgain by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -118,6 +119,7 @@ fun JobReview(
             Button(
                 onClick = {
                     store.complete(jobId)
+                    if (rating > 0) onReviewSubmitted(rating, comment)
                     onFinished()
                 },
                 modifier = Modifier

@@ -2,6 +2,9 @@ package com.askit.app
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import com.askit.app.explore.ExploreBrowseSection
@@ -36,7 +39,11 @@ import com.askit.app.navigation.AskITNavigationState
 import com.askit.app.posttask.PostTaskDraft
 import com.askit.app.posttask.PostTaskRoute
 import com.askit.app.posttask.PostTaskViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.askit.app.profile.EditProfileScreen
+import com.askit.app.profile.LocalProfileRepository
+import com.askit.app.profile.ProfileReview
+import com.askit.app.profile.ProfileRoute
+import com.askit.app.profile.ProfileViewModel
 
 @Composable
 internal fun rememberAskITEntryProvider(
@@ -66,7 +73,11 @@ internal fun rememberAskITEntryProvider(
     onShowCreateSheet: () -> Unit,
     onApplyBlocked: () -> Unit,
     clock: () -> Long,
-) = entryProvider<NavKey> {
+): (NavKey) -> NavEntry<NavKey> {
+    val profileViewModel = remember(jobsViewModel) {
+        ProfileViewModel(LocalProfileRepository(jobsViewModel.profileStore))
+    }
+    return entryProvider<NavKey> {
     entry<AppDestination.Home> {
         EmptyRootDestination(
             iconRes = com.askit.designsystem.R.drawable.ic_home_outlined,
@@ -162,7 +173,10 @@ internal fun rememberAskITEntryProvider(
         CreatePostRoute(
             viewModel = createPostViewModel,
             onBack = { navigationState.pop() },
-            onCompleteDraft = onCreatePostCompleted,
+            onCompleteDraft = { draft ->
+                profileViewModel.appendGallery(draft.photos.mapNotNull { it.uri })
+                onCreatePostCompleted(draft)
+            },
         )
     }
     entry<AppDestination.Inbox> {
@@ -185,10 +199,45 @@ internal fun rememberAskITEntryProvider(
         )
     }
     entry<AppDestination.Profile> {
-        EmptyRootDestination(
-            iconRes = com.askit.designsystem.R.drawable.ic_person,
-            titleRes = com.askit.designsystem.R.string.empty_profile_title,
-            supportingRes = com.askit.designsystem.R.string.empty_profile_supporting,
+        val profile by profileViewModel.profile.collectAsStateWithLifecycle()
+        val loadState by profileViewModel.loadState.collectAsStateWithLifecycle()
+        val jobs by jobsViewModel.jobs.collectAsStateWithLifecycle()
+        val viewAsOther by jobsViewModel.viewAsOtherParty.collectAsStateWithLifecycle()
+        ProfileRoute(
+            profile = profile,
+            jobs = jobs,
+            viewAsOtherParty = viewAsOther,
+            loadState = loadState,
+            messages = profileViewModel.messages,
+            onEditProfile = { navigationState.push(AppDestination.EditProfile) },
+            onEditListing = {
+                listServiceViewModel.startNewDraft()
+                navigationState.push(AppDestination.ListService)
+            },
+            onUploadWork = {
+                createPostViewModel.startNewDraft()
+                navigationState.push(AppDestination.CreatePost)
+            },
+            onOpenJob = { navigationState.push(AppDestination.JobDetail(it)) },
+            onViewAllJobs = { navigationState.navigate(AppDestination.Inbox) },
+            onSaveAbout = profileViewModel::updateAbout,
+            onSaveLookingFor = profileViewModel::updateLookingFor,
+            onSaveSkills = profileViewModel::updateSkills,
+            onSaveAvailability = profileViewModel::updateAvailability,
+            onSetAvatar = profileViewModel::setAvatar,
+            onAddLicense = profileViewModel::addLicense,
+            onUsernameCopied = profileViewModel::notifyCopied,
+        )
+    }
+    entry<AppDestination.EditProfile> {
+        val profile by profileViewModel.profile.collectAsStateWithLifecycle()
+        EditProfileScreen(
+            profile = profile,
+            onBack = { navigationState.pop() },
+            onSave = { state ->
+                profileViewModel.saveIdentity(state)
+                navigationState.pop()
+            },
         )
     }
     entry<AppDestination.NewMessage> {
@@ -254,6 +303,23 @@ internal fun rememberAskITEntryProvider(
             jobId = key.jobId,
             store = jobsViewModel.store,
             onFinished = { navigationState.pop() },
+            onReviewSubmitted = { rating, comment ->
+                val job = jobsViewModel.store.job(key.jobId)
+                if (job != null) {
+                    profileViewModel.appendReview(
+                        ProfileReview(
+                            id = "rev-${job.id}",
+                            name = job.counterpartName,
+                            meta = job.title,
+                            rating = rating.toFloat(),
+                            body = comment,
+                            createdAtMillis = clock(),
+                            jobId = job.id,
+                        ),
+                    )
+                }
+            },
         )
+    }
     }
 }

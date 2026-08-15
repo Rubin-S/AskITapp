@@ -29,6 +29,11 @@ internal sealed interface AppDestination : NavKey {
     }
 
     @Serializable
+    data object EditProfile : AppDestination {
+        override val bottomBarDestination = AskITDestination.Profile
+    }
+
+    @Serializable
     data object SearchAreaDestination : AppDestination {
         override val bottomBarDestination = AskITDestination.Explore
     }
