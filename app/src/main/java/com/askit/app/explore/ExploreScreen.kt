@@ -327,6 +327,8 @@ fun ExploreRoute(
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
+    onApplyToTask: ((ExploreTaskResult) -> Unit)? = null,
+    onRequestService: ((ExplorePersonResult) -> Unit)? = null,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
     onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
@@ -357,6 +359,8 @@ fun ExploreRoute(
         onFilterScopeChanged = onFilterScopeChanged,
         onPersonClick = onPersonClick,
         onTaskClick = onTaskClick,
+        onApplyToTask = onApplyToTask,
+        onRequestService = onRequestService,
     )
 }
 
@@ -383,6 +387,8 @@ fun ExploreScreen(
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
+    onApplyToTask: ((ExploreTaskResult) -> Unit)? = null,
+    onRequestService: ((ExplorePersonResult) -> Unit)? = null,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
     onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
@@ -475,6 +481,13 @@ fun ExploreScreen(
 
     val personClick = onPersonClick
     val taskClick = onTaskClick
+
+    CompositionLocalProvider(
+        LocalExploreLeadActions provides ExploreLeadActions(
+            onApplyToTask = onApplyToTask,
+            onRequestService = onRequestService,
+        ),
+    ) {
 
     val orderedAppliedFilters = normalizeAvailableExploreFilterOptions(
         scope = selectedScope,
@@ -575,6 +588,7 @@ fun ExploreScreen(
                 onRetryBrowseSection = onRetryBrowseSection,
             )
         }
+    }
     }
 }
 
@@ -1568,6 +1582,9 @@ private fun LazyListScope.addPersonResultRows(
                         ?.takeIf { row.stableId.isNotEmpty() }
                         ?.let { click -> { click(row.stableId) } },
                 )
+                if (!person.primaryService.isNullOrBlank()) {
+                    ExploreRequestButton(person)
+                }
             }
         }
     }
@@ -1595,22 +1612,25 @@ private fun LazyListScope.addServiceResultRows(
                         },
                     ),
             ) {
-                ServiceResultItem(
-                    serviceTitle = person.primaryService.orEmpty(),
-                    category = "",
-                    description = person.additionalServices
-                        .map(String::trim)
-                        .filter(String::isNotEmpty)
-                        .joinToString(", "),
-                    providerName = person.name,
-                    providerAvatarUrl = person.avatarUrl,
-                    priceLabel = person.priceLabel,
-                    coverageLabel = person.locationLabel,
-                    modifier = Modifier.testTag("explore_service_result_card"),
-                    onClick = onClick
-                        ?.takeIf { row.stableId.isNotEmpty() }
-                        ?.let { click -> { click(row.stableId) } },
-                )
+                Column {
+                    ServiceResultItem(
+                        serviceTitle = person.primaryService.orEmpty(),
+                        category = "",
+                        description = person.additionalServices
+                            .map(String::trim)
+                            .filter(String::isNotEmpty)
+                            .joinToString(", "),
+                        providerName = person.name,
+                        providerAvatarUrl = person.avatarUrl,
+                        priceLabel = person.priceLabel,
+                        coverageLabel = person.locationLabel,
+                        modifier = Modifier.testTag("explore_service_result_card"),
+                        onClick = onClick
+                            ?.takeIf { row.stableId.isNotEmpty() }
+                            ?.let { click -> { click(row.stableId) } },
+                    )
+                    ExploreRequestButton(person)
+                }
             }
         }
     }
@@ -1655,6 +1675,9 @@ private fun LazyListScope.addTaskResultRows(
                         }
                         ?.let { click -> { click(row.stableId) } },
                 )
+                if (task.status != TaskResultStatus.Unavailable) {
+                    ExploreApplyButton(task)
+                }
             }
         }
     }

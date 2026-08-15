@@ -43,7 +43,7 @@ class AskITBottomBarTest {
 
         composeTestRule.onNodeWithContentDescription("Home").performClick()
         composeTestRule.onNodeWithContentDescription("Explore").performClick()
-        composeTestRule.onNodeWithContentDescription("Inbox").performClick()
+        composeTestRule.onNodeWithContentDescription("Messages").performClick()
         composeTestRule.onNodeWithContentDescription("Profile").performClick()
 
         assertEquals(
@@ -78,15 +78,18 @@ class AskITBottomBarTest {
     }
 
     @Test
-    fun selectedDestination_showsItsLabel() {
+    fun destinations_hideVisibleLabels() {
         setBottomBar(selected = AskITDestination.Home)
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        listOf("Home", "Explore", "Messages", "Profile").forEach { name ->
+            composeTestRule.onAllNodesWithText(name).assertCountEquals(0)
+            composeTestRule.onNodeWithContentDescription(name).assertIsDisplayed()
+        }
     }
 
     @Test
     fun longPress_showsEachTooltip() {
         setBottomBar()
-        listOf("Home", "Explore", "Create", "Inbox", "Profile").forEach { name ->
+        listOf("Home", "Explore", "Create", "Messages", "Profile").forEach { name ->
             composeTestRule
                 .onNodeWithContentDescription(name)
                 .performTouchInput { longClick() }
@@ -106,25 +109,25 @@ class AskITBottomBarTest {
         setBottomBar(unreadCount = -3)
         composeTestRule.onAllNodesWithText("0").assertCountEquals(0)
         composeTestRule
-            .onAllNodesWithContentDescription("Inbox, -3 unread messages")
+            .onAllNodesWithContentDescription("Messages, -3 unread messages")
             .assertCountEquals(0)
     }
 
     @Test
     fun badge_showsOneToNinetyNine() {
         setBottomBar(unreadCount = 2)
-        composeTestRule.onNodeWithText("2").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("2", useUnmergedTree = true).assertCountEquals(1)
         composeTestRule
-            .onNodeWithContentDescription("Inbox, 2 unread messages")
+            .onNodeWithContentDescription("Messages, 2 unread messages")
             .assertIsDisplayed()
     }
 
     @Test
     fun badge_shows99PlusAboveNinetyNine() {
         setBottomBar(unreadCount = 150)
-        composeTestRule.onNodeWithText("99+").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("99+", useUnmergedTree = true).assertCountEquals(1)
         composeTestRule
-            .onNodeWithContentDescription("Inbox, 150 unread messages")
+            .onNodeWithContentDescription("Messages, 150 unread messages")
             .assertIsDisplayed()
     }
 
@@ -148,7 +151,7 @@ class AskITBottomBarTest {
     @Test
     fun everyControl_remainsClickable() {
         setBottomBar()
-        listOf("Home", "Explore", "Create", "Inbox", "Profile").forEach { name ->
+        listOf("Home", "Explore", "Create", "Messages", "Profile").forEach { name ->
             composeTestRule.onNodeWithContentDescription(name).assertHasClickAction()
         }
     }
