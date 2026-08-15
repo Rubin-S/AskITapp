@@ -35,8 +35,8 @@ class NavigationPersistenceTest {
     @Test
     fun switchingTabs_doesNotReplayHistoricalTabs_andBackExitsThroughHome() {
         openExplore()
-        composeTestRule.onNodeWithContentDescription("Inbox").performClick()
-        composeTestRule.onNodeWithContentDescription("Inbox").assertIsSelected()
+        composeTestRule.onNodeWithContentDescription("Messages").performClick()
+        composeTestRule.onNodeWithContentDescription("Messages").assertIsSelected()
 
         composeTestRule.activity.onBackPressedDispatcher.onBackPressed()
         composeTestRule.onNodeWithContentDescription("Home").assertIsSelected()
@@ -72,7 +72,7 @@ class NavigationPersistenceTest {
         openExplore()
         composeTestRule.onNodeWithTag("explore_search_field").performTextInput("electrician")
 
-        composeTestRule.onNodeWithContentDescription("Inbox").performClick()
+        composeTestRule.onNodeWithContentDescription("Messages").performClick()
         composeTestRule.onNodeWithContentDescription("Explore").performClick()
 
         composeTestRule.onNodeWithText("electrician").assertIsDisplayed()

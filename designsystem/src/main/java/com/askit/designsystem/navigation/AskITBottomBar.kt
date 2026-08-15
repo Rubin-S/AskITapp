@@ -3,11 +3,16 @@ package com.askit.designsystem.navigation
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -15,11 +20,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
@@ -60,37 +66,46 @@ fun AskITBottomBar(
 ) {
     val unread = unreadCount.coerceAtLeast(0)
 
-    NavigationBar(
-        modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
     ) {
-        IconDestination(
-            selected = selectedDestination == AskITDestination.Home,
-            labelRes = R.string.nav_home,
-            selectedIcon = R.drawable.ic_home_filled,
-            unselectedIcon = R.drawable.ic_home_outlined,
-            onClick = { onDestinationClick(AskITDestination.Home) },
-        )
-        IconDestination(
-            selected = selectedDestination == AskITDestination.Explore,
-            labelRes = R.string.nav_explore,
-            selectedIcon = R.drawable.ic_explore_filled,
-            unselectedIcon = R.drawable.ic_explore_outlined,
-            onClick = { onDestinationClick(AskITDestination.Explore) },
-        )
-        CreateSlot(onClick = onCreateClick)
-        InboxDestination(
-            selected = selectedDestination == AskITDestination.Inbox,
-            unread = unread,
-            onClick = { onDestinationClick(AskITDestination.Inbox) },
-        )
-        ProfileDestination(
-            selected = selectedDestination == AskITDestination.Profile,
-            avatarUrl = avatarUrl,
-            onClick = { onDestinationClick(AskITDestination.Profile) },
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(NavigationBarDefaults.windowInsets)
+                .height(64.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconDestination(
+                selected = selectedDestination == AskITDestination.Home,
+                labelRes = R.string.nav_home,
+                selectedIcon = R.drawable.ic_home_filled,
+                unselectedIcon = R.drawable.ic_home_outlined,
+                onClick = { onDestinationClick(AskITDestination.Home) },
+            )
+            IconDestination(
+                selected = selectedDestination == AskITDestination.Explore,
+                labelRes = R.string.nav_explore,
+                selectedIcon = R.drawable.ic_explore_filled,
+                unselectedIcon = R.drawable.ic_explore_outlined,
+                onClick = { onDestinationClick(AskITDestination.Explore) },
+            )
+            CreateSlot(onClick = onCreateClick)
+            InboxDestination(
+                selected = selectedDestination == AskITDestination.Inbox,
+                unread = unread,
+                onClick = { onDestinationClick(AskITDestination.Inbox) },
+            )
+            ProfileDestination(
+                selected = selectedDestination == AskITDestination.Profile,
+                avatarUrl = avatarUrl,
+                onClick = { onDestinationClick(AskITDestination.Profile) },
+            )
+        }
     }
 }
 
@@ -106,8 +121,7 @@ private fun RowScope.NavSlot(
         selected = selected,
         onClick = onClick,
         icon = { LongPressTooltip(label, content = icon) },
-        label = { Text(label) },
-        alwaysShowLabel = false,
+        label = null,
         colors = destinationColors(),
         modifier = Modifier.semantics { this.contentDescription = contentDescription },
     )
@@ -170,7 +184,12 @@ private fun RowScope.InboxDestination(
                         containerColor = MaterialTheme.colorScheme.onSurface,
                         contentColor = MaterialTheme.colorScheme.surface,
                     ) {
-                        Text(text = badgeText)
+                        Text(
+                            text = badgeText,
+                            modifier = Modifier.requiredWidthIn(min = 8.dp),
+                            maxLines = 1,
+                            softWrap = false,
+                        )
                     }
                 },
             ) {
@@ -233,7 +252,6 @@ private fun RowScope.CreateSlot(onClick: () -> Unit) {
             SmallFloatingActionButton(
                 onClick = onClick,
                 modifier = Modifier
-                    .offset(y = (-4).dp)
                     .size(48.dp)
                     .semantics {
                         role = Role.Button

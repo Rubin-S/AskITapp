@@ -3,7 +3,7 @@
     <string name="nav_home">Home</string>
     <string name="nav_explore">Explore</string>
     <string name="nav_create">Create</string>
-    <string name="nav_inbox">Inbox</string>
+    <string name="nav_inbox">Messages</string>
     <string name="nav_profile">Profile</string>
     <string name="empty_home_title">Nothing here yet</string>
     <string name="empty_home_supporting">Post a task, list a service, or share an update with people nearby.</string>
@@ -14,8 +14,8 @@
     <string name="empty_profile_supporting">Your name, work, and listings will live here once you add them.</string>
     <string name="create_sheet_title">Create</string>
     <plurals name="nav_inbox_unread">
-        <item quantity="one">Inbox, %d unread message</item>
-        <item quantity="other">Inbox, %d unread messages</item>
+        <item quantity="one">Messages, %d unread message</item>
+        <item quantity="other">Messages, %d unread messages</item>
     </plurals>
 
     <string name="create_post_task_title">Post a task</string>

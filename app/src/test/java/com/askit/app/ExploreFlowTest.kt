@@ -1842,7 +1842,7 @@ class ExploreFlowTest {
         searchField().performTextInput("laptop repair")
 
         composeTestRule.onNodeWithContentDescription("Home").performClick()
-        composeTestRule.onNodeWithContentDescription("Inbox").performClick()
+        composeTestRule.onNodeWithContentDescription("Messages").performClick()
         composeTestRule.onNodeWithContentDescription("Explore").performClick()
 
         composeTestRule.onNodeWithText("laptop repair").assertIsDisplayed()
