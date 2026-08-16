@@ -143,6 +143,10 @@ class ListServiceViewModel(
         setState(ListServiceFormState())
     }
 
+    fun loadDraft(draft: ListServiceDraft) {
+        setState(draft.toFormState())
+    }
+
     fun updateTitle(value: String) = update { copy(title = value) }
 
     fun updateDescription(value: String) = update { copy(description = value) }

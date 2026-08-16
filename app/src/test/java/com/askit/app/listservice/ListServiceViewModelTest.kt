@@ -196,6 +196,27 @@ class ListServiceViewModelTest {
     }
 
     @Test
+    fun publishedDraft_mapsOntoListing_andLoadDraftRestoresTitle() {
+        val viewModel = completeRequiredFields(ListServiceViewModel(SavedStateHandle()))
+        viewModel.toggleDeliveryMode(ListServiceDeliveryMode.REMOTE)
+        viewModel.updateExperience("5 yrs exp")
+        assertTrue(viewModel.review())
+        val draft = requireNotNull(viewModel.buildValidatedDraft())
+        val listing = draft.toServiceListing("Plumber")
+        assertEquals("Repair kitchen taps", listing.title)
+        assertEquals("Plumber", listing.category)
+        assertEquals("plumber", listing.categoryId)
+        assertEquals("5 yrs exp", listing.experience)
+
+        val editor = ListServiceViewModel(SavedStateHandle())
+        editor.loadDraft(draft)
+        assertEquals("Repair kitchen taps", editor.formState.value.title)
+        assertEquals("plumber", editor.formState.value.categoryId)
+        assertEquals("5 yrs exp", editor.formState.value.experience)
+        assertEquals(setOf(ListServiceDeliveryMode.REMOTE), editor.formState.value.deliveryModes)
+    }
+
+    @Test
     fun serviceDraft_doesNotOwnPersonIdentityOrContactFields() {
         val fieldNames = ListServiceDraft::class.java.declaredFields.map { it.name }.toSet()
 

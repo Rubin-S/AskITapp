@@ -11,8 +11,14 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.defaultExploreFilterOptions
+import com.askit.app.inbox.InboxViewModel
+import com.askit.app.jobs.JobsStore
+import com.askit.app.jobs.JobsViewModel
 import com.askit.app.listservice.ListServiceViewModel
 import com.askit.app.posttask.PostTaskViewModel
+import com.askit.app.profile.LocalProfileRepository
+import com.askit.app.profile.ProfileViewModel
+import com.askit.app.session.SessionProfileStore
 import com.askit.designsystem.theme.AskITTheme
 import com.google.android.libraries.places.api.Places
 
@@ -44,6 +50,24 @@ class MainActivity : ComponentActivity() {
                 initializer { CreatePostViewModel(createSavedStateHandle()) }
             },
         )[CreatePostViewModel::class.java]
+        val jobsViewModel = ViewModelProvider(
+            this,
+            viewModelFactory {
+                initializer {
+                    val profile = SessionProfileStore()
+                    JobsViewModel(JobsStore(profile), profile)
+                }
+            },
+        )[JobsViewModel::class.java]
+        val inboxViewModel = ViewModelProvider(this)[InboxViewModel::class.java]
+        val profileViewModel = ViewModelProvider(
+            this,
+            viewModelFactory {
+                initializer {
+                    ProfileViewModel(LocalProfileRepository(jobsViewModel.profileStore))
+                }
+            },
+        )[ProfileViewModel::class.java]
         setContent {
             AskITTheme {
                 AskITApp(
@@ -51,6 +75,9 @@ class MainActivity : ComponentActivity() {
                     postTaskViewModel = postTaskViewModel,
                     listServiceViewModel = listServiceViewModel,
                     createPostViewModel = createPostViewModel,
+                    jobsViewModel = jobsViewModel,
+                    inboxViewModel = inboxViewModel,
+                    profileViewModel = profileViewModel,
                     onExit = ::finish,
                     availableFilterOptions = defaultExploreFilterOptions(),
                     treatUnresolvedSearchAsEmpty = true,

@@ -16,17 +16,21 @@ class JobsStore(
     )
     val jobs: StateFlow<List<Job>> = _jobs.asStateFlow()
 
-    private val _viewAsOtherParty = MutableStateFlow(false)
-    val viewAsOtherParty: StateFlow<Boolean> = _viewAsOtherParty.asStateFlow()
+    private val _viewAsOtherJobIds = MutableStateFlow<Set<String>>(emptySet())
+    val viewAsOtherJobIds: StateFlow<Set<String>> = _viewAsOtherJobIds.asStateFlow()
 
     private var nextId = 100
 
     fun job(id: String): Job? = _jobs.value.firstOrNull { it.id == id }
 
-    fun visibleParty(job: Job): JobParty = job.visibleParty(_viewAsOtherParty.value)
+    fun isViewAsOther(jobId: String): Boolean = jobId in _viewAsOtherJobIds.value
 
-    fun toggleViewAsOtherParty() {
-        _viewAsOtherParty.update { !it }
+    fun visibleParty(job: Job): JobParty = job.visibleParty(isViewAsOther(job.id))
+
+    fun toggleViewAsOtherParty(jobId: String) {
+        _viewAsOtherJobIds.update { ids ->
+            if (jobId in ids) ids - jobId else ids + jobId
+        }
     }
 
     fun applyToTask(
@@ -91,11 +95,6 @@ class JobsStore(
             it.copy(status = JobStatus.Started, startedAtMillis = clock())
         }
         return true
-    }
-
-    fun stubScan(jobId: String): Boolean {
-        val job = job(jobId) ?: return false
-        return verifyOtp(jobId, job.otp)
     }
 
     fun requestComplete(jobId: String) = update(jobId) { job ->

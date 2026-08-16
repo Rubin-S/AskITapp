@@ -41,7 +41,6 @@ enum class MessagesPane {
 fun MessagesRoute(
     conversations: List<Conversation>,
     jobs: List<Job>,
-    viewAsOtherParty: Boolean,
     onCompose: () -> Unit,
     onOpenChat: (String) -> Unit,
     onOpenJob: (String) -> Unit,
@@ -50,6 +49,7 @@ fun MessagesRoute(
     onAcceptJob: (String) -> Unit = {},
     onDeclineJob: (String) -> Unit = {},
     onCancelJob: (String) -> Unit = {},
+    viewAsOtherJobIds: Set<String> = emptySet(),
 ) {
     var selectedIndex by rememberSaveable { mutableIntStateOf(initialPane.ordinal) }
     val panes = MessagesPane.entries
@@ -116,8 +116,8 @@ fun MessagesRoute(
                 )
                 MessagesPane.Jobs -> JobsHub(
                     jobs = jobs,
-                    viewAsOtherParty = viewAsOtherParty,
                     onOpenJob = onOpenJob,
+                    viewAsOtherJobIds = viewAsOtherJobIds,
                     onAccept = onAcceptJob,
                     onDecline = onDeclineJob,
                     onCancel = onCancelJob,

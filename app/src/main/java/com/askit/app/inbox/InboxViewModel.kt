@@ -39,6 +39,16 @@ class InboxViewModel(
         refresh()
     }
 
+    fun block(conversationId: String) {
+        store.block(conversationId)
+        refresh()
+    }
+
+    fun report(conversationId: String) {
+        store.report(conversationId)
+        refresh()
+    }
+
     fun startConversation(contact: ChatContact): String {
         val id = store.startConversation(contact)
         refresh()

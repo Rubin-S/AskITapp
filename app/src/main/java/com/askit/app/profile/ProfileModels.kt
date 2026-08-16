@@ -4,7 +4,6 @@ import androidx.annotation.DrawableRes
 import com.askit.app.jobs.Job
 import com.askit.app.jobs.JobStatus
 import com.askit.app.jobs.isSeeker
-import com.askit.app.jobs.visibleParty
 import com.askit.app.session.ServiceListing
 import com.askit.designsystem.R as DsR
 
@@ -58,8 +57,8 @@ fun experiencesFromListing(listing: ServiceListing): List<ProfileExperience> = l
     ),
 )
 
-fun List<Job>.profileRequestCount(viewAsOtherParty: Boolean): Int = count { job ->
-    !job.inHistory && job.isSeeker(job.visibleParty(viewAsOtherParty))
+fun List<Job>.profileRequestCount(): Int = count { job ->
+    !job.inHistory && job.isSeeker(job.localParty)
 }
 
 fun List<Job>.profileCompletedCount(): Int = count { it.status == JobStatus.Completed }

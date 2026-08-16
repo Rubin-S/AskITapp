@@ -79,7 +79,6 @@ class ProfileViewModel(
 
     private fun emitError() {
         _messages.tryEmit(R.string.profile_action_error)
-        _loadState.value = ProfileLoadState.Failed(R.string.profile_action_error)
     }
 }
 

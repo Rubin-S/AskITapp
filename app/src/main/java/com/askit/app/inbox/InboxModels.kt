@@ -21,6 +21,8 @@ data class Conversation(
     val preview: String,
     val unreadCount: Int,
     val muted: Boolean = false,
+    val blocked: Boolean = false,
+    val reported: Boolean = false,
     val updatedAtMillis: Long,
 )
 
@@ -68,6 +70,16 @@ class InboxStore(
     fun setMuted(conversationId: String, muted: Boolean) {
         val current = conversations[conversationId] ?: return
         conversations[conversationId] = current.copy(muted = muted)
+    }
+
+    fun block(conversationId: String) {
+        val current = conversations[conversationId] ?: return
+        conversations[conversationId] = current.copy(blocked = true)
+    }
+
+    fun report(conversationId: String) {
+        val current = conversations[conversationId] ?: return
+        conversations[conversationId] = current.copy(reported = true)
     }
 
     fun sendText(conversationId: String, body: String) {

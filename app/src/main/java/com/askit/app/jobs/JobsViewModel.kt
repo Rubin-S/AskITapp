@@ -9,7 +9,7 @@ class JobsViewModel(
     val profileStore: SessionProfileStore,
 ) : ViewModel() {
     val jobs: StateFlow<List<Job>> = store.jobs
-    val viewAsOtherParty: StateFlow<Boolean> = store.viewAsOtherParty
+    val viewAsOtherJobIds: StateFlow<Set<String>> = store.viewAsOtherJobIds
     val profile = profileStore.profile
 
     fun filtered(filter: JobsFilter): List<Job> = jobs.value.filter { job ->

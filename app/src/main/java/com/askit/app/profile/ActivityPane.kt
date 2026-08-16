@@ -27,7 +27,6 @@ import com.askit.app.jobs.JobWorkMode
 import com.askit.app.jobs.isProvider
 import com.askit.app.jobs.isSeeker
 import com.askit.app.jobs.jobStatusLabelRes
-import com.askit.app.jobs.visibleParty
 import com.askit.designsystem.jobs.JobCardActions
 import com.askit.designsystem.jobs.JobCardBadgeTone
 import com.askit.designsystem.jobs.JobLeadCard
@@ -37,7 +36,6 @@ import com.askit.designsystem.profile.ProfileSectionCard
 @Composable
 fun ActivityPane(
     jobs: List<Job>,
-    viewAsOtherParty: Boolean,
     saved: List<SavedProfessional>,
     hasListedService: Boolean,
     onOpenJob: (String) -> Unit,
@@ -45,10 +43,10 @@ fun ActivityPane(
     modifier: Modifier = Modifier,
 ) {
     val requests = jobs.filter { job ->
-        !job.inHistory && job.isSeeker(job.visibleParty(viewAsOtherParty))
+        !job.inHistory && job.isSeeker(job.localParty)
     }
     val activeJobs = jobs.filter { job ->
-        !job.inHistory && job.isProvider(job.visibleParty(viewAsOtherParty))
+        !job.inHistory && job.isProvider(job.localParty)
     }
     Column(
         modifier = modifier
@@ -75,7 +73,7 @@ fun ActivityPane(
                     modifier = Modifier.testTag("profile_requests_empty"),
                 )
             } else {
-                requests.forEach { CompactJobRow(it, viewAsOtherParty, onOpenJob) }
+                requests.forEach { CompactJobRow(it, onOpenJob) }
             }
         }
         if (saved.isNotEmpty()) {
@@ -102,7 +100,7 @@ fun ActivityPane(
                         modifier = Modifier.testTag("profile_jobs_empty"),
                     )
                 } else {
-                    activeJobs.forEach { CompactJobRow(it, viewAsOtherParty, onOpenJob) }
+                    activeJobs.forEach { CompactJobRow(it, onOpenJob) }
                 }
             }
         }
@@ -110,8 +108,8 @@ fun ActivityPane(
 }
 
 @Composable
-private fun CompactJobRow(job: Job, viewAsOtherParty: Boolean, onOpenJob: (String) -> Unit) {
-    val party = job.visibleParty(viewAsOtherParty)
+private fun CompactJobRow(job: Job, onOpenJob: (String) -> Unit) {
+    val party = job.localParty
     val location = job.locationLabel.ifBlank {
         if (job.workMode == JobWorkMode.Remote) {
             stringResource(R.string.job_location_remote)

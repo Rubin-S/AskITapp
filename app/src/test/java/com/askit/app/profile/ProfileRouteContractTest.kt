@@ -12,9 +12,15 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import com.askit.app.jobs.Job
+import com.askit.app.listservice.ListServiceDeliveryMode
+import com.askit.app.listservice.ListServiceDetails
+import com.askit.app.listservice.ListServiceDraft
+import com.askit.app.listservice.toServiceListing
 import com.askit.app.session.DefaultCarpentryListing
+import com.askit.app.session.ProfileAvailability
 import com.askit.app.session.SessionProfile
 import com.askit.app.session.SessionProfileStore
+import kotlinx.coroutines.flow.StateFlow
 import com.askit.designsystem.theme.AskITTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -190,6 +196,31 @@ class ProfileRouteContractTest {
         assertEquals(listOf("GSTIN"), repo.profile.value.licenses)
     }
 
+    @Test
+    fun actionError_keepsProfileReady() {
+        val viewModel = ProfileViewModel(ThrowingProfileRepository())
+        assertEquals(ProfileLoadState.Ready, viewModel.loadState.value)
+        viewModel.updateAbout("new about")
+        assertEquals(ProfileLoadState.Ready, viewModel.loadState.value)
+    }
+
+    @Test
+    fun applyListing_usesDraftNotDefaultCarpentry() {
+        val store = SessionProfileStore()
+        val draft = ListServiceDraft(
+            categoryId = "plumber",
+            title = "Repair kitchen taps",
+            description = "I repair leaking taps.",
+            deliveryModes = setOf(ListServiceDeliveryMode.REMOTE),
+            details = ListServiceDetails(null, "4 yrs", null, null, null, null, null),
+        )
+        store.applyListing(draft.toServiceListing("Plumber"), draft)
+        assertEquals("Repair kitchen taps", store.profile.value.listing?.title)
+        assertEquals("plumber", store.profile.value.listing?.categoryId)
+        assertEquals("Repair kitchen taps", store.profile.value.listingDraft?.title)
+        assertTrue(store.profile.value.hasListedService)
+    }
+
     private fun setProfile(profile: SessionProfile = SessionProfile()) {
         composeTestRule.setContent {
             AskITTheme {
@@ -204,7 +235,6 @@ private fun TestProfileRoute(profile: SessionProfile, jobs: List<Job> = emptyLis
     ProfileRoute(
         profile = profile,
         jobs = jobs,
-        viewAsOtherParty = false,
         onEditProfile = {},
         onEditListing = {},
         onUploadWork = {},
@@ -218,4 +248,27 @@ private fun TestProfileRoute(profile: SessionProfile, jobs: List<Job> = emptyLis
         onAddLicense = {},
         onUsernameCopied = {},
     )
+}
+
+private class ThrowingProfileRepository : ProfileRepository {
+    private val store = SessionProfileStore()
+    override val profile: StateFlow<SessionProfile> = store.profile
+
+    override fun updateIdentity(
+        displayName: String,
+        username: String,
+        city: String,
+        bio: String,
+        about: String,
+        avatarUrl: String?,
+    ) = error("failed")
+
+    override fun updateAbout(about: String) = error("failed")
+    override fun updateLookingFor(lookingFor: List<String>) = error("failed")
+    override fun updateSkills(skills: List<String>) = error("failed")
+    override fun updateAvailability(availability: ProfileAvailability) = error("failed")
+    override fun setAvatar(avatarUrl: String?) = error("failed")
+    override fun appendGallery(uris: List<String>) = error("failed")
+    override fun appendReview(review: ProfileReview) = error("failed")
+    override fun addLicense(license: String) = error("failed")
 }

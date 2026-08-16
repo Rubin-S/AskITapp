@@ -7,7 +7,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.askit.app.media.createCaptureImageUri
@@ -21,7 +22,9 @@ class ProfilePhotoActions(
 @Composable
 fun rememberProfilePhotoActions(onUri: (String) -> Unit): ProfilePhotoActions {
     val context = LocalContext.current
-    var pendingCapture by remember { mutableStateOf<Uri?>(null) }
+    var pendingCapture by rememberSaveable(stateSaver = CaptureUriSaver) {
+        mutableStateOf<Uri?>(null)
+    }
     val library = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri ->
@@ -47,3 +50,8 @@ fun rememberProfilePhotoActions(onUri: (String) -> Unit): ProfilePhotoActions {
         },
     )
 }
+
+private val CaptureUriSaver = Saver<Uri?, String>(
+    save = { it?.toString().orEmpty() },
+    restore = { value -> value.takeIf { it.isNotEmpty() }?.let(Uri::parse) },
+)

@@ -119,9 +119,10 @@ fun JobReview(
             Button(
                 onClick = {
                     store.complete(jobId)
-                    if (rating > 0) onReviewSubmitted(rating, comment)
+                    onReviewSubmitted(rating, comment)
                     onFinished()
                 },
+                enabled = rating > 0,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 48.dp)

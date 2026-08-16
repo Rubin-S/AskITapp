@@ -359,6 +359,8 @@
     <string name="messages_profile">View profile</string>
     <string name="messages_block">Block</string>
     <string name="messages_report">Report</string>
+    <string name="messages_blocked">You blocked this conversation. You can still read past messages.</string>
+    <string name="messages_reported">Thanks. We recorded your report on this device.</string>
     <string name="messages_view_as_other">View as other party</string>
     <string name="messages_composer_hint">Message</string>
     <string name="messages_attach">Attach photo</string>
@@ -424,6 +426,7 @@
     <string name="job_verify_enter_title">Enter code</string>
     <string name="job_verify_enter_helper">Ask them for the 4-digit code, or scan the QR.</string>
     <string name="job_verify_scan">Scan QR</string>
+    <string name="job_verify_scan_unavailable">QR scanning isn\'t available yet. Enter the 4-digit code.</string>
     <string name="job_verify_start">Start</string>
     <string name="job_verify_error">That code does not match.</string>
     <string name="job_review_title">How did it go?</string>

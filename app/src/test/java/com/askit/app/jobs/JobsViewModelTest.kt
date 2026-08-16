@@ -41,14 +41,13 @@ class JobsViewModelTest {
         val profile = SessionProfileStore(SessionProfile(hasListedService = true))
         val store = JobsStore(profile, seedIncomingLeads = false)
         val incoming = store.requestService("Cleaning", "Karthik")
-        store.toggleViewAsOtherParty()
+        store.toggleViewAsOtherParty(incoming)
         store.reject(incoming)
         val rejected = store.job(incoming)!!
         assertEquals(JobStatus.Rejected, rejected.status)
         assertTrue(rejected.inHistory)
         assertEquals(R.string.job_status_you_rejected, jobStatusLabelRes(rejected, store.visibleParty(rejected)))
 
-        store.toggleViewAsOtherParty()
         val outgoing = store.requestService("Tutoring", "Meena")
         store.cancel(outgoing)
         val canceled = store.job(outgoing)!!
@@ -61,7 +60,7 @@ class JobsViewModelTest {
         val profile = SessionProfileStore(SessionProfile(hasListedService = true))
         val store = JobsStore(profile, seedIncomingLeads = false)
         val id = store.requestService("Laptop help", "Meena", JobWorkMode.Remote)
-        store.toggleViewAsOtherParty()
+        store.toggleViewAsOtherParty(id)
         store.accept(id)
         assertEquals(JobStatus.Accepted, store.job(id)?.status)
         assertFalse(store.job(id)!!.stepperSteps().contains(JobStep.OnTheWay))
@@ -74,7 +73,7 @@ class JobsViewModelTest {
         val store = JobsStore(profile, clock = { now }, seedIncomingLeads = false)
         val id = store.requestService("Laptop help", "Meena", JobWorkMode.Remote)
         val otp = store.job(id)!!.otp
-        store.toggleViewAsOtherParty()
+        store.toggleViewAsOtherParty(id)
         store.accept(id)
         assertTrue(store.verifyOtp(id, otp))
         assertEquals(JobStatus.Started, store.job(id)?.status)
@@ -90,12 +89,12 @@ class JobsViewModelTest {
         val store = JobsStore(profile, seedIncomingLeads = false)
         val id = store.requestService("Laptop help", "Meena", JobWorkMode.Remote)
         val otp = store.job(id)!!.otp
-        store.toggleViewAsOtherParty()
+        store.toggleViewAsOtherParty(id)
         store.accept(id)
         assertTrue(store.verifyOtp(id, otp))
         store.requestComplete(id)
         assertFalse(store.markComplete(id))
-        store.toggleViewAsOtherParty()
+        store.toggleViewAsOtherParty(id)
         assertTrue(store.markComplete(id))
         store.completeWithReviewDeferred(id)
         assertEquals(JobStatus.Completed, store.job(id)?.status)
@@ -110,5 +109,18 @@ class JobsViewModelTest {
         assertTrue(JobKind.TaskApplication in kinds)
         assertTrue(JobKind.ServiceRequest in kinds)
         assertTrue(store.jobs.value.any { it.localParty == JobParty.Receiver })
+    }
+
+    @Test
+    fun viewAsOtherParty_isScopedToOneJob() {
+        val profile = SessionProfileStore(SessionProfile(hasListedService = true))
+        val store = JobsStore(profile, seedIncomingLeads = false)
+        val first = store.requestService("Cleaning", "Karthik")
+        val second = store.requestService("Tutoring", "Meena")
+        store.toggleViewAsOtherParty(first)
+        assertTrue(store.isViewAsOther(first))
+        assertFalse(store.isViewAsOther(second))
+        assertEquals(JobParty.Receiver, store.visibleParty(store.job(first)!!))
+        assertEquals(JobParty.Applicant, store.visibleParty(store.job(second)!!))
     }
 }
