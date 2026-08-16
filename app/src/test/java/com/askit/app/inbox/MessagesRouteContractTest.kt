@@ -39,6 +39,16 @@ class MessagesRouteContractTest {
     }
 
     @Test
+    fun block_hidesComposer() {
+        val store = InboxStore()
+        val viewModel = InboxViewModel(store)
+        viewModel.block("priya")
+        assertEquals(true, viewModel.store.conversation("priya")?.blocked)
+        viewModel.report("priya")
+        assertEquals(true, viewModel.store.conversation("priya")?.reported)
+    }
+
+    @Test
     fun receiverAccept_thenViewAsOtherParty_showsSeekerCode() {
         val profile = SessionProfileStore()
         val store = JobsStore(profile, seedIncomingLeads = true)
@@ -64,7 +74,7 @@ class MessagesRouteContractTest {
         composeTestRule.onNodeWithTag("job_enter_code").assertIsDisplayed()
         composeTestRule.onNodeWithTag("job_view_as_other").assertIsDisplayed()
         viewAsOther = true
-        store.toggleViewAsOtherParty()
+        store.toggleViewAsOtherParty(id)
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithTag("job_show_code").assertIsDisplayed()
     }

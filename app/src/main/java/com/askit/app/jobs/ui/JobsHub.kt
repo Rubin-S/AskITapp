@@ -30,8 +30,8 @@ import com.askit.designsystem.jobs.JobLeadCard
 @Composable
 fun JobsHub(
     jobs: List<Job>,
-    viewAsOtherParty: Boolean,
     onOpenJob: (String) -> Unit,
+    viewAsOtherJobIds: Set<String> = emptySet(),
     modifier: Modifier = Modifier,
     onAccept: (String) -> Unit = {},
     onDecline: (String) -> Unit = {},
@@ -59,7 +59,7 @@ fun JobsHub(
         items(active, key = { it.id }) { job ->
             JobCardItem(
                 job = job,
-                viewAsOtherParty = viewAsOtherParty,
+                viewAsOtherParty = job.id in viewAsOtherJobIds,
                 onOpenJob = onOpenJob,
                 onAccept = onAccept,
                 onDecline = onDecline,
@@ -81,7 +81,7 @@ fun JobsHub(
             items(history, key = { it.id }) { job ->
                 JobCardItem(
                     job = job,
-                    viewAsOtherParty = viewAsOtherParty,
+                    viewAsOtherParty = job.id in viewAsOtherJobIds,
                     onOpenJob = onOpenJob,
                     onAccept = onAccept,
                     onDecline = onDecline,

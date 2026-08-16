@@ -27,7 +27,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,7 +58,7 @@ fun EditProfileScreen(
         bio = profile.bio,
         avatarUrl = profile.avatarUrl,
     )
-    var form by remember { mutableStateOf(original) }
+    var form by rememberSaveable(stateSaver = EditProfileFormSaver) { mutableStateOf(original) }
     var showDiscard by rememberSaveable { mutableStateOf(false) }
     var showPhoto by rememberSaveable { mutableStateOf(false) }
     val photoActions = rememberProfilePhotoActions { uri -> form = form.copy(avatarUrl = uri) }
@@ -229,3 +229,28 @@ fun EditProfileScreen(
         )
     }
 }
+
+private val EditProfileFormSaver = listSaver<EditProfileFormState, Any?>(
+    save = {
+        listOf(
+            it.displayName,
+            it.username,
+            it.city,
+            it.bio,
+            it.avatarUrl,
+            it.usernameTouched,
+            it.displayNameTouched,
+        )
+    },
+    restore = {
+        EditProfileFormState(
+            displayName = it[0] as String,
+            username = it[1] as String,
+            city = it[2] as String,
+            bio = it[3] as String,
+            avatarUrl = it[4] as String?,
+            usernameTouched = it[5] as Boolean,
+            displayNameTouched = it[6] as Boolean,
+        )
+    },
+)

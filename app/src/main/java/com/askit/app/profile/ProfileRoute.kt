@@ -55,7 +55,6 @@ import kotlinx.coroutines.flow.emptyFlow
 fun ProfileRoute(
     profile: SessionProfile,
     jobs: List<Job>,
-    viewAsOtherParty: Boolean,
     onEditProfile: () -> Unit,
     onEditListing: () -> Unit,
     onUploadWork: () -> Unit,
@@ -272,7 +271,6 @@ fun ProfileRoute(
                         )
                         ProfilePane.Activity -> ActivityPane(
                             jobs = jobs,
-                            viewAsOtherParty = viewAsOtherParty,
                             saved = profile.savedProfessionals,
                             hasListedService = profile.hasListedService,
                             onOpenJob = onOpenJob,

@@ -43,6 +43,7 @@ fun JobVerifyEnter(
 ) {
     var code by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf(false) }
+    var scanUnavailable by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -86,6 +87,14 @@ fun JobVerifyEnter(
                     modifier = Modifier.testTag("job_otp_error"),
                 )
             }
+            if (scanUnavailable) {
+                Text(
+                    text = stringResource(R.string.job_verify_scan_unavailable),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.testTag("job_otp_scan_unavailable"),
+                )
+            }
             Button(
                 onClick = {
                     if (store.verifyOtp(jobId, code)) {
@@ -102,7 +111,8 @@ fun JobVerifyEnter(
             ) { Text(stringResource(R.string.job_verify_start)) }
             OutlinedButton(
                 onClick = {
-                    if (store.stubScan(jobId)) onVerified() else error = true
+                    scanUnavailable = true
+                    error = false
                 },
                 modifier = Modifier
                     .fillMaxWidth()

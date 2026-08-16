@@ -34,7 +34,7 @@ class MessagesScreenshotTest {
     fun jobsHub_empty_light() {
         composeTestRule.setContent {
             AskITTheme(darkTheme = false) {
-                JobsHub(jobs = emptyList(), viewAsOtherParty = false, onOpenJob = {})
+                JobsHub(jobs = emptyList(), onOpenJob = {})
             }
         }
         capture("jobs_hub_empty_light")
@@ -60,7 +60,6 @@ class MessagesScreenshotTest {
                             otp = "1234",
                         ),
                     ),
-                    viewAsOtherParty = false,
                     onOpenJob = {},
                 )
             }
@@ -88,7 +87,6 @@ class MessagesScreenshotTest {
                             otp = "1234",
                         ),
                     ),
-                    viewAsOtherParty = false,
                     onOpenJob = {},
                 )
             }
@@ -185,7 +183,6 @@ class MessagesScreenshotTest {
                 MessagesRoute(
                     conversations = emptyList(),
                     jobs = emptyList(),
-                    viewAsOtherParty = false,
                     onCompose = {},
                     onOpenChat = {},
                     onOpenJob = {},

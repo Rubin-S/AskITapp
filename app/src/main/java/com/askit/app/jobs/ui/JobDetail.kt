@@ -142,7 +142,7 @@ fun JobDetail(
             JobDetailHeader(
                 counterpartName = job.counterpartName,
                 locationLabel = location,
-                onViewAsOther = { store.toggleViewAsOtherParty() },
+                onViewAsOther = { store.toggleViewAsOtherParty(job.id) },
             )
             JobStatusBanner(
                 title = stringResource(jobBannerTitleRes(job, party)),

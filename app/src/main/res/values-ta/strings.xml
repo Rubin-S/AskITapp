@@ -359,6 +359,8 @@
     <string name="messages_profile">சுயவிவரத்தைப் பார்</string>
     <string name="messages_block">தடு</string>
     <string name="messages_report">புகாரளி</string>
+    <string name="messages_blocked">இந்த உரையாடலைத் தடுத்துவிட்டீர்கள். பழைய செய்திகளை இன்னும் படிக்கலாம்.</string>
+    <string name="messages_reported">நன்றி. இந்தச் சாதனத்தில் உங்கள் புகார் பதிவு செய்யப்பட்டது.</string>
     <string name="messages_view_as_other">மற்ற தரப்பாகப் பார்</string>
     <string name="messages_composer_hint">செய்தி</string>
     <string name="messages_attach">புகைப்படம் இணை</string>
@@ -424,6 +426,7 @@
     <string name="job_verify_enter_title">குறியீட்டை உள்ளிடு</string>
     <string name="job_verify_enter_helper">4 இலக்கக் குறியீட்டைக் கேளுங்கள் அல்லது QR-ஐ ஸ்கேன் செய்யுங்கள்.</string>
     <string name="job_verify_scan">QR ஸ்கேன்</string>
+    <string name="job_verify_scan_unavailable">QR ஸ்கேன் இன்னும் கிடைக்கவில்லை. 4 இலக்கக் குறியீட்டை உள்ளிடுங்கள்.</string>
     <string name="job_verify_start">தொடங்கு</string>
     <string name="job_verify_error">அந்தக் குறியீடு பொருந்தவில்லை.</string>
     <string name="job_review_title">எப்படி இருந்தது?</string>

@@ -77,7 +77,6 @@ class ProfileScreenshotTest {
                         profileStrengthPercent = 90,
                     ),
                     jobs = emptyList(),
-                    viewAsOtherParty = false,
                     onEditProfile = {},
                     onEditListing = {},
                     onUploadWork = {},
@@ -137,7 +136,6 @@ class ProfileScreenshotTest {
                 ProfileRoute(
                     profile = profile,
                     jobs = emptyList(),
-                    viewAsOtherParty = false,
                     onEditProfile = {},
                     onEditListing = {},
                     onUploadWork = {},

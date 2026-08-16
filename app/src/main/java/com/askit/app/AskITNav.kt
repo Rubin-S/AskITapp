@@ -31,6 +31,8 @@ import com.askit.app.explore.ExploreViewModel
 import com.askit.app.inbox.InboxViewModel
 import com.askit.app.jobs.JobsStore
 import com.askit.app.jobs.JobsViewModel
+import com.askit.app.profile.LocalProfileRepository
+import com.askit.app.profile.ProfileViewModel
 import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.listservice.ListServiceViewModel
 import com.askit.app.navigation.AppDestination
@@ -50,6 +52,7 @@ fun AskITApp(
     createPostViewModel: CreatePostViewModel? = null,
     jobsViewModel: JobsViewModel? = null,
     inboxViewModel: InboxViewModel? = null,
+    profileViewModel: ProfileViewModel? = null,
     onExit: () -> Unit = {},
     resultState: ExploreResultState = ExploreResultState.Loading,
     browseState: ExploreBrowseState = ExploreBrowseState(),
@@ -86,6 +89,9 @@ fun AskITApp(
         JobsViewModel(JobsStore(profile), profile)
     }
     val resolvedInboxViewModel = inboxViewModel ?: remember { InboxViewModel() }
+    val resolvedProfileViewModel = profileViewModel ?: remember(resolvedJobsViewModel) {
+        ProfileViewModel(LocalProfileRepository(resolvedJobsViewModel.profileStore))
+    }
     val navigationState = rememberAskITNavigationState()
     var showCreateSheet by rememberSaveable { mutableStateOf(false) }
     var showApplyGate by rememberSaveable { mutableStateOf(false) }
@@ -97,6 +103,7 @@ fun AskITApp(
         createPostViewModel = resolvedCreatePostViewModel,
         jobsViewModel = resolvedJobsViewModel,
         inboxViewModel = resolvedInboxViewModel,
+        profileViewModel = resolvedProfileViewModel,
         resultState = resultState,
         browseState = browseState,
         onRetryResults = onRetryResults,

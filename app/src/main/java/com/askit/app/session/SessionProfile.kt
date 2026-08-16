@@ -1,5 +1,6 @@
 package com.askit.app.session
 
+import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.profile.ProfileGalleryItem
 import com.askit.app.profile.ProfileReview
 import com.askit.app.profile.SavedProfessional
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.update
 data class ServiceListing(
     val title: String,
     val category: String,
+    val categoryId: String? = null,
     val description: String,
     val quoteLabel: String,
     val coverage: String,
@@ -52,6 +54,7 @@ data class SessionProfile(
     val profileStrengthPercent: Int = 72,
     val hasListedService: Boolean = false,
     val listing: ServiceListing? = null,
+    val listingDraft: ListServiceDraft? = null,
     val availability: ProfileAvailability = ProfileAvailability(),
     val gallery: List<ProfileGalleryItem> = emptyList(),
     val reviews: List<ProfileReview> = emptyList(),
@@ -80,11 +83,12 @@ class SessionProfileStore(
         }
     }
 
-    fun applyListing(listing: ServiceListing) {
+    fun applyListing(listing: ServiceListing, draft: ListServiceDraft? = null) {
         _profile.update {
             it.copy(
                 hasListedService = true,
                 listing = listing,
+                listingDraft = draft,
                 skills = listing.tags,
                 profileStrengthPercent = maxOf(it.profileStrengthPercent, 90),
             )

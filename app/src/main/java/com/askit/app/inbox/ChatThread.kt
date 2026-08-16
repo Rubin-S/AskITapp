@@ -18,11 +18,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -42,19 +46,28 @@ import com.askit.designsystem.people.AskITAvatar
 fun ChatThread(
     conversation: Conversation,
     messages: List<ChatMessage>,
-    viewAsOtherParty: Boolean,
     onBack: () -> Unit,
     onSendText: (String) -> Unit,
     onSendPhoto: (String) -> Unit,
     onMuteChanged: (Boolean) -> Unit,
-    onViewAsOtherParty: () -> Unit,
+    onBlock: () -> Unit = {},
+    onReport: () -> Unit = {},
+    viewAsOtherParty: Boolean = false,
+    onViewAsOtherParty: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var draft by rememberSaveable { mutableStateOf("") }
     var menuExpanded by rememberSaveable { mutableStateOf(false) }
+    var viewAsOther by rememberSaveable { mutableStateOf(viewAsOtherParty) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val reportedMessage = stringResource(R.string.messages_reported)
+    LaunchedEffect(conversation.reported) {
+        if (conversation.reported) snackbarHostState.showSnackbar(reportedMessage)
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -126,16 +139,23 @@ fun ChatThread(
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.messages_block)) },
-                            onClick = { menuExpanded = false },
+                            onClick = {
+                                menuExpanded = false
+                                onBlock()
+                            },
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.messages_report)) },
-                            onClick = { menuExpanded = false },
+                            onClick = {
+                                menuExpanded = false
+                                onReport()
+                            },
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.messages_view_as_other)) },
                             onClick = {
                                 menuExpanded = false
+                                viewAsOther = !viewAsOther
                                 onViewAsOtherParty()
                             },
                         )
@@ -144,15 +164,27 @@ fun ChatThread(
             )
         },
         bottomBar = {
-            ChatComposer(
-                value = draft,
-                onValueChange = { draft = it },
-                onSend = {
-                    onSendText(draft)
-                    draft = ""
-                },
-                onPhotoPicked = onSendPhoto,
-            )
+            if (conversation.blocked) {
+                Text(
+                    text = stringResource(R.string.messages_blocked),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .testTag("chat_blocked"),
+                )
+            } else {
+                ChatComposer(
+                    value = draft,
+                    onValueChange = { draft = it },
+                    onSend = {
+                        onSendText(draft)
+                        draft = ""
+                    },
+                    onPhotoPicked = onSendPhoto,
+                )
+            }
         },
     ) { padding ->
         LazyColumn(
@@ -168,7 +200,7 @@ fun ChatThread(
             itemsIndexed(ordered, key = { _, item -> item.id }) { index, message ->
                 val previous = ordered.getOrNull(index + 1)
                 val sameAuthor = previous?.fromLocalUser == message.fromLocalUser
-                val fromLocal = if (viewAsOtherParty) !message.fromLocalUser else message.fromLocalUser
+                val fromLocal = if (viewAsOther) !message.fromLocalUser else message.fromLocalUser
                 MessageBubble(
                     body = message.body,
                     photoModel = message.photoUri,

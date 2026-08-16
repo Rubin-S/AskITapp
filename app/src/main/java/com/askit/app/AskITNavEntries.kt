@@ -2,7 +2,7 @@ package com.askit.app
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -34,13 +34,14 @@ import com.askit.app.jobs.ui.JobVerifyShare
 import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.listservice.ListServiceRoute
 import com.askit.app.listservice.ListServiceViewModel
+import com.askit.app.listservice.categoryLabel
+import com.askit.app.listservice.toServiceListing
 import com.askit.app.navigation.AppDestination
 import com.askit.app.navigation.AskITNavigationState
 import com.askit.app.posttask.PostTaskDraft
 import com.askit.app.posttask.PostTaskRoute
 import com.askit.app.posttask.PostTaskViewModel
 import com.askit.app.profile.EditProfileScreen
-import com.askit.app.profile.LocalProfileRepository
 import com.askit.app.profile.ProfileReview
 import com.askit.app.profile.ProfileRoute
 import com.askit.app.profile.ProfileViewModel
@@ -54,6 +55,7 @@ internal fun rememberAskITEntryProvider(
     createPostViewModel: CreatePostViewModel,
     jobsViewModel: JobsViewModel,
     inboxViewModel: InboxViewModel,
+    profileViewModel: ProfileViewModel,
     resultState: ExploreResultState,
     browseState: ExploreBrowseState,
     onRetryResults: (() -> Unit)?,
@@ -74,9 +76,7 @@ internal fun rememberAskITEntryProvider(
     onApplyBlocked: () -> Unit,
     clock: () -> Long,
 ): (NavKey) -> NavEntry<NavKey> {
-    val profileViewModel = remember(jobsViewModel) {
-        ProfileViewModel(LocalProfileRepository(jobsViewModel.profileStore))
-    }
+    val context = LocalContext.current
     return entryProvider<NavKey> {
     entry<AppDestination.Home> {
         EmptyRootDestination(
@@ -163,9 +163,12 @@ internal fun rememberAskITEntryProvider(
         ListServiceRoute(
             viewModel = listServiceViewModel,
             onBack = { navigationState.pop() },
-            onCompleteDraft = {
-                jobsViewModel.profileStore.markServiceListed()
-                onListServiceCompleted(it)
+            onCompleteDraft = { draft ->
+                jobsViewModel.profileStore.applyListing(
+                    listing = draft.toServiceListing(draft.categoryLabel(context::getString)),
+                    draft = draft,
+                )
+                onListServiceCompleted(draft)
             },
         )
     }
@@ -181,11 +184,11 @@ internal fun rememberAskITEntryProvider(
     }
     entry<AppDestination.Inbox> {
         val jobs by jobsViewModel.jobs.collectAsStateWithLifecycle()
-        val viewAsOther by jobsViewModel.viewAsOtherParty.collectAsStateWithLifecycle()
+        val viewAsOtherJobIds by jobsViewModel.viewAsOtherJobIds.collectAsStateWithLifecycle()
         MessagesRoute(
             conversations = inboxViewModel.conversations,
             jobs = jobs,
-            viewAsOtherParty = viewAsOther,
+            viewAsOtherJobIds = viewAsOtherJobIds,
             onCompose = { navigationState.push(AppDestination.NewMessage) },
             onOpenChat = { id ->
                 inboxViewModel.openThread(id)
@@ -202,16 +205,19 @@ internal fun rememberAskITEntryProvider(
         val profile by profileViewModel.profile.collectAsStateWithLifecycle()
         val loadState by profileViewModel.loadState.collectAsStateWithLifecycle()
         val jobs by jobsViewModel.jobs.collectAsStateWithLifecycle()
-        val viewAsOther by jobsViewModel.viewAsOtherParty.collectAsStateWithLifecycle()
         ProfileRoute(
             profile = profile,
             jobs = jobs,
-            viewAsOtherParty = viewAsOther,
             loadState = loadState,
             messages = profileViewModel.messages,
             onEditProfile = { navigationState.push(AppDestination.EditProfile) },
             onEditListing = {
-                listServiceViewModel.startNewDraft()
+                val draft = jobsViewModel.profileStore.profile.value.listingDraft
+                if (draft != null) {
+                    listServiceViewModel.loadDraft(draft)
+                } else {
+                    listServiceViewModel.startNewDraft()
+                }
                 navigationState.push(AppDestination.ListService)
             },
             onUploadWork = {
@@ -254,27 +260,25 @@ internal fun rememberAskITEntryProvider(
     entry<AppDestination.ChatThread> { key ->
         val conversation = inboxViewModel.store.conversation(key.conversationId) ?: return@entry
         inboxViewModel.conversations
-        val viewAsOther by jobsViewModel.viewAsOtherParty.collectAsStateWithLifecycle()
         ChatThread(
             conversation = conversation,
             messages = inboxViewModel.store.messages(key.conversationId),
-            viewAsOtherParty = viewAsOther,
             onBack = { navigationState.pop() },
             onSendText = { inboxViewModel.sendText(key.conversationId, it) },
             onSendPhoto = { inboxViewModel.sendPhoto(key.conversationId, it) },
             onMuteChanged = { inboxViewModel.setMuted(key.conversationId, it) },
-            onViewAsOtherParty = { jobsViewModel.store.toggleViewAsOtherParty() },
+            onBlock = { inboxViewModel.block(key.conversationId) },
+            onReport = { inboxViewModel.report(key.conversationId) },
         )
     }
     entry<AppDestination.JobDetail> { key ->
         val jobs by jobsViewModel.jobs.collectAsStateWithLifecycle()
-        val viewAsOther by jobsViewModel.viewAsOtherParty.collectAsStateWithLifecycle()
+        val viewAsOtherJobIds by jobsViewModel.viewAsOtherJobIds.collectAsStateWithLifecycle()
         val job = jobs.firstOrNull { it.id == key.jobId } ?: return@entry
-        viewAsOther
         JobDetail(
             job = job,
             store = jobsViewModel.store,
-            viewAsOtherParty = viewAsOther,
+            viewAsOtherParty = job.id in viewAsOtherJobIds,
             clock = clock,
             onBack = { navigationState.pop() },
             onShareCode = { navigationState.push(AppDestination.JobVerifyShare(key.jobId)) },
