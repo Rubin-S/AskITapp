@@ -5,8 +5,28 @@ import com.askit.designsystem.navigation.AskITDestination
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal sealed interface AppDestination : NavKey {
+sealed interface AppDestination : NavKey {
     val bottomBarDestination: AskITDestination
+
+    @Serializable
+    data object Entry : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data object AuthPhone : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data class AuthOtp(val phoneNumber: String) : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data class FormA(val phoneNumber: String) : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
 
     @Serializable
     data object Home : AppDestination {
@@ -34,6 +54,11 @@ internal sealed interface AppDestination : NavKey {
     }
 
     @Serializable
+    data object ProfileSettings : AppDestination {
+        override val bottomBarDestination = AskITDestination.Profile
+    }
+
+    @Serializable
     data object SearchAreaDestination : AppDestination {
         override val bottomBarDestination = AskITDestination.Explore
     }
@@ -51,6 +76,16 @@ internal sealed interface AppDestination : NavKey {
     @Serializable
     data object CreatePost : AppDestination {
         override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data object CreatorDashboard : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data object ProviderDashboard : AppDestination {
+        override val bottomBarDestination = AskITDestination.Profile
     }
 
     @Serializable
@@ -81,6 +116,36 @@ internal sealed interface AppDestination : NavKey {
     @Serializable
     data class JobReview(val jobId: String) : AppDestination {
         override val bottomBarDestination = AskITDestination.Inbox
+    }
+
+    @Serializable
+    data class TaskDetail(val taskId: String) : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data class ServiceDetail(val serviceId: String) : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data class UserProfile(val userId: String) : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data object Story : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data class StoryViewer(val startStoryId: String) : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data class PostDetail(val postId: String) : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
     }
 
     companion object {

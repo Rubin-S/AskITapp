@@ -1,6 +1,7 @@
 package com.askit.app
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -16,9 +17,20 @@ import com.askit.app.explore.ExploreRoute
 import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.SearchAreaRoute
+import com.askit.app.creatordashboard.CreatorDashboardRoute
+import com.askit.app.creatordashboard.CreatorDashboardViewModel
 import com.askit.app.createpost.CreatePostRoute
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.createpost.PostDraft
+import com.askit.app.entry.EntryScreen
+import com.askit.app.home.HomeScreen
+import com.askit.app.home.HomeViewModel
+import com.askit.app.home.details.PostDetailScreen
+import com.askit.app.home.details.ServiceDetailScreen
+import com.askit.app.home.details.TaskDetailScreen
+import com.askit.app.home.details.UserProfileScreen
+import com.askit.app.home.stories.StoryViewerRoute
+import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.ChatThread
 import com.askit.app.inbox.InboxViewModel
 import com.askit.app.inbox.MessagesPane
@@ -44,18 +56,31 @@ import com.askit.app.posttask.PostTaskViewModel
 import com.askit.app.profile.EditProfileScreen
 import com.askit.app.profile.ProfileReview
 import com.askit.app.profile.ProfileRoute
+import com.askit.app.profile.ProfileSettingsScreen
 import com.askit.app.profile.ProfileViewModel
+import com.askit.app.story.StoryDraft
+import com.askit.app.story.StoryRoute
+import com.askit.app.story.StoryViewModel
+import com.askit.app.task.Task
+import com.askit.app.task.TaskRepository
+import com.askit.app.task.toExploreTaskResult
 
 @Composable
 internal fun rememberAskITEntryProvider(
     navigationState: AskITNavigationState,
+    taskRepository: TaskRepository,
+    homeViewModel: HomeViewModel,
     exploreViewModel: ExploreViewModel,
     postTaskViewModel: PostTaskViewModel,
     listServiceViewModel: ListServiceViewModel,
     createPostViewModel: CreatePostViewModel,
+    creatorDashboardViewModel: CreatorDashboardViewModel,
+    providerDashboardViewModel: com.askit.app.providerdashboard.ProviderDashboardViewModel,
+    storyViewModel: StoryViewModel,
     jobsViewModel: JobsViewModel,
     inboxViewModel: InboxViewModel,
     profileViewModel: ProfileViewModel,
+    storyViewerViewModel: StoryViewerViewModel,
     resultState: ExploreResultState,
     browseState: ExploreBrowseState,
     onRetryResults: (() -> Unit)?,
@@ -78,32 +103,97 @@ internal fun rememberAskITEntryProvider(
 ): (NavKey) -> NavEntry<NavKey> {
     val context = LocalContext.current
     return entryProvider<NavKey> {
+    entry<AppDestination.Entry> {
+        EntryScreen(
+            onGetStarted = {
+                navigationState.push(AppDestination.AuthPhone)
+            },
+            onLogin = {
+                navigationState.push(AppDestination.AuthPhone)
+            },
+        )
+    }
+    entry<AppDestination.AuthPhone> {
+        com.askit.app.auth.AuthPhoneScreen(
+            onBack = {
+                navigationState.pop()
+            },
+            onGetOtp = { phoneNumber ->
+                navigationState.push(AppDestination.AuthOtp(phoneNumber = phoneNumber))
+            },
+        )
+    }
+    entry<AppDestination.AuthOtp> { key ->
+        com.askit.app.auth.AuthOtpScreen(
+            phoneNumber = key.phoneNumber,
+            onBack = {
+                navigationState.pop()
+            },
+            onEditPhone = {
+                navigationState.pop()
+            },
+            onVerifySuccess = {
+                navigationState.push(AppDestination.FormA(phoneNumber = key.phoneNumber))
+            },
+        )
+    }
+    entry<AppDestination.FormA> { key ->
+        com.askit.app.auth.FormAScreen(
+            phoneNumber = key.phoneNumber,
+            onBack = {
+                navigationState.pop()
+            },
+            onSubmitSuccess = { _, _, _, _ ->
+                navigationState.clearToHome()
+            },
+            initialInterests = emptyList(),
+        )
+    }
     entry<AppDestination.Home> {
-        EmptyRootDestination(
-            iconRes = com.askit.designsystem.R.drawable.ic_home_outlined,
-            titleRes = com.askit.designsystem.R.string.empty_home_title,
-            supportingRes = com.askit.designsystem.R.string.empty_home_supporting,
-            actionRes = com.askit.designsystem.R.string.empty_home_action,
-            onAction = onShowCreateSheet,
+        HomeScreen(
+            viewModel = homeViewModel,
+            onAddStoryClick = { post ->
+                if (post != null) {
+                    storyViewModel.startReshareDraft(post)
+                } else {
+                    storyViewModel.startNewDraft()
+                }
+                navigationState.push(AppDestination.Story)
+            },
+            onStoryClick = { story ->
+                navigationState.push(AppDestination.StoryViewer(startStoryId = story.id))
+            },
+            onTaskClick = { task ->
+                navigationState.push(AppDestination.TaskDetail(taskId = task.id))
+            },
+            onServiceClick = { service ->
+                navigationState.push(AppDestination.ServiceDetail(serviceId = service.id))
+            },
+            onPersonClick = { person ->
+                navigationState.push(AppDestination.UserProfile(userId = person.id))
+            },
         )
     }
     entry<AppDestination.Explore> {
         val exploreQuery by exploreViewModel.uiState.collectAsStateWithLifecycle()
-        val resolvedResultState =
-            if (
-                treatUnresolvedSearchAsEmpty &&
-                onRetryResults == null &&
-                resultState is ExploreResultState.Loading &&
-                exploreQuery.query.isNotBlank()
-            ) {
+        val repositoryTasks by taskRepository.tasks.collectAsStateWithLifecycle()
+        val mappedExploreTasks = repositoryTasks.map { it.toExploreTaskResult() }
+        val effectiveResultState = when (resultState) {
+            is ExploreResultState.Results -> resultState.copy(tasks = mappedExploreTasks)
+            ExploreResultState.Loading -> if (treatUnresolvedSearchAsEmpty && exploreQuery.query.isNotBlank()) {
                 ExploreResultState.Empty(ExploreResultState.EmptyReason.Query)
             } else {
-                resultState
+                ExploreResultState.Results(
+                    people = emptyList(),
+                    tasks = mappedExploreTasks,
+                )
             }
+            else -> resultState
+        }
         ExploreRoute(
             viewModel = exploreViewModel,
             onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) },
-            resultState = resolvedResultState,
+            resultState = effectiveResultState,
             browseState = browseState,
             onRetryResults = onRetryResults,
             onRetryBrowseSection = onRetryBrowseSection,
@@ -114,8 +204,12 @@ internal fun rememberAskITEntryProvider(
             appliedFilterOptions = appliedFilterOptions,
             onFiltersChanged = onFiltersChanged,
             onFilterScopeChanged = exploreViewModel::onFilterScopeSelected,
-            onPersonClick = onPersonClick,
-            onTaskClick = onTaskClick,
+            onPersonClick = onPersonClick ?: { personId ->
+                navigationState.push(AppDestination.UserProfile(userId = personId))
+            },
+            onTaskClick = onTaskClick ?: { taskId ->
+                navigationState.push(AppDestination.TaskDetail(taskId = taskId))
+            },
             onApplyToTask = { task ->
                 when (
                     val result = jobsViewModel.store.applyToTask(
@@ -156,7 +250,10 @@ internal fun rememberAskITEntryProvider(
         PostTaskRoute(
             viewModel = postTaskViewModel,
             onBack = { navigationState.pop() },
-            onCompleteDraft = onPostTaskCompleted,
+            onCompleteDraft = { draft ->
+                onPostTaskCompleted(draft)
+                navigationState.pop()
+            },
         )
     }
     entry<AppDestination.ListService> {
@@ -179,6 +276,49 @@ internal fun rememberAskITEntryProvider(
             onCompleteDraft = { draft ->
                 profileViewModel.appendGallery(draft.photos.mapNotNull { it.uri })
                 onCreatePostCompleted(draft)
+            },
+        )
+    }
+    entry<AppDestination.CreatorDashboard> {
+        CreatorDashboardRoute(
+            viewModel = creatorDashboardViewModel,
+            onBack = { navigationState.pop() },
+            onCreatePost = { _ ->
+                createPostViewModel.startNewDraft()
+                navigationState.push(AppDestination.CreatePost)
+            },
+            onOpenChat = { conversationId ->
+                inboxViewModel.openThread(conversationId)
+                navigationState.push(AppDestination.ChatThread(conversationId))
+            },
+            onOpenPostDetail = { postId ->
+                navigationState.push(AppDestination.PostDetail(postId))
+            },
+            onOpenProfile = { userId ->
+                navigationState.push(AppDestination.UserProfile(userId))
+            },
+        )
+    }
+    entry<AppDestination.ProviderDashboard> {
+        com.askit.app.providerdashboard.ProviderDashboardRoute(
+            viewModel = providerDashboardViewModel,
+            onBack = { navigationState.pop() },
+            onOpenJob = { jobId ->
+                navigationState.push(AppDestination.JobDetail(jobId))
+            },
+            onOpenChat = { conversationId ->
+                inboxViewModel.openThread(conversationId)
+                navigationState.push(AppDestination.ChatThread(conversationId))
+            },
+            onEditProfile = {
+                navigationState.push(AppDestination.EditProfile)
+            },
+            onUploadWork = {
+                createPostViewModel.startNewDraft()
+                navigationState.push(AppDestination.CreatePost)
+            },
+            onManageAlerts = {
+                navigationState.navigate(AppDestination.Inbox)
             },
         )
     }
@@ -233,6 +373,46 @@ internal fun rememberAskITEntryProvider(
             onSetAvatar = profileViewModel::setAvatar,
             onAddLicense = profileViewModel::addLicense,
             onUsernameCopied = profileViewModel::notifyCopied,
+            onOpenSettings = { navigationState.push(AppDestination.ProfileSettings) },
+            onOpenProviderDashboard = { navigationState.push(AppDestination.ProviderDashboard) },
+        )
+    }
+    entry<AppDestination.ProfileSettings> {
+        val profile by profileViewModel.profile.collectAsStateWithLifecycle()
+        ProfileSettingsScreen(
+            profile = profile,
+            onBack = { navigationState.pop() },
+            onNavigateToEditProfile = { navigationState.push(AppDestination.EditProfile) },
+            onNavigateToListService = {
+                val draft = jobsViewModel.profileStore.profile.value.listingDraft
+                if (draft != null) {
+                    listServiceViewModel.loadDraft(draft)
+                } else {
+                    listServiceViewModel.startNewDraft()
+                }
+                navigationState.push(AppDestination.ListService)
+            },
+            onNavigateToCreatePost = {
+                createPostViewModel.startNewDraft()
+                navigationState.push(AppDestination.CreatePost)
+            },
+            onNavigateToJobRequests = {
+                navigationState.navigate(AppDestination.Inbox)
+            },
+            onNavigateToSupportChat = {
+                navigationState.push(AppDestination.NewMessage)
+            },
+            onUpdatePhoneNumber = profileViewModel::updatePhoneNumber,
+            onUpdatePushNotifications = profileViewModel::updatePushNotifications,
+            onUpdateJobAlerts = profileViewModel::updateJobAlerts,
+            onUpdateLanguage = profileViewModel::updateLanguage,
+            onUpdateLocationServices = profileViewModel::updateLocationServices,
+            onUpdateWhoCanMessage = profileViewModel::updateWhoCanMessage,
+            onSaveAvailability = profileViewModel::updateAvailability,
+            onLogout = {
+                navigationState.navigateAndPush(AppDestination.Home, AppDestination.Entry)
+            },
+            onClearAppData = profileViewModel::resetAppData,
         )
     }
     entry<AppDestination.EditProfile> {
@@ -323,6 +503,101 @@ internal fun rememberAskITEntryProvider(
                     )
                 }
             },
+        )
+    }
+    entry<AppDestination.TaskDetail> { key ->
+        TaskDetailScreen(
+            taskId = key.taskId,
+            taskRepository = taskRepository,
+            onBack = { navigationState.pop() },
+            onApply = { appliedTask ->
+                when (
+                    val result = jobsViewModel.store.applyToTask(
+                        title = appliedTask.title,
+                        counterpartName = appliedTask.posterName,
+                        workMode = JobWorkMode.OnSite,
+                    )
+                ) {
+                    ApplyToTaskResult.NeedsListedService -> onApplyBlocked()
+                    is ApplyToTaskResult.Created -> navigationState.navigateAndPush(
+                        AppDestination.Inbox,
+                        AppDestination.JobDetail(result.jobId),
+                    )
+                }
+            },
+        )
+    }
+    entry<AppDestination.ServiceDetail> { key ->
+        ServiceDetailScreen(
+            serviceId = key.serviceId,
+            onBack = { navigationState.pop() },
+            onRequestService = {
+                val service = com.askit.app.home.details.getServiceDetailById(key.serviceId)
+                val jobId = jobsViewModel.store.requestService(
+                    title = service.title,
+                    counterpartName = service.providerName,
+                )
+                navigationState.navigateAndPush(
+                    AppDestination.Inbox,
+                    AppDestination.JobDetail(jobId),
+                )
+            },
+        )
+    }
+    entry<AppDestination.UserProfile> { key ->
+        UserProfileScreen(
+            userId = key.userId,
+            onBack = { navigationState.pop() },
+            onMessage = {
+                navigationState.push(AppDestination.NewMessage)
+            },
+            onRequestService = {
+                val profile = com.askit.app.home.details.getUserProfileById(key.userId)
+                val jobId = jobsViewModel.store.requestService(
+                    title = profile.trade,
+                    counterpartName = profile.name,
+                )
+                navigationState.navigateAndPush(
+                    AppDestination.Inbox,
+                    AppDestination.JobDetail(jobId),
+                )
+            },
+        )
+    }
+    entry<AppDestination.StoryViewer> { key ->
+        LaunchedEffect(key.startStoryId) {
+            storyViewerViewModel.startAt(key.startStoryId)
+        }
+        StoryViewerRoute(
+            viewModel = storyViewerViewModel,
+            onDismiss = { navigationState.pop() },
+            onViewPost = { postId ->
+                navigationState.push(AppDestination.PostDetail(postId = postId))
+            },
+            onAddStory = {
+                storyViewModel.startNewDraft()
+                navigationState.push(AppDestination.Story)
+            },
+            onStorySeen = { storyId ->
+                homeViewModel.markStorySeen(storyId)
+            },
+        )
+    }
+    entry<AppDestination.Story> {
+        StoryRoute(
+            viewModel = storyViewModel,
+            onBack = { navigationState.pop() },
+            onCompleteDraft = { draft ->
+                homeViewModel.addStoryFromDraft(draft)
+                navigationState.pop()
+            },
+            onOpenCreateSheet = onShowCreateSheet,
+        )
+    }
+    entry<AppDestination.PostDetail> { key ->
+        PostDetailScreen(
+            postId = key.postId,
+            onBack = { navigationState.pop() },
         )
     }
     }

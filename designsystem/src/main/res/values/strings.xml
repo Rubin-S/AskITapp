@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="nav_home">Home</string>
     <string name="nav_explore">Explore</string>
     <string name="nav_create">Create</string>
@@ -55,6 +55,8 @@
     </plurals>
     <string name="create_post_title">Create a post</string>
     <string name="create_post_supporting">Share an update, photo, carousel, before/after, or poll</string>
+    <string name="create_creator_dashboard_title">Creator dashboard</string>
+    <string name="create_creator_dashboard_supporting">View your social reach, audience growth, and insights</string>
     <string name="post_feed_author_fallback">You</string>
     <string name="post_feed_photo_content_description">Post photo</string>
     <string name="post_feed_photo_unavailable">Photo unavailable</string>
@@ -65,4 +67,62 @@
     <string name="post_feed_before">Before</string>
     <string name="post_feed_after">After</string>
     <string name="post_feed_before_after_slider">Before and after comparison. Drag to reveal.</string>
+
+    <string name="story_viewer_close">Close story</string>
+    <string name="story_viewer_reply_placeholder">Send message</string>
+    <string name="story_viewer_like">Like story</string>
+
+    <string name="discard_dialog_title">Discard this draft?</string>
+    <string name="discard_dialog_message">Your changes will be lost.</string>
+    <string name="discard_dialog_keep_editing">Keep editing</string>
+    <string name="discard_dialog_discard">Discard</string>
+    <string name="profile_settings">Settings</string>
+
+    <string name="post_feed_like">Like</string>
+    <string name="post_feed_unlike">Unlike</string>
+    <string name="post_feed_comment">Comment</string>
+    <string name="post_feed_share">Share</string>
+    <string name="post_feed_save">Save</string>
+    <string name="post_feed_unsave">Unsave</string>
+    <string name="post_feed_more_options">More options</string>
+
+    <string name="comments_title">Comments</string>
+    <string name="comments_empty">No comments yet. Start the conversation.</string>
+    <string name="comments_reply">Reply</string>
+    <string name="comments_replying_to">Replying to %1$s</string>
+    <string name="comments_cancel_reply">Cancel reply</string>
+    <string name="comments_input_placeholder">What do you think of this?</string>
+    <string name="comments_send">Send</string>
+    <string name="comments_view_replies" tools:ignore="PluralsCandidate">View %1$d more replies</string>
+    <string name="comments_hide_replies">Hide replies</string>
+    <string name="comments_like">Like comment</string>
+    <string name="comments_unlike">Unlike comment</string>
+
+    <string name="share_title">Share</string>
+    <string name="share_search_placeholder">Search</string>
+    <string name="share_add_to_story">Add to story</string>
+    <string name="share_whatsapp">WhatsApp</string>
+    <string name="share_whatsapp_status">WhatsApp Status</string>
+    <string name="share_external">Share</string>
+    <string name="share_copy_link">Copy link</string>
+    <string name="share_link_copied">Link copied to clipboard!</string>
+    <string name="share_sent_to">Sent to %1$s</string>
+
+    <!-- Profile Primitives -->
+    <string name="profile_action_edit">Edit profile</string>
+    <string name="profile_action_share">Share</string>
+    <string name="profile_action_view_as_public">View as Public</string>
+    <string name="profile_action_message">Message</string>
+    <string name="profile_action_follow">Follow</string>
+    <string name="profile_action_following">Following</string>
+    <string name="profile_action_request_service">Request Service</string>
+    <string name="profile_preview_banner_title">Viewing as Public</string>
+    <string name="profile_preview_exit">Exit Preview</string>
+    <string name="profile_complete_form_b_title">Offer services in your neighborhood</string>
+    <string name="profile_complete_form_b_hint">Add your Service Card to list your skills and get hired locally.</string>
+    <string name="profile_complete_form_b_action">Add Service Card</string>
+    <string name="profile_provider_dashboard_title">Provider Dashboard</string>
+    <string name="profile_provider_dashboard_hint">Manage incoming service requests, active jobs, and your trust score.</string>
+    <string name="profile_provider_dashboard_action">Open Dashboard</string>
+    <string name="profile_verified_badge_desc">Verified</string>
 </resources>

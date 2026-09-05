@@ -28,6 +28,14 @@ interface ProfileRepository {
     fun appendGallery(uris: List<String>)
     fun appendReview(review: ProfileReview)
     fun addLicense(license: String)
+    fun updateActiveRole(role: String)
+    fun updatePhoneNumber(phone: String)
+    fun updatePushNotifications(enabled: Boolean)
+    fun updateJobAlerts(enabled: Boolean)
+    fun updateLanguage(lang: String)
+    fun updateLocationServices(enabled: Boolean)
+    fun updateWhoCanMessage(option: String)
+    fun resetAppData()
 }
 
 class LocalProfileRepository(
@@ -62,4 +70,20 @@ class LocalProfileRepository(
     override fun appendReview(review: ProfileReview) = store.appendReview(review)
 
     override fun addLicense(license: String) = store.addLicense(license)
+
+    override fun updateActiveRole(role: String) = store.updateActiveRole(role)
+
+    override fun updatePhoneNumber(phone: String) = store.updatePhoneNumber(phone)
+
+    override fun updatePushNotifications(enabled: Boolean) = store.updatePushNotifications(enabled)
+
+    override fun updateJobAlerts(enabled: Boolean) = store.updateJobAlerts(enabled)
+
+    override fun updateLanguage(lang: String) = store.updateLanguage(lang)
+
+    override fun updateLocationServices(enabled: Boolean) = store.updateLocationServices(enabled)
+
+    override fun updateWhoCanMessage(option: String) = store.updateWhoCanMessage(option)
+
+    override fun resetAppData() = store.resetAppData()
 }

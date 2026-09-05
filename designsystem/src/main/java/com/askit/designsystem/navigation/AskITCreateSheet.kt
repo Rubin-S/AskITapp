@@ -38,6 +38,7 @@ enum class AskITCreateAction {
     PostTask,
     AddService,
     CreatePost,
+    CreatorDashboard,
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -95,6 +96,12 @@ fun AskITCreateSheet(
                 titleRes = R.string.create_post_title,
                 supportingRes = R.string.create_post_supporting,
                 onClick = { select(AskITCreateAction.CreatePost) },
+            )
+            CreateRow(
+                iconRes = R.drawable.ic_dashboard,
+                titleRes = R.string.create_creator_dashboard_title,
+                supportingRes = R.string.create_creator_dashboard_supporting,
+                onClick = { select(AskITCreateAction.CreatorDashboard) },
             )
         }
     }

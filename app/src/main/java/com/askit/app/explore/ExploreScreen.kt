@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -346,6 +347,8 @@ fun ExploreRoute(
         onRecentSearchRemoved = viewModel::removeRecentSearch,
         onRecentSearchesCleared = viewModel::clearRecentSearches,
         onSearchFiltersClick = onSearchFiltersClick,
+        people = (resultState as? ExploreResultState.Results)?.people.orEmpty(),
+        tasks = (resultState as? ExploreResultState.Results)?.tasks.orEmpty(),
         resultState = resultState,
         browseState = browseState,
         onRetryResults = onRetryResults,
@@ -515,10 +518,11 @@ fun ExploreScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .imePadding()
             .testTag("explore_results_list"),
         state = listState,
-        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 32.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.Top,
     ) {
         item(key = "header:explore", contentType = "header") {
@@ -586,6 +590,16 @@ fun ExploreScreen(
                 onTaskClick = taskClick,
                 onChangeArea = ::openFilters,
                 onRetryBrowseSection = onRetryBrowseSection,
+                onViewMorePeople = {
+                    onQuerySubmitted("Professionals")
+                    selectedScopeOrdinal = ExploreResultScope.People.ordinal
+                    closeSearch()
+                },
+                onViewMoreTasks = {
+                    onQuerySubmitted("Tasks")
+                    selectedScopeOrdinal = ExploreResultScope.Tasks.ordinal
+                    closeSearch()
+                },
             )
         }
     }
@@ -1321,6 +1335,8 @@ private fun LazyListScope.addBrowseResultSections(
     onTaskClick: ((String) -> Unit)?,
     onChangeArea: () -> Unit,
     onRetryBrowseSection: ((ExploreBrowseSection) -> Unit)?,
+    onViewMorePeople: (() -> Unit)? = null,
+    onViewMoreTasks: (() -> Unit)? = null,
 ) {
     addPersonResultSection(
         sectionKey = "browse:people",
@@ -1333,6 +1349,7 @@ private fun LazyListScope.addBrowseResultSections(
         onBrowseRetry = onRetryBrowseSection?.let { retry ->
             { retry(ExploreBrowseSection.Professionals) }
         },
+        onViewMore = onViewMorePeople,
     )
     addTaskResultSection(
         sectionKey = "browse:tasks",
@@ -1345,6 +1362,7 @@ private fun LazyListScope.addBrowseResultSections(
         onBrowseRetry = onRetryBrowseSection?.let { retry ->
             { retry(ExploreBrowseSection.Tasks) }
         },
+        onViewMore = onViewMoreTasks,
     )
 }
 
@@ -1469,6 +1487,7 @@ private fun LazyListScope.addPersonResultSection(
     browseStatus: ExploreBrowseStatus? = null,
     onBrowseChangeArea: (() -> Unit)? = null,
     onBrowseRetry: (() -> Unit)? = null,
+    onViewMore: (() -> Unit)? = null,
 ) {
     val uniquePeople = distinctPeopleById(people)
     if (uniquePeople.isEmpty() && browseStatus == null) return
@@ -1478,6 +1497,7 @@ private fun LazyListScope.addPersonResultSection(
             ExploreResultSectionHeading(
                 heading = stringResource(heading),
                 testTag = sectionTag,
+                onViewMore = onViewMore.takeIf { uniquePeople.isNotEmpty() },
             )
         }
     }
@@ -1513,6 +1533,7 @@ private fun LazyListScope.addTaskResultSection(
     browseStatus: ExploreBrowseStatus? = null,
     onBrowseChangeArea: (() -> Unit)? = null,
     onBrowseRetry: (() -> Unit)? = null,
+    onViewMore: (() -> Unit)? = null,
 ) {
     val uniqueTasks = distinctTasksById(tasks)
     if (uniqueTasks.isEmpty() && browseStatus == null) return
@@ -1522,6 +1543,7 @@ private fun LazyListScope.addTaskResultSection(
             ExploreResultSectionHeading(
                 heading = stringResource(heading),
                 testTag = sectionTag,
+                onViewMore = onViewMore.takeIf { uniqueTasks.isNotEmpty() },
             )
         }
     }
@@ -1582,9 +1604,6 @@ private fun LazyListScope.addPersonResultRows(
                         ?.takeIf { row.stableId.isNotEmpty() }
                         ?.let { click -> { click(row.stableId) } },
                 )
-                if (!person.primaryService.isNullOrBlank()) {
-                    ExploreRequestButton(person)
-                }
             }
         }
     }
@@ -1612,25 +1631,22 @@ private fun LazyListScope.addServiceResultRows(
                         },
                     ),
             ) {
-                Column {
-                    ServiceResultItem(
-                        serviceTitle = person.primaryService.orEmpty(),
-                        category = "",
-                        description = person.additionalServices
-                            .map(String::trim)
-                            .filter(String::isNotEmpty)
-                            .joinToString(", "),
-                        providerName = person.name,
-                        providerAvatarUrl = person.avatarUrl,
-                        priceLabel = person.priceLabel,
-                        coverageLabel = person.locationLabel,
-                        modifier = Modifier.testTag("explore_service_result_card"),
-                        onClick = onClick
-                            ?.takeIf { row.stableId.isNotEmpty() }
-                            ?.let { click -> { click(row.stableId) } },
-                    )
-                    ExploreRequestButton(person)
-                }
+                ServiceResultItem(
+                    serviceTitle = person.primaryService.orEmpty(),
+                    category = "",
+                    description = person.additionalServices
+                        .map(String::trim)
+                        .filter(String::isNotEmpty)
+                        .joinToString(", "),
+                    providerName = person.name,
+                    providerAvatarUrl = person.avatarUrl,
+                    priceLabel = person.priceLabel,
+                    coverageLabel = person.locationLabel,
+                    modifier = Modifier.testTag("explore_service_result_card"),
+                    onClick = onClick
+                        ?.takeIf { row.stableId.isNotEmpty() }
+                        ?.let { click -> { click(row.stableId) } },
+                )
             }
         }
     }
@@ -1675,9 +1691,6 @@ private fun LazyListScope.addTaskResultRows(
                         }
                         ?.let { click -> { click(row.stableId) } },
                 )
-                if (task.status != TaskResultStatus.Unavailable) {
-                    ExploreApplyButton(task)
-                }
             }
         }
     }
@@ -1687,19 +1700,46 @@ private fun LazyListScope.addTaskResultRows(
 private fun ExploreResultSectionHeading(
     heading: String,
     testTag: String,
+    onViewMore: (() -> Unit)? = null,
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 24.dp)
+            .padding(top = 20.dp, bottom = 4.dp)
             .testTag(testTag),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = heading,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.semantics { heading() },
         )
-        Spacer(Modifier.height(12.dp))
+        if (onViewMore != null) {
+            Row(
+                modifier = Modifier
+                    .clickable(
+                        role = androidx.compose.ui.semantics.Role.Button,
+                        onClickLabel = "View more $heading",
+                        onClick = onViewMore,
+                    )
+                    .padding(vertical = 4.dp, horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = "View all",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Icon(
+                    painter = painterResource(com.askit.designsystem.R.drawable.ic_chevron_right),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
     }
 }
 

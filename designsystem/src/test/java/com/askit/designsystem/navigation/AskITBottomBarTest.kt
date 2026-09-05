@@ -173,15 +173,17 @@ class AskITBottomBarTest {
         composeTestRule.onNodeWithText("Post a task").assertIsDisplayed()
         composeTestRule.onNodeWithText("List a service").assertIsDisplayed()
         composeTestRule.onNodeWithText("Create a post").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Creator dashboard").assertIsDisplayed()
         listOf(
             "Find someone to help with a job or problem",
             "Offer a service to customers",
             "Share an update, photo, carousel, before/after, or poll",
+            "View your social reach, audience growth, and insights",
         ).forEach { supportingCopy ->
             composeTestRule.onNodeWithText(supportingCopy).assertIsDisplayed()
         }
 
-        val actionTitles = listOf("Post a task", "List a service", "Create a post")
+        val actionTitles = listOf("Post a task", "List a service", "Create a post", "Creator dashboard")
         actionTitles.forEach { title ->
             composeTestRule.onNodeWithText(title).assertHasClickAction()
         }
@@ -191,12 +193,13 @@ class AskITBottomBarTest {
                     node.config[SemanticsProperties.Role] == Role.Button
             },
             useUnmergedTree = true,
-        ).assertCountEquals(3)
+        ).assertCountEquals(4)
         val actionPositions = actionTitles.map { title ->
             composeTestRule.onNodeWithText(title).fetchSemanticsNode().boundsInRoot.top
         }
         assertTrue(actionPositions[0] < actionPositions[1])
         assertTrue(actionPositions[1] < actionPositions[2])
+        assertTrue(actionPositions[2] < actionPositions[3])
         assertTrue(
             composeTestRule
                 .onNodeWithText("Create")
@@ -224,9 +227,11 @@ class AskITBottomBarTest {
             "பணியைப் பதிவிடு",
             "சேவையைப் பட்டியலிடு",
             "பதிவை உருவாக்கு",
+            "படைப்பாளர் டாஷ்போர்டு",
             "ஒரு வேலை அல்லது சிக்கலுக்கு உதவ ஒருவரைக் கண்டுபிடிக்கவும்",
             "வாடிக்கையாளர்களுக்கு உங்கள் சேவையை வழங்குங்கள்",
             "புதுப்பிப்பு, புகைப்படம், கருசல், முன்/பின் ஒப்பீடு அல்லது வாக்கெடுப்பைப் பகிரவும்",
+            "உங்கள் பார்வை வீச்சு, பார்வையாளர்கள் வளர்ச்சி மற்றும் புள்ளிவிவரங்களைக் காண்க",
         ).forEach { text ->
             composeTestRule.onNodeWithText(text).assertIsDisplayed()
         }
@@ -250,7 +255,7 @@ class AskITBottomBarTest {
         listOf(1f, 1.3f, 1.5f, 2f).forEach { scale ->
             composeTestRule.runOnUiThread { fontScale.value = scale }
             composeTestRule.waitForIdle()
-            listOf("Post a task", "List a service", "Create a post").forEach { title ->
+            listOf("Post a task", "List a service", "Create a post", "Creator dashboard").forEach { title ->
                 composeTestRule
                     .onNodeWithText(title)
                     .performScrollTo()

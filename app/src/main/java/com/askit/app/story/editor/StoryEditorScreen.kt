@@ -36,6 +36,7 @@ import com.askit.app.story.StoryFormState
 import com.askit.app.story.StoryLayer
 import com.askit.app.story.StoryMediaType
 import com.askit.app.story.StoryViewModel
+import com.askit.app.story.stickers.PostReshareSticker
 import com.askit.designsystem.dialogs.AskITDiscardDialog
 import com.askit.designsystem.navigation.AskITVerticalToolColumn
 import com.askit.designsystem.navigation.AskITVerticalToolItem
@@ -94,6 +95,21 @@ fun StoryEditorScreen(
             onTextChanged = { id, text -> viewModel.updateTextLayer(id, text = text) },
             modifier = Modifier.fillMaxSize(),
         )
+
+        state.sharedPost?.let { post ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                PostReshareSticker(
+                    post = post,
+                    cardStyle = state.reshareCardStyle,
+                    onClick = { viewModel.toggleReshareCardStyle() },
+                )
+            }
+        }
 
         IconButton(
             onClick = ::requestBack,

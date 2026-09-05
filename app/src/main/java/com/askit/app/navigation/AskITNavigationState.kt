@@ -43,11 +43,22 @@ internal class AskITNavigationState(
         return true
     }
 
+    fun clearToHome() {
+        topLevelRouteState.value = AppDestination.Home
+        val stack = backStacks.getValue(AppDestination.Home)
+        while (stack.size > 1) {
+            stack.removeLastOrNull()
+        }
+    }
+
     val isAtRoot: Boolean
         get() = backStacks.getValue(topLevelRoute).size == 1
 
     fun goBack(): Boolean {
         val currentStack = backStacks.getValue(topLevelRoute)
+        if (currentStack.lastOrNull() == AppDestination.Entry) {
+            return false
+        }
         if (currentStack.size > 1) {
             currentStack.removeLastOrNull()
             return true
@@ -78,13 +89,21 @@ internal class AskITNavigationState(
 }
 
 @Composable
-internal fun rememberAskITNavigationState(): AskITNavigationState {
+internal fun rememberAskITNavigationState(
+    initialRoute: AppDestination = AppDestination.Home,
+): AskITNavigationState {
     val topLevelRoute = rememberSerializable(
         serializer = MutableStateSerializer(NavKeySerializer()),
     ) {
         mutableStateOf<NavKey>(AppDestination.Home)
     }
-    val backStacks = TOP_LEVEL_ROUTES.associateWith { rememberNavBackStack(it) }
+    val backStacks = TOP_LEVEL_ROUTES.associateWith { route ->
+        if (route == AppDestination.Home && initialRoute == AppDestination.Entry) {
+            rememberNavBackStack(AppDestination.Home, AppDestination.Entry)
+        } else {
+            rememberNavBackStack(route)
+        }
+    }
     return remember {
         AskITNavigationState(
             topLevelRouteState = topLevelRoute,

@@ -110,8 +110,12 @@ class ExploreFlowTest {
 
     @Test
     fun idleExplore_keepsAllBrowseSectionsVisible_whenNearbyDataIsEmpty() {
-        setApp()
-        openExplore()
+        setBrowseContent(
+            browseState = ExploreBrowseState(
+                professionals = ExploreBrowseStatus.Available,
+                tasks = ExploreBrowseStatus.Available,
+            ),
+        )
 
         composeTestRule.onNodeWithText("Nearby professionals")
             .performScrollTo()

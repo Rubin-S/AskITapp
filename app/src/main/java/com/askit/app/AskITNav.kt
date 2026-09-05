@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.createpost.PostDraft
+import com.askit.app.creatordashboard.CreatorDashboardViewModel
 import com.askit.app.explore.ExploreBrowseSection
 import com.askit.app.explore.ExploreBrowseState
 import com.askit.app.explore.ExploreFilterOption
@@ -28,6 +29,9 @@ import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreViewModel
+import com.askit.app.home.HomeViewModel
+import com.askit.app.home.data.FakeHomeRepository
+import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.InboxViewModel
 import com.askit.app.jobs.JobsStore
 import com.askit.app.jobs.JobsViewModel
@@ -40,6 +44,10 @@ import com.askit.app.navigation.rememberAskITNavigationState
 import com.askit.app.posttask.PostTaskDraft
 import com.askit.app.posttask.PostTaskViewModel
 import com.askit.app.session.SessionProfileStore
+import com.askit.app.task.InMemoryTaskRepository
+import com.askit.app.task.TaskRepository
+import com.askit.app.story.StoryDraft
+import com.askit.app.story.StoryViewModel
 import com.askit.designsystem.navigation.AskITBottomBar
 import com.askit.designsystem.navigation.AskITCreateAction
 import com.askit.designsystem.navigation.AskITCreateSheet
@@ -47,12 +55,18 @@ import com.askit.designsystem.navigation.AskITCreateSheet
 @Composable
 fun AskITApp(
     exploreViewModel: ExploreViewModel,
+    taskRepository: TaskRepository? = null,
+    homeViewModel: HomeViewModel? = null,
     postTaskViewModel: PostTaskViewModel? = null,
     listServiceViewModel: ListServiceViewModel? = null,
     createPostViewModel: CreatePostViewModel? = null,
+    creatorDashboardViewModel: CreatorDashboardViewModel? = null,
+    providerDashboardViewModel: com.askit.app.providerdashboard.ProviderDashboardViewModel? = null,
+    storyViewModel: StoryViewModel? = null,
     jobsViewModel: JobsViewModel? = null,
     inboxViewModel: InboxViewModel? = null,
     profileViewModel: ProfileViewModel? = null,
+    storyViewerViewModel: StoryViewerViewModel? = null,
     onExit: () -> Unit = {},
     resultState: ExploreResultState = ExploreResultState.Loading,
     browseState: ExploreBrowseState = ExploreBrowseState(),
@@ -69,9 +83,12 @@ fun AskITApp(
     onPostTaskCompleted: (PostTaskDraft) -> Unit = {},
     onListServiceCompleted: (ListServiceDraft) -> Unit = {},
     onCreatePostCompleted: (PostDraft) -> Unit = {},
+    onStoryCompleted: (StoryDraft) -> Unit = {},
     treatUnresolvedSearchAsEmpty: Boolean = false,
     clock: () -> Long = System::currentTimeMillis,
+    initialRoute: AppDestination = AppDestination.Home,
 ) {
+    val resolvedTaskRepository = taskRepository ?: remember { InMemoryTaskRepository() }
     val viewModelAppliedFilterOptions by exploreViewModel.appliedFilterOptions.collectAsStateWithLifecycle()
     val controlledAppliedFilterOptions = if (
         appliedFilterOptions.isEmpty() && onFiltersChanged == null
@@ -81,29 +98,47 @@ fun AskITApp(
         appliedFilterOptions
     }
     val controlledFiltersChanged = onFiltersChanged ?: exploreViewModel::onFiltersChanged
+    val resolvedHomeViewModel = homeViewModel ?: remember { HomeViewModel() }
     val resolvedPostTaskViewModel = postTaskViewModel ?: remember { PostTaskViewModel() }
     val resolvedListServiceViewModel = listServiceViewModel ?: remember { ListServiceViewModel() }
     val resolvedCreatePostViewModel = createPostViewModel ?: remember { CreatePostViewModel() }
+    val resolvedStoryViewModel = storyViewModel ?: remember { StoryViewModel() }
     val resolvedJobsViewModel = jobsViewModel ?: remember {
         val profile = SessionProfileStore()
         JobsViewModel(JobsStore(profile), profile)
     }
+    val resolvedCreatorDashboardViewModel = creatorDashboardViewModel
+        ?: remember(resolvedJobsViewModel) {
+            CreatorDashboardViewModel(resolvedJobsViewModel.profileStore)
+        }
+    val resolvedProviderDashboardViewModel = providerDashboardViewModel
+        ?: remember(resolvedJobsViewModel) {
+            com.askit.app.providerdashboard.ProviderDashboardViewModel(resolvedJobsViewModel.profileStore)
+        }
     val resolvedInboxViewModel = inboxViewModel ?: remember { InboxViewModel() }
     val resolvedProfileViewModel = profileViewModel ?: remember(resolvedJobsViewModel) {
         ProfileViewModel(LocalProfileRepository(resolvedJobsViewModel.profileStore))
     }
-    val navigationState = rememberAskITNavigationState()
+    val resolvedStoryViewerViewModel = storyViewerViewModel
+        ?: remember { StoryViewerViewModel(FakeHomeRepository()) }
+    val navigationState = rememberAskITNavigationState(initialRoute = initialRoute)
     var showCreateSheet by rememberSaveable { mutableStateOf(false) }
     var showApplyGate by rememberSaveable { mutableStateOf(false) }
     val entryProvider = rememberAskITEntryProvider(
         navigationState = navigationState,
+        taskRepository = resolvedTaskRepository,
+        homeViewModel = resolvedHomeViewModel,
         exploreViewModel = exploreViewModel,
         postTaskViewModel = resolvedPostTaskViewModel,
         listServiceViewModel = resolvedListServiceViewModel,
         createPostViewModel = resolvedCreatePostViewModel,
+        creatorDashboardViewModel = resolvedCreatorDashboardViewModel,
+        providerDashboardViewModel = resolvedProviderDashboardViewModel,
+        storyViewModel = resolvedStoryViewModel,
         jobsViewModel = resolvedJobsViewModel,
         inboxViewModel = resolvedInboxViewModel,
         profileViewModel = resolvedProfileViewModel,
+        storyViewerViewModel = resolvedStoryViewerViewModel,
         resultState = resultState,
         browseState = browseState,
         onRetryResults = onRetryResults,
@@ -117,15 +152,20 @@ fun AskITApp(
         appliedFilterOptions = controlledAppliedFilterOptions,
         onFiltersChanged = controlledFiltersChanged,
         treatUnresolvedSearchAsEmpty = treatUnresolvedSearchAsEmpty,
-        onPostTaskCompleted = onPostTaskCompleted,
+        onPostTaskCompleted = { draft ->
+            resolvedTaskRepository.createTask(draft)
+            onPostTaskCompleted(draft)
+        },
         onListServiceCompleted = onListServiceCompleted,
         onCreatePostCompleted = onCreatePostCompleted,
         onShowCreateSheet = { showCreateSheet = true },
         onApplyBlocked = { showApplyGate = true },
         clock = clock,
     )
+    val profileState by resolvedProfileViewModel.profile.collectAsStateWithLifecycle()
     AskITShell(
         navigationState = navigationState,
+        avatarUrl = profileState.avatarUrl,
         unreadCount = resolvedInboxViewModel.unreadCount,
         entryProvider = entryProvider,
         onExit = onExit,
@@ -146,6 +186,9 @@ fun AskITApp(
                     resolvedCreatePostViewModel.startNewDraft()
                     navigationState.push(AppDestination.CreatePost)
                 }
+                AskITCreateAction.CreatorDashboard -> {
+                    navigationState.push(AppDestination.CreatorDashboard)
+                }
             }
         },
         showApplyGate = showApplyGate,
@@ -161,6 +204,7 @@ fun AskITApp(
 @Composable
 private fun AskITShell(
     navigationState: com.askit.app.navigation.AskITNavigationState,
+    avatarUrl: String?,
     unreadCount: Int,
     entryProvider: (NavKey) -> androidx.navigation3.runtime.NavEntry<NavKey>,
     onExit: () -> Unit,
@@ -174,12 +218,13 @@ private fun AskITShell(
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (navigationState.isAtRoot) {
                 AskITBottomBar(
                     selectedDestination = navigationState.topLevelRoute.bottomBarDestination,
-                    avatarUrl = null,
+                    avatarUrl = avatarUrl,
                     unreadCount = unreadCount,
                     onDestinationClick = { destination ->
                         navigationState.navigate(AppDestination.fromBottomBarDestination(destination))
@@ -192,7 +237,7 @@ private fun AskITShell(
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(bottom = padding.calculateBottomPadding()),
             color = MaterialTheme.colorScheme.background,
         ) {
             NavDisplay(

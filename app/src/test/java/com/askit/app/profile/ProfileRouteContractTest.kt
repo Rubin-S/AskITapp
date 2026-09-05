@@ -5,6 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -12,6 +15,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import com.askit.app.jobs.Job
+import com.askit.app.jobs.JobKind
+import com.askit.app.jobs.JobParty
+import com.askit.app.jobs.JobStatus
+import com.askit.app.jobs.JobWorkMode
 import com.askit.app.listservice.ListServiceDeliveryMode
 import com.askit.app.listservice.ListServiceDetails
 import com.askit.app.listservice.ListServiceDraft
@@ -43,10 +50,10 @@ class ProfileRouteContractTest {
 
     @Test
     fun galleryIsDefaultTab_andShowsEmptyNotFakeCells() {
-        setProfile()
-        composeTestRule.onNodeWithTag("profile_tab_gallery").assertIsDisplayed()
+        setProfile(SessionProfile(hasListedService = true))
+        composeTestRule.onNodeWithTag("profile_tab_services").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_tab_gallery").performClick()
         composeTestRule.onNodeWithTag("profile_tab_about").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("profile_tab_activity").assertIsDisplayed()
         composeTestRule.onNodeWithTag("profile_tab_reviews").assertIsDisplayed()
         composeTestRule.onNodeWithTag("profile_gallery_empty").assertIsDisplayed()
         composeTestRule.onNodeWithTag("profile_photo_grid").assertDoesNotExist()
@@ -59,6 +66,35 @@ class ProfileRouteContractTest {
         composeTestRule.onNodeWithTag("profile_more").performClick()
         composeTestRule.onNodeWithTag("profile_share").assertIsDisplayed()
         composeTestRule.onNodeWithTag("profile_copy_username").assertIsDisplayed()
+    }
+
+    @Test
+    fun overflowMenu_hasSettings_andNavigatesToSettings() {
+        var settingsOpened = false
+        composeTestRule.setContent {
+            AskITTheme {
+                ProfileRoute(
+                    profile = SessionProfile(),
+                    jobs = emptyList(),
+                    onEditProfile = {},
+                    onEditListing = {},
+                    onUploadWork = {},
+                    onOpenJob = {},
+                    onViewAllJobs = {},
+                    onSaveAbout = {},
+                    onSaveLookingFor = {},
+                    onSaveSkills = {},
+                    onSaveAvailability = {},
+                    onSetAvatar = {},
+                    onAddLicense = {},
+                    onUsernameCopied = {},
+                    onOpenSettings = { settingsOpened = true },
+                )
+            }
+        }
+        composeTestRule.onNodeWithTag("profile_more").performClick()
+        composeTestRule.onNodeWithTag("profile_settings").assertIsDisplayed().performClick()
+        assertTrue(settingsOpened)
     }
 
     @Test
@@ -84,9 +120,11 @@ class ProfileRouteContractTest {
     fun galleryShowsUriAfterPost() {
         setProfile(
             SessionProfile(
+                hasListedService = true,
                 gallery = listOf(ProfileGalleryItem(id = "p1", uri = "content://askit/photo1")),
             ),
         )
+        composeTestRule.onNodeWithTag("profile_tab_gallery").performClick()
         composeTestRule.onNodeWithTag("profile_photo_grid").assertIsDisplayed()
         composeTestRule.onNodeWithTag("profile_photo_p1").assertExists()
     }
@@ -221,10 +259,357 @@ class ProfileRouteContractTest {
         assertTrue(store.profile.value.hasListedService)
     }
 
-    private fun setProfile(profile: SessionProfile = SessionProfile()) {
+    @Test
+    fun spatialOrdering_ownerFormA_verifiesUniversalOrderOnProfileRoute() {
+        setProfile(
+            SessionProfile(
+                displayName = "Rahul Verma",
+                username = "rahul_v",
+                bio = "Community member",
+                city = "Bengaluru",
+                joinedYear = "2023",
+                hasListedService = false,
+                followerCount = 84,
+                followingCount = 31,
+            ),
+        )
+
+        val topBarY = composeTestRule.onNodeWithTag("profile_top_bar").getUnclippedBoundsInRoot().top
+        val coverY = composeTestRule.onNodeWithTag("profile_cover").getUnclippedBoundsInRoot().top
+        val avatarY = composeTestRule.onNodeWithTag("profile_avatar").getUnclippedBoundsInRoot().top
+        val identityY = composeTestRule.onNodeWithTag("profile_identity_block").getUnclippedBoundsInRoot().top
+        val metricsY = composeTestRule.onNodeWithTag("profile_metrics_bar").getUnclippedBoundsInRoot().top
+        val actionsY = composeTestRule.onNodeWithTag("profile_action_row").getUnclippedBoundsInRoot().top
+        val bannerY = composeTestRule.onNodeWithTag("profile_complete_form_b_banner").getUnclippedBoundsInRoot().top
+        val tabsY = composeTestRule.onNodeWithTag("profile_tabs").getUnclippedBoundsInRoot().top
+        val contentY = composeTestRule.onNodeWithTag("profile_content_section").getUnclippedBoundsInRoot().top
+
+        assertTrue("TopBar <= Cover", topBarY <= coverY)
+        assertTrue("Cover <= Avatar", coverY <= avatarY)
+        assertTrue("Avatar < Identity", avatarY < identityY)
+        assertTrue("Identity < Metrics", identityY < metricsY)
+        assertTrue("Metrics < Actions", metricsY < actionsY)
+        assertTrue("Actions < Banner", actionsY < bannerY)
+        assertTrue("Banner < Tabs", bannerY < tabsY)
+        assertTrue("Tabs < Content", tabsY < contentY)
+    }
+
+    @Test
+    fun spatialOrdering_providerFormB_verifiesUniversalOrderOnProfileRoute() {
+        setProfile(
+            SessionProfile(
+                displayName = "Priya Sharma",
+                username = "priya_e",
+                bio = "Certified electrician",
+                city = "Chennai",
+                joinedYear = "2022",
+                hasListedService = true,
+                listing = DefaultCarpentryListing,
+                followerCount = 120,
+                followingCount = 45,
+            ),
+        )
+
+        val topBarY = composeTestRule.onNodeWithTag("profile_top_bar").getUnclippedBoundsInRoot().top
+        val coverY = composeTestRule.onNodeWithTag("profile_cover").getUnclippedBoundsInRoot().top
+        val avatarY = composeTestRule.onNodeWithTag("profile_avatar").getUnclippedBoundsInRoot().top
+        val identityY = composeTestRule.onNodeWithTag("profile_identity_block").getUnclippedBoundsInRoot().top
+        val metricsY = composeTestRule.onNodeWithTag("profile_metrics_bar").getUnclippedBoundsInRoot().top
+        val actionsY = composeTestRule.onNodeWithTag("profile_action_row").getUnclippedBoundsInRoot().top
+        val tabsY = composeTestRule.onNodeWithTag("profile_tabs").getUnclippedBoundsInRoot().top
+        val contentY = composeTestRule.onNodeWithTag("profile_content_section").getUnclippedBoundsInRoot().top
+
+        assertTrue("TopBar <= Cover", topBarY <= coverY)
+        assertTrue("Cover <= Avatar", coverY <= avatarY)
+        assertTrue("Avatar < Identity", avatarY < identityY)
+        assertTrue("Identity < Metrics", identityY < metricsY)
+        assertTrue("Metrics < Actions", metricsY < actionsY)
+        assertTrue("Actions < Tabs", actionsY < tabsY)
+        assertTrue("Tabs < Content", tabsY < contentY)
+
+        composeTestRule.onNodeWithTag("profile_complete_form_b_banner").assertDoesNotExist()
+    }
+
+    @Test
+    fun formADynamicMetricsAndTabs_ownerView_showsThreeMetricsThreeTabsAndCompleteFormBBanner() {
+        val jobs = listOf(sampleJob("j1"), sampleJob("j2"))
+        setProfile(
+            SessionProfile(
+                displayName = "Rahul Verma",
+                username = "rahul_v",
+                hasListedService = false,
+                followerCount = 84,
+                followingCount = 31,
+            ),
+            jobs = jobs,
+        )
+
+        composeTestRule.onNodeWithTag("profile_metric_activity").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_metric_followers").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_metric_following").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_metric_rating").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_metric_completed_jobs").assertDoesNotExist()
+
+        composeTestRule.onNodeWithTag("profile_tab_activity").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_tab_about").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_tab_reviews").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_tab_services").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_tab_gallery").assertDoesNotExist()
+
+        composeTestRule.onNodeWithTag("profile_complete_form_b_banner").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_camera").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_edit").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_share").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").assertIsDisplayed()
+    }
+
+    @Test
+    fun formBDynamicMetricsAndTabs_ownerView_showsFourMetricsFourTabsAndNoMotivationalBanner() {
+        setProfile(
+            SessionProfile(
+                displayName = "Priya Sharma",
+                username = "priya_e",
+                hasListedService = true,
+                listing = DefaultCarpentryListing,
+                followerCount = 120,
+                followingCount = 45,
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("profile_metric_rating").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_metric_completed_jobs").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_metric_followers").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_metric_following").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_metric_activity").assertDoesNotExist()
+
+        composeTestRule.onNodeWithTag("profile_tab_services").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_tab_gallery").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_tab_reviews").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_tab_about").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("profile_complete_form_b_banner").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_camera").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").assertIsDisplayed()
+    }
+
+    @Test
+    fun viewAsPublic_toggle_showsFloatingExitBannerAndVisitorActions() {
+        setProfile(
+            SessionProfile(
+                displayName = "Priya Sharma",
+                username = "priya_e",
+                hasListedService = true,
+                listing = DefaultCarpentryListing,
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("profile_preview_banner").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").performClick()
+
+        composeTestRule.onNodeWithTag("profile_preview_banner").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_exit_preview").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_message").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_follow").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_request_service").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_edit").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_camera").assertDoesNotExist()
+    }
+
+    @Test
+    fun exitPreview_bannerClick_restoresOwnerMode() {
+        setProfile(
+            SessionProfile(
+                displayName = "Priya Sharma",
+                username = "priya_e",
+                hasListedService = true,
+                listing = DefaultCarpentryListing,
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").performClick()
+        composeTestRule.onNodeWithTag("profile_preview_banner").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("profile_exit_preview").performClick()
+        composeTestRule.onNodeWithTag("profile_preview_banner").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_action_edit").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_camera").assertIsDisplayed()
+    }
+
+    @Test
+    fun formA_viewAsPublic_hidesMotivationalBannerAndCamera_andEnforcesVisitorProtection() {
+        setProfile(
+            SessionProfile(
+                displayName = "Rahul Verma",
+                username = "rahul_v",
+                hasListedService = false,
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("profile_complete_form_b_banner").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_camera").assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").performClick()
+
+        composeTestRule.onNodeWithTag("profile_preview_banner").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_complete_form_b_banner").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_camera").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_action_request_service").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_action_message").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_follow").assertIsDisplayed()
+    }
+
+    @Test
+    fun formB_viewAsPublic_suppressesServiceCardEditButton_andScopingToServicesTab() {
+        setProfile(
+            SessionProfile(
+                displayName = "Priya Sharma",
+                username = "priya_e",
+                hasListedService = true,
+                listing = DefaultCarpentryListing,
+            ),
+        )
+
+        composeTestRule.onNodeWithTag("profile_your_service").assertExists()
+        composeTestRule.onNodeWithText("Edit listing").assertExists()
+
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").performClick()
+
+        composeTestRule.onNodeWithTag("profile_your_service").assertExists()
+        composeTestRule.onNodeWithText("Edit listing").assertDoesNotExist()
+
+        composeTestRule.onNodeWithTag("profile_tab_gallery").performClick()
+        composeTestRule.onNodeWithTag("profile_your_service").assertDoesNotExist()
+
+        composeTestRule.onNodeWithTag("profile_tab_reviews").performClick()
+        composeTestRule.onNodeWithTag("profile_your_service").assertDoesNotExist()
+    }
+
+    @Test
+    fun followSimulation_togglesInPublicPreviewMode() {
+        setProfile(SessionProfile(hasListedService = false))
+
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").performClick()
+        composeTestRule.onNode(hasTestTag("profile_action_follow") and hasText("Follow")).assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("profile_action_follow").performClick()
+        composeTestRule.onNode(hasTestTag("profile_action_follow") and hasText("Following")).assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("profile_action_follow").performClick()
+        composeTestRule.onNode(hasTestTag("profile_action_follow") and hasText("Follow")).assertIsDisplayed()
+    }
+
+    @Test
+    fun inPlacePreviewToggling_preservesTabSelectionAndFollowStateAcrossTransitions() {
+        setProfile(
+            SessionProfile(
+                displayName = "Priya Sharma",
+                username = "priya_e",
+                hasListedService = true,
+                listing = DefaultCarpentryListing,
+            ),
+        )
+
+        // 1. Initial owner mode: select "reviews" tab (tab index 2)
+        composeTestRule.onNodeWithTag("profile_tab_reviews").performClick()
+        composeTestRule.onNodeWithTag("profile_reviews_empty").assertIsDisplayed()
+
+        // 2. Enter in-place preview via profile_action_view_as_public
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").performClick()
+        composeTestRule.onNodeWithTag("profile_preview_banner").assertIsDisplayed()
+
+        // 3. Verify tab selection is preserved in preview mode (reviews empty state still displayed)
+        composeTestRule.onNodeWithTag("profile_reviews_empty").assertIsDisplayed()
+
+        // 4. In preview mode, toggle follow state to "Following"
+        composeTestRule.onNode(hasTestTag("profile_action_follow") and hasText("Follow")).assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_action_follow").performClick()
+        composeTestRule.onNode(hasTestTag("profile_action_follow") and hasText("Following")).assertIsDisplayed()
+
+        // 5. Exit preview mode via floating exit banner (profile_exit_preview)
+        composeTestRule.onNodeWithTag("profile_exit_preview").performClick()
+        composeTestRule.onNodeWithTag("profile_preview_banner").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_action_edit").assertIsDisplayed()
+
+        // 6. Verify tab selection is preserved after exiting preview (reviews tab still active)
+        composeTestRule.onNodeWithTag("profile_reviews_empty").assertIsDisplayed()
+
+        // 7. Re-enter preview mode and verify follow state was preserved (remains "Following")
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").performClick()
+        composeTestRule.onNodeWithTag("profile_preview_banner").assertIsDisplayed()
+        composeTestRule.onNode(hasTestTag("profile_action_follow") and hasText("Following")).assertIsDisplayed()
+    }
+
+    @Test
+    fun formAVisitorProtection_noRequestServiceOrProviderTabsInVisitorOrPreview() {
+        setProfile(
+            SessionProfile(
+                displayName = "Rahul Verma",
+                username = "rahul_v",
+                hasListedService = false,
+            ),
+        )
+
+        // Enter preview
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").performClick()
+        composeTestRule.onNodeWithTag("profile_preview_banner").assertIsDisplayed()
+
+        // In preview mode:
+        // No Request Service CTA
+        composeTestRule.onNodeWithTag("profile_action_request_service").assertDoesNotExist()
+        // No provider tabs
+        composeTestRule.onNodeWithTag("profile_tab_services").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_tab_gallery").assertDoesNotExist()
+        // Strictly 3 member tabs
+        composeTestRule.onNodeWithTag("profile_tab_activity").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_tab_about").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_tab_reviews").assertIsDisplayed()
+    }
+
+    @Test
+    fun cameraAffordanceAndMotivationalBanner_strictlyHiddenInPreviewAndVisitorModes() {
+        // Form A owner
+        setProfile(
+            SessionProfile(
+                displayName = "Rahul Verma",
+                username = "rahul_v",
+                hasListedService = false,
+            ),
+        )
+        composeTestRule.onNodeWithTag("profile_camera").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_complete_form_b_banner").assertIsDisplayed()
+
+        // Enter preview
+        composeTestRule.onNodeWithTag("profile_action_view_as_public").performClick()
+        composeTestRule.onNodeWithTag("profile_camera").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("profile_complete_form_b_banner").assertDoesNotExist()
+
+        // Exit preview
+        composeTestRule.onNodeWithTag("profile_exit_preview").performClick()
+        composeTestRule.onNodeWithTag("profile_camera").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profile_complete_form_b_banner").assertIsDisplayed()
+    }
+
+    private fun sampleJob(id: String, status: JobStatus = JobStatus.Completed): Job {
+        return Job(
+            id = id,
+            title = "Repair Task $id",
+            counterpartName = "Client A",
+            kind = JobKind.TaskApplication,
+            localParty = JobParty.Receiver,
+            status = status,
+            workMode = JobWorkMode.OnSite,
+            locationLabel = "Indiranagar",
+            otp = "1234",
+            inHistory = false,
+        )
+    }
+
+    private fun setProfile(profile: SessionProfile = SessionProfile(), jobs: List<Job> = emptyList()) {
         composeTestRule.setContent {
             AskITTheme {
-                TestProfileRoute(profile = profile)
+                TestProfileRoute(profile = profile, jobs = jobs)
             }
         }
     }
@@ -271,4 +656,12 @@ private class ThrowingProfileRepository : ProfileRepository {
     override fun appendGallery(uris: List<String>) = error("failed")
     override fun appendReview(review: ProfileReview) = error("failed")
     override fun addLicense(license: String) = error("failed")
+    override fun updateActiveRole(role: String) = error("failed")
+    override fun updatePhoneNumber(phone: String) = error("failed")
+    override fun updatePushNotifications(enabled: Boolean) = error("failed")
+    override fun updateJobAlerts(enabled: Boolean) = error("failed")
+    override fun updateLanguage(lang: String) = error("failed")
+    override fun updateLocationServices(enabled: Boolean) = error("failed")
+    override fun updateWhoCanMessage(option: String) = error("failed")
+    override fun resetAppData() = error("failed")
 }

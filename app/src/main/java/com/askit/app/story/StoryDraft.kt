@@ -1,5 +1,6 @@
 package com.askit.app.story
 
+import com.askit.app.home.model.FeedPost
 import kotlinx.serialization.Serializable
 
 const val STORY_MAX_DURATION_MS = 15_000L
@@ -42,6 +43,12 @@ enum class StoryStickerKind {
     Link,
     Photo,
     Emoji,
+    PostReshare,
+}
+
+enum class StoryReshareCardStyle {
+    FullCard,
+    MinimalCard,
 }
 
 enum class StoryEditorTool {
@@ -131,6 +138,8 @@ data class StoryDraft(
     val caption: String = "",
     val audience: StoryAudience = StoryAudience.Everyone,
     val layers: List<StoryLayer> = emptyList(),
+    val sharedPost: FeedPost? = null,
+    val reshareCardStyle: StoryReshareCardStyle = StoryReshareCardStyle.FullCard,
 )
 
 data class StoryFormState(
@@ -156,9 +165,12 @@ data class StoryFormState(
     val editingTextLayerId: String? = null,
     val drawStrokeColorArgb: Long = 0xFFFFFFFF,
     val currentDrawLayerId: String? = null,
+    val sharedPost: FeedPost? = null,
+    val reshareCardStyle: StoryReshareCardStyle = StoryReshareCardStyle.FullCard,
 ) {
     val hasMeaningfulChanges: Boolean
         get() {
+            if (sharedPost != null) return true
             if (mediaUri != null || mediaType == StoryMediaType.SolidBackground) return true
             if (createTextDraft.isNotBlank()) return true
             if (layers.isNotEmpty()) return true

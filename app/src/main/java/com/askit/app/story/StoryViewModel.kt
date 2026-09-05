@@ -2,6 +2,7 @@ package com.askit.app.story
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.askit.app.home.model.FeedPost
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +27,34 @@ class StoryViewModel(
 
     fun startNewDraft() {
         setState(StoryFormState())
+    }
+
+    fun startReshareDraft(post: FeedPost) {
+        setState(
+            _formState.value.copy(
+                screenMode = StoryScreenMode.Editor,
+                mediaType = StoryMediaType.SolidBackground,
+                mediaUri = null,
+                durationMs = null,
+                trimStartMs = 0L,
+                trimEndMs = null,
+                layers = emptyList(),
+                selectedLayerId = null,
+                createTextDraft = "",
+                sharedPost = post,
+                reshareCardStyle = StoryReshareCardStyle.FullCard,
+                solidBackgroundIndex = 4, // Deep dark gradient background
+            ),
+        )
+    }
+
+    fun toggleReshareCardStyle() = update {
+        val next = if (reshareCardStyle == StoryReshareCardStyle.FullCard) {
+            StoryReshareCardStyle.MinimalCard
+        } else {
+            StoryReshareCardStyle.FullCard
+        }
+        copy(reshareCardStyle = next)
     }
 
     fun setScreenMode(mode: StoryScreenMode) = update { copy(screenMode = mode) }
@@ -301,7 +330,9 @@ class StoryViewModel(
         if (state.screenMode != StoryScreenMode.Editor && state.screenMode != StoryScreenMode.CreateText) {
             return null
         }
-        val hasMedia = state.mediaUri != null || state.mediaType == StoryMediaType.SolidBackground
+        val hasMedia = state.mediaUri != null ||
+            state.mediaType == StoryMediaType.SolidBackground ||
+            state.sharedPost != null
         if (!hasMedia) return null
         return StoryDraft(
             mediaUri = state.mediaUri,
@@ -318,6 +349,8 @@ class StoryViewModel(
             caption = state.caption.trim(),
             audience = state.audience,
             layers = state.layers.sortedBy(StoryLayer::zIndex),
+            sharedPost = state.sharedPost,
+            reshareCardStyle = state.reshareCardStyle,
         )
     }
 
