@@ -32,8 +32,11 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -78,9 +81,11 @@ import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -91,6 +96,7 @@ import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
 import com.askit.app.explore.SearchAreaScreen
 import com.askit.app.media.persistPhotoPickerReadAccess
+import com.askit.designsystem.R as DsR
 import com.askit.designsystem.tasks.TaskResultItem
 import java.text.DateFormat
 import java.util.Date
@@ -1007,20 +1013,22 @@ private fun PostTaskReview(
     }
     val timingLabel = when (state.timingMode) {
         PostTaskTimingMode.ASAP -> stringResource(R.string.post_task_asap)
-        PostTaskTimingMode.DATE -> stringResource(R.string.post_task_on_date)
+        PostTaskTimingMode.DATE -> if (state.selectedDateMillis != null) {
+            formatDate(state.selectedDateMillis)
+        } else {
+            stringResource(R.string.post_task_on_date)
+        }
         PostTaskTimingMode.FLEXIBLE -> stringResource(R.string.post_task_flexible)
         null -> ""
     }
     val privateAddress = state.privateAddressOrLandmark.trim()
     val accessInstructions = state.accessInstructions.trim()
-    val itemDetailsVisible = state.quantityOrMeasurements.isNotBlank() ||
-        state.brandOrModel.isNotBlank() || state.materialsPolicy != null
     val previewLocationLabel = when (state.workMode) {
-        PostTaskWorkMode.AT_MY_LOCATION -> state.publicAreaLabel.trim()
+        PostTaskWorkMode.AT_MY_LOCATION -> state.publicAreaLabel.trim().ifEmpty { "Local Area" }
         PostTaskWorkMode.AT_PROVIDER_LOCATION ->
             stringResource(R.string.post_task_at_provider_location)
         PostTaskWorkMode.REMOTE -> stringResource(R.string.post_task_remote)
-        null -> ""
+        null -> "Local Area"
     }
     val previewTimingLabel = when (state.timingMode) {
         PostTaskTimingMode.ASAP -> stringResource(R.string.post_task_asap)
@@ -1032,17 +1040,17 @@ private fun PostTaskReview(
         PostTaskBudgetMode.REQUEST_QUOTES -> stringResource(R.string.post_task_request_quotes)
         PostTaskBudgetMode.FIXED -> state.fixedBudget.trim().takeIf(String::isNotEmpty)?.let {
             stringResource(R.string.post_task_budget_fixed_value, it)
-        }.orEmpty()
+        }.orEmpty().ifEmpty { "Request Quotes" }
         PostTaskBudgetMode.RANGE -> {
             val minimum = state.minimumBudget.trim()
             val maximum = state.maximumBudget.trim()
             if (minimum.isEmpty() || maximum.isEmpty()) {
-                ""
+                "Request Quotes"
             } else {
                 stringResource(R.string.post_task_budget_range_display, minimum, maximum)
             }
         }
-        null -> ""
+        null -> "Request Quotes"
     }
     val scopeHighlights = listOfNotNull(
         listOf(state.quantityOrMeasurements.trim(), state.brandOrModel.trim())
@@ -1052,149 +1060,315 @@ private fun PostTaskReview(
         state.materialsPolicy?.let { policy -> stringResource(policy.labelRes) },
     ).take(2)
 
+    val requirementsList = buildList {
+        if (workModeLabel.isNotBlank()) {
+            add("Work mode: $workModeLabel")
+        }
+        if (state.quantityOrMeasurements.isNotBlank()) {
+            add("Quantity / Measurements: ${state.quantityOrMeasurements.trim()}")
+        }
+        if (state.brandOrModel.isNotBlank()) {
+            add("Brand / Model: ${state.brandOrModel.trim()}")
+        }
+        state.materialsPolicy?.let { policy ->
+            add("Materials: ${stringResource(policy.labelRes)}")
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .widthIn(max = 640.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            text = stringResource(R.string.post_task_review_title),
-            style = MaterialTheme.typography.headlineSmall,
-        )
-        Text(
-            text = stringResource(R.string.post_task_review_helper),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Spacer(Modifier.height(12.dp))
-        PostTaskSectionHeading(R.string.post_task_what_you_need)
-        PostTaskSummaryRow(R.string.post_task_category, categoryLabel)
-        PostTaskSummaryRow(R.string.post_task_task_title, state.title.trim())
-        PostTaskSummaryBlock(R.string.post_task_details, state.details.trim())
-
-        Spacer(Modifier.height(12.dp))
-        PostTaskSectionHeading(R.string.post_task_where)
-        PostTaskSummaryRow(R.string.post_task_work_mode, workModeLabel)
-        if (state.workMode == PostTaskWorkMode.AT_MY_LOCATION && state.publicAreaLabel.isNotBlank()) {
-            PostTaskSummaryRow(R.string.post_task_public_area, state.publicAreaLabel)
-            val publicInformation = stringResource(R.string.post_task_public_information)
+        // Review header
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = stringResource(R.string.post_task_location_privacy),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.semantics { stateDescription = publicInformation },
+                text = stringResource(R.string.post_task_review_title),
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
             )
-        }
-
-        if (state.workMode == PostTaskWorkMode.AT_MY_LOCATION &&
-            (privateAddress.isNotBlank() || accessInstructions.isNotBlank())
-        ) {
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            PostTaskSectionHeading(R.string.post_task_private_location)
             Text(
-                text = stringResource(R.string.post_task_private_information),
+                text = stringResource(R.string.post_task_review_helper),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            if (privateAddress.isNotBlank()) {
-                PostTaskSummaryRow(R.string.post_task_address_optional, privateAddress)
-            }
-            if (accessInstructions.isNotBlank()) {
-                PostTaskSummaryBlock(R.string.post_task_access_instructions, accessInstructions)
-            }
         }
 
-        Spacer(Modifier.height(12.dp))
-        PostTaskSectionHeading(R.string.post_task_when)
-        PostTaskSummaryRow(R.string.post_task_timing, timingLabel)
-        if (state.timingMode == PostTaskTimingMode.DATE && state.selectedDateMillis != null) {
-            PostTaskSummaryRow(
-                R.string.post_task_date,
-                formatDate(state.selectedDateMillis),
+        // Top Hero: Feed Card Preview (How it appears in Explore & Home)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(
+                    painter = painterResource(DsR.drawable.ic_visibility),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = "Feed Card Preview",
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+
+            TaskResultItem(
+                title = state.title.trim(),
+                category = categoryLabel,
+                summary = state.details.trim().takeIf(String::isNotEmpty),
+                budgetLabel = previewBudgetLabel,
+                locationLabel = previewLocationLabel,
+                timingLabel = previewTimingLabel,
+                posterName = "You (Task Creator)",
+                postedLabel = "Review Draft",
+                status = null,
+                photoModels = state.photoUris,
+                scopeHighlights = scopeHighlights,
+                modifier = Modifier.testTag("post_task_provider_preview_card"),
             )
         }
 
-        state.budgetMode?.let { budgetMode ->
-            Spacer(Modifier.height(12.dp))
-            PostTaskSectionHeading(R.string.post_task_budget)
-            PostTaskSummaryRow(
-                R.string.post_task_budget,
-                when (budgetMode) {
-                    PostTaskBudgetMode.REQUEST_QUOTES -> stringResource(R.string.post_task_request_quotes)
-                    PostTaskBudgetMode.FIXED -> stringResource(
-                        R.string.post_task_fixed_amount_value,
-                        state.fixedBudget.trim(),
-                    )
-                    PostTaskBudgetMode.RANGE -> stringResource(
-                        R.string.post_task_budget_range_value,
-                        state.minimumBudget.trim(),
-                        state.maximumBudget.trim(),
-                    )
-                },
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.padding(vertical = 4.dp),
+        )
+
+        // Full Task Details Header
+        Text(
+            text = "Full Task Details",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+
+        // Category & timing badge row (matching TaskDetailScreen)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+            ) {
+                Text(
+                    text = categoryLabel,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                )
+            }
+
+            Text(
+                text = timingLabel.ifEmpty { "Flexible" },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
+        // Title (matching TaskDetailScreen)
+        Text(
+            text = state.title.trim(),
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+
+        // Estimated Budget & Timing Card (matching TaskDetailScreen)
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Estimated Budget",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = previewBudgetLabel,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = "Timeline",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = timingLabel.ifEmpty { "Flexible" },
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = if (state.timingMode == PostTaskTimingMode.ASAP) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                    )
+                }
+            }
+        }
+
+        // Requester & Location row (matching TaskDetailScreen)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Y",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "You (Task Creator)",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = previewLocationLabel,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        // Description (matching TaskDetailScreen)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = "Description",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = state.details.trim(),
+                style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        // Key Requirements (matching TaskDetailScreen)
+        if (requirementsList.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Key Requirements",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                requirementsList.forEach { req ->
+                    Row(
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = "•",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = req,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
+
+        // Photos (matching TaskDetailScreen)
         if (state.photoUris.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            PostTaskSectionHeading(R.string.post_task_photos)
-            PhotoList(uris = state.photoUris, onRemovePhoto = {}, allowRemove = false)
-        }
-
-        if (itemDetailsVisible) {
-            Spacer(Modifier.height(12.dp))
-            PostTaskSectionHeading(R.string.post_task_item_details)
-            if (state.quantityOrMeasurements.isNotBlank()) {
-                PostTaskSummaryRow(
-                    R.string.post_task_quantity_measurements,
-                    state.quantityOrMeasurements.trim(),
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Photos (${state.photoUris.size})",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
-            }
-            if (state.brandOrModel.isNotBlank()) {
-                PostTaskSummaryRow(R.string.post_task_brand_model, state.brandOrModel.trim())
-            }
-            state.materialsPolicy?.let { policy ->
-                PostTaskSummaryRow(
-                    R.string.post_task_materials,
-                    stringResource(policy.labelRes),
-                )
+                PhotoList(uris = state.photoUris, onRemovePhoto = {}, allowRemove = false)
             }
         }
 
-        Spacer(Modifier.height(12.dp))
-        PostTaskSectionHeading(R.string.post_task_provider_preview)
-        Text(
-            text = stringResource(R.string.post_task_provider_preview_helper),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = stringResource(R.string.post_task_provider_preview_privacy),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = stringResource(R.string.post_task_provider_preview_live_data),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        TaskResultItem(
-            title = state.title.trim(),
-            category = categoryLabel,
-            summary = state.details.trim(),
-            budgetLabel = previewBudgetLabel,
-            locationLabel = previewLocationLabel,
-            timingLabel = previewTimingLabel,
-            posterName = "",
-            postedLabel = "",
-            status = null,
-            photoModels = state.photoUris,
-            scopeHighlights = scopeHighlights,
-            modifier = Modifier.testTag("post_task_provider_preview_card"),
-        )
+        // Dedicated Private Information Card (with lock icon & reassurance)
+        if (state.workMode == PostTaskWorkMode.AT_MY_LOCATION &&
+            (privateAddress.isNotBlank() || accessInstructions.isNotBlank())
+        ) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(
+                            painter = painterResource(DsR.drawable.ic_lock),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text = "Private Information",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
 
-        Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = "🔒 Visible only to your assigned provider after you accept their offer.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    if (privateAddress.isNotBlank()) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        PostTaskSummaryRow(R.string.post_task_address_optional, privateAddress)
+                    }
+
+                    if (accessInstructions.isNotBlank()) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        PostTaskSummaryBlock(R.string.post_task_access_instructions, accessInstructions)
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Edit button
         OutlinedButton(
             onClick = onEdit,
             modifier = Modifier

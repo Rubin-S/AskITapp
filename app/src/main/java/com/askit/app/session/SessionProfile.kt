@@ -62,8 +62,22 @@ data class SessionProfile(
     val savedProfessionals: List<SavedProfessional> = emptyList(),
     val followingCount: Int = 0,
     val followerCount: Int = 0,
+    val phoneNumber: String = "9876543298",
+    val activeRole: String = "Both",
+    val pushNotificationsEnabled: Boolean = true,
+    val jobAlertsEnabled: Boolean = true,
+    val selectedLanguage: String = "English",
+    val locationServicesEnabled: Boolean = true,
+    val whoCanMessage: String = "Everyone",
+    val blockedAccountsCount: Int = 0,
 ) {
     val showsServiceCard: Boolean get() = hasListedService && listing != null
+    val maskedPhoneNumber: String
+        get() = if (phoneNumber.length >= 4) {
+            "${phoneNumber.take(2)}••••••${phoneNumber.takeLast(2)}"
+        } else {
+            phoneNumber
+        }
 }
 
 class SessionProfileStore(
@@ -169,6 +183,38 @@ class SessionProfileStore(
                 current.copy(licenses = current.licenses + trimmed)
             }
         }
+    }
+
+    fun updateActiveRole(role: String) {
+        _profile.update { it.copy(activeRole = role) }
+    }
+
+    fun updatePhoneNumber(phone: String) {
+        _profile.update { it.copy(phoneNumber = phone) }
+    }
+
+    fun updatePushNotifications(enabled: Boolean) {
+        _profile.update { it.copy(pushNotificationsEnabled = enabled) }
+    }
+
+    fun updateJobAlerts(enabled: Boolean) {
+        _profile.update { it.copy(jobAlertsEnabled = enabled) }
+    }
+
+    fun updateLanguage(lang: String) {
+        _profile.update { it.copy(selectedLanguage = lang) }
+    }
+
+    fun updateLocationServices(enabled: Boolean) {
+        _profile.update { it.copy(locationServicesEnabled = enabled) }
+    }
+
+    fun updateWhoCanMessage(option: String) {
+        _profile.update { it.copy(whoCanMessage = option) }
+    }
+
+    fun resetAppData() {
+        _profile.value = SessionProfile()
     }
 }
 

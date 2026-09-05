@@ -73,6 +73,33 @@ class ProfileViewModel(
     fun addLicense(license: String) =
         runCatching { repository.addLicense(license) }.onFailure { emitError() }
 
+    fun updateActiveRole(role: String) =
+        runCatching { repository.updateActiveRole(role) }.onFailure { emitError() }
+
+    fun updatePhoneNumber(phone: String) =
+        runCatching { repository.updatePhoneNumber(phone) }.onFailure { emitError() }
+
+    fun updatePushNotifications(enabled: Boolean) =
+        runCatching { repository.updatePushNotifications(enabled) }.onFailure { emitError() }
+
+    fun updateJobAlerts(enabled: Boolean) =
+        runCatching { repository.updateJobAlerts(enabled) }.onFailure { emitError() }
+
+    fun updateLanguage(lang: String) =
+        runCatching { repository.updateLanguage(lang) }.onFailure { emitError() }
+
+    fun updateLocationServices(enabled: Boolean) =
+        runCatching { repository.updateLocationServices(enabled) }.onFailure { emitError() }
+
+    fun updateWhoCanMessage(option: String) =
+        runCatching { repository.updateWhoCanMessage(option) }.onFailure { emitError() }
+
+    fun resetAppData() =
+        runCatching {
+            repository.resetAppData()
+            _messages.tryEmit(R.string.settings_data_cleared)
+        }.onFailure { emitError() }
+
     fun notifyCopied() {
         _messages.tryEmit(R.string.profile_username_copied)
     }

@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,14 +52,15 @@ fun YourServiceCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("profile_your_service"),
-        shape = RoundedCornerShape(24.dp),
-        color = colors.secondaryContainer,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        shape = RoundedCornerShape(20.dp),
+        color = colors.surfaceContainer,
+        border = BorderStroke(1.dp, colors.outlineVariant.copy(alpha = 0.5f)),
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            // Header Row: Eyebrow + Live status pill
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -67,83 +69,129 @@ fun YourServiceCard(
                 Text(
                     text = eyebrow,
                     style = MaterialTheme.typography.labelSmall,
-                    color = colors.onSecondaryContainer,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.primary,
                 )
+                val liveBgColor = if (live) Color(0xFF4CAF50).copy(alpha = 0.15f) else colors.errorContainer
+                val liveTextColor = if (live) Color(0xFF4CAF50) else colors.onErrorContainer
                 Surface(
-                    shape = RoundedCornerShape(50),
-                    color = if (live) colors.primaryContainer else colors.errorContainer,
+                    shape = RoundedCornerShape(6.dp),
+                    color = liveBgColor,
                 ) {
                     Text(
                         text = liveLabel,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (live) colors.onPrimaryContainer else colors.onErrorContainer,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = liveTextColor,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                     )
                 }
             }
+
+            // Service Title
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = colors.onSecondaryContainer,
+                color = colors.onSurface,
             )
+
+            // Category pill & Experience
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Surface(shape = RoundedCornerShape(50), color = colors.onSecondaryContainer) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = colors.primaryContainer,
+                ) {
                     Text(
                         text = category,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = colors.secondaryContainer,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                     )
                 }
+                if (experience.isNotBlank()) {
+                    Text(
+                        text = experience,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                    )
+                }
+            }
+
+            // Description
+            if (description.isNotBlank()) {
                 Text(
-                    text = experience,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.onSecondaryContainer,
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
                 )
             }
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSecondaryContainer,
-            )
+
+            // Price / Quote Box
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
                 color = colors.surfaceContainerHigh,
+                border = BorderStroke(1.dp, colors.outlineVariant.copy(alpha = 0.3f)),
             ) {
-                Column(modifier = Modifier.padding(12.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Text(fromLabel, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
-                        Text(quoteKind, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                        Text(
+                            text = fromLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.onSurfaceVariant,
+                        )
+                        Text(
+                            text = quoteKind,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.onSurfaceVariant,
+                        )
                     }
                     Text(
                         text = quoteValue,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = colors.onSurface,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = colors.primary,
                     )
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+
+            // 3-Metric Row: Coverage, Hours, Response
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 ListingMetric(coverageLabel, coverageValue, coverageHint, Modifier.weight(1f))
                 ListingMetric(hoursLabel, hoursValue, hoursHint, Modifier.weight(1f))
                 ListingMetric(responseLabel, responseValue, responseHint, Modifier.weight(1f))
             }
-            ChipRow(chips = tags)
-            HorizontalDivider(color = colors.outlineVariant)
-            AskITSecondaryButton(
-                onClick = onEdit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("profile_edit_listing"),
-            ) {
-                Text(editLabel)
+
+            // Tags
+            if (tags.isNotEmpty()) {
+                ChipRow(chips = tags)
+            }
+
+            if (editLabel.isNotBlank()) {
+                HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.5f))
+                AskITSecondaryButton(
+                    onClick = onEdit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("profile_edit_listing"),
+                ) {
+                    Text(editLabel)
+                }
             }
         }
     }
@@ -154,26 +202,35 @@ private fun ListingMetric(label: String, value: String, hint: String, modifier: 
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
     ) {
-        Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(
+            modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             Text(
-                text = value,
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = value.ifBlank { "—" },
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                hint,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (hint.isNotBlank()) {
+                Text(
+                    text = hint,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

@@ -105,4 +105,38 @@ class StoryViewModelTest {
         assertEquals("Hello neighbors", layer.text)
         assertEquals(id, viewModel.formState.value.editingTextLayerId)
     }
+
+    @Test
+    fun startReshareDraft_initializesEditorWithPostCardAndDarkBackground() {
+        val viewModel = StoryViewModel(SavedStateHandle())
+        val samplePost = com.askit.app.home.data.getFeedPostById("post-1")
+
+        viewModel.startReshareDraft(samplePost)
+
+        val state = viewModel.formState.value
+        assertEquals(StoryScreenMode.Editor, state.screenMode)
+        assertEquals(StoryMediaType.SolidBackground, state.mediaType)
+        assertEquals(samplePost, state.sharedPost)
+        assertEquals(StoryReshareCardStyle.FullCard, state.reshareCardStyle)
+        assertTrue(viewModel.isDirty)
+
+        val draft = viewModel.buildValidatedDraft()
+        assertEquals(samplePost, draft?.sharedPost)
+        assertEquals(StoryReshareCardStyle.FullCard, draft?.reshareCardStyle)
+    }
+
+    @Test
+    fun toggleReshareCardStyle_switchesBetweenFullAndMinimal() {
+        val viewModel = StoryViewModel(SavedStateHandle())
+        val samplePost = com.askit.app.home.data.getFeedPostById("post-1")
+
+        viewModel.startReshareDraft(samplePost)
+        assertEquals(StoryReshareCardStyle.FullCard, viewModel.formState.value.reshareCardStyle)
+
+        viewModel.toggleReshareCardStyle()
+        assertEquals(StoryReshareCardStyle.MinimalCard, viewModel.formState.value.reshareCardStyle)
+
+        viewModel.toggleReshareCardStyle()
+        assertEquals(StoryReshareCardStyle.FullCard, viewModel.formState.value.reshareCardStyle)
+    }
 }

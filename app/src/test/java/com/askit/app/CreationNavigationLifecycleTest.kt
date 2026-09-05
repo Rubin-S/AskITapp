@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.AnnotatedString
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -54,6 +55,17 @@ class CreationNavigationLifecycleTest {
 
         openPost()
         systemBack()
+        assertHome()
+
+        openCreatorDashboard()
+        systemBack()
+        assertHome()
+    }
+
+    @Test
+    fun creatorDashboard_toolbarBack_exitsRoute() {
+        openCreatorDashboard()
+        toolbarBack()
         assertHome()
     }
 
@@ -253,6 +265,13 @@ class CreationNavigationLifecycleTest {
         openCreateSheet()
         composeTestRule.onNodeWithText("Create a post").performClick()
         composeTestRule.onNodeWithText("Create post").assertIsDisplayed()
+        composeTestRule.onAllNodesWithContentDescription("Create").assertCountEquals(0)
+    }
+
+    private fun openCreatorDashboard() {
+        openCreateSheet()
+        composeTestRule.onNodeWithText("Creator dashboard").performClick()
+        composeTestRule.onNodeWithText("Creator Dashboard").assertIsDisplayed()
         composeTestRule.onAllNodesWithContentDescription("Create").assertCountEquals(0)
     }
 

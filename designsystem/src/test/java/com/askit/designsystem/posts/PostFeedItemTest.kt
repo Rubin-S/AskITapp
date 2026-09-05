@@ -14,6 +14,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import com.askit.designsystem.theme.AskITTheme
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,7 +40,7 @@ class PostFeedItemTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun rendersAllFiveBodies_withoutFakeSocialActions() {
+    fun rendersAllFiveBodies_withSocialActions() {
         composeTestRule.setContent {
             AskITTheme(darkTheme = false) {
                 Box(modifier = Modifier.width(360.dp)) {
@@ -47,7 +49,7 @@ class PostFeedItemTest {
             }
         }
 
-        composeTestRule.onNodeWithText("A community update").assertIsDisplayed()
+        composeTestRule.onNodeWithText("A community update", substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithTag("post_list").performScrollToNode(
             hasText("A photo caption", substring = true),
         )
@@ -66,12 +68,61 @@ class PostFeedItemTest {
             hasText("Which finish looks better?", substring = true),
         )
         composeTestRule.onNodeWithText("Which finish looks better?", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithTag("post_list").performScrollToNode(
+            hasText("Matte black"),
+        )
         composeTestRule.onNodeWithText("Matte black").assertIsDisplayed()
         composeTestRule.onNodeWithTag("post_list").performScrollToNode(
             hasText("Closes 24 hours after posting", substring = true),
         )
         composeTestRule.onNodeWithText("Closes 24 hours after posting", substring = true).assertIsDisplayed()
-        composeTestRule.onAllNodes(hasClickAction(), useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun rendersSocialInteractionActions_andHandlesClicks() {
+        var moreClicked = false
+        var commentClicked = false
+        var shareClicked = false
+
+        composeTestRule.setContent {
+            AskITTheme {
+                PostFeedItem(
+                    author = PostFeedAuthor("Alice"),
+                    timeAgoLabel = "2h",
+                    likesCount = 10,
+                    commentsCount = 3,
+                    content = PostFeedContent(body = "Hello world"),
+                    onMoreClick = { moreClicked = true },
+                    onCommentClick = { commentClicked = true },
+                    onShareClick = { shareClicked = true },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("post_feed_like_button").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("post_feed_comment_button").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("post_feed_share_button").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("post_feed_save_button").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("post_feed_more_options").assertIsDisplayed()
+
+        composeTestRule.onNodeWithText("10").assertIsDisplayed()
+        composeTestRule.onNodeWithText("3").assertIsDisplayed()
+
+        // Test Like toggle increments local count from 10 to 11
+        composeTestRule.onNodeWithTag("post_feed_like_button").performClick()
+        composeTestRule.onNodeWithText("11").assertIsDisplayed()
+
+        // Test Comment click callback
+        composeTestRule.onNodeWithTag("post_feed_comment_button").performClick()
+        assertTrue(commentClicked)
+
+        // Test Share click callback
+        composeTestRule.onNodeWithTag("post_feed_share_button").performClick()
+        assertTrue(shareClicked)
+
+        // Test More click callback
+        composeTestRule.onNodeWithTag("post_feed_more_options").performClick()
+        assertTrue(moreClicked)
     }
 
     @Test

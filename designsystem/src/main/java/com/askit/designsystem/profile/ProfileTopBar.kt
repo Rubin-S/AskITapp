@@ -37,6 +37,8 @@ fun ProfileTopBar(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     backContentDescription: String = "",
+    settingsLabel: String = "",
+    onSettingsClick: (() -> Unit)? = null,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     TopAppBar(
@@ -77,6 +79,16 @@ fun ProfileTopBar(
                     onDismissRequest = { menuExpanded = false },
                     modifier = Modifier.testTag("profile_more_menu"),
                 ) {
+                    if (onSettingsClick != null) {
+                        DropdownMenuItem(
+                            text = { Text(settingsLabel.ifBlank { "Settings" }) },
+                            onClick = {
+                                menuExpanded = false
+                                onSettingsClick()
+                            },
+                            modifier = Modifier.testTag("profile_settings"),
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text(shareLabel) },
                         onClick = {
@@ -96,7 +108,6 @@ fun ProfileTopBar(
                 }
             }
         },
-        windowInsets = WindowInsets(0, 0, 0, 0),
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background,
         ),
