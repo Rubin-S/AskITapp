@@ -5,10 +5,20 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-lint:
+  build:
+    name: Lint, test and assemble
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -20,17 +30,30 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Gradle version
-        run: ./gradlew --version
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Lint
         run: ./gradlew lintDebug lintRelease
+
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest
 
       - name: Assemble debug
         run: ./gradlew assembleDebug
 
       - name: Assemble release
         run: ./gradlew assembleRelease bundleRelease
+
+      - name: Upload lint and test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            **/build/reports/
+            **/build/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
