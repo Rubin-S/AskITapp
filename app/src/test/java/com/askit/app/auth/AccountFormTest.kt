@@ -30,7 +30,10 @@ class AccountFormTest {
     @Test fun previewSignupCannotOverwriteThePreviouslySignedInAccount() {
         val saved = mutableMapOf<String, com.askit.app.session.SessionProfile>()
         val store = com.askit.app.session.SessionProfileStore(persist = { saved[it.accountId] = it; it })
-        val auth = AuthViewModel(clientPreview = true, profileStore = store, clock = { 0L })
+        // Preview personas live in the demo source set, so supply the signed-in owner explicitly.
+        val auth = AuthViewModel(clientPreview = true, profileStore = store, clock = { 0L },
+            previewProfileLoader = { id -> com.askit.app.session.SessionProfile(accountId = id, displayName = "Preview owner") })
+        assertEquals("preview-owner", store.profile.value.accountId)
         val owner = store.profile.value
         auth.signOut()
         auth.requestCode("+919876543210")
