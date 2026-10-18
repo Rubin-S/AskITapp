@@ -1,7 +1,9 @@
 package com.askit.app.story
 
+import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.askit.app.home.model.FeedPost
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +14,8 @@ import kotlinx.serialization.json.Json
 
 class StoryViewModel(
     private val savedStateHandle: SavedStateHandle? = null,
+    /** Test seam; production schedules on [viewModelScope]. */
+    draftSaveScheduler: ((Long, () -> Unit) -> DraftSaveDebouncer.Cancellable)? = null,
 ) : ViewModel() {
 
     private val json = Json {
@@ -21,6 +25,29 @@ class StoryViewModel(
 
     private val _formState = MutableStateFlow(restoreState())
     val formState: StateFlow<StoryFormState> = _formState.asStateFlow()
+
+    // Encoding the transform, viewport, shared post and every layer to JSON on each drag/pinch
+    // frame was the editor's hottest path. Saves are debounced, and flushed when the activity
+    // saves its state (so process death never loses the latest draft) and when cleared.
+    private val draftSaves = DraftSaveDebouncer(
+        delayMillis = STORY_DRAFT_SAVE_DEBOUNCE_MS,
+        schedule = draftSaveScheduler ?: DraftSaveDebouncer.coroutineScheduler(viewModelScope),
+    )
+
+    init {
+        savedStateHandle?.setSavedStateProvider(FLUSH_PROVIDER_KEY) {
+            draftSaves.flush()
+            Bundle()
+        }
+    }
+
+    /** Writes any debounced draft save now. */
+    fun flushDraftSave() = draftSaves.flush()
+
+    override fun onCleared() {
+        draftSaves.flush()
+        super.onCleared()
+    }
 
     val isDirty: Boolean
         get() = _formState.value.hasMeaningfulChanges
@@ -358,7 +385,7 @@ class StoryViewModel(
 
     private fun setState(next: StoryFormState) {
         _formState.value = next
-        persist(next)
+        if (savedStateHandle != null) draftSaves.submit { persist(_formState.value) }
     }
 
     private fun nextZIndex(): Int = (_formState.value.layers.maxOfOrNull { it.zIndex } ?: 0) + 1
@@ -451,6 +478,7 @@ class StoryViewModel(
         private const val FRONT_CAMERA_KEY = "story_front_camera"
         private const val GALLERY_THUMB_KEY = "story_gallery_thumb"
         private const val DRAW_COLOR_KEY = "story_draw_color"
+        private const val FLUSH_PROVIDER_KEY = "story_draft_flush"
     }
 }
 
