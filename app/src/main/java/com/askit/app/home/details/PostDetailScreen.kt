@@ -144,7 +144,6 @@ fun PostDetailScreen(
             onDismiss = { activeCommentPost = null },
             canComment = post.commentsEnabled && store.isCurrentAccount(currentAccountId()),
             disabledMessage = stringResource(if (!post.commentsEnabled) R.string.post_comments_disabled else R.string.post_action_sign_in),
-            currentUserAvatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
         )
     }
 

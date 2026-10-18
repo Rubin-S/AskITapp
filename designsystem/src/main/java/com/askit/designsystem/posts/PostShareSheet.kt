@@ -55,59 +55,11 @@ data class ShareContact(
     val avatarUrl: String? = null,
 )
 
-val defaultSampleShareContacts: List<ShareContact> = listOf(
-    ShareContact(
-        id = "sweetlin",
-        name = "Sweetlin! \uD83C\uDF37",
-        avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-    ),
-    ShareContact(
-        id = "kavibharathi",
-        name = "kavibharathi .D.R",
-        avatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-    ),
-    ShareContact(
-        id = "jd",
-        name = "jd",
-        avatarUrl = "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150",
-    ),
-    ShareContact(
-        id = "eeea",
-        name = "euıəəəa",
-        avatarUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-    ),
-    ShareContact(
-        id = "raagesh",
-        name = "Raagesh",
-        avatarUrl = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
-    ),
-    ShareContact(
-        id = "priya",
-        name = "Priya Sharma",
-        avatarUrl = "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150",
-    ),
-    ShareContact(
-        id = "suresh",
-        name = "Suresh Kumar",
-        avatarUrl = "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150",
-    ),
-    ShareContact(
-        id = "ananya",
-        name = "Ananya Roy",
-        avatarUrl = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
-    ),
-    ShareContact(
-        id = "karthik",
-        name = "Karthik Raja",
-        avatarUrl = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
-    ),
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostShareSheet(
     onDismiss: () -> Unit,
-    contacts: List<ShareContact> = defaultSampleShareContacts,
+    contacts: List<ShareContact> = emptyList(),
     onSendToContact: (ShareContact) -> Unit,
     onCopyLink: () -> Unit,
     onShareExternal: () -> Unit,

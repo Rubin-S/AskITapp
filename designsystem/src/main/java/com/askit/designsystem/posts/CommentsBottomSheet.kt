@@ -78,92 +78,11 @@ data class CommentItem(
     val replies: List<CommentItem> = emptyList(),
 )
 
-val defaultSampleComments: List<CommentItem> = listOf(
-    CommentItem(
-        id = "c1",
-        authorName = "mikakkad",
-        authorAvatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-        timeAgo = "3h",
-        text = "Very important topic to discuss with \uD83D\uDC4F\uD83D\uDC4F. After economy of our country will definitely improve .",
-        likesCount = 2,
-        isLiked = false,
-    ),
-    CommentItem(
-        id = "c2",
-        authorName = "13shaur13",
-        authorAvatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-        timeAgo = "6h",
-        text = "I am on the side where I just want to know where were their voices when it really mattered\uD83E\uDD14",
-        likesCount = 1,
-        isLiked = false,
-    ),
-    CommentItem(
-        id = "c3",
-        authorName = "laxmi273013_",
-        authorAvatarUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-        timeAgo = "7h",
-        text = "Kangana always right \uD83D\uDD25\uD83D\uDD25",
-        likesCount = 217,
-        isLiked = false,
-        replies = listOf(
-            CommentItem(
-                id = "c3-r1",
-                authorName = "virat.mishra_17",
-                authorAvatarUrl = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
-                timeAgo = "7h",
-                text = "kaise",
-                replyingToName = "laxmi273013_",
-                likesCount = 2,
-                isLiked = false,
-            ),
-            CommentItem(
-                id = "c3-r2",
-                authorName = "its_me_ankitchopra",
-                authorAvatarUrl = "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150",
-                timeAgo = "7h",
-                text = "Wow how can u say that she is always right \uD83D\uDE02",
-                replyingToName = "laxmi273013_",
-                likesCount = 4,
-                isLiked = false,
-            ),
-            CommentItem(
-                id = "c3-r3",
-                authorName = "_munt4zir_",
-                authorAvatarUrl = "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150",
-                timeAgo = "7h",
-                text = "I agree \uD83D\uDCAF with u , when she said genZ's guttr generation , she was definitely thinking about u ...",
-                replyingToName = "laxmi273013_",
-                likesCount = 9,
-                isLiked = false,
-            ),
-            CommentItem(
-                id = "c3-r4",
-                authorName = "madhan_nani321",
-                authorAvatarUrl = "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150",
-                timeAgo = "6h",
-                text = "kyunki wo right wing ko support karti hai.. \uD83D\uDE02",
-                replyingToName = "virat.mishra_17",
-                likesCount = 1,
-                isLiked = false,
-            ),
-        ),
-    ),
-    CommentItem(
-        id = "c4",
-        authorName = "vibekaleshh",
-        authorAvatarUrl = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
-        timeAgo = "6h",
-        text = "People have objections on women's clothes for traditions but no objection to the vulgar dance of people getting up like Gods? Where do these people go then?",
-        likesCount = 15,
-        isLiked = false,
-    ),
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommentsBottomSheet(
     onDismiss: () -> Unit,
-    initialComments: List<CommentItem> = defaultSampleComments,
+    initialComments: List<CommentItem> = emptyList(),
     currentUserAvatarUrl: String? = null,
     onCommentAdded: ((parentId: String?, text: String) -> Unit)? = null,
     canComment: Boolean = true,
