@@ -6,15 +6,15 @@ Date: 7 October 2026 · Owner: founder · Status: written design awaiting review
 
 AskIT helps people get local work done, helps providers find work and earn, and supports a local community. Seekers and providers are both customers. Hiring and earning carry more weight than community growth. The founder wants faster, easier development and a useful production-ready app launched as soon as it is ready.
 
-The approved conversational design is recorded in [questions 1–39](../../launch-planning-qa.md). This document consolidates it and supplies concrete **proposed implementation defaults** for previously open details. Approval of the conversation did not approve these new defaults. Written-design approval is the next checkpoint; implementation planning follows it.
+The approved conversational design is recorded in [questions 1–39](launch-planning-qa.md). This document consolidates it and supplies concrete **proposed implementation defaults** for previously open details. Approval of the conversation did not approve these new defaults. Written-design approval is the next checkpoint; implementation planning follows it.
 
 The first release is a free, small invited pilot in **Pondicherry**. Recruitment and promotion focus on home services, while other supported categories can register, participate, publish services, and hire. There is no fixed launch date, committed participant count, operating budget, or demonstrated user-capacity guarantee.
 
 **Controlling provider rule:** providers can publish listings, respond to tasks, and accept jobs without manual review. Review earns a badge only. This replaces the earlier approval-before-work requirement. The chosen badge wording is **“Profile reviewed,”** based on phone verification, profile/service details, and available work examples.
 
-The [correction-document comparison](../../correction-reference-review.md) is reference material. Its five call slots, 30-minute missed-call rule, subscription scoring, and other unselected suggestions are not requirements.
+The [correction-document comparison](correction-reference-review.md) is reference material. Its five call slots, 30-minute missed-call rule, subscription scoring, and other unselected suggestions are not requirements.
 
-The [audit](../../production-readiness-audit.md) remains **NO-GO**. This document is a design, not evidence that the app or backend works in production.
+The [audit](production-readiness-audit.md) remains **NO-GO**. This document is a design, not evidence that the app or backend works in production.
 
 ## 2. Launch scope
 
@@ -93,7 +93,7 @@ Apply limits server-side and surface stable localized errors. Tests must show th
 
 ## 5. Accounts, listings, and review badge
 
-Preserve the proposed [auth paths and session contract](../../auth-backend-contract.md): OTP challenge/verification, refresh rotation, and revoke. Derive identity from the session, keep phone numbers in E.164, consume a challenge once, and enforce server-side expiry/attempt/resend limits. Proposed initial OTP values are six digits, five-minute expiry, 30-second resend wait, and five verification attempts; additional hourly/daily SMS limits and a spend ceiling are part of the production SMS configuration.
+Preserve the proposed [auth paths and session contract](auth-backend-contract.md): OTP challenge/verification, refresh rotation, and revoke. Derive identity from the session, keep phone numbers in E.164, consume a challenge once, and enforce server-side expiry/attempt/resend limits. Proposed initial OTP values are six digits, five-minute expiry, 30-second resend wait, and five verification attempts; additional hourly/daily SMS limits and a spend ceiling are part of the production SMS configuration.
 
 Store credentials/challenges securely on the server and never log OTPs, refresh/access tokens, or raw message bodies. Keep the existing Android Keystore/no-backup refresh storage, backend binding, bounded refresh retry, and account-isolation behavior. Concurrent authenticated requests share one refresh operation. The server rejects reuse of a consumed refresh credential. If a rotation response is lost before it can be saved, recover through sign-in rather than repeatedly replaying the consumed credential. A local storage failure after receiving the response retries saving that pending credential before another rotation. Scope revocation to the affected session/family so recovery does not log out unrelated device sessions.
 
@@ -115,7 +115,7 @@ Phone retrieval is a separate authorized endpoint, never part of a public profil
 
 Direct Call and Show interest remain available on every eligible task. Where permission is needed, Direct Call requests it first. The UI reports a contact request or dialer handoff; ordinary dialer launch is not evidence of a placed, answered, or missed call. WhatsApp handoff follows the same number-disclosure rule and handles unavailable external apps.
 
-Public tasks expose the chosen public area only. Store exact address and access instructions separately. The seeker and currently assigned provider after booking confirmation can retrieve them. Other respondents, pending selections, former assignees, and unrelated accounts are denied. Access checks and cache invalidation apply to APIs, media, notifications, telemetry, reassignment, logout, and account switching. Preserve the existing [task privacy requirements](../../task-privacy-handoff.md).
+Public tasks expose the chosen public area only. Store exact address and access instructions separately. The seeker and currently assigned provider after booking confirmation can retrieve them. Other respondents, pending selections, former assignees, and unrelated accounts are denied. Access checks and cache invalidation apply to APIs, media, notifications, telemetry, reassignment, logout, and account switching. Preserve the existing [task privacy requirements](task-privacy-handoff.md).
 
 ## 7. Hiring and reviews
 

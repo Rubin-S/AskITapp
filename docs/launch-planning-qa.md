@@ -4,7 +4,7 @@ Last updated: 2026-10-07 (Asia/Kolkata)
 
 This is a working requirements record. The complete design, implementation plan, and release scope have not yet been reviewed. It does not authorize a production release.
 
-The [consolidated written design](superpowers/specs/2026-10-07-askit-production-launch-design.md) is now available for founder review. It separates locked conversational decisions from proposed detailed defaults. Earlier answers below are historical where later answers supersede them.
+The [consolidated written design](launch-design.md) is now available for founder review. It separates locked conversational decisions from proposed detailed defaults. Earlier answers below are historical where later answers supersede them.
 
 ## Terminology
 

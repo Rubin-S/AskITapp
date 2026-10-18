@@ -4,7 +4,7 @@ Prepared: 2026-10-07 (Asia/Kolkata)
 
 Status: the founder selected **approach C: a custom backend from day one**. This document records the comparison and the current design direction. It is not the final specification or implementation plan. No hosting service has been selected or purchased.
 
-The [consolidated written design](superpowers/specs/2026-10-07-askit-production-launch-design.md) is now the proposed specification for founder review. Keep this comparison as decision history; the written design identifies the locked sections and proposed detailed defaults.
+The [consolidated written design](launch-design.md) is now the proposed specification for founder review. Keep this comparison as decision history; the written design identifies the locked sections and proposed detailed defaults.
 
 ## Understanding of the founder's goal
 
