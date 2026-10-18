@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -38,6 +39,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +56,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -330,7 +333,6 @@ fun ControlledCommentsBottomSheet(
                         )
                         IconButton(
                             onClick = onCancelReply,
-                            modifier = Modifier.size(24.dp),
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_close),
@@ -488,7 +490,8 @@ private fun CommentRow(
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
-                                .clickable { onReplyClick(comment) }
+                                .minimumInteractiveComponentSize()
+                                .clickable(role = Role.Button) { onReplyClick(comment) }
                                 .padding(vertical = 4.dp),
                         )
                     }
@@ -500,7 +503,8 @@ private fun CommentRow(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .clickable(onClick = onLikeClick)
+                        .minimumInteractiveComponentSize()
+                        .clickable(role = Role.Button, onClick = onLikeClick)
                         .padding(4.dp),
                 ) {
                     Icon(
@@ -532,7 +536,8 @@ private fun CommentRow(
             Row(
                 modifier = Modifier
                     .padding(start = 48.dp)
-                    .clickable(onClick = onToggleReplies)
+                    .heightIn(min = 48.dp)
+                    .clickable(role = Role.Button, onClick = onToggleReplies)
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -642,7 +647,8 @@ private fun ReplyRow(reply: CommentItem, onLikeClick: (() -> Unit)?, onReplyClic
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
-                        .clickable(onClick = onReplyClick)
+                        .minimumInteractiveComponentSize()
+                        .clickable(role = Role.Button, onClick = onReplyClick)
                         .padding(vertical = 2.dp),
                 )
             }
@@ -653,7 +659,8 @@ private fun ReplyRow(reply: CommentItem, onLikeClick: (() -> Unit)?, onReplyClic
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .clickable(onClick = onLikeClick)
+                    .minimumInteractiveComponentSize()
+                    .clickable(role = Role.Button, onClick = onLikeClick)
                     .padding(4.dp),
             ) {
                 Icon(

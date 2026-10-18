@@ -150,20 +150,6 @@ fun ProfileSettingsScreen(
                         }
                     }
                 },
-                actions = {
-                    IconButton(
-                        onClick = {},
-                        modifier = Modifier
-                            .padding(end = 4.dp)
-                            .size(48.dp),
-                    ) {
-                        Icon(
-                            painter = painterResource(DsR.drawable.ic_more),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 ),
@@ -697,7 +683,7 @@ private fun SettingsProfileHeaderCard(
             Icon(
                 painter = painterResource(DsR.drawable.ic_chevron_right),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -783,7 +769,7 @@ private fun SettingsNavigationRow(
         Icon(
             painter = painterResource(DsR.drawable.ic_chevron_right),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(18.dp),
         )
     }

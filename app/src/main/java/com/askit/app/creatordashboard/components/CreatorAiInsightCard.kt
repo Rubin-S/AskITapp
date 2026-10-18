@@ -72,7 +72,6 @@ fun CreatorAiInsightCard(
                 }
                 IconButton(
                     onClick = onDismiss,
-                    modifier = Modifier.size(28.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,

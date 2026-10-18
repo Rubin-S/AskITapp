@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -52,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -356,8 +358,9 @@ private fun PostActionBar(
             // Like button
             Row(
                 modifier = Modifier
+                    .minimumInteractiveComponentSize()
                     .clip(CircleShape)
-                    .clickable { onLikeClick?.invoke() }
+                    .clickable(role = Role.Button) { onLikeClick?.invoke() }
                     .padding(vertical = 4.dp, horizontal = 2.dp)
                     .testTag("post_feed_like_button"),
                 verticalAlignment = Alignment.CenterVertically,
@@ -385,8 +388,9 @@ private fun PostActionBar(
             // Comment button
             Row(
                 modifier = Modifier
+                    .minimumInteractiveComponentSize()
                     .clip(CircleShape)
-                    .clickable { onCommentClick?.invoke() }
+                    .clickable(role = Role.Button) { onCommentClick?.invoke() }
                     .padding(vertical = 4.dp, horizontal = 2.dp)
                     .testTag("post_feed_comment_button"),
                 verticalAlignment = Alignment.CenterVertically,
@@ -410,8 +414,9 @@ private fun PostActionBar(
             // Share button
             Box(
                 modifier = Modifier
+                    .minimumInteractiveComponentSize()
                     .clip(CircleShape)
-                    .clickable { onShareClick?.invoke() }
+                    .clickable(role = Role.Button) { onShareClick?.invoke() }
                     .padding(vertical = 4.dp, horizontal = 2.dp)
                     .testTag("post_feed_share_button"),
                 contentAlignment = Alignment.Center,
@@ -428,8 +433,9 @@ private fun PostActionBar(
         // Save button
         Box(
             modifier = Modifier
+                .minimumInteractiveComponentSize()
                 .clip(CircleShape)
-                .clickable {
+                .clickable(role = Role.Button) {
                     onSaveClick?.invoke()
                 }
                 .padding(vertical = 4.dp, horizontal = 2.dp)

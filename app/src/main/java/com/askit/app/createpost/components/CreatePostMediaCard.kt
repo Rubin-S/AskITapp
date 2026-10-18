@@ -36,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
@@ -59,6 +60,7 @@ import com.askit.app.createpost.photoRatio
 import com.askit.designsystem.inputs.AskITTextField
 import com.askit.designsystem.posts.BeforeAfterSlider
 import com.askit.designsystem.posts.PostFeedMedia
+import com.askit.designsystem.theme.StoryScrimColor
 import com.askit.designsystem.R as DesignR
 
 enum class BeforeAfterSlot {
@@ -412,14 +414,12 @@ private fun SlotCard(
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     )
                 }
+                // 48dp touch target; the 28dp dark circle is only the visual.
                 IconButton(
                     onClick = onRemove,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.65f)),
+                        .drawBehind { drawCircle(color = StoryScrimColor, radius = 14.dp.toPx()) },
                 ) {
                     Icon(
                         painter = painterResource(DesignR.drawable.ic_close),

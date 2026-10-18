@@ -108,7 +108,6 @@ fun ProviderAlertsCard(
 
                         IconButton(
                             onClick = { onDismissAlert(alert.id) },
-                            modifier = Modifier.size(28.dp),
                         ) {
                             Icon(
                                 painter = painterResource(com.askit.designsystem.R.drawable.ic_close),

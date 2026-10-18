@@ -52,25 +52,33 @@ fun ProfileAvatar(avatarUrl: String?, cameraContentDescription: String, onCamera
             )
         }
         if (onCamera != null) {
+            // 48dp touch target around a 28dp visual badge.
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .offset(x = (-2).dp, y = (-2).dp)
-                    .size(28.dp)
+                    .offset(x = 8.dp, y = 8.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.onSurface)
                     .clickable(role = Role.Button, onClick = onCamera)
                     .testTag("profile_camera"),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_camera),
-                    contentDescription = cameraContentDescription,
-                    tint = MaterialTheme.colorScheme.surface,
+                Box(
                     modifier = Modifier
-                        .size(16.dp)
-                        .padding(1.dp),
-                )
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onSurface),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_camera),
+                        contentDescription = cameraContentDescription,
+                        tint = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier
+                            .size(16.dp)
+                            .padding(1.dp),
+                    )
+                }
             }
         }
     }
