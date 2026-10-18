@@ -18,11 +18,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.story.StoryViewModel
 
 private val DRAW_COLORS = listOf(0xFFFFFFFF, 0xFF000000, 0xFF7CE605, 0xFFFF5252)
+private val DRAW_COLOR_NAMES = listOf(
+    R.string.story_text_color_white,
+    R.string.story_text_color_black,
+    R.string.story_text_color_lime,
+    R.string.story_text_color_red,
+)
+
+@Composable
+private fun drawColorName(index: Int): String = stringResource(DRAW_COLOR_NAMES[index])
 
 @Composable
 fun StoryDrawPad(viewModel: StoryViewModel, selectedColorArgb: Long, onDone: () -> Unit, modifier: Modifier = Modifier) {
@@ -39,12 +50,15 @@ fun StoryDrawPad(viewModel: StoryViewModel, selectedColorArgb: Long, onDone: () 
             style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.padding(end = 8.dp),
         )
-        DRAW_COLORS.forEach { color ->
+        DRAW_COLORS.forEachIndexed { index, color ->
+            val colorName = drawColorName(index)
             FilterChip(
                 selected = selectedColorArgb == color,
                 onClick = { viewModel.setDrawColor(color) },
                 label = { Text("") },
-                modifier = Modifier.background(Color(color), CircleShape),
+                modifier = Modifier
+                    .background(Color(color), CircleShape)
+                    .semantics { contentDescription = colorName },
             )
         }
         IconButton(onClick = onDone) {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,11 +63,14 @@ private fun Modifier.storyRing(isSeen: Boolean): Modifier {
 
 @Composable
 fun StoryAvatar(story: Story, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val seenState = stringResource(if (story.isSeen) AppR.string.story_state_seen else AppR.string.story_state_unseen)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .width(82.dp)
-            .clickable(role = Role.Button, onClick = onClick),
+            .clickable(role = Role.Button, onClick = onClick)
+            // One TalkBack stop: the name once (from the label below), plus seen/unseen state.
+            .semantics(mergeDescendants = true) { stateDescription = seenState },
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -76,7 +81,7 @@ fun StoryAvatar(story: Story, onClick: () -> Unit, modifier: Modifier = Modifier
             if (!story.authorAvatarUrl.isNullOrBlank()) {
                 AsyncImage(
                     model = story.authorAvatarUrl,
-                    contentDescription = story.authorName,
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
@@ -196,7 +201,8 @@ fun AddStoryAvatar(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .size(36.dp)
+                    .offset(x = 6.dp, y = 6.dp)
+                    .size(48.dp)
                     .clickable(
                         role = Role.Button,
                         onClick = actualAddClick,
@@ -212,7 +218,7 @@ fun AddStoryAvatar(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_add),
-                        contentDescription = null,
+                        contentDescription = stringResource(AppR.string.story_add_new_title),
                         tint = Color.Black,
                         modifier = Modifier.size(14.dp),
                     )

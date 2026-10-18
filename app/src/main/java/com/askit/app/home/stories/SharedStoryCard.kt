@@ -11,6 +11,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.home.model.Story
@@ -20,6 +22,7 @@ import com.askit.app.story.StoryMediaType
 import com.askit.app.story.editor.StoryCanvas
 import com.askit.app.story.editor.StoryFrame
 import com.askit.app.story.stickers.PostReshareSticker
+import com.askit.designsystem.theme.StoryScrimColor
 import kotlinx.coroutines.delay
 
 /** A reference to the live story, rather than a downloadable copy of its media. */
@@ -60,11 +63,15 @@ fun SharedStoryCard(reference: StoryReference, resolveStory: (String) -> Story?,
                         }
                     }
                     if (draft.mediaType == StoryMediaType.Video) {
+                        val videoLabel = stringResource(com.askit.app.R.string.story_shared_video_badge)
                         Text(
                             "▶",
                             color = Color.White,
                             style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.background(Color.Black.copy(alpha = .5f), RoundedCornerShape(50)).padding(8.dp),
+                            modifier = Modifier
+                                .clearAndSetSemantics { contentDescription = videoLabel }
+                                .background(StoryScrimColor, RoundedCornerShape(50))
+                                .padding(8.dp),
                         )
                     }
                 }

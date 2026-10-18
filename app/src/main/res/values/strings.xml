@@ -1125,4 +1125,14 @@
     <string name="home_feed_error_fallback">Something went wrong loading your feed.</string>
     <string name="language_endonym_english" translatable="false">English</string>
     <string name="language_endonym_tamil" translatable="false">தமிழ்</string>
+    <string name="story_viewer_position">Story %1$d of %2$d by %3$s</string>
+    <string name="story_viewer_media_fallback">Story by %1$s, %2$s</string>
+    <string name="story_viewer_action_next">Next story</string>
+    <string name="story_viewer_action_previous">Previous story</string>
+    <string name="story_viewer_action_pause">Pause story</string>
+    <string name="story_viewer_action_resume">Resume story</string>
+    <string name="story_state_unseen">New story</string>
+    <string name="story_state_seen">Viewed</string>
+    <string name="story_shared_video_badge">Video</string>
+    <string name="story_text_color_red">Red</string>
 </resources>

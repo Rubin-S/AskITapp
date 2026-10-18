@@ -31,7 +31,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -44,6 +46,7 @@ import com.askit.app.story.editor.StoryCanvas
 import com.askit.app.story.editor.StoryFrame
 import com.askit.app.story.editor.StoryStage
 import com.askit.app.story.stickers.PostReshareSticker
+import com.askit.designsystem.theme.StoryScrimColor
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
@@ -139,8 +142,26 @@ internal fun StoryViewerScreen(
         pageCount = { state.groups.size },
     )
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+    val touchExploring = rememberTouchExplorationEnabled()
     val effectivePaused = actionsOpen || state.paused || showViewPostTooltip || pagerState.isScrollInProgress ||
-        !lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
+        touchExploring || !lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
+    val a11yLabels = StoryA11yLabels(
+        next = stringResource(com.askit.app.R.string.story_viewer_action_next),
+        previous = stringResource(com.askit.app.R.string.story_viewer_action_previous),
+        pause = when {
+            touchExploring -> null
+            state.paused -> stringResource(com.askit.app.R.string.story_viewer_action_resume)
+            else -> stringResource(com.askit.app.R.string.story_viewer_action_pause)
+        },
+    )
+    val positionDescription = state.currentGroup?.let { group ->
+        stringResource(
+            com.askit.app.R.string.story_viewer_position,
+            state.itemIndex + 1,
+            group.stories.size,
+            group.authorName,
+        )
+    }.orEmpty()
     var videoProgress by remember(restartKey) { mutableFloatStateOf(0f) }
     // A reader, not a value: the progress bar reads it while drawing, so playback ticks no
     // longer recompose the whole viewer every frame.
@@ -182,6 +203,13 @@ internal fun StoryViewerScreen(
                     userScrollEnabled = !actionsOpen,
                     modifier = Modifier
                         .fillMaxSize()
+                        .storyAccessibilityActions(
+                            description = positionDescription,
+                            labels = a11yLabels,
+                            onPrevious = { if (!actionsOpen) onPrevious() },
+                            onNext = { if (!actionsOpen) onNext() },
+                            onTogglePause = { onPauseChanged(!state.paused) },
+                        )
                         .storyTapGestures(
                             onPrevious = {
                                 if (actionsOpen) return@storyTapGestures
@@ -271,7 +299,12 @@ internal fun StoryViewerScreen(
                             relativeTimeLabel(state.currentStory)
                         },
                         onClose = onDismiss,
-                        modifier = Modifier.align(Alignment.TopCenter),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .semantics {
+                                isTraversalGroup = true
+                                traversalIndex = -1f
+                            },
                         isOwnStory = isOwn && !retainedPlayback,
                         showActions = !retainedPlayback,
                         onAddStory = onAddStory,
@@ -304,6 +337,9 @@ private fun StoryPageContent(
 ) {
     val story = group.stories[itemIndex.coerceIn(group.stories.indices)]
     val content = story.content
+    val mediaDescription = content.caption.ifBlank {
+        stringResource(com.askit.app.R.string.story_viewer_media_fallback, group.authorName, relativeTimeLabel(story))
+    }
     key(story.id) {
         StoryFrame(content.viewport) {
             StoryCanvas(
@@ -321,9 +357,7 @@ private fun StoryPageContent(
                 videoLoop = false,
                 onVideoProgress = onVideoProgress,
                 onVideoFinished = onVideoFinished,
-                modifier = Modifier.fillMaxSize().semantics {
-                    if (content.caption.isNotBlank()) contentDescription = content.caption
-                },
+                modifier = Modifier.fillMaxSize().semantics { contentDescription = mediaDescription },
             )
         }
     }
@@ -352,15 +386,15 @@ private fun TopAndBottomScrims() {
             .drawBehind {
                 drawRect(
                     brush = Brush.verticalGradient(
-                        colors = listOf(Color.Black.copy(alpha = 0.55f), Color.Transparent),
+                        colors = listOf(StoryScrimColor, Color.Transparent),
                         startY = 0f,
-                        endY = size.height * 0.18f,
+                        endY = size.height * 0.22f,
                     ),
                 )
                 drawRect(
                     brush = Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)),
-                        startY = size.height * 0.82f,
+                        colors = listOf(Color.Transparent, StoryScrimColor),
+                        startY = size.height * 0.78f,
                         endY = size.height,
                     ),
                 )

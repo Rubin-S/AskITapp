@@ -1120,4 +1120,14 @@
     <string name="location_demo_cancel">ரத்து செய்</string>
     <string name="create_post_media_photos">புகைப்படங்கள்</string>
     <string name="home_feed_error_fallback">உங்கள் ஊட்டத்தை ஏற்றுவதில் ஏதோ தவறு ஏற்பட்டது.</string>
+    <string name="story_viewer_position">%3$s இன் கதை, %2$d இல் %1$d</string>
+    <string name="story_viewer_media_fallback">%1$s இன் கதை, %2$s</string>
+    <string name="story_viewer_action_next">அடுத்த கதை</string>
+    <string name="story_viewer_action_previous">முந்தைய கதை</string>
+    <string name="story_viewer_action_pause">கதையை இடைநிறுத்து</string>
+    <string name="story_viewer_action_resume">கதையைத் தொடர்</string>
+    <string name="story_state_unseen">புதிய கதை</string>
+    <string name="story_state_seen">பார்க்கப்பட்டது</string>
+    <string name="story_shared_video_badge">வீடியோ</string>
+    <string name="story_text_color_red">சிவப்பு</string>
 </resources>
