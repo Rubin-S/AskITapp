@@ -1,6 +1,8 @@
 package com.askit.app.profile
 
 import com.askit.app.home.stories.StorySocialStore
+import com.askit.app.home.stories.followerIds
+import com.askit.app.home.stories.followingIds
 import com.askit.app.jobs.*
 import org.junit.Assert.*
 import org.junit.Test
@@ -50,13 +52,13 @@ class ProfileMetricsTest {
         val social = StorySocialStore()
         social.activateAccount("owner")
         social.setFollowing("owner", "other", true)
-        assertEquals(setOf("other"), social.followingIds("owner"))
-        assertEquals(setOf("owner"), social.followerIds("other"))
+        assertEquals(setOf("other"), social.relationships.value.followingIds("owner"))
+        assertEquals(setOf("owner"), social.relationships.value.followerIds("other"))
         social.activateAccount("other")
-        assertEquals(setOf("owner"), social.followerIds("other"))
+        assertEquals(setOf("owner"), social.relationships.value.followerIds("other"))
         social.setFollowing("other", "owner", true)
-        assertEquals(setOf("other"), social.followerIds("owner"))
+        assertEquals(setOf("other"), social.relationships.value.followerIds("owner"))
         social.setFollowing("other", "owner", false)
-        assertTrue(social.followerIds("owner").isEmpty())
+        assertTrue(social.relationships.value.followerIds("owner").isEmpty())
     }
 }

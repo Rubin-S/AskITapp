@@ -64,7 +64,6 @@ fun OtpBoxes(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     digitCount: Int = 4,
-    boxSize: Int = if (digitCount > 4) 44 else 56,
     isError: Boolean = false,
     autoFocus: Boolean = true,
     onComplete: ((String) -> Unit)? = null,

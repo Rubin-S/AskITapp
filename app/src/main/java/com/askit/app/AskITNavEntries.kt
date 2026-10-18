@@ -51,6 +51,8 @@ import com.askit.app.home.details.TaskDetailScreen
 import com.askit.app.home.details.UserProfileScreen
 import com.askit.app.home.stories.StoryViewerRoute
 import com.askit.app.home.stories.StoryViewerViewModel
+import com.askit.app.home.stories.followerIds
+import com.askit.app.home.stories.followingIds
 import com.askit.app.inbox.ChatContact
 import com.askit.app.inbox.ChatThread
 import com.askit.app.inbox.InboxViewModel
@@ -183,8 +185,8 @@ internal fun rememberAskITEntryProvider(
         }
         return com.askit.app.profile.ProfilePeopleState(
             currentTaskAccountId(),
-            profileRelationships.filterValues { id in it }.keys.map(::person),
-            profileRelationships[id].orEmpty().map(::person),
+            profileRelationships.followerIds(id).map(::person),
+            profileRelationships.followingIds(id).map(::person),
             profileRelationships[currentTaskAccountId()].orEmpty(),
             canMutate = true,
         )

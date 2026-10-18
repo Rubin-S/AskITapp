@@ -45,8 +45,6 @@ class StorySocialStore(
     }.toMutableMap()
     private val mutableRelationships = MutableStateFlow(initialRelationships)
     val relationships = mutableRelationships.asStateFlow()
-    fun followingIds(id: String): Set<String> = accounts[id]?.following.orEmpty()
-    fun followerIds(id: String): Set<String> = accounts.values.filter { id in it.following }.mapNotNull { it.accountId }.toSet()
     private val mutableState = MutableStateFlow(StorySocialState())
     val state = mutableState.asStateFlow()
     private val mutableFeedback = MutableStateFlow<StoryFeedback?>(null)
@@ -145,3 +143,9 @@ class StorySocialStore(
         mutableState.value = next
     }
 }
+
+/** Ids [accountId] follows, from a relationships map (account id to the ids it follows). */
+internal fun Map<String, Set<String>>.followingIds(accountId: String): Set<String> = this[accountId].orEmpty()
+
+/** Ids that follow [accountId], from a relationships map (account id to the ids it follows). */
+internal fun Map<String, Set<String>>.followerIds(accountId: String): Set<String> = filterValues { accountId in it }.keys
