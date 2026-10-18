@@ -1,15 +1,47 @@
-*.iml
+# Gradle
 .gradle/
+**/build/
+.kotlin/
+
+# Local configuration and secrets
 local.properties
 secrets.properties
 *.jks
 *.keystore
-/.idea/
-.DS_Store
-**/build/
-/captures/
+keystore.properties
+google-services.json
+
+# Android Studio / IntelliJ
+*.iml
+.idea/*
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
+!.idea/dictionaries/
+.navigation/
+captures/
 .externalNativeBuild/
 .cxx/
+
+# Build outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+output-metadata.json
+
+# Lint and test reports
+lint-results*.html
+lint-results*.xml
+lint-results*.txt
+lint-baseline.xml.bak
+hs_err_pid*
+replay_pid*
+
+# Logs and OS files
 *.log
+.DS_Store
+Thumbs.db
+
+# Local scratch output
 /screenshots/
 /deliverables/
