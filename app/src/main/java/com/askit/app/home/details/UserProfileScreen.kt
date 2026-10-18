@@ -58,8 +58,9 @@ data class UserProfileData(
     val postcodeDistanceKm: Double? = null,
 )
 
+/** Sample public profiles exist only in the client-preview build; release has no profile lookup yet. */
 fun getUserProfileById(userId: String): UserProfileData? =
-    if (com.askit.app.BuildConfig.CLIENT_PREVIEW) com.askit.app.preview.previewPublicProfile(userId) else null
+    if (com.askit.app.BuildConfig.CLIENT_PREVIEW) com.askit.app.variant.AppVariant.publicProfile(userId) else null
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable

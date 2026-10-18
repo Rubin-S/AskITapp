@@ -7,17 +7,18 @@ import com.askit.app.session.SessionProfile
 import com.askit.app.listservice.toServiceListing
 import com.askit.app.story.StoryLayer
 import com.askit.app.story.StoryStickerKind
+import com.askit.app.variant.ProfileSnapshotStorage
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.security.MessageDigest
 
 /** Preview-only durable snapshots and retained media, isolated by stable account ID. */
-internal class PreviewProfileStorage(private val context: Context) {
+internal class PreviewProfileStorage(private val context: Context) : ProfileSnapshotStorage {
     private val preferences = context.getSharedPreferences("preview_profiles_v1", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
-    fun loadRelationships(): Map<String, Set<String>> {
+    override fun loadRelationships(): Map<String, Set<String>> {
         check(BuildConfig.CLIENT_PREVIEW)
         return context.getSharedPreferences("preview_relationships_v1", Context.MODE_PRIVATE).getString("relationships", null)
             ?.let { json.decodeFromString<Map<String, Set<String>>>(it) }.orEmpty()
@@ -25,13 +26,13 @@ internal class PreviewProfileStorage(private val context: Context) {
 
     // KTX edit returns Unit; retain the checked commit result so failures never publish success.
     @android.annotation.SuppressLint("UseKtx")
-    fun saveRelationships(relationships: Map<String, Set<String>>) {
+    override fun saveRelationships(relationships: Map<String, Set<String>>) {
         check(BuildConfig.CLIENT_PREVIEW)
         check(context.getSharedPreferences("preview_relationships_v1", Context.MODE_PRIVATE).edit()
             .putString("relationships", json.encodeToString(relationships)).commit())
     }
 
-    fun load(accountId: String): SessionProfile? {
+    override fun load(accountId: String): SessionProfile? {
         check(BuildConfig.CLIENT_PREVIEW)
         return preferences.getString(accountId, null)?.let { saved ->
             json.decodeFromString<SessionProfile>(saved).also { require(it.accountId == accountId) }.let { profile ->
@@ -42,7 +43,7 @@ internal class PreviewProfileStorage(private val context: Context) {
     }
 
     @android.annotation.SuppressLint("UseKtx")
-    fun save(profile: SessionProfile): SessionProfile {
+    override fun save(profile: SessionProfile): SessionProfile {
         check(BuildConfig.CLIENT_PREVIEW)
         if (profile.accountId.isBlank()) return profile
         val durable = profile.copy(

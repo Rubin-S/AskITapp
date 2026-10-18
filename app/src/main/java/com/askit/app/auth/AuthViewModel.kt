@@ -58,7 +58,7 @@ class AuthViewModel(
     fun selectPreviewAccount(id: String) {
         if (!clientPreview) return
         session?.userId?.let { previewProfiles[it] = profileStore.profile.value }
-        val next = runCatching { previewProfiles[id] ?: previewProfileLoader(id) ?: com.askit.app.preview.previewProfile(id) }
+        val next = runCatching { previewProfiles[id] ?: checkNotNull(previewProfileLoader(id)) }
             .getOrElse { mutableState.value = mutableState.value.copy(errorRes = R.string.profile_load_error); return }
         profileStore.replaceAccount(next)
         session = AuthSession("local-preview", "local-preview", 86_400, true, id)

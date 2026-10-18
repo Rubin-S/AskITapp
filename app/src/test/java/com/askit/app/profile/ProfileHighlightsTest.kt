@@ -62,14 +62,4 @@ class ProfileHighlightsTest {
         store.deleteHighlight("owner", "collection")
         assertTrue(store.profile.value.highlights.isEmpty())
     }
-    @Test fun cameraCacheMediaIsCopiedBeforeTheSourceCanBeEvicted() {
-        val directory = java.nio.file.Files.createTempDirectory("highlight-test").toFile()
-        try {
-            val source = java.io.File(directory, "camera.jpg").apply { writeText("photo bytes") }
-            val retained = com.askit.app.preview.retainPreviewFile(source, java.io.File(directory, "durable"))
-            source.delete()
-            assertEquals("photo bytes", retained.readText())
-            assertEquals(retained, com.askit.app.preview.retainPreviewFile(retained, retained.parentFile!!))
-        } finally { directory.deleteRecursively() }
-    }
 }

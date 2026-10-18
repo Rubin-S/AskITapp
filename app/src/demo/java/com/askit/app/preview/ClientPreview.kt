@@ -47,7 +47,7 @@ internal fun seedPreviewContent(tasks: TaskRepository, posts: PostStore, jobs: J
     ), TaskCommentAuthor("preview-owner", profile.displayName, profile.avatarUrl))
     posts.activateAccount("preview-owner")
     posts.publish(PostDraft(body = "Demo project update: explore this post's Edit, Save, Archive, Pin and commenting controls."), "preview-owner", profile)
-    jobs.addClientPreviewJobs()
+    jobs.addClientPreviewJobs(com.askit.app.demo.clientPreviewJobs())
 }
 
 @Composable

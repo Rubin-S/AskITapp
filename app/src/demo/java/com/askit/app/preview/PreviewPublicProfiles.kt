@@ -70,7 +70,7 @@ internal fun previewPublicProfile(userId: String): UserProfileData? = (when (use
             ),
         ),
     )
-    else -> com.askit.app.home.data.sampleNearbyProfessionals()
+    else -> com.askit.app.demo.sampleNearbyProfessionals()
         .firstOrNull { it.id == userId }?.let { person ->
             UserProfileData(
                 id = person.id,
