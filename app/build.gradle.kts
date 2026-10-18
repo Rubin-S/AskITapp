@@ -4,6 +4,7 @@ import java.net.URI
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.roborazzi)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.secrets)
 }
@@ -42,6 +43,9 @@ android {
         versionName = "1.0"
         buildConfigField("boolean", "CLIENT_PREVIEW", "false")
         buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
+        // The secrets plugin sets the real key per app variant; this inert default only exists
+        // so the unit-test manifest (merged for Robolectric) has a value to substitute.
+        manifestPlaceholders["PLACES_API_KEY"] = "DEFAULT_API_KEY"
     }
 
     if (signRelease) {
@@ -107,6 +111,11 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        // Robolectric/Roborazzi tests need merged resources and the test manifest.
+        unitTests.isIncludeAndroidResources = true
+    }
+
     lint {
         warningsAsErrors = true
         abortOnError = true
@@ -165,5 +174,27 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.roborazzi.junit.rule)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+// Screenshot tests (Roborazzi on Robolectric Native Graphics) live under a `screenshots` package.
+// Robolectric ships no linux-aarch64 native graphics runtime, so on such hosts they are skipped
+// (CI runs on ubuntu x86_64). Pass -Paskit.forceScreenshotTests to run them anyway.
+val robolectricNativeGraphicsAvailable =
+    !(System.getProperty("os.name") == "Linux" && System.getProperty("os.arch") in setOf("aarch64", "arm64")) ||
+        providers.gradleProperty("askit.forceScreenshotTests").isPresent
+tasks.withType<Test>().configureEach {
+    maxHeapSize = "1536m"
+    if (!robolectricNativeGraphicsAvailable) {
+        exclude("**/screenshots/**")
+        // :designsystem has only screenshot tests, so nothing is left to run on such hosts.
+        failOnNoDiscoveredTests.set(false)
+    }
 }
