@@ -22,6 +22,7 @@ fun StoryBottomBar(
     onShareClick: () -> Unit,
     modifier: Modifier = Modifier,
     isOwnStory: Boolean = false,
+    canShare: Boolean = true,
 ) {
     Row(
         modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
@@ -36,8 +37,11 @@ fun StoryBottomBar(
                     tint = if (isLiked) Color(0xFFFF3040) else Color.White)
             }
         }
-        IconButton(onClick = onShareClick, modifier = Modifier.size(48.dp).testTag("story_share")) {
-            Icon(painterResource(R.drawable.ic_share), contentDescription = stringResource(R.string.post_feed_share), tint = Color.White)
+        // Restricted (Close circle / Message) stories are owner-only and must not be forwarded.
+        if (canShare) {
+            IconButton(onClick = onShareClick, modifier = Modifier.size(48.dp).testTag("story_share")) {
+                Icon(painterResource(R.drawable.ic_share), contentDescription = stringResource(R.string.post_feed_share), tint = Color.White)
+            }
         }
     }
 }

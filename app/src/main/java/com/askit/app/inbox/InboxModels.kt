@@ -1,5 +1,6 @@
 package com.askit.app.inbox
 
+import com.askit.app.home.model.isShareable
 import com.askit.app.home.model.isAvailable
 
 data class ChatContact(
@@ -111,7 +112,7 @@ class InboxStore(
     }
 
     fun sendStory(contact: ChatContact, story: com.askit.app.home.model.Story): Boolean {
-        if (contacts.none { it.id == contact.id } || !story.isAvailable()) return false
+        if (contacts.none { it.id == contact.id } || !story.isAvailable() || !story.isShareable) return false
         if (conversations[contact.id]?.blocked == true) return false
         val id = startConversation(contact) ?: return false
         return appendMessage(id, body = "", photoUri = null, sharedStory = StoryReference(story.id, story.authorName))

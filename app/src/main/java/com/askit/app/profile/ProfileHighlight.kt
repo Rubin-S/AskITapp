@@ -1,5 +1,6 @@
 package com.askit.app.profile
 
+import com.askit.app.home.model.isVisibleTo
 import com.askit.app.home.model.Story
 import com.askit.app.story.StoryAudience
 import kotlinx.serialization.Serializable
@@ -25,6 +26,6 @@ data class ProfileHighlight(
     fun visibleStories(viewerId: String?, authorizedPostIds: Set<String> = emptySet()): List<Story> = stories.filter {
         !it.isDeleted && it.authorId == ownerId &&
             (it.content.sharedPost == null || (it.content.sharedPost.id in authorizedPostIds && !it.content.sharedPost.archived)) &&
-            (viewerId == ownerId || it.content.audience == StoryAudience.Everyone)
+            (viewerId == ownerId || it.isVisibleTo(viewerId))
     }
 }

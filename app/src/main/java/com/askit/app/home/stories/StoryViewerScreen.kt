@@ -1,5 +1,6 @@
 package com.askit.app.home.stories
 
+import com.askit.app.home.model.isShareable
 import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animate
@@ -264,6 +265,7 @@ internal fun StoryViewerScreen(
                         onShareClick = onShareClick,
                         modifier = Modifier.align(Alignment.BottomCenter),
                         isOwnStory = isOwn,
+                        canShare = state.currentStory?.isShareable == true,
                     )
                 }
             }

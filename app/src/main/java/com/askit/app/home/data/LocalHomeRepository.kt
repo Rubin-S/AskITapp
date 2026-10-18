@@ -4,6 +4,7 @@ import com.askit.app.home.model.FeedItem
 import com.askit.app.home.model.FeedPost
 import com.askit.app.home.model.Story
 import com.askit.app.home.model.isAvailable
+import com.askit.app.home.model.isVisibleTo
 import com.askit.app.home.posts.PostStore
 import com.askit.app.home.stories.StoryActionFailure
 import com.askit.app.home.stories.StoryActionResult
@@ -50,10 +51,15 @@ class LocalHomeRepository(
 
     override val posts: PostStore = PostStore(fixtures.posts)
 
-    override fun getStory(storyId: String): Story? = storiesFlow.value.firstOrNull { it.id == storyId && it.isAvailable() }
+    override fun getStory(storyId: String): Story? = storiesFlow.value.firstOrNull {
+        it.id == storyId && it.isAvailable() && it.isVisibleTo(storySocial.state.value.accountId)
+    }
 
     override fun getStories(): Flow<List<Story>> = combine(storiesFlow, storySocial.state) { stories, social ->
-        stories.filter { it.isAvailable() && it.authorId !in social.muted && it.id !in social.hiddenStoryIds }
+        stories.filter {
+            it.isAvailable() && it.isVisibleTo(social.accountId) &&
+                it.authorId !in social.muted && it.id !in social.hiddenStoryIds
+        }
             .map { it.copy(isOwn = social.accountId != null && it.authorId == social.accountId) }
     }
 
