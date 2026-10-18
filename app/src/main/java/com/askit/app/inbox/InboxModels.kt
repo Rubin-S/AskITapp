@@ -74,11 +74,6 @@ class InboxStore(
         conversations[conversationId] = current.copy(unreadCount = 0)
     }
 
-    fun setUnread(conversationId: String, count: Int) {
-        val current = conversations[conversationId] ?: return
-        conversations[conversationId] = current.copy(unreadCount = count.coerceAtLeast(0))
-    }
-
     fun setMuted(conversationId: String, muted: Boolean) {
         val current = conversations[conversationId] ?: return
         conversations[conversationId] = current.copy(muted = muted)

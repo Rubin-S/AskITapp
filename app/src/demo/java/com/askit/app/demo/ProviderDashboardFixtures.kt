@@ -39,7 +39,6 @@ internal fun sampleProviderDashboard(profile: SessionProfile): ProviderDashboard
                 distanceKm = 2.3,
                 remainingSeconds = 272,
                 priceQuote = "₹450",
-                urgencyTag = "High Demand",
             ),
         ),
         activeJobs = listOf(

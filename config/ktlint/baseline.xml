@@ -28,8 +28,8 @@
         <error line="56" column="141" source="standard:max-line-length" />
     </file>
     <file name="app/src/demo/java/com/askit/app/preview/PreviewPublicProfiles.kt">
-        <error line="37" column="141" source="standard:max-line-length" />
-        <error line="71" column="141" source="standard:max-line-length" />
+        <error line="36" column="141" source="standard:max-line-length" />
+        <error line="70" column="141" source="standard:max-line-length" />
     </file>
     <file name="app/src/main/java/com/askit/app/auth/AccountFormFields.kt">
         <error line="3" column="1" source="standard:no-wildcard-imports" />

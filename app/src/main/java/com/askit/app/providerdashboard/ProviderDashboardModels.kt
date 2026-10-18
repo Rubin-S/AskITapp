@@ -22,7 +22,6 @@ data class IncomingRequestItem(
     val distanceKm: Double,
     val remainingSeconds: Int,
     val priceQuote: String,
-    val urgencyTag: String = "Urgent",
 )
 
 /**

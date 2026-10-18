@@ -25,7 +25,6 @@ data class CreatorMetricItem(
     val deltaText: String,
     val trend: MetricTrend,
     val icon: ImageVector,
-    val isHighlighted: Boolean = false,
 )
 
 @Immutable
@@ -35,10 +34,7 @@ data class CreatorCategoryMetrics(val discovery: List<CreatorMetricItem>, val co
 data class HeroKpiSummary(
     val reachValue: String,
     val reachDelta: String,
-    val reachTrend: MetricTrend,
     val engagementRate: String,
-    val engagementDelta: String,
-    val engagementTrend: MetricTrend,
     val sparklinePoints: List<Float>,
     val envelopeLowerBounds: List<Float>,
     val envelopeUpperBounds: List<Float>,
@@ -77,7 +73,6 @@ enum class CreatorActivityType {
 data class CreatorActivityItem(
     val id: String,
     val type: CreatorActivityType,
-    val actorName: String,
     val avatarUrl: String? = null,
     val titleText: String,
     val subtitleText: String,
@@ -98,10 +93,7 @@ data class CreatorDashboardUiState(
     val heroKpi: HeroKpiSummary = HeroKpiSummary(
         reachValue = "0",
         reachDelta = "0%",
-        reachTrend = MetricTrend.Neutral,
         engagementRate = "0%",
-        engagementDelta = "0%",
-        engagementTrend = MetricTrend.Neutral,
         sparklinePoints = emptyList(),
         envelopeLowerBounds = emptyList(),
         envelopeUpperBounds = emptyList(),

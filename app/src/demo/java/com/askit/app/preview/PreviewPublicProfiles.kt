@@ -14,7 +14,6 @@ internal fun previewPublicProfile(userId: String): UserProfileData? = (
             isProvider = false,
             rating = 0.0,
             completedJobsCount = 0,
-            activityCount = 15,
             followerCount = 84,
             followingCount = 31,
             location = "Indiranagar, Bengaluru",

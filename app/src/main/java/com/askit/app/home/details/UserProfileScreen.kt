@@ -42,7 +42,6 @@ data class UserProfileData(
     val skills: List<String> = emptyList(),
     val reviews: List<UserReviewData> = emptyList(),
     val isProvider: Boolean = true,
-    val activityCount: Int = 12,
     val followerCount: Int = 0,
     val followingCount: Int = 0,
     val isVerified: Boolean = false,

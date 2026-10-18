@@ -142,7 +142,7 @@ internal fun SessionProfile.toPublicProfile() = UserProfileData(
     id = accountId, username = username, name = displayName, avatarUrl = avatarUrl,
     trade = listing?.title ?: title, bio = listing?.description ?: bio, isProvider = listing != null,
     location = city, joinedYear = joinedYear, skills = skills, isVerified = isVerified,
-    followerCount = followerCount, followingCount = followingCount, activityCount = 0,
+    followerCount = followerCount, followingCount = followingCount,
     bannerUrl = bannerUrl, highlights = highlights, listing = listing, directionalReviews = reviews,
     discloseApproximateLocation = discloseApproximateLocation,
 )
