@@ -127,9 +127,6 @@ sealed class StoryLayer {
 }
 
 @Serializable
-data class StoryPollSticker(val question: String, val options: List<String>)
-
-@Serializable
 data class StoryDraft(
     val mediaUri: String? = null,
     val mediaType: StoryMediaType? = null,

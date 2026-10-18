@@ -79,20 +79,6 @@ fun Job.isSeeker(party: JobParty): Boolean = when (kind) {
 
 fun Job.isProvider(party: JobParty): Boolean = !isSeeker(party)
 
-fun Job.isTerminal(): Boolean = when (status) {
-    JobStatus.Completed,
-    JobStatus.Canceled,
-    JobStatus.Rejected,
-    -> true
-
-    JobStatus.Applied,
-    JobStatus.Accepted,
-    JobStatus.OnTheWay,
-    JobStatus.Started,
-    JobStatus.AwaitingSeekerComplete,
-    -> false
-}
-
 fun Job.stepperSteps(): List<JobStep> = if (workMode == JobWorkMode.Remote) {
     listOf(JobStep.Applied, JobStep.Accepted, JobStep.Started, JobStep.Complete)
 } else {

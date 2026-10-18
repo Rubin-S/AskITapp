@@ -187,18 +187,6 @@ fun AskITAvatar(avatarUrl: String?, avatarSize: Dp, fallbackIconSize: Dp, modifi
 }
 
 @Composable
-fun PersonResultMetadata(rating: Double?, reviewCount: Int, locationLabel: String, price: String?, modifier: Modifier = Modifier) {
-    ResultMetadataLine(
-        rating = rating,
-        reviewCount = reviewCount,
-        locationLabel = locationLabel,
-        price = price,
-        showServiceMetadata = true,
-        modifier = modifier,
-    )
-}
-
-@Composable
 private fun ResultAvatar(avatarUrl: String?) {
     Box(
         modifier = Modifier

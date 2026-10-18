@@ -6,14 +6,13 @@ import org.junit.Test
 
 class ProfilePrivacyTest {
     @Test fun distanceRequiresExplicitConsentViewerPostcodeAndFiniteDistance() {
-        val profile = SessionProfile()
-        assertNull(profile.approximateDistance("641001", 3.5))
-        val consented = profile.copy(discloseApproximateLocation = true)
-        assertNull(consented.approximateDistance("", 3.5))
-        assertNull(consented.approximateDistance("641001", null))
-        assertNull(consented.approximateDistance("641001", Double.NaN))
-        assertNull(consented.approximateDistance("641001", -1.0))
-        assertEquals(4, consented.approximateDistance("641001", 3.5))
+        assertNull(approximateProfileDistance(consent = false, viewerPostcode = "641001", distanceKm = 3.5))
+        assertNull(approximateProfileDistance(consent = true, viewerPostcode = "", distanceKm = 3.5))
+        assertNull(approximateProfileDistance(consent = true, viewerPostcode = null, distanceKm = 3.5))
+        assertNull(approximateProfileDistance(consent = true, viewerPostcode = "641001", distanceKm = null))
+        assertNull(approximateProfileDistance(consent = true, viewerPostcode = "641001", distanceKm = Double.NaN))
+        assertNull(approximateProfileDistance(consent = true, viewerPostcode = "641001", distanceKm = -1.0))
+        assertEquals(4, approximateProfileDistance(consent = true, viewerPostcode = "641001", distanceKm = 3.5))
     }
 
     @Test fun bannerMapsToOwnerAndReadOnlyPublicPreview() {
