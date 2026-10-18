@@ -725,7 +725,7 @@
     <string name="settings_logout_confirm_title">வெளியேற வேண்டுமா?</string>
     <string name="settings_logout_confirm_msg">உங்கள் AskIT கணக்கிலிருந்து வெளியேற விரும்புகிறீர்களா?</string>
     <string name="settings_clear_data_confirm_title">செயலியின் அனைத்துத் தரவையும் அழிக்க வேண்டுமா?</string>
-    <string name="settings_clear_data_confirm_msg">இந்தச் சாதனத்தில் சேமித்த வேலைகள், சேவைப் பட்டியல்கள் மற்றும் விருப்பத்தேர்வுகள் அனைத்தும் மீட்டமைக்கப்படும்.</string>
+    <string name="settings_clear_data_confirm_msg">இந்தச் சாதனத்தில் சேமித்த வேலைகள், சேவைப் பட்டியல்கள் மற்றும் விருப்பத்தேர்வுகள் அனைத்தும் மீட்டமைக்கப்பட்டு, நீங்கள் வெளியேற்றப்படுவீர்கள்.</string>
     <string name="settings_clear_data_action">தரவை அழி</string>
     <string name="settings_status_live">செயலில் உள்ளது</string>
     <string name="settings_status_manage">நிர்வகி</string>

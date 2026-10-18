@@ -507,7 +507,7 @@
     <string name="settings_logout_confirm_title">Log out?</string>
     <string name="settings_logout_confirm_msg">Are you sure you want to log out of your AskIT account?</string>
     <string name="settings_clear_data_confirm_title">Clear all app data?</string>
-    <string name="settings_clear_data_confirm_msg">This will reset all local saved tasks, listings, and preferences.</string>
+    <string name="settings_clear_data_confirm_msg">This resets the tasks, listings, and preferences saved on this device and signs you out.</string>
     <string name="settings_clear_data_action">Clear data</string>
     <string name="settings_status_live">Live</string>
     <string name="settings_status_manage">Manage</string>

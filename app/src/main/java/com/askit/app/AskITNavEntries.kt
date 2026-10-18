@@ -644,8 +644,11 @@ internal fun rememberAskITEntryProvider(
             onSaveAvailability = profileViewModel::updateAvailability,
             onLogout = authViewModel::signOut,
             onClearAppData = {
+                // Clearing local data ends the session too: staying signed in with a blank
+                // profile left the account half-broken until the next sign-in.
                 profileViewModel.resetAppData()
                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
+                authViewModel.signOut()
             },
         )
     }
