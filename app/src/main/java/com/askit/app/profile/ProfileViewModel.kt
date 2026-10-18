@@ -1,11 +1,10 @@
 package com.askit.app.profile
 
-import android.content.ContentResolver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.askit.app.R
 import com.askit.app.auth.SignupDraft
-import com.askit.app.auth.isSignupPhotoReadable
+import com.askit.app.auth.SignupResult
 import com.askit.app.session.ProfileAvailability
 import com.askit.app.session.SessionProfile
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,8 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 sealed interface ProfileLoadState {
     data object Loading : ProfileLoadState
@@ -26,6 +23,11 @@ sealed interface ProfileLoadState {
 
 class ProfileViewModel(
     private val repository: ProfileRepository,
+    /**
+     * Whether this build can create an account. Only the client preview can (locally); release
+     * needs the server signup contract (docs/profile-backend-contract.md), which does not exist yet.
+     */
+    private val signupAvailable: Boolean = com.askit.app.BuildConfig.CLIENT_PREVIEW,
 ) : ViewModel() {
     val profile: StateFlow<SessionProfile> = repository.profile
 
@@ -37,15 +39,17 @@ class ProfileViewModel(
     private val _messages = MutableSharedFlow<Int>(extraBufferCapacity = 1)
     val messages: SharedFlow<Int> = _messages.asSharedFlow()
 
-    suspend fun completeSignup(draft: SignupDraft, contentResolver: ContentResolver): Boolean {
-        if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) { emitError(); return false }
-        val photoReadable = withContext(Dispatchers.IO) {
-            isSignupPhotoReadable(contentResolver, draft.avatarUri)
-        }
-        if (!draft.validation(photoReadable).isValid) return false
-        return runCatching {
-            repository.completeSignup(draft.normalized())
-        }.isSuccess
+    val canSignUp: Boolean get() = signupAvailable
+
+    /**
+     * Saves Form A. Release builds return [SignupResult.Unavailable] without touching the profile:
+     * Android must not open Home on an in-memory substitute for a server account.
+     */
+    suspend fun completeSignup(draft: SignupDraft, isPhotoReadable: suspend (String?) -> Boolean): SignupResult {
+        if (!signupAvailable) return SignupResult.Unavailable
+        if (!draft.validation(isPhotoReadable(draft.avatarUri)).isValid) return SignupResult.Invalid
+        return runCatching { repository.completeSignup(draft.normalized()) }
+            .fold(onSuccess = { SignupResult.Saved }, onFailure = { emitError(); SignupResult.Failed })
     }
 
     fun saveIdentity(state: EditProfileFormState): Boolean {

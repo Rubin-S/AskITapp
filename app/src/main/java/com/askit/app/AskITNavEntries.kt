@@ -282,15 +282,20 @@ internal fun rememberAskITEntryProvider(
         com.askit.app.auth.FormAScreen(
             phoneNumber = key.phoneNumber,
             onBack = authViewModel::signOut,
+            signupAvailable = profileViewModel.canSignUp,
             onSubmit = { draft ->
-                val saved = profileViewModel.completeSignup(draft, context.contentResolver)
-                if (saved) {
+                val result = profileViewModel.completeSignup(draft) { uri ->
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        com.askit.app.auth.isSignupPhotoReadable(context.contentResolver, uri)
+                    }
+                }
+                if (result == com.askit.app.auth.SignupResult.Saved) {
                     AppCompatDelegate.setApplicationLocales(
                         LocaleListCompat.forLanguageTags(if (draft.preferredLanguage == "Tamil") "ta" else "en"),
                     )
                     navigationState.clearToHome()
                 }
-                saved
+                result
             },
         )
     }

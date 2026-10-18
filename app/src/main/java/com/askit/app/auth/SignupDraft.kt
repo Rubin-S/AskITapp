@@ -71,3 +71,12 @@ internal fun isSignupPhotoReadable(contentResolver: ContentResolver, avatarUri: 
         true
     }.getOrDefault(false)
 }
+
+/** Outcome of submitting Form A. */
+enum class SignupResult {
+    Saved,
+    Invalid,
+    /** No server can create accounts yet (release). Nothing was saved; the UI says so plainly. */
+    Unavailable,
+    Failed,
+}

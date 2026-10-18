@@ -155,7 +155,7 @@ class MainActivity : AppCompatActivity() {
             this,
             viewModelFactory {
                 initializer {
-                    ProfileViewModel(LocalProfileRepository(jobsViewModel.profileStore))
+                    ProfileViewModel(LocalProfileRepository(jobsViewModel.profileStore), signupAvailable = BuildConfig.CLIENT_PREVIEW)
                 }
             },
         )[ProfileViewModel::class.java]

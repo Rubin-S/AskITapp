@@ -74,8 +74,9 @@ import kotlinx.coroutines.withContext
 fun FormAScreen(
     phoneNumber: String,
     onBack: () -> Unit,
-    onSubmit: suspend (SignupDraft) -> Boolean,
+    onSubmit: suspend (SignupDraft) -> SignupResult,
     modifier: Modifier = Modifier,
+    signupAvailable: Boolean = true,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -95,7 +96,7 @@ fun FormAScreen(
     var isLocating by remember { mutableStateOf(false) }
     var isLocationDetected by rememberSaveable { mutableStateOf(false) }
     var locationFailed by rememberSaveable { mutableStateOf(false) }
-    var submissionFailed by rememberSaveable { mutableStateOf(false) }
+    var submissionResult by rememberSaveable { mutableStateOf<SignupResult?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
     var photoCheckVersion by remember { mutableIntStateOf(0) }
     var photoReadable by remember(avatarUri, photoCheckVersion) { mutableStateOf(false) }
@@ -121,17 +122,18 @@ fun FormAScreen(
         email = email,
     )
     val validation = draft.validation(photoReadable)
-    val isFormValid = validation.isValid && !isSubmitting &&
+    val isFormValid = signupAvailable && validation.isValid && !isSubmitting &&
         (com.askit.app.BuildConfig.CLIENT_PREVIEW || editablePhone == phoneNumber)
 
     fun submit() {
         if (!isFormValid || isSubmitting) return
         isSubmitting = true
-        submissionFailed = false
+        submissionResult = null
         scope.launch {
             try {
-                submissionFailed = !onSubmit(draft)
-                if (submissionFailed) photoCheckVersion++
+                val result = onSubmit(draft)
+                submissionResult = result.takeUnless { it == SignupResult.Saved }
+                if (result != SignupResult.Saved) photoCheckVersion++
             } finally {
                 isSubmitting = false
             }
@@ -238,6 +240,22 @@ fun FormAScreen(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            if (!signupAvailable) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    modifier = Modifier.fillMaxWidth().testTag("form_a_signup_unavailable"),
+                ) {
+                    Text(
+                        text = stringResource(R.string.form_a_signup_unavailable),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             // Profile Avatar Picker (Human trust anchor)
             Box(
@@ -401,9 +419,11 @@ fun FormAScreen(
             if (!com.askit.app.BuildConfig.CLIENT_PREVIEW && editablePhone != phoneNumber) {
                 Text(stringResource(R.string.profile_phone_verification_needed))
             }
-            if (submissionFailed) {
+            submissionResult?.let { result ->
                 Text(
-                    text = stringResource(R.string.form_a_save_failed),
+                    text = stringResource(
+                        if (result == SignupResult.Unavailable) R.string.form_a_signup_unavailable else R.string.form_a_save_failed,
+                    ),
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("form_a_save_error"),
                 )
