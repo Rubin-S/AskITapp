@@ -1,5 +1,6 @@
 package com.askit.app.home
 
+import android.content.ClipData
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -35,13 +36,14 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -61,6 +63,7 @@ import com.askit.app.home.model.Story
 import com.askit.app.home.model.TaskPreview
 import com.askit.designsystem.posts.CommentsBottomSheet
 import com.askit.designsystem.posts.PostShareSheet
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -241,7 +244,8 @@ fun HomeScreen(
 
     activeSharePost?.let { post ->
         val context = LocalContext.current
-        val clipboardManager = LocalClipboardManager.current
+        val clipboard = LocalClipboard.current
+        val clipboardScope = rememberCoroutineScope()
         val linkCopiedMsg = stringResource(com.askit.designsystem.R.string.share_link_copied)
         val sentToTemplate = stringResource(com.askit.designsystem.R.string.share_sent_to)
 
@@ -256,7 +260,8 @@ fun HomeScreen(
                 activeSharePost = null
             },
             onCopyLink = {
-                clipboardManager.setText(AnnotatedString("https://askit.app/p/${post.id}"))
+                val link = "https://askit.app/p/${post.id}"
+                clipboardScope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(link, link))) }
                 Toast.makeText(
                     context,
                     linkCopiedMsg,
