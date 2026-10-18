@@ -102,7 +102,7 @@ fun IncomingDispatchCard(
                     Text(
                         text = request.customerName,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 

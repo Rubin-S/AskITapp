@@ -49,7 +49,7 @@ fun CreatePostCanvas(
                         lineHeight = 22.sp,
                         fontWeight = FontWeight.Normal,
                     ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },
             modifier = Modifier

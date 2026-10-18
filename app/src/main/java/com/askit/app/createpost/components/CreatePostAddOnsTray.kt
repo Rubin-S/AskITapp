@@ -91,9 +91,7 @@ fun CreatePostAddOnsTray(
                     }
                     IconButton(
                         onClick = onRemoveLocation,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .testTag("create_post_remove_location"),
+                        modifier = Modifier.testTag("create_post_remove_location"),
                     ) {
                         Icon(
                             painter = painterResource(DesignR.drawable.ic_close),
@@ -111,7 +109,7 @@ fun CreatePostAddOnsTray(
                     fontSize = 11.sp,
                     lineHeight = 15.sp,
                 ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .padding(start = 4.dp)
                     .testTag("create_post_location_privacy"),
@@ -223,7 +221,7 @@ fun CreatePostAddOnsTray(
                         fontSize = 11.sp,
                         lineHeight = 15.sp,
                     ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
                         .padding(start = 4.dp)
                         .testTag("create_post_location_privacy"),

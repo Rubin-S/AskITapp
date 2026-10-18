@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -76,8 +75,8 @@ fun YourServiceCard(
                     fontWeight = FontWeight.Bold,
                     color = colors.primary,
                 )
-                val liveBgColor = if (live) Color(0xFF4CAF50).copy(alpha = 0.15f) else colors.errorContainer
-                val liveTextColor = if (live) Color(0xFF4CAF50) else colors.onErrorContainer
+                val liveBgColor = if (live) colors.secondaryContainer else colors.errorContainer
+                val liveTextColor = if (live) colors.onSecondaryContainer else colors.onErrorContainer
                 Surface(
                     shape = RoundedCornerShape(6.dp),
                     color = liveBgColor,

@@ -110,10 +110,13 @@ private val DarkScheme = darkColorScheme(
     scrim = Black,
 )
 
+/** The AskIT colour scheme for [darkTheme]; exposed for contrast tests. */
+internal fun askITColorScheme(darkTheme: Boolean) = if (darkTheme) DarkScheme else LightScheme
+
 @Composable
 fun AskITTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkScheme else LightScheme,
+        colorScheme = askITColorScheme(darkTheme),
         content = content,
     )
 }
