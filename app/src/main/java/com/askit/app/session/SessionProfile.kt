@@ -131,10 +131,10 @@ class SessionProfileStore(
     fun applyListing(listing: ServiceListing, draft: ListServiceDraft? = null) {
         update {
             it.copy(
+                // Account phone/email change only through the verified identity flow, never as a
+                // side effect of saving a service listing.
                 hasListedService = true,
-                phoneNumber = draft?.contactPhone?.takeIf(String::isNotBlank) ?: it.phoneNumber,
-                email = draft?.contactEmail?.takeIf(String::isNotBlank) ?: it.email,
-                listing = listing,
+                listing = listing.copy(phoneNumber = "", email = ""),
                 listingDraft = draft,
                 skills = listing.tags,
                 profileStrengthPercent = maxOf(it.profileStrengthPercent, 90),
@@ -150,7 +150,6 @@ class SessionProfileStore(
             bio = state.bio.trim(), title = state.title.trim(), avatarUrl = account.avatarUri,
             email = account.email, pincode = account.pincode, phoneNumber = account.phoneNumber,
             selectedLanguage = account.preferredLanguage, discloseApproximateLocation = state.discloseApproximateLocation,
-            listing = it.listing?.copy(phoneNumber = account.phoneNumber, email = account.email.orEmpty()),
             listingDraft = it.listingDraft?.copy(contactPhone = account.phoneNumber, contactEmail = account.email.orEmpty())) }
     }
 

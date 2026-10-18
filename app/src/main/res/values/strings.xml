@@ -1127,4 +1127,5 @@
     <string name="dashboard_data_unavailable_title">Dashboard data isn\'t available yet</string>
     <string name="dashboard_data_unavailable_body">Your jobs, requests, ratings and reach will appear here once AskIT is connected to its server.</string>
     <string name="form_a_signup_unavailable">Sign-ups aren\'t open yet. AskIT can\'t create new accounts until its server is live, so nothing entered here is saved. Please sign out and try again later.</string>
+    <string name="list_service_contact_private">Kept private. Your phone and email are not shown on the listing; customers reach you through AskIT messages.</string>
 </resources>

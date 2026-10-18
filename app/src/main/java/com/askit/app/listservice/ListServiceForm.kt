@@ -684,6 +684,12 @@ internal fun ServiceProfessionalFields(state: ListServiceFormState, viewModel: L
     AskITTextField(value = state.contactEmail, onValueChange = { viewModel.updateContact(state.contactPhone, it) },
         label = { Text(stringResource(R.string.account_email) + " *") }, singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
+    Text(
+        text = stringResource(R.string.list_service_contact_private),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.fillMaxWidth().testTag("list_service_contact_private"),
+    )
     AskITTextField(value = state.availability, onValueChange = viewModel::updateAvailability,
         label = { Text(stringResource(R.string.list_service_availability) + " *") }, modifier = Modifier.fillMaxWidth())
     AskITTextField(value = state.experience, onValueChange = viewModel::updateExperience,

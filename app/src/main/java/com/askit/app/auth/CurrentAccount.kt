@@ -72,11 +72,11 @@ internal data class AccountProfile(
     internal fun toSessionProfile(phoneNumber: String, accountId: String): SessionProfile {
         if (accountId.isBlank() || highlights.map { it.id }.distinct().size != highlights.size ||
             highlights.any { runCatching { it.validate(accountId) }.isFailure }) throw AuthApiException(AuthError.InvalidResponse)
-        val canonicalListing = listingDraft?.toServiceListing(listing?.category ?: listingDraft.categoryId)
-            ?.copy(live = listing?.live ?: availability.available) ?: listing
+        // Public listings never carry contact details, even if a server sends them.
+        val canonicalListing = (listingDraft?.toServiceListing(listing?.category ?: listingDraft.categoryId)
+            ?.copy(live = listing?.live ?: availability.available) ?: listing)?.copy(phoneNumber = "", email = "")
         if (listingDraft != null && (listing == null || listing.title != listingDraft.title ||
-            listing.description != listingDraft.description || listing.phoneNumber != phoneNumber || listing.email != email ||
-            listingDraft.contactPhone != phoneNumber || listingDraft.contactEmail != email)) throw AuthApiException(AuthError.InvalidResponse)
+            listing.description != listingDraft.description)) throw AuthApiException(AuthError.InvalidResponse)
         if (displayName.isBlank() || city.isBlank() ||
             (username.isNotEmpty() && !com.askit.app.profile.isUsernameValid(username.removePrefix("@"))) ||
             (email.isNotEmpty() && !validAccountEmail(email)) || (pincode.isNotEmpty() && !validAccountPostcode(pincode)) ||

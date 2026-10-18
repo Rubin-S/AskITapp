@@ -42,7 +42,10 @@ fun ListServiceDraft.toServiceListing(categoryLabel: String): ServiceListing {
     }.distinct()
     return ServiceListing(
         title = title,
-        phoneNumber = contactPhone, email = contactEmail,
+        // The public listing never carries contact details: the form and review promise that
+        // profile contact settings stay private, and customers reach providers through AskIT.
+        // contactPhone/contactEmail stay in the owner-only ListServiceDraft.
+        phoneNumber = "", email = "",
         category = categoryLabel,
         categoryId = categoryId,
         description = description,
