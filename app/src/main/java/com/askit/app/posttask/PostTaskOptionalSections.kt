@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.askit.app.R
+import com.askit.app.forms.FormRadioRow
 import com.askit.designsystem.inputs.AskITTextField
 
 @Composable
@@ -55,19 +56,19 @@ internal fun PostTaskBudgetSection(
     )
     if (PostTaskOptionalSection.BUDGET in state.expandedOptionalSections) {
         Column(Modifier.selectableGroup()) {
-            PostTaskChoiceRow(
+            FormRadioRow(
                 modifier = Modifier.testTag("post_task_budget_quotes"),
                 label = stringResource(R.string.post_task_request_quotes),
                 selected = state.budgetMode == PostTaskBudgetMode.REQUEST_QUOTES,
                 onClick = { viewModel.selectBudgetMode(PostTaskBudgetMode.REQUEST_QUOTES) },
             )
-            PostTaskChoiceRow(
+            FormRadioRow(
                 modifier = Modifier.testTag("post_task_budget_fixed"),
                 label = stringResource(R.string.post_task_fixed_amount),
                 selected = state.budgetMode == PostTaskBudgetMode.FIXED,
                 onClick = { viewModel.selectBudgetMode(PostTaskBudgetMode.FIXED) },
             )
-            PostTaskChoiceRow(
+            FormRadioRow(
                 modifier = Modifier.testTag("post_task_budget_range"),
                 label = stringResource(R.string.post_task_budget_range),
                 selected = state.budgetMode == PostTaskBudgetMode.RANGE,
@@ -243,7 +244,7 @@ internal fun PostTaskItemDetailsSection(viewModel: PostTaskViewModel, state: Pos
             modifier = Modifier.padding(top = 4.dp),
         )
         Column(Modifier.selectableGroup()) {
-            PostTaskChoiceRow(
+            FormRadioRow(
                 label = stringResource(R.string.post_task_materials_requester),
                 selected = state.materialsPolicy == PostTaskMaterialsPolicy.REQUESTER_HAS_MATERIALS,
                 onClick = {
@@ -252,7 +253,7 @@ internal fun PostTaskItemDetailsSection(viewModel: PostTaskViewModel, state: Pos
                     )
                 },
             )
-            PostTaskChoiceRow(
+            FormRadioRow(
                 label = stringResource(R.string.post_task_materials_provider),
                 selected = state.materialsPolicy == PostTaskMaterialsPolicy.PROVIDER_BRINGS_MATERIALS,
                 onClick = {
@@ -261,7 +262,7 @@ internal fun PostTaskItemDetailsSection(viewModel: PostTaskViewModel, state: Pos
                     )
                 },
             )
-            PostTaskChoiceRow(
+            FormRadioRow(
                 label = stringResource(R.string.post_task_materials_decide_later),
                 selected = state.materialsPolicy == PostTaskMaterialsPolicy.DECIDE_AFTER_INSPECTION,
                 onClick = {

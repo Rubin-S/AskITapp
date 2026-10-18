@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
+import com.askit.app.forms.FormSummaryRow
 import com.askit.designsystem.services.ServiceResultItem
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -59,8 +60,8 @@ internal fun ListServiceReview(modifier: Modifier = Modifier, state: ListService
 
         Spacer(Modifier.height(8.dp))
         ListServiceSectionHeading(R.string.list_service_what_you_offer)
-        ListServiceSummaryRow(R.string.list_service_category, category)
-        ListServiceSummaryRow(R.string.list_service_service_title, state.title.trim())
+        FormSummaryRow(R.string.list_service_category, category)
+        FormSummaryRow(R.string.list_service_service_title, state.title.trim())
         ListServiceSummaryBlock(R.string.list_service_description, state.description.trim())
 
         Spacer(Modifier.height(8.dp))
@@ -70,16 +71,16 @@ internal fun ListServiceReview(modifier: Modifier = Modifier, state: ListService
             deliveryLabels.joinToString(", "),
         )
         if (state.customerAreaLabel.isNotBlank()) {
-            ListServiceSummaryRow(R.string.list_service_customer_area, state.customerAreaLabel.trim())
+            FormSummaryRow(R.string.list_service_customer_area, state.customerAreaLabel.trim())
             state.coverageRadiusKm?.let { radius ->
-                ListServiceSummaryRow(
+                FormSummaryRow(
                     R.string.list_service_travel_coverage,
                     stringResource(R.string.list_service_up_to, radius),
                 )
             }
         }
         if (state.providerAreaLabel.isNotBlank()) {
-            ListServiceSummaryRow(
+            FormSummaryRow(
                 R.string.list_service_provider_location,
                 state.providerAreaLabel.trim(),
             )
@@ -88,7 +89,7 @@ internal fun ListServiceReview(modifier: Modifier = Modifier, state: ListService
         priceLabel?.let {
             Spacer(Modifier.height(8.dp))
             ListServiceSectionHeading(R.string.list_service_pricing)
-            ListServiceSummaryRow(R.string.list_service_pricing, it)
+            FormSummaryRow(R.string.list_service_pricing, it)
         }
 
         val nonEmptyDetails = details.filter { (_, value) -> value.isNotBlank() }

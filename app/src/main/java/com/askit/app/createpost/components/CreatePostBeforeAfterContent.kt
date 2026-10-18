@@ -6,7 +6,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,18 +15,14 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,9 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -51,10 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.askit.app.R
-import com.askit.app.createpost.CreatePostViewModel
-import com.askit.app.createpost.PostDisclosure
 import com.askit.app.createpost.PostMediaDraft
-import com.askit.app.createpost.PostMediaLayout
 import com.askit.app.createpost.PostValidationField
 import com.askit.app.createpost.photoRatio
 import com.askit.designsystem.inputs.AskITTextField
@@ -159,18 +149,24 @@ internal fun BeforeAfterContent(
     }
 
     // Hidden or compact descriptions preserving contract tags
-    BeforeSlotDisclosures(
+    SlotDescriptionDisclosure(
         content = before,
         isExpanded = beforeDescriptionExpanded,
         onDescriptionChange = { onDescriptionChange(0, it) },
         onToggleDescription = onToggleBeforeDescription,
+        addLabelRes = R.string.create_post_add_before_description,
+        hideLabelRes = R.string.create_post_hide_before_description,
+        fieldLabelRes = R.string.create_post_before_description_label,
         testTag = "create_post_before_slot",
     )
-    AfterSlotDisclosures(
+    SlotDescriptionDisclosure(
         content = after,
         isExpanded = afterDescriptionExpanded,
         onDescriptionChange = { onDescriptionChange(1, it) },
         onToggleDescription = onToggleAfterDescription,
+        addLabelRes = R.string.create_post_add_after_description,
+        hideLabelRes = R.string.create_post_hide_after_description,
+        fieldLabelRes = R.string.create_post_after_description_label,
         testTag = "create_post_after_slot",
     )
 }
@@ -315,12 +311,16 @@ private fun SlotCard(
     }
 }
 
+/** Collapsible image-description field under one before/after slot. */
 @Composable
-private fun BeforeSlotDisclosures(
+private fun SlotDescriptionDisclosure(
     content: PostMediaDraft,
     isExpanded: Boolean,
     onDescriptionChange: (String) -> Unit,
     onToggleDescription: () -> Unit,
+    @StringRes addLabelRes: Int,
+    @StringRes hideLabelRes: Int,
+    @StringRes fieldLabelRes: Int,
     testTag: String,
 ) {
     Column(
@@ -332,13 +332,7 @@ private fun BeforeSlotDisclosures(
             modifier = Modifier.testTag("${testTag}_description_toggle"),
         ) {
             Text(
-                text = if (isExpanded) {
-                    stringResource(
-                        R.string.create_post_hide_before_description,
-                    )
-                } else {
-                    stringResource(R.string.create_post_add_before_description)
-                },
+                text = stringResource(if (isExpanded) hideLabelRes else addLabelRes),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -348,47 +342,7 @@ private fun BeforeSlotDisclosures(
                 value = content.imageDescription,
                 onValueChange = onDescriptionChange,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.create_post_before_description_label)) },
-                minLines = 2,
-            )
-        }
-    }
-}
-
-@Composable
-private fun AfterSlotDisclosures(
-    content: PostMediaDraft,
-    isExpanded: Boolean,
-    onDescriptionChange: (String) -> Unit,
-    onToggleDescription: () -> Unit,
-    testTag: String,
-) {
-    Column(
-        modifier = Modifier.testTag("${testTag}_container"),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        TextButton(
-            onClick = onToggleDescription,
-            modifier = Modifier.testTag("${testTag}_description_toggle"),
-        ) {
-            Text(
-                text = if (isExpanded) {
-                    stringResource(
-                        R.string.create_post_hide_after_description,
-                    )
-                } else {
-                    stringResource(R.string.create_post_add_after_description)
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        if (isExpanded) {
-            AskITTextField(
-                value = content.imageDescription,
-                onValueChange = onDescriptionChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.create_post_after_description_label)) },
+                label = { Text(stringResource(fieldLabelRes)) },
                 minLines = 2,
             )
         }

@@ -34,6 +34,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.category.ASKIT_SERVICE_CATEGORIES
+import com.askit.app.forms.FormFieldError
+import com.askit.app.forms.FormRadioRow
 import com.askit.app.task.formatTaskDate
 import com.askit.app.task.labelRes
 import com.askit.designsystem.inputs.AskITTextField
@@ -284,19 +286,19 @@ private fun PostTaskWhereSection(
             .selectableGroup()
             .testTag("post_task_work_mode_options"),
     ) {
-        PostTaskChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("post_task_work_mode_at_my_location"),
             label = stringResource(R.string.post_task_at_my_location),
             selected = state.workMode == PostTaskWorkMode.AT_MY_LOCATION,
             onClick = { onSelectWorkMode(PostTaskWorkMode.AT_MY_LOCATION) },
         )
-        PostTaskChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("post_task_work_mode_provider"),
             label = stringResource(R.string.post_task_at_provider_location),
             selected = state.workMode == PostTaskWorkMode.AT_PROVIDER_LOCATION,
             onClick = { onSelectWorkMode(PostTaskWorkMode.AT_PROVIDER_LOCATION) },
         )
-        PostTaskChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("post_task_work_mode_remote"),
             label = stringResource(R.string.post_task_remote),
             selected = state.workMode == PostTaskWorkMode.REMOTE,
@@ -304,7 +306,7 @@ private fun PostTaskWhereSection(
         )
     }
     if (PostTaskValidationField.WORK_MODE in validationErrors) {
-        PostTaskError(R.string.post_task_error_work_mode)
+        FormFieldError(R.string.post_task_error_work_mode)
     }
 
     if (state.workMode == PostTaskWorkMode.AT_MY_LOCATION) {
@@ -339,7 +341,7 @@ private fun PostTaskWhereSection(
                 }
             }
             if (PostTaskValidationField.LOCATION in validationErrors) {
-                PostTaskError(R.string.post_task_error_location)
+                FormFieldError(R.string.post_task_error_location)
             }
             Text(
                 text = stringResource(R.string.post_task_location_privacy),
@@ -380,19 +382,19 @@ private fun PostTaskWhenSection(
             .selectableGroup()
             .testTag("post_task_timing_options"),
     ) {
-        PostTaskChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("post_task_timing_asap"),
             label = stringResource(R.string.post_task_asap),
             selected = state.timingMode == PostTaskTimingMode.ASAP,
             onClick = { onSelectTiming(PostTaskTimingMode.ASAP) },
         )
-        PostTaskChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("post_task_timing_date"),
             label = stringResource(R.string.post_task_on_date),
             selected = state.timingMode == PostTaskTimingMode.DATE,
             onClick = { onSelectTiming(PostTaskTimingMode.DATE) },
         )
-        PostTaskChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("post_task_timing_flexible"),
             label = stringResource(R.string.post_task_flexible),
             selected = state.timingMode == PostTaskTimingMode.FLEXIBLE,
@@ -400,7 +402,7 @@ private fun PostTaskWhenSection(
         )
     }
     if (PostTaskValidationField.TIMING in validationErrors) {
-        PostTaskError(R.string.post_task_error_timing)
+        FormFieldError(R.string.post_task_error_timing)
     }
     if (state.timingMode == PostTaskTimingMode.DATE) {
         OutlinedButton(
@@ -419,7 +421,7 @@ private fun PostTaskWhenSection(
             )
         }
         if (PostTaskValidationField.DATE in validationErrors) {
-            PostTaskError(R.string.post_task_error_date)
+            FormFieldError(R.string.post_task_error_date)
         }
     }
 }

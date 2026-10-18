@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.askit.app.R
+import com.askit.app.forms.FormSummaryRow
 import com.askit.app.task.TaskPhotoGallery
 import com.askit.app.task.TaskPreferencesSummary
 import com.askit.app.task.presentation
@@ -341,12 +342,12 @@ internal fun PostTaskReview(modifier: Modifier = Modifier, state: PostTaskFormSt
 
                     if (privateAddress.isNotBlank()) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        PostTaskSummaryRow(R.string.post_task_address_optional, privateAddress)
+                        FormSummaryRow(R.string.post_task_address_optional, privateAddress)
                     }
 
                     if (accessInstructions.isNotBlank()) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        PostTaskSummaryBlock(R.string.post_task_access_instructions, accessInstructions)
+                        FormSummaryRow(R.string.post_task_access_instructions, accessInstructions)
                     }
                 }
             }

@@ -41,6 +41,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.askit.app.R
+import com.askit.app.forms.FormFieldError
+import com.askit.app.forms.FormRadioRow
 import com.askit.designsystem.inputs.AskITTextField
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -60,37 +62,37 @@ internal fun ListServicePricingEditor(
             .testTag("list_service_pricing_options"),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        ListServicePricingChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("list_service_pricing_contact"),
             label = stringResource(R.string.list_service_contact_for_quote),
             selected = state.pricingMode == ListServicePricingMode.CONTACT_FOR_QUOTE,
             onClick = { viewModel.selectPricingMode(ListServicePricingMode.CONTACT_FOR_QUOTE) },
         )
-        ListServicePricingChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("list_service_pricing_starting"),
             label = stringResource(R.string.list_service_starting_at),
             selected = state.pricingMode == ListServicePricingMode.STARTING_AT,
             onClick = { viewModel.selectPricingMode(ListServicePricingMode.STARTING_AT) },
         )
-        ListServicePricingChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("list_service_pricing_fixed"),
             label = stringResource(R.string.list_service_fixed_price),
             selected = state.pricingMode == ListServicePricingMode.FIXED,
             onClick = { viewModel.selectPricingMode(ListServicePricingMode.FIXED) },
         )
-        ListServicePricingChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("list_service_pricing_hourly"),
             label = stringResource(R.string.list_service_hourly),
             selected = state.pricingMode == ListServicePricingMode.HOURLY,
             onClick = { viewModel.selectPricingMode(ListServicePricingMode.HOURLY) },
         )
-        ListServicePricingChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("list_service_pricing_visit"),
             label = stringResource(R.string.list_service_per_visit),
             selected = state.pricingMode == ListServicePricingMode.PER_VISIT,
             onClick = { viewModel.selectPricingMode(ListServicePricingMode.PER_VISIT) },
         )
-        ListServicePricingChoiceRow(
+        FormRadioRow(
             modifier = Modifier.testTag("list_service_pricing_range"),
             label = stringResource(R.string.list_service_range),
             selected = state.pricingMode == ListServicePricingMode.RANGE,
@@ -114,7 +116,7 @@ internal fun ListServicePricingEditor(
             label = { Text(stringResource(R.string.list_service_price_amount)) },
             supportingText = {
                 if (ListServiceValidationField.PRICE in validationErrors) {
-                    ListServiceError(R.string.list_service_error_price)
+                    FormFieldError(R.string.list_service_error_price)
                 }
             },
             isError = ListServiceValidationField.PRICE in validationErrors,
@@ -148,7 +150,7 @@ internal fun ListServicePricingEditor(
                 label = { Text(stringResource(R.string.list_service_maximum_price)) },
                 supportingText = {
                     if (ListServiceValidationField.PRICE_RANGE in validationErrors) {
-                        ListServiceError(R.string.list_service_error_price_range)
+                        FormFieldError(R.string.list_service_error_price_range)
                     }
                 },
                 isError = ListServiceValidationField.PRICE_RANGE in validationErrors,
