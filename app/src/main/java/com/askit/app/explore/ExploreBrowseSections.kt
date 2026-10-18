@@ -21,14 +21,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,15 +33,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
+import com.askit.designsystem.empty.AskITStateCard
+import com.askit.designsystem.empty.AskITStateTone
 import java.util.Locale
 
 private val BROWSE_CATEGORY_SPACING = 12.dp
@@ -207,91 +204,23 @@ internal fun BrowseSectionStateCard(
     }
 
     val copy = browseSectionStateCopy(section, effectiveStatus)
-    val isOffline = effectiveStatus == ExploreBrowseStatus.Offline
-    val isServerUnavailable = effectiveStatus == ExploreBrowseStatus.ServerUnavailable
-    val containerColor = when {
-        isOffline -> MaterialTheme.colorScheme.tertiaryContainer
-        isServerUnavailable -> MaterialTheme.colorScheme.errorContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerHigh
-    }
-    val contentColor = when {
-        isOffline -> MaterialTheme.colorScheme.onTertiaryContainer
-        isServerUnavailable -> MaterialTheme.colorScheme.onErrorContainer
-        else -> MaterialTheme.colorScheme.onSurface
-    }
-    val supportingTextColor = when {
-        isOffline -> MaterialTheme.colorScheme.onTertiaryContainer
-        isServerUnavailable -> MaterialTheme.colorScheme.onErrorContainer
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val iconTint = when {
-        isOffline -> MaterialTheme.colorScheme.tertiary
-        isServerUnavailable -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val action = if (effectiveStatus == ExploreBrowseStatus.Empty) {
-        onChangeArea
-    } else {
-        onRetry
-    }
-    val actionLabel = if (effectiveStatus == ExploreBrowseStatus.Empty) {
-        R.string.explore_change_area
-    } else {
-        R.string.explore_retry
-    }
+    val isEmpty = effectiveStatus == ExploreBrowseStatus.Empty
     val sectionKey = section.name.lowercase(Locale.US)
     val statusKey = effectiveStatus.name.lowercase(Locale.US)
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("explore_browse_${sectionKey}_$statusKey")
-            .semantics { liveRegion = LiveRegionMode.Polite },
-        shape = RoundedCornerShape(16.dp),
-        color = containerColor,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                painter = painterResource(copy.iconRes),
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(64.dp),
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = stringResource(copy.titleRes),
-                    color = contentColor,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = stringResource(copy.supportingTextRes),
-                    color = supportingTextColor,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                action?.let { onAction ->
-                    TextButton(
-                        onClick = onAction,
-                        modifier = Modifier.testTag("explore_browse_${sectionKey}_action"),
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = contentColor,
-                        ),
-                    ) {
-                        Text(stringResource(actionLabel))
-                    }
-                }
-            }
-        }
-    }
+    AskITStateCard(
+        iconRes = copy.iconRes,
+        title = stringResource(copy.titleRes),
+        supporting = stringResource(copy.supportingTextRes),
+        modifier = Modifier.testTag("explore_browse_${sectionKey}_$statusKey"),
+        tone = when (effectiveStatus) {
+            ExploreBrowseStatus.Offline -> AskITStateTone.Offline
+            ExploreBrowseStatus.ServerUnavailable -> AskITStateTone.Error
+            else -> AskITStateTone.Neutral
+        },
+        actionLabel = stringResource(if (isEmpty) R.string.explore_change_area else R.string.explore_retry),
+        onAction = if (isEmpty) onChangeArea else onRetry,
+        actionModifier = Modifier.testTag("explore_browse_${sectionKey}_action"),
+    )
 }
 
 private fun browseSectionStateCopy(section: ExploreBrowseSection, status: ExploreBrowseStatus): BrowseSectionStateCopy = when (status) {
