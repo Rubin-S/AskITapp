@@ -57,11 +57,9 @@ fun ChatsPane(
     }
 }
 
-private fun relativeTimeLabel(updatedAtMillis: Long, nowMillis: Long): String {
-    return DateUtils.getRelativeTimeSpanString(
-        updatedAtMillis,
-        nowMillis,
-        DateUtils.MINUTE_IN_MILLIS,
-        DateUtils.FORMAT_ABBREV_RELATIVE,
-    ).toString()
-}
+private fun relativeTimeLabel(updatedAtMillis: Long, nowMillis: Long): String = DateUtils.getRelativeTimeSpanString(
+    updatedAtMillis,
+    nowMillis,
+    DateUtils.MINUTE_IN_MILLIS,
+    DateUtils.FORMAT_ABBREV_RELATIVE,
+).toString()

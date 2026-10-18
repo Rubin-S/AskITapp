@@ -47,11 +47,7 @@ import com.askit.designsystem.R
 import kotlin.math.roundToInt
 
 @Composable
-fun BeforeAfterSlider(
-    before: PostFeedMedia,
-    after: PostFeedMedia,
-    modifier: Modifier = Modifier,
-) {
+fun BeforeAfterSlider(before: PostFeedMedia, after: PostFeedMedia, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val beforePainter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context).data(before.model).crossfade(false).build(),
@@ -141,10 +137,7 @@ fun BeforeAfterSlider(
 }
 
 @Composable
-private fun SliderImage(
-    painter: AsyncImagePainter,
-    state: AsyncImagePainter.State,
-) {
+private fun SliderImage(painter: AsyncImagePainter, state: AsyncImagePainter.State) {
     if (state is AsyncImagePainter.State.Error) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
@@ -178,6 +171,4 @@ private fun ComparisonLabel(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-private fun Modifier.aspectRatioFor(ratio: Float): Modifier =
-    this.then(Modifier.aspectRatio(ratio.coerceIn(0.65f, 1.85f)))
-
+private fun Modifier.aspectRatioFor(ratio: Float): Modifier = this.then(Modifier.aspectRatio(ratio.coerceIn(0.65f, 1.85f)))

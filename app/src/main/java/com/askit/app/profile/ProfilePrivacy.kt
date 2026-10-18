@@ -8,7 +8,6 @@ import kotlin.math.roundToInt
 internal fun SessionProfile.approximateDistance(viewerPostcode: String?, distanceKm: Double?): Int? =
     approximateProfileDistance(discloseApproximateLocation, viewerPostcode, distanceKm)
 
-internal fun approximateProfileDistance(consent: Boolean, viewerPostcode: String?, distanceKm: Double?): Int? =
-    distanceKm?.takeIf {
-        consent && validAccountPostcode(viewerPostcode.orEmpty()) && it.isFinite() && it >= 0
-    }?.roundToInt()
+internal fun approximateProfileDistance(consent: Boolean, viewerPostcode: String?, distanceKm: Double?): Int? = distanceKm?.takeIf {
+    consent && validAccountPostcode(viewerPostcode.orEmpty()) && it.isFinite() && it >= 0
+}?.roundToInt()

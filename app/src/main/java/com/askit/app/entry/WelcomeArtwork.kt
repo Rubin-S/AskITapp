@@ -38,9 +38,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
-import com.askit.designsystem.R as DsR
 import kotlin.math.cos
 import kotlin.math.sin
+import com.askit.designsystem.R as DsR
 
 private enum class WelcomeService(
     @DrawableRes val portrait: Int,
@@ -63,12 +63,16 @@ internal fun WelcomeArtwork(colors: WelcomeColors, modifier: Modifier = Modifier
     // Compose's animation clock respects the system animator duration scale, including zero.
     val transition = rememberInfiniteTransition(label = "welcome ambience")
     val breath by transition.animateFloat(
-        initialValue = 0.65f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(4200), RepeatMode.Reverse), label = "logo glow",
+        initialValue = 0.65f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(4200), RepeatMode.Reverse),
+        label = "logo glow",
     )
     val orbit by transition.animateFloat(
-        initialValue = 0f, targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(90000, easing = LinearEasing)), label = "orbit lights",
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(90000, easing = LinearEasing)),
+        label = "orbit lights",
     )
     BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
         val edge = maxWidth
@@ -80,13 +84,22 @@ internal fun WelcomeArtwork(colors: WelcomeColors, modifier: Modifier = Modifier
             )
             drawCircle(colors.ring, radius = unit * 0.30f, style = Stroke(width = 1.dp.toPx()))
             drawCircle(colors.innerRing, radius = unit * 0.215f, style = Stroke(width = 1.dp.toPx()))
-            drawCircle(colors.ring, radius = unit * 0.42f, style = Stroke(width = 0.8.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 3.dp.toPx()))))
+            drawCircle(
+                colors.ring,
+                radius = unit * 0.42f,
+                style = Stroke(width = 0.8.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 3.dp.toPx()))),
+            )
             repeat(8) { index ->
                 val radians = Math.toRadians(index * 45.0 + orbit)
                 drawCircle(
                     color = WelcomeLime,
                     radius = unit * 0.007f,
-                    center = center + androidx.compose.ui.geometry.Offset((cos(radians) * unit * 0.42f).toFloat(), (sin(radians) * unit * 0.42f).toFloat()),
+                    center =
+                        center +
+                            androidx.compose.ui.geometry.Offset(
+                                (cos(radians) * unit * 0.42f).toFloat(),
+                                (sin(radians) * unit * 0.42f).toFloat(),
+                            ),
                 )
             }
         }
@@ -95,7 +108,12 @@ internal fun WelcomeArtwork(colors: WelcomeColors, modifier: Modifier = Modifier
                 .background(WelcomeLime).testTag("entry_center_logo_card"),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(painterResource(R.drawable.ic_welcome_brand), stringResource(R.string.auth_logo), tint = Color(0xFF131811), modifier = Modifier.fillMaxSize())
+            Icon(
+                painterResource(R.drawable.ic_welcome_brand),
+                stringResource(R.string.auth_logo),
+                tint = Color(0xFF131811),
+                modifier = Modifier.fillMaxSize(),
+            )
         }
         WelcomeService.entries.forEach { service ->
             val radians = Math.toRadians(service.angle)
@@ -106,12 +124,16 @@ internal fun WelcomeArtwork(colors: WelcomeColors, modifier: Modifier = Modifier
                     .graphicsLayer { translationY = (breath - 0.825f) * edge.toPx() * 0.018f },
             ) {
                 Image(
-                    painterResource(service.portrait), contentDescription = null,
+                    painterResource(service.portrait),
+                    contentDescription = null,
                     modifier = Modifier.fillMaxSize().clip(CircleShape).border(1.2.dp, colors.portraitBorder, CircleShape),
                     contentScale = ContentScale.Crop,
                 )
                 Box(
-                    Modifier.align(Alignment.BottomEnd).offset(portraitSize * (service.badgeX - 0.77f), portraitSize * (service.badgeY - 0.77f))
+                    Modifier.align(Alignment.BottomEnd).offset(
+                        portraitSize * (service.badgeX - 0.77f),
+                        portraitSize * (service.badgeY - 0.77f),
+                    )
                         .size(portraitSize * 0.46f).background(colors.badge, CircleShape)
                         .border(1.2.dp, colors.portraitBorder, CircleShape),
                     contentAlignment = Alignment.Center,

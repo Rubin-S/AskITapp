@@ -14,23 +14,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
-import com.askit.app.task.presentation
-import com.askit.designsystem.tasks.TaskResultItem
-import com.askit.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.askit.app.R
 import com.askit.app.home.model.FeedItem
 import com.askit.app.home.model.TaskPreview
+import com.askit.app.task.presentation
+import com.askit.designsystem.tasks.TaskResultItem
 
 @Composable
-fun HomeTasksSection(
-    section: FeedItem.TaskSection,
-    modifier: Modifier = Modifier,
-    onTaskClick: (TaskPreview) -> Unit = {},
-) {
+fun HomeTasksSection(section: FeedItem.TaskSection, modifier: Modifier = Modifier, onTaskClick: (TaskPreview) -> Unit = {}) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -71,11 +67,7 @@ fun HomeTasksSection(
 }
 
 @Composable
-private fun HomeTaskCard(
-    task: TaskPreview,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun HomeTaskCard(task: TaskPreview, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val display = task.sourceTask?.presentation(LocalContext.current)
     TaskResultItem(
         title = task.title,

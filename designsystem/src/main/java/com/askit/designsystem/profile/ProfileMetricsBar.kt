@@ -37,10 +37,7 @@ data class ProfileMetricItem(
 
 /** Shared rating, completed-job and relationship metrics for both account roles. */
 @Composable
-fun ProfileMetricsBar(
-    metrics: List<ProfileMetricItem>,
-    modifier: Modifier = Modifier,
-) {
+fun ProfileMetricsBar(metrics: List<ProfileMetricItem>, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()

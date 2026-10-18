@@ -22,10 +22,10 @@ import com.askit.app.jobs.JobWorkMode
 import com.askit.app.jobs.jobCardBadgeRes
 import com.askit.app.jobs.jobCardBadgeTone
 import com.askit.app.jobs.visibleParty
-import com.askit.designsystem.R as DsR
 import com.askit.designsystem.empty.AskITEmptyState
 import com.askit.designsystem.jobs.JobCardActions
 import com.askit.designsystem.jobs.JobLeadCard
+import com.askit.designsystem.R as DsR
 
 @Composable
 fun JobsHub(
@@ -132,7 +132,6 @@ private fun JobCardItem(
     )
 }
 
-
 private fun jobCardActions(
     job: Job,
     party: JobParty,
@@ -152,11 +151,13 @@ private fun jobCardActions(
             onAccept = { onAccept(job.id) },
             onDecline = { onDecline(job.id) },
         )
+
         JobParty.Applicant -> JobCardActions.OutgoingPending(
             cancelLabel = cancelLabel,
             onCancel = { onCancel(job.id) },
         )
     }
+
     JobStatus.Accepted,
     JobStatus.OnTheWay,
     JobStatus.Started,
@@ -165,6 +166,7 @@ private fun jobCardActions(
         trackLabel = trackLabel,
         onTrack = { onOpenJob(job.id) },
     )
+
     JobStatus.Completed,
     JobStatus.Canceled,
     JobStatus.Rejected,

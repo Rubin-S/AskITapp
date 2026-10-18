@@ -29,36 +29,37 @@ internal class BackendClient(baseUrl: String, client: OkHttpClient) {
         .callTimeout(20, TimeUnit.SECONDS)
         .build()
 
-    suspend fun request(path: String, body: String? = null, expectedStatus: Int = 200, accessToken: String? = null): String = suspendCancellableCoroutine { continuation ->
-        val request = Request.Builder()
-            .url(baseUrl.newBuilder().addPathSegments(path).build())
-            .header("Accept", "application/json")
-            .apply { if (accessToken != null) header("Authorization", "Bearer $accessToken") }
-            .apply { if (body != null) post(body.toRequestBody("application/json; charset=utf-8".toMediaType())) }
-            .build()
-        val call = client.newCall(request)
-        continuation.invokeOnCancellation { call.cancel() }
-        call.enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                continuation.resumeWithException(e)
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                try {
-                    val content = response.use {
-                        if (expectedStatus == 204 && it.code == 204) return@use ""
-                        val source = it.body?.source() ?: throw BackendResponseException(it.code, null)
-                        source.request(65_537)
-                        if (source.buffer.size > 65_536) throw BackendResponseException(it.code, null)
-                        val content = source.readUtf8()
-                        if (it.code != expectedStatus) throw BackendResponseException(it.code, content)
-                        content
-                    }
-                    continuation.resume(content)
-                } catch (e: IOException) {
+    suspend fun request(path: String, body: String? = null, expectedStatus: Int = 200, accessToken: String? = null): String =
+        suspendCancellableCoroutine { continuation ->
+            val request = Request.Builder()
+                .url(baseUrl.newBuilder().addPathSegments(path).build())
+                .header("Accept", "application/json")
+                .apply { if (accessToken != null) header("Authorization", "Bearer $accessToken") }
+                .apply { if (body != null) post(body.toRequestBody("application/json; charset=utf-8".toMediaType())) }
+                .build()
+            val call = client.newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+            call.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
                     continuation.resumeWithException(e)
                 }
-            }
-        })
-    }
+
+                override fun onResponse(call: Call, response: Response) {
+                    try {
+                        val content = response.use {
+                            if (expectedStatus == 204 && it.code == 204) return@use ""
+                            val source = it.body?.source() ?: throw BackendResponseException(it.code, null)
+                            source.request(65_537)
+                            if (source.buffer.size > 65_536) throw BackendResponseException(it.code, null)
+                            val content = source.readUtf8()
+                            if (it.code != expectedStatus) throw BackendResponseException(it.code, content)
+                            content
+                        }
+                        continuation.resume(content)
+                    } catch (e: IOException) {
+                        continuation.resumeWithException(e)
+                    }
+                }
+            })
+        }
 }

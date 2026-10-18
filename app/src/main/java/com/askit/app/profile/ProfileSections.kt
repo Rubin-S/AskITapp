@@ -1,9 +1,7 @@
 package com.askit.app.profile
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,8 +9,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
@@ -41,8 +41,11 @@ fun ProfileSections(
     val canManage = state.isOwner && !state.isPublicPreview
     when (sectionId) {
         "about" -> ProfileServiceAbout(state.listing, canManage, onEditService)
+
         "services" -> ServicesPane(state.listing, canManage, onEditService)
+
         "showcase", "posts" -> ProfilePostsPane(posts, onOpenPost)
+
         "tasks" -> {
             val context = LocalContext.current
             val ownedTasks = tasks.forProfile(state.userId)
@@ -51,10 +54,12 @@ fun ProfileSections(
                 if (ownedTasks.isEmpty()) Text(stringResource(R.string.profile_tasks_empty), Modifier.padding(24.dp))
                 ownedTasks.forEach { task ->
                     val labels = task.presentation(context)
-                    TaskResultItem(title = task.title, category = labels.category, summary = task.description,
+                    TaskResultItem(
+                        title = task.title, category = labels.category, summary = task.description,
                         budgetLabel = labels.budget, locationLabel = labels.location, timingLabel = labels.timing,
                         posterName = task.posterName, postedLabel = labels.posted, photoModels = task.photos,
-                        scopeHighlights = labels.requirements, onClick = { onOpenTask(task.id) })
+                        scopeHighlights = labels.requirements, onClick = { onOpenTask(task.id) },
+                    )
                 }
             }
         }
@@ -73,11 +78,17 @@ private fun ProfileServiceAbout(listing: ServiceListing?, canManage: Boolean, on
         listOf(
             R.string.profile_service_category to listing.category,
             R.string.profile_service_experience to listing.experience,
-            R.string.profile_service_area to (listing.deliveryModes.map { mode -> stringResource(when (mode) {
-                com.askit.app.listservice.ListServiceDeliveryMode.REMOTE -> R.string.list_service_remote
-                com.askit.app.listservice.ListServiceDeliveryMode.AT_CUSTOMER_LOCATION -> R.string.list_service_at_customer_location
-                com.askit.app.listservice.ListServiceDeliveryMode.AT_PROVIDER_LOCATION -> R.string.list_service_at_provider_location
-            }) } + listOf(listing.coverage, listing.coverageHint)).filter(String::isNotBlank).joinToString(" · "),
+            R.string.profile_service_area to (
+                listing.deliveryModes.map { mode ->
+                    stringResource(
+                        when (mode) {
+                            com.askit.app.listservice.ListServiceDeliveryMode.REMOTE -> R.string.list_service_remote
+                            com.askit.app.listservice.ListServiceDeliveryMode.AT_CUSTOMER_LOCATION -> R.string.list_service_at_customer_location
+                            com.askit.app.listservice.ListServiceDeliveryMode.AT_PROVIDER_LOCATION -> R.string.list_service_at_provider_location
+                        },
+                    )
+                } + listOf(listing.coverage, listing.coverageHint)
+                ).filter(String::isNotBlank).joinToString(" · "),
             R.string.profile_hours to listing.hours,
             R.string.profile_contact_phone to listing.phoneNumber,
             R.string.profile_contact_email to listing.email,
@@ -92,13 +103,9 @@ private fun ProfileServiceAbout(listing: ServiceListing?, canManage: Boolean, on
         if (canManage) Button(onClick = onEdit) { Text(stringResource(R.string.profile_edit_service)) }
     }
 }
+
 @Composable
-fun ServicesPane(
-    listing: ServiceListing?,
-    isOwner: Boolean,
-    onEditListing: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun ServicesPane(listing: ServiceListing?, isOwner: Boolean, onEditListing: () -> Unit, modifier: Modifier = Modifier) {
     if (listing != null) {
         Column(
             modifier = modifier.fillMaxWidth(),

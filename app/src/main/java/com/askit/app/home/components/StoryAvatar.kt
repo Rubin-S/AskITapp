@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.askit.app.R as AppR
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -36,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.askit.app.home.model.Story
 import com.askit.designsystem.R
+import com.askit.app.R as AppR
 
 // Keep ring geometry in dp so the subtle spacing survives density changes.
 @Composable
@@ -60,11 +60,7 @@ private fun Modifier.storyRing(isSeen: Boolean): Modifier {
 }
 
 @Composable
-fun StoryAvatar(
-    story: Story,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun StoryAvatar(story: Story, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier

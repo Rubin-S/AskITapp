@@ -36,19 +36,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.askit.app.R
-import com.askit.app.task.toPublicTask
-import com.askit.app.task.presentation
-import com.askit.app.task.TaskPreferencesSummary
 import com.askit.app.task.TaskPhotoGallery
-import com.askit.designsystem.R as DsR
+import com.askit.app.task.TaskPreferencesSummary
+import com.askit.app.task.presentation
+import com.askit.app.task.toPublicTask
 import com.askit.designsystem.tasks.TaskResultItem
+import com.askit.designsystem.R as DsR
 
 @Composable
-internal fun PostTaskReview(
-    modifier: Modifier = Modifier,
-    state: PostTaskFormState,
-    onEdit: () -> Unit,
-) {
+internal fun PostTaskReview(modifier: Modifier = Modifier, state: PostTaskFormState, onEdit: () -> Unit) {
     val context = LocalContext.current
     val draft = state.toDraft()
     val task = draft.toPublicTask("review", stringResource(R.string.post_task_you_creator))

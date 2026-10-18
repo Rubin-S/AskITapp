@@ -1,7 +1,5 @@
 package com.askit.app.profile
 
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,14 +18,15 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -35,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.session.ProfileAvailability
+import com.askit.designsystem.inputs.AskITTextField
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -44,11 +44,7 @@ private enum class AvailabilityDateField { From, To }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AvailabilitySheet(
-    availability: ProfileAvailability,
-    onDismiss: () -> Unit,
-    onSave: (ProfileAvailability) -> Unit,
-) {
+fun AvailabilitySheet(availability: ProfileAvailability, onDismiss: () -> Unit, onSave: (ProfileAvailability) -> Unit) {
     var fromMillis by remember { mutableStateOf(availability.fromMillis) }
     var toMillis by remember { mutableStateOf(availability.toMillis) }
     var message by remember { mutableStateOf(availability.message) }
@@ -191,13 +187,7 @@ fun AvailabilitySheet(
 }
 
 @Composable
-private fun DateField(
-    value: String,
-    label: String,
-    tag: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun DateField(value: String, label: String, tag: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     AskITTextField(
         value = value,
         onValueChange = {},

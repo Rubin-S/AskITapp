@@ -1,13 +1,9 @@
 package com.askit.app.inbox
 
-import com.askit.app.home.model.isShareable
 import com.askit.app.home.model.isAvailable
+import com.askit.app.home.model.isShareable
 
-data class ChatContact(
-    val id: String,
-    val name: String,
-    val avatarUrl: String? = null,
-)
+data class ChatContact(val id: String, val name: String, val avatarUrl: String? = null)
 
 data class ChatMessage(
     val id: String,
@@ -65,13 +61,11 @@ class InboxStore(
         }
     }
 
-    fun conversations(): List<Conversation> =
-        conversations.values.sortedByDescending { it.updatedAtMillis }
+    fun conversations(): List<Conversation> = conversations.values.sortedByDescending { it.updatedAtMillis }
 
     fun unreadCount(): Int = conversations.values.sumOf { it.unreadCount }
 
-    fun messages(conversationId: String): List<ChatMessage> =
-        messages[conversationId].orEmpty()
+    fun messages(conversationId: String): List<ChatMessage> = messages[conversationId].orEmpty()
 
     fun conversation(id: String): Conversation? = conversations[id]
 

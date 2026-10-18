@@ -2,8 +2,8 @@ package com.askit.app.explore
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,18 +32,18 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.layout.ContentScale
 import com.askit.app.R
 import java.util.Locale
 
@@ -129,7 +129,7 @@ internal fun BrowseServices(
                 onChangeArea = onChangeArea,
                 onRetry = onRetry?.let { retry -> { retry(ExploreBrowseSection.Services) } },
             )
-            }
+        }
     }
 }
 
@@ -294,10 +294,7 @@ internal fun BrowseSectionStateCard(
     }
 }
 
-private fun browseSectionStateCopy(
-    section: ExploreBrowseSection,
-    status: ExploreBrowseStatus,
-): BrowseSectionStateCopy = when (status) {
+private fun browseSectionStateCopy(section: ExploreBrowseSection, status: ExploreBrowseStatus): BrowseSectionStateCopy = when (status) {
     ExploreBrowseStatus.Empty -> when (section) {
         ExploreBrowseSection.Services -> BrowseSectionStateCopy(
             iconRes = R.drawable.explore_services_empty,
@@ -344,10 +341,7 @@ private fun browseSectionStateCopy(
 }
 
 @Composable
-internal fun BrowseSectionSkeleton(
-    section: ExploreBrowseSection,
-    tagPrefix: String = "explore_browse",
-) {
+internal fun BrowseSectionSkeleton(section: ExploreBrowseSection, tagPrefix: String = "explore_browse") {
     val sectionKey = section.name.lowercase(Locale.US)
     val loadingTag = "${tagPrefix}_${sectionKey}_loading"
     val skeletonColor = MaterialTheme.colorScheme.surfaceContainerHigh

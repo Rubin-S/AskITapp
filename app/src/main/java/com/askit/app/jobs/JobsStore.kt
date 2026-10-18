@@ -1,11 +1,11 @@
 package com.askit.app.jobs
 
+import com.askit.app.posttask.PostTaskWorkMode
 import com.askit.app.session.AccountScope
 import com.askit.app.session.SessionProfileStore
-import com.askit.app.task.TaskRepository
 import com.askit.app.task.TaskActionFailure
+import com.askit.app.task.TaskRepository
 import com.askit.app.task.actionPolicy
-import com.askit.app.posttask.PostTaskWorkMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -81,10 +81,13 @@ class JobsStore(
         }
     }
 
-    fun taskApplication(taskId: String, accountId: String?): Job? =
-        if (accountId.isNullOrBlank()) null else _jobs.value.firstOrNull {
+    fun taskApplication(taskId: String, accountId: String?): Job? = if (accountId.isNullOrBlank()) {
+        null
+    } else {
+        _jobs.value.firstOrNull {
             it.sourceTaskId == taskId && it.applicantAccountId == accountId && it.kind == JobKind.TaskApplication
         }
+    }
 
     @Synchronized
     fun applyToTask(repository: TaskRepository, taskId: String, accountId: String?): ApplyToTaskResult {
@@ -106,11 +109,7 @@ class JobsStore(
         )
     }
 
-    fun requestService(
-        title: String,
-        counterpartName: String,
-        workMode: JobWorkMode = JobWorkMode.OnSite,
-    ): String = createLead(
+    fun requestService(title: String, counterpartName: String, workMode: JobWorkMode = JobWorkMode.OnSite): String = createLead(
         title = title,
         counterpartName = counterpartName,
         kind = JobKind.ServiceRequest,
@@ -180,6 +179,7 @@ class JobsStore(
         if (!job.isProvider(visibleParty(job))) return false
         return when (job.status) {
             JobStatus.Accepted, JobStatus.OnTheWay -> true
+
             JobStatus.Applied,
             JobStatus.Started,
             JobStatus.AwaitingSeekerComplete,

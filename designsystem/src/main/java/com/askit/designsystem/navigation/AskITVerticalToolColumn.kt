@@ -42,11 +42,7 @@ data class AskITVerticalToolItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AskITVerticalToolColumn(
-    items: List<AskITVerticalToolItem>,
-    modifier: Modifier = Modifier,
-    overlay: Boolean = false,
-) {
+fun AskITVerticalToolColumn(items: List<AskITVerticalToolItem>, modifier: Modifier = Modifier, overlay: Boolean = false) {
     val idleTint = MaterialTheme.colorScheme.onSurface
     val selectedTint = MaterialTheme.colorScheme.primary
 
@@ -57,52 +53,52 @@ fun AskITVerticalToolColumn(
     ) {
         items.forEach { item ->
             key(item.testTag ?: item.labelRes) {
-            val label = stringResource(item.labelRes)
-            val tooltipState = rememberTooltipState()
-            TooltipBox(
-                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                    TooltipAnchorPosition.Left,
-                ),
-                tooltip = { PlainTooltip { Text(label) } },
-                state = tooltipState,
-            ) {
-                IconButton(
-                    onClick = item.onClick,
-                    modifier = Modifier
-                        .heightIn(min = 48.dp)
-                        .then(
-                            if (item.testTag != null) Modifier.testTag(item.testTag) else Modifier,
-                        )
-                        .semantics { contentDescription = label },
+                val label = stringResource(item.labelRes)
+                val tooltipState = rememberTooltipState()
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                        TooltipAnchorPosition.Left,
+                    ),
+                    tooltip = { PlainTooltip { Text(label) } },
+                    state = tooltipState,
                 ) {
-                    if (overlay) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(
-                                    color = if (item.selected) Color.White else Color.White.copy(alpha = 0.55f),
-                                    shape = CircleShape,
+                    IconButton(
+                        onClick = item.onClick,
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .then(
+                                if (item.testTag != null) Modifier.testTag(item.testTag) else Modifier,
+                            )
+                            .semantics { contentDescription = label },
+                    ) {
+                        if (overlay) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(
+                                        color = if (item.selected) Color.White else Color.White.copy(alpha = 0.55f),
+                                        shape = CircleShape,
+                                    )
+                                    .border(1.dp, Color.White.copy(alpha = 0.95f), CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(22.dp),
+                                    tint = Color.Black,
                                 )
-                                .border(1.dp, Color.White.copy(alpha = 0.95f), CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
+                            }
+                        } else {
                             Icon(
                                 imageVector = item.icon,
                                 contentDescription = null,
-                                modifier = Modifier.size(22.dp),
-                                tint = Color.Black,
+                                modifier = Modifier.size(24.dp),
+                                tint = if (item.selected) selectedTint else idleTint,
                             )
                         }
-                    } else {
-                        Icon(
-                            imageVector = item.icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = if (item.selected) selectedTint else idleTint,
-                        )
                     }
                 }
-            }
             }
         }
     }

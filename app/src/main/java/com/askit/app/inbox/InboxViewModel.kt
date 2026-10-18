@@ -33,7 +33,11 @@ class InboxViewModel(
         val recipientStore = accounts.peek(recipientId)
         val access = when {
             accountId != ownerId -> MessageAccess.Unavailable
-            store.conversation(recipientId)?.blocked == true || recipientStore?.conversation(ownerId)?.blocked == true -> MessageAccess.Blocked
+
+            store.conversation(
+                recipientId,
+            )?.blocked == true || recipientStore?.conversation(ownerId)?.blocked == true -> MessageAccess.Blocked
+
             else -> resolveAccess(ownerId, recipientId, (recipientStore?.contacts ?: seed().contacts).any { it.id == ownerId })
         }
         access.messageRes?.let { _feedback.tryEmit(it) }

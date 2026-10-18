@@ -13,17 +13,9 @@ enum class ExploreRateUnit(@StringRes val labelRes: Int) {
 }
 
 /** Numeric public pricing, independent of the localized display label. */
-data class ExploreListedPrice(
-    val minimum: BigDecimal,
-    val maximum: BigDecimal,
-    val unit: ExploreRateUnit,
-)
+data class ExploreListedPrice(val minimum: BigDecimal, val maximum: BigDecimal, val unit: ExploreRateUnit)
 
-data class ExplorePriceFilter(
-    val minimum: String = "",
-    val maximum: String = "",
-    val unit: ExploreRateUnit? = null,
-) {
+data class ExplorePriceFilter(val minimum: String = "", val maximum: String = "", val unit: ExploreRateUnit? = null) {
     val hasBounds: Boolean get() = minimum.isNotBlank() || maximum.isNotBlank()
     val isActive: Boolean get() = hasBounds || unit != null
     val isValid: Boolean get() {

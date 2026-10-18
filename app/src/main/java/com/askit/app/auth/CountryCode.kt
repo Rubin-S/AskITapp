@@ -1,11 +1,6 @@
 package com.askit.app.auth
 
-data class CountryCode(
-    val countryName: String,
-    val isoCode: String,
-    val dialCode: String,
-    val flagEmoji: String,
-)
+data class CountryCode(val countryName: String, val isoCode: String, val dialCode: String, val flagEmoji: String)
 
 val defaultCountryCodes = listOf(
     CountryCode("India", "IN", "+91", "🇮🇳"),

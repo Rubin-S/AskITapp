@@ -29,18 +29,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.jobs.JobsStore
-import com.askit.designsystem.R as DsR
 import com.askit.designsystem.jobs.OtpBoxes
+import com.askit.designsystem.R as DsR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JobVerifyEnter(
-    jobId: String,
-    store: JobsStore,
-    onBack: () -> Unit,
-    onVerified: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun JobVerifyEnter(jobId: String, store: JobsStore, onBack: () -> Unit, onVerified: () -> Unit, modifier: Modifier = Modifier) {
     var code by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf(false) }
     var lockedOut by rememberSaveable { mutableStateOf(false) }
@@ -100,7 +94,12 @@ fun JobVerifyEnter(
                 onClick = {
                     when (store.verifyStartCode(jobId, code)) {
                         com.askit.app.jobs.StartCodeCheck.Verified -> onVerified()
-                        com.askit.app.jobs.StartCodeCheck.LockedOut -> { lockedOut = true; error = true }
+
+                        com.askit.app.jobs.StartCodeCheck.LockedOut -> {
+                            lockedOut = true
+                            error = true
+                        }
+
                         is com.askit.app.jobs.StartCodeCheck.Rejected -> error = true
                     }
                 },

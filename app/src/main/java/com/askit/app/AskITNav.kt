@@ -6,41 +6,38 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import com.askit.designsystem.dialogs.AskITAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.SideEffect
-import com.askit.app.task.TaskDiscussionViewModel
-import com.askit.app.task.TaskActionsViewModel
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
-import com.askit.app.createpost.CreatePostViewModel
-import com.askit.app.config.AppLinks
 import com.askit.app.auth.AuthDestination
 import com.askit.app.auth.AuthOperation
+import com.askit.app.config.AppLinks
+import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.createpost.PostDraft
 import com.askit.app.creatordashboard.CreatorDashboardViewModel
 import com.askit.app.explore.ExploreBrowseSection
@@ -54,17 +51,20 @@ import com.askit.app.home.HomeViewModel
 import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.InboxViewModel
 import com.askit.app.jobs.JobsViewModel
-import com.askit.app.profile.ProfileViewModel
 import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.listservice.ListServiceViewModel
 import com.askit.app.navigation.AppDestination
 import com.askit.app.navigation.rememberAskITNavigationState
 import com.askit.app.posttask.PostTaskDraft
 import com.askit.app.posttask.PostTaskViewModel
-import com.askit.app.task.toExploreTaskResult
-import com.askit.app.task.TaskRepository
+import com.askit.app.profile.ProfileViewModel
 import com.askit.app.story.StoryDraft
 import com.askit.app.story.StoryViewModel
+import com.askit.app.task.TaskActionsViewModel
+import com.askit.app.task.TaskDiscussionViewModel
+import com.askit.app.task.TaskRepository
+import com.askit.app.task.toExploreTaskResult
+import com.askit.designsystem.dialogs.AskITAlertDialog
 import com.askit.designsystem.navigation.AskITBottomBar
 import com.askit.designsystem.navigation.AskITCreateAction
 import com.askit.designsystem.navigation.AskITCreateSheet
@@ -233,17 +233,27 @@ fun AskITApp(
             val current = resolvedJobsViewModel.profileStore.profile.value
             val state = resolvedAuthViewModel.state.value
             if (!BuildConfig.CLIENT_PREVIEW || session?.userId != sender || current.accountId != sender ||
-                state.signedOut || state.operation in setOf(AuthOperation.SignOut, AuthOperation.RestoreSession, AuthOperation.LoadAccount)) {
+                state.signedOut ||
+                state.operation in setOf(AuthOperation.SignOut, AuthOperation.RestoreSession, AuthOperation.LoadAccount)
+            ) {
                 com.askit.app.inbox.MessageAccess.Unavailable
-            } else runCatching {
-                val target = messagingProfiles?.load(recipient)
-                    ?: if (recipient in setOf("preview-owner", "preview-visitor", "preview-seeker")) com.askit.app.variant.AppVariant.previewProfile(recipient) else null
-                val preference = target?.whoCanMessage ?: "Everyone".takeIf {
-                    com.askit.app.home.details.getUserProfileById(recipient) != null ||
-                        com.askit.app.variant.AppVariant.inboxSeed().contacts.any { it.id == recipient }
-                }
-                com.askit.app.inbox.messagingAccess(sender, recipient, preference, isContact, current.isVerified)
-            }.getOrDefault(com.askit.app.inbox.MessageAccess.Unavailable)
+            } else {
+                runCatching {
+                    val target = messagingProfiles?.load(recipient)
+                        ?: if (recipient in
+                            setOf("preview-owner", "preview-visitor", "preview-seeker")
+                        ) {
+                            com.askit.app.variant.AppVariant.previewProfile(recipient)
+                        } else {
+                            null
+                        }
+                    val preference = target?.whoCanMessage ?: "Everyone".takeIf {
+                        com.askit.app.home.details.getUserProfileById(recipient) != null ||
+                            com.askit.app.variant.AppVariant.inboxSeed().contacts.any { it.id == recipient }
+                    }
+                    com.askit.app.inbox.messagingAccess(sender, recipient, preference, isContact, current.isVerified)
+                }.getOrDefault(com.askit.app.inbox.MessageAccess.Unavailable)
+            }
         }
         if (!isResolvingDiscussionAccount && (authState.operation != AuthOperation.SignOut || authState.signedOut)) {
             resolvedInboxViewModel.activateAccount(discussionAccountId)
@@ -279,9 +289,15 @@ fun AskITApp(
                 val errorRes = authState.errorRes
                 if (errorRes == null) {
                     CircularProgressIndicator()
-                    Text(stringResource(if (authState.operation == AuthOperation.RestoreSession) {
-                        R.string.auth_restoring_session
-                    } else R.string.auth_loading_account))
+                    Text(
+                        stringResource(
+                            if (authState.operation == AuthOperation.RestoreSession) {
+                                R.string.auth_restoring_session
+                            } else {
+                                R.string.auth_loading_account
+                            },
+                        ),
+                    )
                 } else {
                     Text(stringResource(errorRes))
                     if (errorRes != R.string.auth_session_expired) {
@@ -360,14 +376,17 @@ fun AskITApp(
                     resolvedPostTaskViewModel.startNewDraft()
                     navigationState.push(AppDestination.PostTask)
                 }
+
                 AskITCreateAction.AddService -> {
                     resolvedListServiceViewModel.startNewDraft()
                     navigationState.push(AppDestination.ListService)
                 }
+
                 AskITCreateAction.CreatePost -> {
                     resolvedCreatePostViewModel.startNewDraft()
                     navigationState.push(AppDestination.CreatePost)
                 }
+
                 AskITCreateAction.CreatorDashboard -> {
                     navigationState.push(AppDestination.CreatorDashboard)
                 }

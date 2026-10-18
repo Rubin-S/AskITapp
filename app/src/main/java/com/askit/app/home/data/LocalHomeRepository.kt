@@ -86,7 +86,9 @@ class LocalHomeRepository(
                     if (taskPreviews.isNotEmpty()) add(FeedItem.TaskSection(id = "featured-tasks", tasks = taskPreviews))
                     addAll(fixtures.pageOneTrail)
                 }
+
                 page >= 2 -> fixtures.laterPages.getOrElse(page - 2) { emptyList() }
+
                 else -> emptyList()
             }
             posts.project(template)

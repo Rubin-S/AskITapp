@@ -25,10 +25,8 @@ interface JobStartCodeAuthority {
     fun verify(jobId: String, expected: String, entered: String): StartCodeCheck
 }
 
-class LocalJobStartCodeAuthority(
-    private val random: SecureRandom = SecureRandom(),
-    val maxAttempts: Int = DEFAULT_MAX_ATTEMPTS,
-) : JobStartCodeAuthority {
+class LocalJobStartCodeAuthority(private val random: SecureRandom = SecureRandom(), val maxAttempts: Int = DEFAULT_MAX_ATTEMPTS) :
+    JobStartCodeAuthority {
     private val failures = mutableMapOf<String, Int>()
 
     /** Four digits, matching the current entry UI. Leading zeros are allowed. */

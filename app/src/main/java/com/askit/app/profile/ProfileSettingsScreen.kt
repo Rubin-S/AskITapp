@@ -1,7 +1,5 @@
 package com.askit.app.profile
 
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import com.askit.designsystem.dialogs.AskITAlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,7 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -39,14 +35,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -56,10 +54,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.askit.app.R
-import com.askit.app.session.ProfileAvailability
 import com.askit.app.session.AppLanguage
 import com.askit.app.session.MessagingAudience
+import com.askit.app.session.ProfileAvailability
 import com.askit.app.session.SessionProfile
+import com.askit.designsystem.dialogs.AskITAlertDialog
+import com.askit.designsystem.inputs.AskITTextField
 import com.askit.designsystem.people.AskITAvatar
 import com.askit.designsystem.R as DsR
 
@@ -246,7 +246,13 @@ fun ProfileSettingsScreen(
                     title = stringResource(R.string.settings_location_services),
                     icon = painterResource(DsR.drawable.ic_location),
                     iconBgColor = Color(0xFF00897B),
-                    value = if (profile.locationServicesEnabled) stringResource(R.string.settings_status_on) else stringResource(R.string.settings_status_off),
+                    value = if (profile.locationServicesEnabled) {
+                        stringResource(
+                            R.string.settings_status_on,
+                        )
+                    } else {
+                        stringResource(R.string.settings_status_off)
+                    },
                     testTag = "settings_row_location",
                     onClick = { onUpdateLocationServices(!profile.locationServicesEnabled) },
                 )
@@ -271,8 +277,10 @@ fun ProfileSettingsScreen(
                 SettingsNavigationRow(
                     title = stringResource(R.string.story_muted_settings),
                     icon = painterResource(DsR.drawable.ic_shield),
-                    iconBgColor = Color(0xFF546E7A), value = mutedStoryAuthors.size.toString(),
-                    testTag = "settings_muted_stories", onClick = { showMutedStories = true },
+                    iconBgColor = Color(0xFF546E7A),
+                    value = mutedStoryAuthors.size.toString(),
+                    testTag = "settings_muted_stories",
+                    onClick = { showMutedStories = true },
                 )
                 SettingsDivider()
                 SettingsNavigationRow(
@@ -294,7 +302,9 @@ fun ProfileSettingsScreen(
                     title = stringResource(R.string.settings_service_listing),
                     icon = painterResource(DsR.drawable.ic_work),
                     iconBgColor = Color(0xFF7CB342),
-                    value = stringResource(if (profile.hasListedService) R.string.settings_status_live else R.string.settings_status_manage),
+                    value = stringResource(
+                        if (profile.hasListedService) R.string.settings_status_live else R.string.settings_status_manage,
+                    ),
                     testTag = "settings_row_service_listing",
                     onClick = onNavigateToListService,
                 )
@@ -449,7 +459,6 @@ fun ProfileSettingsScreen(
 
     // Dialogs and Bottom Sheets
 
-
     if (showLanguageSheet) {
         ModalBottomSheet(
             onDismissRequest = { showLanguageSheet = false },
@@ -465,7 +474,9 @@ fun ProfileSettingsScreen(
     }
 
     if (showMutedStories) {
-        com.askit.app.home.stories.MutedStoriesSheet(mutedStoryAuthors, onDismiss = { showMutedStories = false }, onUnmute = onUnmuteStoryAuthor)
+        com.askit.app.home.stories.MutedStoriesSheet(mutedStoryAuthors, onDismiss = {
+            showMutedStories = false
+        }, onUnmute = onUnmuteStoryAuthor)
     }
 
     if (showMessagePrivacySheet) {
@@ -520,12 +531,27 @@ fun ProfileSettingsScreen(
     }
 
     if (showSavedSheet) {
-        com.askit.app.home.posts.PostCollectionSheet(savedPosts, archived = false,
-            onDismiss = { showSavedSheet = false }, onOpen = { id -> showSavedSheet = false; onOpenPost(id) })
+        com.askit.app.home.posts.PostCollectionSheet(
+            savedPosts,
+            archived = false,
+            onDismiss = { showSavedSheet = false },
+            onOpen = { id ->
+                showSavedSheet = false
+                onOpenPost(id)
+            },
+        )
     }
     if (showArchivedPosts) {
-        com.askit.app.home.posts.PostCollectionSheet(archivedPosts, archived = true,
-            onDismiss = { showArchivedPosts = false }, onOpen = { id -> showArchivedPosts = false; onOpenPost(id) }, onRestore = onRestorePost)
+        com.askit.app.home.posts.PostCollectionSheet(
+            archivedPosts,
+            archived = true,
+            onDismiss = { showArchivedPosts = false },
+            onOpen = { id ->
+                showArchivedPosts = false
+                onOpenPost(id)
+            },
+            onRestore = onRestorePost,
+        )
     }
 
     if (showHistorySheet) {
@@ -679,10 +705,7 @@ private fun SettingsProfileHeaderCard(
 }
 
 @Composable
-private fun SettingsSectionHeader(
-    title: String,
-    modifier: Modifier = Modifier,
-) {
+private fun SettingsSectionHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
         style = MaterialTheme.typography.labelMedium.copy(
@@ -695,10 +718,7 @@ private fun SettingsSectionHeader(
 }
 
 @Composable
-private fun SettingsCardContainer(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
+private fun SettingsCardContainer(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -821,9 +841,7 @@ private fun SettingsToggleRow(
 }
 
 @Composable
-private fun SettingsDivider(
-    modifier: Modifier = Modifier,
-) {
+private fun SettingsDivider(modifier: Modifier = Modifier) {
     HorizontalDivider(
         modifier = modifier.padding(start = 66.dp),
         thickness = 0.75.dp,
@@ -832,10 +850,7 @@ private fun SettingsDivider(
 }
 
 @Composable
-private fun LanguageSelectionContent(
-    selectedLanguage: String,
-    onSelectLanguage: (String) -> Unit,
-) {
+private fun LanguageSelectionContent(selectedLanguage: String, onSelectLanguage: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -875,10 +890,7 @@ private fun LanguageSelectionContent(
 }
 
 @Composable
-private fun MessagePrivacyContent(
-    currentOption: String,
-    onSelectOption: (String) -> Unit,
-) {
+private fun MessagePrivacyContent(currentOption: String, onSelectOption: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -889,11 +901,13 @@ private fun MessagePrivacyContent(
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(bottom = 16.dp),
         )
-        if (com.askit.app.BuildConfig.CLIENT_PREVIEW) Text(
-            text = stringResource(R.string.settings_message_privacy_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        if (com.askit.app.BuildConfig.CLIENT_PREVIEW) {
+            Text(
+                text = stringResource(R.string.settings_message_privacy_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         messagePrivacyOptions.forEach { (opt, label) ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,

@@ -27,10 +27,10 @@ import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.story.StoryAudience
 import com.askit.app.story.StoryFormState
+import com.askit.app.story.StoryViewModel
 import com.askit.app.story.editor.StoryCanvas
 import com.askit.app.story.editor.StoryFrame
 import com.askit.app.story.stickers.PostReshareSticker
-import com.askit.app.story.StoryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

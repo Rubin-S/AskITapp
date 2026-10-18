@@ -5,32 +5,17 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface PostMedia {
     @Serializable
-    data class SinglePhoto(
-        val url: String,
-        val contentDescription: String? = null,
-        val aspectRatio: Float = 4f / 3f,
-    ) : PostMedia
+    data class SinglePhoto(val url: String, val contentDescription: String? = null, val aspectRatio: Float = 4f / 3f) : PostMedia
 
     @Serializable
-    data class Carousel(
-        val urls: List<String>,
-        val aspectRatio: Float = 4f / 3f,
-    ) : PostMedia
+    data class Carousel(val urls: List<String>, val aspectRatio: Float = 4f / 3f) : PostMedia
 
     @Serializable
-    data class BeforeAfter(
-        val beforeUrl: String,
-        val afterUrl: String,
-        val aspectRatio: Float = 4f / 3f,
-    ) : PostMedia
+    data class BeforeAfter(val beforeUrl: String, val afterUrl: String, val aspectRatio: Float = 4f / 3f) : PostMedia
 }
 
 @Serializable
-data class PostPoll(
-    val question: String,
-    val options: List<String>,
-    val closingSummary: String = "Poll ends soon",
-)
+data class PostPoll(val question: String, val options: List<String>, val closingSummary: String = "Poll ends soon")
 
 @Serializable
 data class FeedPost(

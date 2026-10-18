@@ -2,8 +2,8 @@ package com.askit.app.auth
 
 import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.listservice.toServiceListing
-import com.askit.app.profile.ProfileHighlight
 import com.askit.app.profile.ProfileGalleryItem
+import com.askit.app.profile.ProfileHighlight
 import com.askit.app.profile.ProfileReview
 import com.askit.app.profile.SavedProfessional
 import com.askit.app.session.ProfileAvailability
@@ -12,11 +12,7 @@ import com.askit.app.session.SessionProfile
 import kotlinx.serialization.Serializable
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
-data class CurrentAccount(
-    val userId: String,
-    val phoneNumber: String,
-    val profile: SessionProfile?,
-)
+data class CurrentAccount(val userId: String, val phoneNumber: String, val profile: SessionProfile?)
 
 @Serializable
 internal data class AccountResponse(val userId: String, val phoneNumber: String, val profile: AccountProfile?)
@@ -71,30 +67,46 @@ internal data class AccountProfile(
 ) {
     internal fun toSessionProfile(phoneNumber: String, accountId: String): SessionProfile {
         if (accountId.isBlank() || highlights.map { it.id }.distinct().size != highlights.size ||
-            highlights.any { runCatching { it.validate(accountId) }.isFailure }) throw AuthApiException(AuthError.InvalidResponse)
+            highlights.any { runCatching { it.validate(accountId) }.isFailure }
+        ) {
+            throw AuthApiException(AuthError.InvalidResponse)
+        }
         // Public listings never carry contact details, even if a server sends them.
-        val canonicalListing = (listingDraft?.toServiceListing(listing?.category ?: listingDraft.categoryId)
-            ?.copy(live = listing?.live ?: availability.available) ?: listing)?.copy(phoneNumber = "", email = "")
-        if (listingDraft != null && (listing == null || listing.title != listingDraft.title ||
-            listing.description != listingDraft.description)) throw AuthApiException(AuthError.InvalidResponse)
+        val canonicalListing = (
+            listingDraft?.toServiceListing(listing?.category ?: listingDraft.categoryId)
+                ?.copy(live = listing?.live ?: availability.available) ?: listing
+            )?.copy(phoneNumber = "", email = "")
+        if (listingDraft != null && (
+                listing == null || listing.title != listingDraft.title ||
+                    listing.description != listingDraft.description
+                )
+        ) {
+            throw AuthApiException(AuthError.InvalidResponse)
+        }
         if (displayName.isBlank() || city.isBlank() ||
             (username.isNotEmpty() && !com.askit.app.profile.isUsernameValid(username.removePrefix("@"))) ||
             (email.isNotEmpty() && !validAccountEmail(email)) || (pincode.isNotEmpty() && !validAccountPostcode(pincode)) ||
-            !validAccountPhone(phoneNumber) || selectedLanguage !in com.askit.app.session.AppLanguage.storedValues || !joinedYear.matches(Regex("[0-9]{4}")) ||
+            !validAccountPhone(phoneNumber) || selectedLanguage !in com.askit.app.session.AppLanguage.storedValues ||
+            !joinedYear.matches(Regex("[0-9]{4}")) ||
             profileStrengthPercent !in 0..100 || followingCount < 0 || followerCount < 0 || blockedAccountsCount < 0 ||
             activeRole !in setOf("Seeker", "Provider", "Both") ||
             whoCanMessage !in com.askit.app.session.MessagingAudience.storedValues ||
             reviews.any { it.rating !in 0f..5f }
-        ) throw AuthApiException(AuthError.InvalidResponse)
+        ) {
+            throw AuthApiException(AuthError.InvalidResponse)
+        }
         for (ids in listOf(gallery.map { it.id }, reviews.map { it.id }, savedProfessionals.map { it.id })) {
             if (ids.any(String::isBlank) || ids.distinct().size != ids.size) throw AuthApiException(AuthError.InvalidResponse)
         }
         val mediaUrls = listOfNotNull(avatarUrl, bannerUrl) + gallery.map { it.uri } +
             reviews.mapNotNull { it.avatarUrl } + savedProfessionals.mapNotNull { it.avatarUrl }
         if (mediaUrls.any { value ->
-            val url = value.toHttpUrlOrNull()
-            value.length > 2_048 || url == null || !url.isHttps || url.username.isNotEmpty() || url.password.isNotEmpty()
-        }) throw AuthApiException(AuthError.InvalidResponse)
+                val url = value.toHttpUrlOrNull()
+                value.length > 2_048 || url == null || !url.isHttps || url.username.isNotEmpty() || url.password.isNotEmpty()
+            }
+        ) {
+            throw AuthApiException(AuthError.InvalidResponse)
+        }
         return SessionProfile(
             accountId = accountId, highlights = highlights, listingDraft = listingDraft,
             displayName = displayName,

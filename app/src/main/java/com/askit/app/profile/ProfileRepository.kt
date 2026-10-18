@@ -1,7 +1,7 @@
 package com.askit.app.profile
 
-import com.askit.app.session.ProfileAvailability
 import com.askit.app.auth.SignupDraft
+import com.askit.app.session.ProfileAvailability
 import com.askit.app.session.SessionProfile
 import com.askit.app.session.SessionProfileStore
 import kotlinx.coroutines.flow.StateFlow
@@ -32,17 +32,14 @@ interface ProfileRepository {
     fun resetAppData()
 }
 
-class LocalProfileRepository(
-    private val store: SessionProfileStore,
-) : ProfileRepository {
+class LocalProfileRepository(private val store: SessionProfileStore) : ProfileRepository {
     override val profile: StateFlow<SessionProfile> = store.profile
 
     override fun completeSignup(draft: SignupDraft) = store.completeSignup(draft)
 
     override fun updateIdentity(state: EditProfileFormState) = store.updateIdentity(state)
 
-    override fun updateAvailability(availability: ProfileAvailability) =
-        store.updateAvailability(availability)
+    override fun updateAvailability(availability: ProfileAvailability) = store.updateAvailability(availability)
 
     override fun saveHighlight(actorId: String, highlight: ProfileHighlight) = store.saveHighlight(actorId, highlight)
     override fun deleteHighlight(actorId: String, id: String) = store.deleteHighlight(actorId, id)

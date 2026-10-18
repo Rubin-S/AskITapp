@@ -38,21 +38,55 @@ internal fun ProfileBanner(uri: String?, canEdit: Boolean, onSave: (String?) -> 
     Column {
         Box(Modifier.fillMaxWidth().height(120.dp).testTag("profile_banner")) {
             ProfileCover()
-            if (uri != null) AsyncImage(model = uri, contentDescription = stringResource(R.string.profile_banner),
-                contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { failed = true })
-            if (canEdit) Box(Modifier.align(Alignment.TopEnd)) {
-                IconButton(onClick = { if (uri == null) photos.launchLibrary() else menu = true }, enabled = !saving, modifier = Modifier.testTag("profile_banner_edit")) {
-                    Icon(painterResource(DsR.drawable.ic_edit), stringResource(R.string.profile_edit_banner))
-                }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.profile_edit_banner)) },
-                        onClick = { menu = false; photos.launchLibrary() })
-                    if (uri != null) DropdownMenuItem(text = { Text(stringResource(R.string.profile_remove_banner)) },
-                        onClick = { menu = false; failed = !onSave(null) })
+            if (uri != null) {
+                AsyncImage(
+                    model = uri,
+                    contentDescription = stringResource(R.string.profile_banner),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    onError = { failed = true },
+                )
+            }
+            if (canEdit) {
+                Box(Modifier.align(Alignment.TopEnd)) {
+                    IconButton(onClick = {
+                        if (uri ==
+                            null
+                        ) {
+                            photos.launchLibrary()
+                        } else {
+                            menu = true
+                        }
+                    }, enabled = !saving, modifier = Modifier.testTag("profile_banner_edit")) {
+                        Icon(painterResource(DsR.drawable.ic_edit), stringResource(R.string.profile_edit_banner))
+                    }
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.profile_edit_banner)) },
+                            onClick = {
+                                menu = false
+                                photos.launchLibrary()
+                            },
+                        )
+                        if (uri != null) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.profile_remove_banner)) },
+                                onClick = {
+                                    menu = false
+                                    failed = !onSave(null)
+                                },
+                            )
+                        }
+                    }
                 }
             }
         }
-        if (failed) Text(stringResource(R.string.profile_banner_failed), color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.padding(start = 128.dp, end = 16.dp, top = 8.dp))
+        if (failed) {
+            Text(
+                stringResource(R.string.profile_banner_failed),
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 128.dp, end = 16.dp, top = 8.dp),
+            )
+        }
     }
 }

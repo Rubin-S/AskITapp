@@ -10,19 +10,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.designsystem.tasks.TaskPhotoMedia
-import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun TaskPreferencesSummary(preferences: TaskProviderPreferences) {
     val age = when {
         preferences.minimumAge != null && preferences.maximumAge != null ->
             stringResource(R.string.task_preference_age_range, preferences.minimumAge, preferences.maximumAge)
+
         preferences.minimumAge != null -> stringResource(R.string.task_preference_age_minimum, preferences.minimumAge)
+
         preferences.maximumAge != null -> stringResource(R.string.task_preference_age_maximum, preferences.maximumAge)
+
         else -> stringResource(R.string.task_preference_none)
     }
     val languages = TaskLanguage.entries.filter { it in preferences.languages }
@@ -31,7 +34,10 @@ fun TaskPreferencesSummary(preferences: TaskProviderPreferences) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.task_provider_preferences), style = MaterialTheme.typography.titleMedium)
         Text(stringResource(R.string.task_preference_age_summary, age), style = MaterialTheme.typography.bodyMedium)
-        Text(stringResource(R.string.task_preference_gender_summary, stringResource(preferences.gender.labelRes)), style = MaterialTheme.typography.bodyMedium)
+        Text(
+            stringResource(R.string.task_preference_gender_summary, stringResource(preferences.gender.labelRes)),
+            style = MaterialTheme.typography.bodyMedium,
+        )
         Text(stringResource(R.string.task_preference_language_summary, languages), style = MaterialTheme.typography.bodyMedium)
     }
 }

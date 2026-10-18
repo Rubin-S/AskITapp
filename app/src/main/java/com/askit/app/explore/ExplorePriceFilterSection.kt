@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,14 +21,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
+import com.askit.designsystem.inputs.AskITTextField
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun ExplorePriceFilterSection(
-    scope: ExploreResultScope,
-    filter: ExplorePriceFilter,
-    onChange: (ExplorePriceFilter) -> Unit,
-) {
+internal fun ExplorePriceFilterSection(scope: ExploreResultScope, filter: ExplorePriceFilter, onChange: (ExplorePriceFilter) -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,

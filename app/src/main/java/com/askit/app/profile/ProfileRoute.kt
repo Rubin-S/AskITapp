@@ -82,14 +82,18 @@ fun ProfileRoute(
 
     var showContact by rememberSaveable { mutableStateOf(false) }
     if (showContact) ProfileContactDialog(profile.listing, isPublicPreview, onDismiss = { showContact = false })
-    val actionConfig = profileActions(uiState, profile.accountId, mapOf(
-        ProfileActionId.EDIT to onEditProfile,
-        ProfileActionId.VIEW_AS to { isPublicPreview = true },
-        ProfileActionId.PROVIDER_DASHBOARD to onOpenProviderDashboard,
-        ProfileActionId.CREATOR_DASHBOARD to onOpenCreatorDashboard,
-        ProfileActionId.POST_TASK to onPostTask,
-        ProfileActionId.CONTACT to { showContact = true },
-    ))
+    val actionConfig = profileActions(
+        uiState,
+        profile.accountId,
+        mapOf(
+            ProfileActionId.EDIT to onEditProfile,
+            ProfileActionId.VIEW_AS to { isPublicPreview = true },
+            ProfileActionId.PROVIDER_DASHBOARD to onOpenProviderDashboard,
+            ProfileActionId.CREATOR_DASHBOARD to onOpenCreatorDashboard,
+            ProfileActionId.POST_TASK to onPostTask,
+            ProfileActionId.CONTACT to { showContact = true },
+        ),
+    )
 
     Scaffold(
         modifier = modifier.fillMaxSize().testTag("profile_route"),
@@ -104,6 +108,7 @@ fun ProfileRoute(
             ) {
                 CircularProgressIndicator(modifier = Modifier.testTag("profile_loading"))
             }
+
             is ProfileLoadState.Failed -> Box(
                 modifier = Modifier.fillMaxSize().padding(padding).testTag("profile_failed"),
                 contentAlignment = Alignment.Center,
@@ -117,6 +122,7 @@ fun ProfileRoute(
                     Button(onClick = onEditProfile) { Text(stringResource(R.string.profile_edit)) }
                 }
             }
+
             ProfileLoadState.Ready -> UniversalProfileScaffold(
                 uiState = uiState,
                 people = people.copy(canMutate = people.canMutate && !isPublicPreview),
@@ -130,9 +136,11 @@ fun ProfileRoute(
                 onSectionSelected = { sectionId = it },
                 onExitPreview = { isPublicPreview = false },
                 highlightsContent = {
-                    ProfileHighlights(profile.accountId, profile.accountId.takeUnless { isPublicPreview }, profile.highlights,
+                    ProfileHighlights(
+                        profile.accountId, profile.accountId.takeUnless { isPublicPreview }, profile.highlights,
                         stories, canManage = !isPublicPreview, authorizedPostIds = posts.map { it.id }.toSet(), onSave = onSaveHighlight,
-                        onDelete = onDeleteHighlight, onOpenPost = onOpenPost)
+                        onDelete = onDeleteHighlight, onOpenPost = onOpenPost,
+                    )
                 },
                 content = { id ->
                     ProfileSections(id, uiState, posts, tasks, onOpenPost, onOpenTask, onEditListing, onPostTask)

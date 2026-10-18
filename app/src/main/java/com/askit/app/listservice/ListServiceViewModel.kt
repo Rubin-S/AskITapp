@@ -1,11 +1,11 @@
 package com.askit.app.listservice
 
-import kotlinx.serialization.Serializable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
 @Serializable
@@ -95,12 +95,7 @@ data class ListServiceCoverage(
 )
 
 @Serializable
-data class ListServicePublicLocation(
-    val publicAreaLabel: String,
-    val placeId: String?,
-    val latitude: Double,
-    val longitude: Double,
-)
+data class ListServicePublicLocation(val publicAreaLabel: String, val placeId: String?, val latitude: Double, val longitude: Double)
 
 @Serializable
 sealed interface ListServicePricing {
@@ -150,9 +145,7 @@ data class ListServiceDraft(
     val contactEmail: String = "",
 )
 
-class ListServiceViewModel(
-    private val savedStateHandle: SavedStateHandle? = null,
-) : ViewModel() {
+class ListServiceViewModel(private val savedStateHandle: SavedStateHandle? = null) : ViewModel() {
 
     private val _formState = MutableStateFlow(restoreState())
     val formState: StateFlow<ListServiceFormState> = _formState.asStateFlow()
@@ -199,12 +192,7 @@ class ListServiceViewModel(
         )
     }
 
-    fun selectCustomerLocation(
-        placeId: String?,
-        publicAreaLabel: String,
-        latitude: Double,
-        longitude: Double,
-    ) = update {
+    fun selectCustomerLocation(placeId: String?, publicAreaLabel: String, latitude: Double, longitude: Double) = update {
         copy(
             customerPlaceId = placeId,
             customerAreaLabel = publicAreaLabel,
@@ -218,12 +206,7 @@ class ListServiceViewModel(
         update { copy(coverageRadiusKm = radiusKm.takeUnless { it == coverageRadiusKm }) }
     }
 
-    fun selectProviderLocation(
-        placeId: String?,
-        publicAreaLabel: String,
-        latitude: Double,
-        longitude: Double,
-    ) = update {
+    fun selectProviderLocation(placeId: String?, publicAreaLabel: String, latitude: Double, longitude: Double) = update {
         copy(
             providerPlaceId = placeId,
             providerAreaLabel = publicAreaLabel,
@@ -277,9 +260,11 @@ class ListServiceViewModel(
         )
         val errors = validate(attemptedState)
         // Expand the Pricing section when it owns an error so Review can focus the price field.
-        setState(attemptedState.copy(
-            expandedOptionalSections = attemptedState.expandedOptionalSections + errors.mapNotNull { it.owningSection() },
-        ))
+        setState(
+            attemptedState.copy(
+                expandedOptionalSections = attemptedState.expandedOptionalSections + errors.mapNotNull { it.owningSection() },
+            ),
+        )
         if (errors.isNotEmpty()) return false
 
         setState(attemptedState.copy(screenMode = ListServiceScreenMode.REVIEW))
@@ -461,14 +446,20 @@ private fun ListServiceFormState.toDraft(): ListServiceDraft {
     }
     val pricing = when (pricingMode) {
         ListServicePricingMode.CONTACT_FOR_QUOTE -> ListServicePricing.ContactForQuote
+
         ListServicePricingMode.STARTING_AT -> ListServicePricing.StartingAt(priceAmount.trim())
+
         ListServicePricingMode.FIXED -> ListServicePricing.Fixed(priceAmount.trim())
+
         ListServicePricingMode.HOURLY -> ListServicePricing.Hourly(priceAmount.trim())
+
         ListServicePricingMode.PER_VISIT -> ListServicePricing.PerVisit(priceAmount.trim())
+
         ListServicePricingMode.RANGE -> ListServicePricing.Range(
             minimum = minimumPrice.trim(),
             maximum = maximumPrice.trim(),
         )
+
         null -> null
     }
     return ListServiceDraft(
@@ -477,8 +468,12 @@ private fun ListServiceFormState.toDraft(): ListServiceDraft {
             categoryId == LIST_SERVICE_OTHER_CATEGORY_ID && it.isNotBlank()
         },
         title = title.trim(),
-        contactPhone = (com.askit.app.auth.PhoneNumberValidator.validate(contactPhone.trim(),
-            if (contactPhone.trim().startsWith('+')) null else "IN") as com.askit.app.auth.PhoneValidation.Valid).e164,
+        contactPhone = (
+            com.askit.app.auth.PhoneNumberValidator.validate(
+                contactPhone.trim(),
+                if (contactPhone.trim().startsWith('+')) null else "IN",
+            ) as com.askit.app.auth.PhoneValidation.Valid
+            ).e164,
         contactEmail = contactEmail.trim(),
         description = description.trim(),
         deliveryModes = deliveryModes.toSet(),
@@ -506,7 +501,8 @@ private fun validate(state: ListServiceFormState): Set<ListServiceValidationFiel
         add(ListServiceValidationField.CATEGORY)
     }
     if (state.availability.isBlank() || state.experience.toIntOrNull() !in 0..60 ||
-        !com.askit.app.auth.validAccountPhone(state.contactPhone) || !com.askit.app.auth.validAccountEmail(state.contactEmail)) {
+        !com.askit.app.auth.validAccountPhone(state.contactPhone) || !com.askit.app.auth.validAccountEmail(state.contactEmail)
+    ) {
         add(ListServiceValidationField.PROFESSIONAL_DETAILS)
     }
     if (state.title.isBlank()) add(ListServiceValidationField.TITLE)
@@ -525,10 +521,10 @@ private fun validate(state: ListServiceFormState): Set<ListServiceValidationFiel
         }
     }
     if (ListServiceDeliveryMode.AT_PROVIDER_LOCATION in state.deliveryModes && (
-        state.providerAreaLabel.isBlank() ||
-            state.providerLatitude == null ||
-            state.providerLongitude == null
-        )
+            state.providerAreaLabel.isBlank() ||
+                state.providerLatitude == null ||
+                state.providerLongitude == null
+            )
     ) {
         add(ListServiceValidationField.PROVIDER_LOCATION)
     }

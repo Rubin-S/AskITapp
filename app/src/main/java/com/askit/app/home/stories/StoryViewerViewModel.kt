@@ -4,26 +4,25 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.askit.app.home.data.HomeRepository
-import com.askit.app.home.model.isAvailable
 import com.askit.app.home.model.Story
+import com.askit.app.home.model.isAvailable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class StoryViewerViewModel(
-    private val repository: HomeRepository,
-    private val savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+class StoryViewerViewModel(private val repository: HomeRepository, private val savedStateHandle: SavedStateHandle) : ViewModel() {
     val social = repository.storySocial
     private var accountId: String? = savedStateHandle["story_account"]
     private var entryId: String? = savedStateHandle["story_entry"]
     private var savedStoryId: String? = savedStateHandle["story_current"]
-    private val mutableState = MutableStateFlow(StoryViewerUiState(
-        entryStoryId = entryId,
-        menuStoryId = savedStateHandle["story_menu"],
-        reporting = savedStateHandle["story_reporting"] ?: false,
-        reportReason = StoryReportReason.entries.firstOrNull { it.name == savedStateHandle.get<String>("story_reason") },
-    ))
+    private val mutableState = MutableStateFlow(
+        StoryViewerUiState(
+            entryStoryId = entryId,
+            menuStoryId = savedStateHandle["story_menu"],
+            reporting = savedStateHandle["story_reporting"] ?: false,
+            reportReason = StoryReportReason.entries.firstOrNull { it.name == savedStateHandle.get<String>("story_reason") },
+        ),
+    )
     val uiState = mutableState.asStateFlow()
 
     init {
@@ -36,8 +35,17 @@ class StoryViewerViewModel(
             accountId = next
             entryId = null
             savedStoryId = null
-            setState(mutableState.value.copy(menuStoryId = null, reporting = false, reportReason = null,
-                actionError = null, paused = false, entryStoryId = null, shouldClose = false))
+            setState(
+                mutableState.value.copy(
+                    menuStoryId = null,
+                    reporting = false,
+                    reportReason = null,
+                    actionError = null,
+                    paused = false,
+                    entryStoryId = null,
+                    shouldClose = false,
+                ),
+            )
         }
         social.activateAccount(next)
         savedStateHandle["story_account"] = next
@@ -60,8 +68,17 @@ class StoryViewerViewModel(
     fun closeViewer() {
         entryId = null
         savedStoryId = null
-        setState(mutableState.value.copy(menuStoryId = null, reporting = false, reportReason = null,
-            actionError = null, shouldClose = false, paused = false, entryStoryId = null))
+        setState(
+            mutableState.value.copy(
+                menuStoryId = null,
+                reporting = false,
+                reportReason = null,
+                actionError = null,
+                shouldClose = false,
+                paused = false,
+                entryStoryId = null,
+            ),
+        )
     }
 
     fun advanceToNext(): Boolean {
@@ -70,7 +87,11 @@ class StoryViewerViewModel(
         val group = state.currentGroup ?: return false
         when {
             state.itemIndex < group.stories.lastIndex -> setState(state.copy(itemIndex = state.itemIndex + 1, paused = false))
-            state.groupIndex < state.groups.lastIndex -> setState(state.copy(groupIndex = state.groupIndex + 1, itemIndex = 0, paused = false))
+
+            state.groupIndex < state.groups.lastIndex -> setState(
+                state.copy(groupIndex = state.groupIndex + 1, itemIndex = 0, paused = false),
+            )
+
             else -> return false
         }
         return true
@@ -81,8 +102,14 @@ class StoryViewerViewModel(
         if (state.menuStoryId != null) return
         when {
             state.itemIndex > 0 -> setState(state.copy(itemIndex = state.itemIndex - 1, paused = false))
-            state.groupIndex > 0 -> setState(state.copy(groupIndex = state.groupIndex - 1,
-                itemIndex = state.groups[state.groupIndex - 1].stories.lastIndex, paused = false))
+
+            state.groupIndex > 0 -> setState(
+                state.copy(
+                    groupIndex = state.groupIndex - 1,
+                    itemIndex = state.groups[state.groupIndex - 1].stories.lastIndex,
+                    paused = false,
+                ),
+            )
         }
     }
 
@@ -93,11 +120,16 @@ class StoryViewerViewModel(
         if (index != state.groupIndex) setState(state.copy(groupIndex = index, itemIndex = 0, paused = false))
     }
 
-    fun setPaused(paused: Boolean) { setState(mutableState.value.copy(paused = paused)) }
+    fun setPaused(paused: Boolean) {
+        setState(mutableState.value.copy(paused = paused))
+    }
     fun toggleLike(currentAccountId: String?) {
         val story = mutableState.value.currentStory?.id?.let(repository::getStory)
-        val result = if (story == null) StoryActionResult.Rejected(StoryActionFailure.UNAVAILABLE)
-            else social.toggleLike(currentAccountId, story)
+        val result = if (story == null) {
+            StoryActionResult.Rejected(StoryActionFailure.UNAVAILABLE)
+        } else {
+            social.toggleLike(currentAccountId, story)
+        }
         if (result is StoryActionResult.Rejected) social.notify(result.reason.messageRes)
     }
 
@@ -107,11 +139,12 @@ class StoryViewerViewModel(
         mutableState.value.groups.any { group -> group.stories.any { story -> story.id == id } }
     }
 
-
     fun openActions() {
         val story = mutableState.value.currentStory ?: return
         if (story.authorId != null && story.authorId == accountId) return
-        setState(mutableState.value.copy(menuStoryId = story.id, reporting = false, reportReason = null, actionError = null, paused = false))
+        setState(
+            mutableState.value.copy(menuStoryId = story.id, reporting = false, reportReason = null, actionError = null, paused = false),
+        )
     }
     fun closeActions() = setState(mutableState.value.copy(menuStoryId = null, reporting = false, reportReason = null, actionError = null))
     fun openReport() = setState(mutableState.value.copy(reporting = true, actionError = null))
@@ -165,11 +198,18 @@ class StoryViewerViewModel(
         val close = entryId != null && (stories.isEmpty() || selectedId == null)
         val selected = StoryViewerUiState.forStart(groups, selectedId)
         val menuStillVisible = state.menuStoryId?.let { it in visibleIds } == true
-        setState(state.copy(isLoading = false, groups = groups, groupIndex = selected.groupIndex,
-            itemIndex = selected.itemIndex, shouldClose = close,
-            menuStoryId = state.menuStoryId.takeIf { menuStillVisible },
-            reporting = state.reporting && menuStillVisible,
-            reportReason = state.reportReason.takeIf { menuStillVisible }))
+        setState(
+            state.copy(
+                isLoading = false,
+                groups = groups,
+                groupIndex = selected.groupIndex,
+                itemIndex = selected.itemIndex,
+                shouldClose = close,
+                menuStoryId = state.menuStoryId.takeIf { menuStillVisible },
+                reporting = state.reporting && menuStillVisible,
+                reportReason = state.reportReason.takeIf { menuStillVisible },
+            ),
+        )
     }
 
     private fun setState(next: StoryViewerUiState) {

@@ -3,10 +3,10 @@ package com.askit.app.story.editor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
@@ -27,12 +27,7 @@ import com.askit.app.story.StoryViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun StoryEditorBottomChrome(
-    viewModel: StoryViewModel,
-    state: StoryFormState,
-    onNext: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun StoryEditorBottomChrome(viewModel: StoryViewModel, state: StoryFormState, onNext: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()

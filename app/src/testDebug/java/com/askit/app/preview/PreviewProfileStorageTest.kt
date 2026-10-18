@@ -13,6 +13,8 @@ class PreviewProfileStorageTest {
             source.delete()
             assertEquals("photo bytes", retained.readText())
             assertEquals(retained, retainPreviewFile(retained, retained.parentFile!!))
-        } finally { directory.deleteRecursively() }
+        } finally {
+            directory.deleteRecursively()
+        }
     }
 }

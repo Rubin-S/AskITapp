@@ -43,13 +43,18 @@ internal fun ExploreFilterOption.labelRes(): Int = when (this) {
 internal fun ExploreFilterOption.groupFor(scope: ExploreResultScope): ExploreFilterGroup? = when (this) {
     ExploreFilterOption.RatingFourPlus, ExploreFilterOption.RatingFourPointFivePlus ->
         ExploreFilterGroup.Rating.takeUnless { scope == ExploreResultScope.Tasks }
+
     ExploreFilterOption.ReviewsTenPlus, ExploreFilterOption.ReviewsFiftyPlus ->
         ExploreFilterGroup.Reviews.takeUnless { scope == ExploreResultScope.Tasks }
+
     ExploreFilterOption.Remote -> ExploreFilterGroup.WorkLocation.takeUnless { scope == ExploreResultScope.People }
+
     ExploreFilterOption.AvailableToday, ExploreFilterOption.AvailableThisWeek ->
         ExploreFilterGroup.Availability.takeIf { scope == ExploreResultScope.Services || scope == ExploreResultScope.All }
+
     ExploreFilterOption.TaskOpen, ExploreFilterOption.TaskApplied ->
         ExploreFilterGroup.Status.takeIf { scope == ExploreResultScope.Tasks || scope == ExploreResultScope.All }
+
     ExploreFilterOption.NeededToday, ExploreFilterOption.NeededThisWeek ->
         ExploreFilterGroup.Needed.takeIf { scope == ExploreResultScope.Tasks || scope == ExploreResultScope.All }
 }
@@ -74,10 +79,13 @@ internal fun normalizeAppliedExploreFilterOptions(
 
 internal fun defaultExploreFilterOptions(): Map<ExploreResultScope, List<ExploreFilterOption>> =
     ExploreResultScope.entries.associateWith { scope ->
-        normalizeAvailableExploreFilterOptions(scope, listOf(
-            ExploreFilterOption.RatingFourPlus,
-            ExploreFilterOption.RatingFourPointFivePlus,
-            ExploreFilterOption.ReviewsTenPlus,
-            ExploreFilterOption.ReviewsFiftyPlus,
-        ))
+        normalizeAvailableExploreFilterOptions(
+            scope,
+            listOf(
+                ExploreFilterOption.RatingFourPlus,
+                ExploreFilterOption.RatingFourPointFivePlus,
+                ExploreFilterOption.ReviewsTenPlus,
+                ExploreFilterOption.ReviewsFiftyPlus,
+            ),
+        )
     }

@@ -25,12 +25,7 @@ import com.askit.app.R
 import com.askit.app.providerdashboard.ProviderActiveJobItem
 
 @Composable
-fun ActiveJobCard(
-    job: ProviderActiveJobItem,
-    onOpenJob: (String) -> Unit,
-    onOpenChat: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun ActiveJobCard(job: ProviderActiveJobItem, onOpenJob: (String) -> Unit, onOpenChat: (String) -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()

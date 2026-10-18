@@ -15,7 +15,5 @@ sealed interface HomeUiState {
         val hasMore: Boolean = true,
     ) : HomeUiState
 
-    data class Error(
-        val message: String? = null,
-    ) : HomeUiState
+    data class Error(val message: String? = null) : HomeUiState
 }

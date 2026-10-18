@@ -35,12 +35,7 @@ fun ProfileCover(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ProfileAvatar(
-    avatarUrl: String?,
-    cameraContentDescription: String,
-    onCamera: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
+fun ProfileAvatar(avatarUrl: String?, cameraContentDescription: String, onCamera: (() -> Unit)?, modifier: Modifier = Modifier) {
     Box(modifier = modifier.size(96.dp)) {
         Box(
             modifier = Modifier

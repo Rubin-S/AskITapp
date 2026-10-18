@@ -50,7 +50,9 @@ fun TaskDiscussionSheet(
     val error = draft.error ?: TaskCommentFailure.REPLY_UNAVAILABLE.takeIf { draft.replyToId != null && target == null }
     val onReply: ((String, String) -> Unit)? = if (author != null) {
         { _, targetId -> viewModel.reply(task.id, targetId) }
-    } else null
+    } else {
+        null
+    }
 
     ControlledCommentsBottomSheet(
         onDismiss = { viewModel.dismiss(task.id) },

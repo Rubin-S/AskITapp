@@ -1,45 +1,32 @@
 package com.askit.app.listservice
 
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.withFrameNanos
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-
 import androidx.compose.foundation.ExperimentalFoundationApi
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-
 import androidx.compose.foundation.layout.PaddingValues
-
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-
-import com.askit.designsystem.dialogs.AskITAlertDialog
+import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.material3.Button
-
 import androidx.compose.material3.ExperimentalMaterial3Api
-
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,35 +34,31 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
 import androidx.compose.ui.focus.FocusRequester
-
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
-
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
 import com.askit.app.R
-import com.askit.app.posttask.focusAfterFrame
-
 import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
 import com.askit.app.explore.SearchAreaScreen
 import com.askit.app.media.persistPhotoPickerReadAccess
+import com.askit.app.posttask.focusAfterFrame
+import com.askit.designsystem.dialogs.AskITAlertDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -246,24 +229,32 @@ private fun ListServiceScreen(
             withFrameNanos { }
             when (firstInvalidField(validationErrors)) {
                 ListServiceValidationField.PROFESSIONAL_DETAILS -> listState.scrollToItem(0)
+
                 ListServiceValidationField.CATEGORY -> categoryBringIntoView.bringIntoView()
+
                 ListServiceValidationField.TITLE -> {
                     titleBringIntoView.bringIntoView()
                     focusAfterFrame(titleFocusRequester)
                 }
+
                 ListServiceValidationField.DESCRIPTION -> {
                     descriptionBringIntoView.bringIntoView()
                     focusAfterFrame(descriptionFocusRequester)
                 }
+
                 ListServiceValidationField.DELIVERY_MODE -> deliveryBringIntoView.bringIntoView()
+
                 ListServiceValidationField.CUSTOMER_LOCATION,
                 ListServiceValidationField.COVERAGE_RADIUS,
                 -> customerLocationBringIntoView.bringIntoView()
+
                 ListServiceValidationField.PROVIDER_LOCATION -> providerLocationBringIntoView.bringIntoView()
+
                 ListServiceValidationField.PRICE -> {
                     priceBringIntoView.bringIntoView()
                     focusAfterFrame(priceFocusRequester)
                 }
+
                 ListServiceValidationField.PRICE_RANGE -> {
                     priceRangeBringIntoView.bringIntoView()
                     focusAfterFrame(minimumPriceFocusRequester)
@@ -280,7 +271,7 @@ private fun ListServiceScreen(
         contract = ActivityResultContracts.PickMultipleVisualMedia(),
     ) { uris ->
         if (uris.isNotEmpty()) {
-                persistPhotoPickerReadAccess(contentResolver, uris)
+            persistPhotoPickerReadAccess(contentResolver, uris)
             viewModel.setPortfolioUris(
                 viewModel.formState.value.portfolioUris + uris.map(Uri::toString),
             )

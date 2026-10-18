@@ -8,10 +8,7 @@ import android.net.Uri
  * Keeps Photo Picker read access for every selected URI without making one bad URI discard the
  * rest of a multi-selection.
  */
-internal fun persistPhotoPickerReadAccess(
-    contentResolver: ContentResolver,
-    uris: Iterable<Uri>,
-) {
+internal fun persistPhotoPickerReadAccess(contentResolver: ContentResolver, uris: Iterable<Uri>) {
     uris.forEach { uri ->
         runCatching {
             contentResolver.takePersistableUriPermission(

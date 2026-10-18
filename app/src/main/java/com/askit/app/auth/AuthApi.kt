@@ -11,11 +11,7 @@ import okhttp3.OkHttpClient
 import java.io.IOException
 
 @Serializable
-data class OtpChallenge(
-    val challengeId: String,
-    val expiresInSeconds: Long,
-    val retryAfterSeconds: Long,
-)
+data class OtpChallenge(val challengeId: String, val expiresInSeconds: Long, val retryAfterSeconds: Long)
 
 @Serializable
 class AuthSession(
@@ -29,11 +25,7 @@ class AuthSession(
 enum class AuthError { InvalidCode, ExpiredCode, RateLimited, SessionExpired, RequestFailed, InvalidResponse }
 
 @Serializable
-class RefreshedTokens(
-    val accessToken: String,
-    val refreshToken: String,
-    val expiresInSeconds: Long,
-)
+class RefreshedTokens(val accessToken: String, val refreshToken: String, val expiresInSeconds: Long)
 
 class AuthApiException(val error: AuthError, val retryAfterSeconds: Long? = null) :
     IOException("Authentication request failed: ${error.name}")

@@ -14,14 +14,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -35,9 +35,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import coil3.compose.AsyncImage
 import com.askit.app.R
+import com.askit.designsystem.inputs.AskITTextField
 
 @Composable
 internal fun PostTaskBudgetSection(
@@ -98,6 +98,7 @@ internal fun PostTaskBudgetSection(
                     ),
                 )
             }
+
             PostTaskBudgetMode.RANGE -> {
                 Column(Modifier.bringIntoViewRequester(targets.rangeBudget)) {
                     AskITTextField(
@@ -137,6 +138,7 @@ internal fun PostTaskBudgetSection(
                     )
                 }
             }
+
             PostTaskBudgetMode.REQUEST_QUOTES, null -> Unit
         }
     }
@@ -209,10 +211,7 @@ internal fun PostTaskPhotosSection(
 }
 
 @Composable
-internal fun PostTaskItemDetailsSection(
-    viewModel: PostTaskViewModel,
-    state: PostTaskFormState,
-) {
+internal fun PostTaskItemDetailsSection(viewModel: PostTaskViewModel, state: PostTaskFormState) {
     OptionalSectionRow(
         titleRes = R.string.post_task_add_item_details,
         expanded = PostTaskOptionalSection.ITEM_DETAILS in state.expandedOptionalSections,
@@ -276,11 +275,7 @@ internal fun PostTaskItemDetailsSection(
 }
 
 @Composable
-internal fun PostTaskAccessSection(
-    state: PostTaskFormState,
-    onToggle: () -> Unit,
-    onUpdateAccessInstructions: (String) -> Unit,
-) {
+internal fun PostTaskAccessSection(state: PostTaskFormState, onToggle: () -> Unit, onUpdateAccessInstructions: (String) -> Unit) {
     if (state.workMode == PostTaskWorkMode.AT_MY_LOCATION) {
         OptionalSectionRow(
             titleRes = R.string.post_task_add_access_instructions,
@@ -305,11 +300,7 @@ internal fun PostTaskAccessSection(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PhotoList(
-    uris: List<String>,
-    onRemovePhoto: (String) -> Unit,
-    allowRemove: Boolean = true,
-) {
+private fun PhotoList(uris: List<String>, onRemovePhoto: (String) -> Unit, allowRemove: Boolean = true) {
     if (uris.isEmpty()) return
     FlowRow(
         modifier = Modifier.fillMaxWidth(),

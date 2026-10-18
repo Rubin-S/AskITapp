@@ -28,7 +28,10 @@ class AuthContractTest {
     }
 
     @Test fun profileWithoutEmailOrPincodeIsAccepted() {
-        val profile = parseCurrentAccount(me("""{"displayName":"Arun","username":"arun","city":"Chennai","joinedYear":"2024"}"""), json).profile
+        val profile = parseCurrentAccount(
+            me("""{"displayName":"Arun","username":"arun","city":"Chennai","joinedYear":"2024"}"""),
+            json,
+        ).profile
         assertNotNull(profile)
         assertNull(profile!!.email)
     }
@@ -39,7 +42,11 @@ class AuthContractTest {
     }
 
     @Test fun optionalEmailAndPincodeAreStillValidatedWhenPresent() {
-        val good = parseCurrentAccount(me("""{"displayName":"A","username":"a","city":"C","joinedYear":"2024","email":"a@example.com","pincode":"641001"}"""), json)
+        val good =
+            parseCurrentAccount(
+                me("""{"displayName":"A","username":"a","city":"C","joinedYear":"2024","email":"a@example.com","pincode":"641001"}"""),
+                json,
+            )
         assertEquals("a@example.com", good.profile!!.email)
         listOf(""""email":"not-an-email"""", """"pincode":"000"""").forEach { field ->
             assertThrows(AuthApiException::class.java) {

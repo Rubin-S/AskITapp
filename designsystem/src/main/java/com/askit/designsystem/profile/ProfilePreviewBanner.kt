@@ -27,10 +27,7 @@ import com.askit.designsystem.R
  * Features an eye icon, "Viewing as Public" label, and an "Exit Preview" action button.
  */
 @Composable
-fun ProfilePreviewBanner(
-    onExitPreview: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun ProfilePreviewBanner(onExitPreview: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
             .fillMaxWidth()

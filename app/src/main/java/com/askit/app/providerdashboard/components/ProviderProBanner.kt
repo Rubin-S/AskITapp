@@ -24,10 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.askit.app.R
 
 @Composable
-fun ProviderProBanner(
-    onUpgradeClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun ProviderProBanner(onUpgradeClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()

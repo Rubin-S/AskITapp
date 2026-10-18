@@ -146,11 +146,7 @@ private fun RowScope.IconDestination(
 }
 
 @Composable
-private fun RowScope.InboxDestination(
-    selected: Boolean,
-    unread: Int,
-    onClick: () -> Unit,
-) {
+private fun RowScope.InboxDestination(selected: Boolean, unread: Int, onClick: () -> Unit) {
     val label = stringResource(R.string.nav_inbox)
     val description = if (unread > 0) {
         pluralStringResource(R.plurals.nav_inbox_unread, unread, unread)
@@ -202,11 +198,7 @@ private fun RowScope.InboxDestination(
 }
 
 @Composable
-private fun RowScope.ProfileDestination(
-    selected: Boolean,
-    avatarUrl: String?,
-    onClick: () -> Unit,
-) {
+private fun RowScope.ProfileDestination(selected: Boolean, avatarUrl: String?, onClick: () -> Unit) {
     val label = stringResource(R.string.nav_profile)
     NavSlot(selected = selected, label = label, onClick = onClick) {
         ProfileAvatar(avatarUrl = avatarUrl, selected = selected)

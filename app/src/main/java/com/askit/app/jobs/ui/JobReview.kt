@@ -1,7 +1,5 @@
 package com.askit.app.jobs.ui
 
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,13 +16,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -32,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.jobs.JobsStore
+import com.askit.designsystem.inputs.AskITTextField
 import com.askit.designsystem.R as DsR
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,7 +121,9 @@ fun JobReview(
                     if (onReviewSubmitted(rating, comment)) {
                         store.complete(jobId)
                         onFinished()
-                    } else failed = true
+                    } else {
+                        failed = true
+                    }
                 },
                 enabled = rating > 0,
                 modifier = Modifier

@@ -45,11 +45,11 @@ import com.askit.app.jobs.jobStepLabelRes
 import com.askit.app.jobs.jobStepState
 import com.askit.app.jobs.stepperSteps
 import com.askit.app.jobs.visibleParty
-import com.askit.designsystem.R as DsR
 import com.askit.designsystem.jobs.JobStatusBanner
 import com.askit.designsystem.jobs.JobStepper
 import com.askit.designsystem.jobs.JobStepperItem
 import kotlinx.coroutines.delay
+import com.askit.designsystem.R as DsR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -167,11 +167,7 @@ fun JobDetail(
 }
 
 @Composable
-private fun JobDetailHeader(
-    counterpartName: String,
-    locationLabel: String,
-    onViewAsOther: (() -> Unit)?,
-) {
+private fun JobDetailHeader(counterpartName: String, locationLabel: String, onViewAsOther: (() -> Unit)?) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),

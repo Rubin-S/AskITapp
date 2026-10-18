@@ -4,11 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.askit.app.R
 
-data class ServiceCategory(
-    val id: String,
-    @StringRes val labelRes: Int,
-    @DrawableRes val artworkRes: Int,
-)
+data class ServiceCategory(val id: String, @StringRes val labelRes: Int, @DrawableRes val artworkRes: Int)
 
 val ASKIT_SERVICE_CATEGORIES = listOf(
     ServiceCategory("electrician", R.string.explore_category_electrician, R.drawable.service_electrician),

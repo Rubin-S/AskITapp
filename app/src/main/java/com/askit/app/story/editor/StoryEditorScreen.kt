@@ -112,7 +112,7 @@ fun StoryEditorScreen(
                     onTextChanged = { id, text -> viewModel.updateTextLayer(id, text = text) },
                     modifier = Modifier.fillMaxSize(),
                 )
-    
+
                 state.sharedPost?.let { post ->
                     Box(
                         modifier = Modifier

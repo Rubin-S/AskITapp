@@ -112,12 +112,7 @@ fun PostShareSheet(
 }
 
 @Composable
-private fun ShareActionButton(
-    iconRes: Int,
-    label: String,
-    onClick: () -> Unit,
-    tag: String,
-) {
+private fun ShareActionButton(iconRes: Int, label: String, onClick: () -> Unit, tag: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier

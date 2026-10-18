@@ -71,8 +71,16 @@ fun EntryScreen(
                         Modifier.fillMaxWidth().testTag("entry_headline"),
                         color = colors.headline,
                         style = MaterialTheme.typography.headlineLarge.copy(
-                            fontSize = when { tamil -> 24.sp; compact -> 28.sp; else -> 32.sp },
-                            lineHeight = when { tamil -> 34.sp; compact -> 36.sp; else -> 40.sp },
+                            fontSize = when {
+                                tamil -> 24.sp
+                                compact -> 28.sp
+                                else -> 32.sp
+                            },
+                            lineHeight = when {
+                                tamil -> 34.sp
+                                compact -> 36.sp
+                                else -> 40.sp
+                            },
                             fontWeight = if (tamil) FontWeight.SemiBold else FontWeight.Bold,
                             fontFamily = FontFamily.SansSerif,
                             letterSpacing = if (tamil) 0.sp else (-1).sp,
@@ -97,15 +105,23 @@ fun EntryScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = WelcomeLime, contentColor = Color(0xFF10140B)),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp, vertical = 16.dp),
                     ) {
-                        Text(stringResource(R.string.entry_get_started), style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold), textAlign = TextAlign.Center)
+                        Text(
+                            stringResource(R.string.entry_get_started),
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold),
+                            textAlign = TextAlign.Center,
+                        )
                     }
                     Spacer(Modifier.height(12.dp))
                     TextButton(
                         onClick = onLogin,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("entry_btn_login"),
                     ) {
-                        Text(stringResource(R.string.entry_already_have_account), color = colors.secondary,
-                            style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+                        Text(
+                            stringResource(R.string.entry_already_have_account),
+                            color = colors.secondary,
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                        )
                     }
                     Spacer(Modifier.height(16.dp))
                     LegalDisclaimer(
@@ -138,12 +154,16 @@ internal data class WelcomeColors(
     val glowAlpha: Float,
 )
 
-internal fun welcomeColors(dark: Boolean) = if (dark) WelcomeColors(
-    background = Color.Black, headline = Color(0xFFFAFAFA), secondary = Color(0xFFB4B8BF),
-    legal = Color(0xFF969A9F), ring = Color(0xFF29343B), innerRing = Color(0xFF42632D),
-    portraitBorder = Color(0xFF465960), badge = Color(0xFF050A08), badgeIcon = WelcomeLime, glowAlpha = 0.16f,
-) else WelcomeColors(
-    background = Color.White, headline = Color(0xFF111512), secondary = Color(0xFF535C57),
-    legal = Color(0xFF616A65), ring = Color(0xFFCAD4CD), innerRing = Color(0xFFA5C889),
-    portraitBorder = Color(0xFFB9C9C0), badge = Color.White, badgeIcon = Color(0xFF417800), glowAlpha = 0.13f,
-)
+internal fun welcomeColors(dark: Boolean) = if (dark) {
+    WelcomeColors(
+        background = Color.Black, headline = Color(0xFFFAFAFA), secondary = Color(0xFFB4B8BF),
+        legal = Color(0xFF969A9F), ring = Color(0xFF29343B), innerRing = Color(0xFF42632D),
+        portraitBorder = Color(0xFF465960), badge = Color(0xFF050A08), badgeIcon = WelcomeLime, glowAlpha = 0.16f,
+    )
+} else {
+    WelcomeColors(
+        background = Color.White, headline = Color(0xFF111512), secondary = Color(0xFF535C57),
+        legal = Color(0xFF616A65), ring = Color(0xFFCAD4CD), innerRing = Color(0xFFA5C889),
+        portraitBorder = Color(0xFFB9C9C0), badge = Color.White, badgeIcon = Color(0xFF417800), glowAlpha = 0.13f,
+    )
+}

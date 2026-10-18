@@ -28,17 +28,9 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 @Serializable
-class StoredAuthSession(
-    val refreshToken: String,
-    val userId: String,
-    val profileComplete: Boolean,
-)
+class StoredAuthSession(val refreshToken: String, val userId: String, val profileComplete: Boolean)
 
-class AuthSessionStore(
-    context: Context,
-    backendBaseUrl: String,
-    private val keyProvider: () -> SecretKey = ::sessionKey,
-) {
+class AuthSessionStore(context: Context, backendBaseUrl: String, private val keyProvider: () -> SecretKey = ::sessionKey) {
     private val file = File(context.noBackupFilesDir, "auth-session")
     private val pendingFile = File(context.noBackupFilesDir, "auth-session.pending")
     private val binding = backendBaseUrl.toHttpUrl().toString().toByteArray(Charsets.UTF_8)
@@ -138,11 +130,13 @@ class AuthSessionStore(
             val existing = keyStore.getKey(KEY_ALIAS, null)
             if (existing is SecretKey) return existing
             return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").apply {
-                init(KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                    .setKeySize(256)
-                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                    .build())
+                init(
+                    KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                        .setKeySize(256)
+                        .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                        .build(),
+                )
             }.generateKey()
         }
     }

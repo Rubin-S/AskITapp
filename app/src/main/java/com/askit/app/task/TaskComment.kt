@@ -1,10 +1,6 @@
 package com.askit.app.task
 
-data class TaskCommentAuthor(
-    val userId: String,
-    val name: String,
-    val avatarUrl: String? = null,
-)
+data class TaskCommentAuthor(val userId: String, val name: String, val avatarUrl: String? = null)
 
 data class TaskComment(
     val id: String,

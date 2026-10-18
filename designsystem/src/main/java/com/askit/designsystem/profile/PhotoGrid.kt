@@ -27,18 +27,10 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.askit.designsystem.R
 
-data class PhotoGridItem(
-    val id: String,
-    val uri: String,
-    val isCarousel: Boolean = false,
-)
+data class PhotoGridItem(val id: String, val uri: String, val isCarousel: Boolean = false)
 
 @Composable
-fun PhotoGrid(
-    items: List<PhotoGridItem>,
-    caption: String,
-    modifier: Modifier = Modifier,
-) {
+fun PhotoGrid(items: List<PhotoGridItem>, caption: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()

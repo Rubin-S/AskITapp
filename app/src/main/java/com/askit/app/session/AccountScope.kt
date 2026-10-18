@@ -8,10 +8,7 @@ package com.askit.app.session
  * it. The client preview passes true so its local personas keep their data while you switch
  * between them. The signed-out (null) value is never retained.
  */
-class AccountScope<T : Any>(
-    private val retainInactive: Boolean,
-    private val create: (accountId: String?) -> T,
-) {
+class AccountScope<T : Any>(private val retainInactive: Boolean, private val create: (accountId: String?) -> T) {
     var accountId: String? = null
         private set
     var current: T = create(null)

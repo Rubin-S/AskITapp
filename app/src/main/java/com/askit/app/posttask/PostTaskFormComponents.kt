@@ -70,12 +70,7 @@ internal fun PostTaskSummaryBlock(@StringRes labelRes: Int, value: String) {
 }
 
 @Composable
-internal fun PostTaskChoiceRow(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun PostTaskChoiceRow(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -106,12 +101,7 @@ internal fun PostTaskChoiceRow(
 }
 
 @Composable
-internal fun OptionalSectionRow(
-    @StringRes titleRes: Int,
-    expanded: Boolean,
-    onClick: () -> Unit,
-    testTag: String,
-) {
+internal fun OptionalSectionRow(@StringRes titleRes: Int, expanded: Boolean, onClick: () -> Unit, testTag: String) {
     val stateText = stringResource(
         if (expanded) R.string.post_task_collapse else R.string.post_task_expand,
     )
@@ -155,5 +145,4 @@ internal fun PostTaskError(@StringRes messageRes: Int) {
     )
 }
 
-internal fun formatDate(millis: Long): String =
-    formatTaskDate(millis)
+internal fun formatDate(millis: Long): String = formatTaskDate(millis)

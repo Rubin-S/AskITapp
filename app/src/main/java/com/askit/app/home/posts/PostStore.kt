@@ -1,10 +1,10 @@
 package com.askit.app.home.posts
 
 import com.askit.app.R
-import com.askit.app.createpost.photoRatio
 import com.askit.app.createpost.PostDraft
-import com.askit.app.createpost.isValidPostDraft
 import com.askit.app.createpost.PostMediaLayout
+import com.askit.app.createpost.isValidPostDraft
+import com.askit.app.createpost.photoRatio
 import com.askit.app.home.model.FeedItem
 import com.askit.app.home.model.FeedPost
 import com.askit.app.home.model.PostMedia
@@ -15,8 +15,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 
 enum class PostReportReason(val labelRes: Int) {
-    SPAM(R.string.post_report_spam), INAPPROPRIATE(R.string.post_report_inappropriate),
-    MISLEADING(R.string.post_report_misleading), OTHER(R.string.post_report_other),
+    SPAM(R.string.post_report_spam),
+    INAPPROPRIATE(R.string.post_report_inappropriate),
+    MISLEADING(R.string.post_report_misleading),
+    OTHER(R.string.post_report_other),
 }
 
 data class PostAccountState(
@@ -55,11 +57,16 @@ class PostStore(initialPosts: List<FeedPost>) {
     fun isCurrentAccount(id: String?) = !id.isNullOrBlank() && id == account.value.accountId
     fun isOwner(post: FeedPost, id: String?) = isCurrentAccount(id) && post.authorId == id
     fun getPost(id: String): FeedPost? = posts.value[id]?.takeIf { !it.archived || isOwner(it, account.value.accountId) }
-    fun editableDraft(postId: String, id: String?): PostDraft? =
-        posts.value[postId]?.takeIf { isOwner(it, id) }?.let { drafts[postId] }
+    fun editableDraft(postId: String, id: String?): PostDraft? = posts.value[postId]?.takeIf { isOwner(it, id) }?.let { drafts[postId] }
 
     fun project(items: List<FeedItem>): List<FeedItem> = items.mapNotNull { item ->
-        if (item is FeedItem.PostItem) posts.value[item.post.id]?.takeUnless { it.archived || it.id in account.value.hiddenFromHome }?.let(FeedItem::PostItem) else item
+        if (item is FeedItem.PostItem) {
+            posts.value[item.post.id]?.takeUnless {
+                it.archived || it.id in account.value.hiddenFromHome
+            }?.let(FeedItem::PostItem)
+        } else {
+            item
+        }
     }
 
     fun publishedPosts(): List<FeedPost> = posts.value.values.filter { it.id in drafts && !it.archived }.reversed()
@@ -99,8 +106,13 @@ class PostStore(initialPosts: List<FeedPost>) {
         if (!isCurrentAccount(id)) return PostResult.Failure(R.string.post_action_sign_in)
         if (!draft.isValidPostDraft()) return PostResult.Failure(R.string.post_invalid_draft)
         val postId = UUID.randomUUID().toString()
-        val post = FeedPost(id = postId, authorId = id, authorName = profile.displayName,
-            authorAvatarUrl = profile.avatarUrl, content = "").withDraft(draft)
+        val post = FeedPost(
+            id = postId,
+            authorId = id,
+            authorName = profile.displayName,
+            authorAvatarUrl = profile.avatarUrl,
+            content = "",
+        ).withDraft(draft)
         drafts[postId] = draft
         mutablePosts.value = posts.value + (postId to post)
         return PostResult.Success(postId)
@@ -133,7 +145,9 @@ class PostStore(initialPosts: List<FeedPost>) {
         return PostResult.Success(postId)
     }
 
-    fun setArchived(postId: String, id: String?, archived: Boolean): PostResult = changeOwner(postId, id) { copy(archived = archived, pinnedAtMillis = if (archived) null else pinnedAtMillis) }
+    fun setArchived(postId: String, id: String?, archived: Boolean): PostResult = changeOwner(postId, id) {
+        copy(archived = archived, pinnedAtMillis = if (archived) null else pinnedAtMillis)
+    }
     fun toggleLikeCount(postId: String, id: String?): PostResult = changeOwner(postId, id) { copy(hideLikeCount = !hideLikeCount) }
     fun toggleComments(postId: String, id: String?): PostResult = changeOwner(postId, id) { copy(commentsEnabled = !commentsEnabled) }
 
@@ -152,31 +166,45 @@ class PostStore(initialPosts: List<FeedPost>) {
         return PostResult.Success(postId)
     }
     private fun ownerPost(postId: String, id: String?) = posts.value[postId]?.takeIf { isOwner(it, id) }
-    private fun rejection(postId: String, id: String?) = PostResult.Failure(when {
-        !isCurrentAccount(id) -> R.string.post_action_sign_in
-        posts.value[postId] == null -> R.string.post_unavailable
-        else -> R.string.post_action_not_allowed
-    })
-    private fun put(post: FeedPost) { mutablePosts.value = posts.value + (post.id to post) }
-    private fun commit(state: PostAccountState) { accounts[requireNotNull(state.accountId)] = state; mutableAccount.value = state }
+    private fun rejection(postId: String, id: String?) = PostResult.Failure(
+        when {
+            !isCurrentAccount(id) -> R.string.post_action_sign_in
+            posts.value[postId] == null -> R.string.post_unavailable
+            else -> R.string.post_action_not_allowed
+        },
+    )
+    private fun put(post: FeedPost) {
+        mutablePosts.value = posts.value + (post.id to post)
+    }
+    private fun commit(state: PostAccountState) {
+        accounts[requireNotNull(state.accountId)] = state
+        mutableAccount.value = state
+    }
 }
 
 private fun FeedPost.withDraft(draft: PostDraft): FeedPost {
     val photos = draft.photos.mapNotNull { it.uri?.trim()?.takeIf(String::isNotEmpty) }
     val ratio = draft.photos.firstOrNull()?.photoRatio?.value ?: 4f / 3f
-    return copy(content = draft.body.trim(), locationLabel = draft.location?.publicAreaLabel,
+    return copy(
+        content = draft.body.trim(),
+        locationLabel = draft.location?.publicAreaLabel,
         media = when {
             draft.mediaLayout == PostMediaLayout.BEFORE_AFTER && photos.size >= 2 -> PostMedia.BeforeAfter(photos[0], photos[1], ratio)
             photos.size == 1 -> PostMedia.SinglePhoto(photos[0], draft.photos.first().imageDescription.takeIf(String::isNotBlank), ratio)
             photos.size > 1 -> PostMedia.Carousel(photos, ratio)
             else -> null
         },
-        poll = draft.poll?.let { PostPoll(it.question.trim(), it.options.map(String::trim)) })
+        poll = draft.poll?.let { PostPoll(it.question.trim(), it.options.map(String::trim)) },
+    )
 }
 
-
 /** Pinning changes profile order only; hidden Home posts remain accessible here. */
-fun orderedProfilePosts(posts: Collection<FeedPost>, authorId: String?): List<FeedPost> =
-    if (authorId.isNullOrBlank()) emptyList() else posts.filter { it.authorId == authorId && !it.archived }
-        .sortedWith(compareByDescending<FeedPost> { it.pinnedAtMillis != null }
-            .thenByDescending { it.pinnedAtMillis ?: 0L }.thenByDescending { it.createdAtMillis })
+fun orderedProfilePosts(posts: Collection<FeedPost>, authorId: String?): List<FeedPost> = if (authorId.isNullOrBlank()) {
+    emptyList()
+} else {
+    posts.filter { it.authorId == authorId && !it.archived }
+        .sortedWith(
+            compareByDescending<FeedPost> { it.pinnedAtMillis != null }
+                .thenByDescending { it.pinnedAtMillis ?: 0L }.thenByDescending { it.createdAtMillis },
+        )
+}

@@ -40,11 +40,17 @@ fun ListingBriefCard(
     Card(
         modifier = modifier.fillMaxWidth().heightIn(min = 48.dp)
             .semantics(mergeDescendants = true) {}
-            .then(if (onClick == null) Modifier else Modifier.clickable(
-                role = Role.Button,
-                onClickLabel = onClickLabel,
-                onClick = onClick,
-            )),
+            .then(
+                if (onClick == null) {
+                    Modifier
+                } else {
+                    Modifier.clickable(
+                        role = Role.Button,
+                        onClickLabel = onClickLabel,
+                        onClick = onClick,
+                    )
+                },
+            ),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -58,14 +64,20 @@ fun ListingBriefCard(
                 Text(it, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
             Text(
-                title.trim(), style = MaterialTheme.typography.titleMedium,
+                title.trim(),
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2, overflow = TextOverflow.Ellipsis,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
             summary?.trim()?.takeIf(String::isNotEmpty)?.let {
-                Text(it, style = MaterialTheme.typography.bodyMedium,
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
             priceLabel?.trim()?.takeIf(String::isNotEmpty)?.let {
                 Text(it, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
@@ -73,20 +85,31 @@ fun ListingBriefCard(
             locationLabel?.trim()?.takeIf(String::isNotEmpty)?.let { ListingMetadata(it) }
             authorName?.trim()?.takeIf(String::isNotEmpty)?.let { name ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (authorAvatarUrl != null) AskITAvatar(
-                        avatarUrl = authorAvatarUrl, avatarSize = 24.dp, fallbackIconSize = 16.dp,
-                    )
-                    Text(name, style = MaterialTheme.typography.bodySmall,
+                    if (authorAvatarUrl != null) {
+                        AskITAvatar(
+                            avatarUrl = authorAvatarUrl,
+                            avatarSize = 24.dp,
+                            fallbackIconSize = 16.dp,
+                        )
+                    }
+                    Text(
+                        name,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f))
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             }
             val secondary = metadata.map(String::trim).filter(String::isNotEmpty).distinct().joinToString(" · ")
-            if (secondary.isNotEmpty()) Text(
-                secondary, style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3, overflow = TextOverflow.Ellipsis,
-            )
+            if (secondary.isNotEmpty()) {
+                Text(
+                    secondary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

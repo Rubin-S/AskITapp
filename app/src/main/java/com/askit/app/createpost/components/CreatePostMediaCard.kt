@@ -1,6 +1,5 @@
 package com.askit.app.createpost.components
 
-import androidx.compose.runtime.getValue
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -8,12 +7,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,11 +28,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,13 +52,14 @@ import coil3.compose.AsyncImage
 import com.askit.app.R
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.createpost.PostDisclosure
-import com.askit.app.createpost.photoRatio
 import com.askit.app.createpost.PostMediaDraft
 import com.askit.app.createpost.PostMediaLayout
 import com.askit.app.createpost.PostValidationField
-import com.askit.designsystem.R as DesignR
+import com.askit.app.createpost.photoRatio
+import com.askit.designsystem.inputs.AskITTextField
 import com.askit.designsystem.posts.BeforeAfterSlider
 import com.askit.designsystem.posts.PostFeedMedia
+import com.askit.designsystem.R as DesignR
 
 enum class BeforeAfterSlot {
     BEFORE,
@@ -147,9 +147,11 @@ fun CreatePostMediaCard(
                 }
             }
 
-            Text(stringResource(R.string.post_crop_hint),
+            Text(
+                stringResource(R.string.post_crop_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             // Body: Adapt according to selected media layout
             if (isBeforeAfter) {
                 BeforeAfterContent(
@@ -191,13 +193,7 @@ fun CreatePostMediaCard(
 }
 
 @Composable
-private fun MediaSegment(
-    title: String,
-    iconRes: Int,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    testTag: String,
-) {
+private fun MediaSegment(title: String, iconRes: Int, isSelected: Boolean, onClick: () -> Unit, testTag: String) {
     val bgColor by animateColorAsState(
         targetValue = if (isSelected) {
             MaterialTheme.colorScheme.primaryContainer
@@ -763,7 +759,13 @@ private fun GalleryContent(
             ),
         ) {
             Text(
-                text = if (isDescriptionExpanded) stringResource(R.string.create_post_hide_photo_description) else stringResource(R.string.create_post_add_photo_description),
+                text = if (isDescriptionExpanded) {
+                    stringResource(
+                        R.string.create_post_hide_photo_description,
+                    )
+                } else {
+                    stringResource(R.string.create_post_add_photo_description)
+                },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -802,7 +804,13 @@ private fun BeforeSlotDisclosures(
             modifier = Modifier.testTag("${testTag}_description_toggle"),
         ) {
             Text(
-                text = if (isExpanded) stringResource(R.string.create_post_hide_before_description) else stringResource(R.string.create_post_add_before_description),
+                text = if (isExpanded) {
+                    stringResource(
+                        R.string.create_post_hide_before_description,
+                    )
+                } else {
+                    stringResource(R.string.create_post_add_before_description)
+                },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -836,7 +844,13 @@ private fun AfterSlotDisclosures(
             modifier = Modifier.testTag("${testTag}_description_toggle"),
         ) {
             Text(
-                text = if (isExpanded) stringResource(R.string.create_post_hide_after_description) else stringResource(R.string.create_post_add_after_description),
+                text = if (isExpanded) {
+                    stringResource(
+                        R.string.create_post_hide_after_description,
+                    )
+                } else {
+                    stringResource(R.string.create_post_add_after_description)
+                },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

@@ -108,11 +108,7 @@ fun PostReshareSticker(
 }
 
 @Composable
-private fun FullCardView(
-    post: FeedPost,
-    mediaUrl: String?,
-    onClick: (() -> Unit)?,
-) {
+private fun FullCardView(post: FeedPost, mediaUrl: String?, onClick: (() -> Unit)?) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surface,
@@ -122,7 +118,9 @@ private fun FullCardView(
             .then(
                 if (onClick != null) {
                     Modifier.clickable(onClick = onClick)
-                } else Modifier
+                } else {
+                    Modifier
+                },
             )
             .testTag("story_post_sticker_full"),
     ) {
@@ -184,18 +182,16 @@ private fun FullCardView(
 }
 
 @Composable
-private fun MinimalCardView(
-    post: FeedPost,
-    mediaUrl: String?,
-    onClick: (() -> Unit)?,
-) {
+private fun MinimalCardView(post: FeedPost, mediaUrl: String?, onClick: (() -> Unit)?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .then(
                 if (onClick != null) {
                     Modifier.clickable(onClick = onClick)
-                } else Modifier
+                } else {
+                    Modifier
+                },
             )
             .testTag("story_post_sticker_minimal"),
     ) {
@@ -252,10 +248,7 @@ private fun MinimalCardView(
 }
 
 @Composable
-fun ViewPostTooltipPill(
-    onViewPostClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
+fun ViewPostTooltipPill(onViewPostClick: (() -> Unit)?, modifier: Modifier = Modifier) {
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color(0xDD1E1E1E),
@@ -264,7 +257,9 @@ fun ViewPostTooltipPill(
             .then(
                 if (onViewPostClick != null) {
                     Modifier.clickable(onClick = onViewPostClick)
-                } else Modifier
+                } else {
+                    Modifier
+                },
             )
             .testTag("story_view_post_pill"),
     ) {

@@ -28,8 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -284,8 +284,14 @@ fun ExploreScreen(
                     TextButton(onClick = ::openFilters, modifier = Modifier.weight(1f)) {
                         val low = priceFilter.minimum.ifBlank { "0" }
                         val high = priceFilter.maximum.ifBlank { stringResource(R.string.explore_price_no_maximum) }
-                        val unit = if (selectedScope == ExploreResultScope.Tasks) stringResource(R.string.explore_price_fixed) else priceFilter.unit?.let { stringResource(it.labelRes) }
-                            ?: stringResource(R.string.explore_price_any_unit)
+                        val unit = if (selectedScope ==
+                            ExploreResultScope.Tasks
+                        ) {
+                            stringResource(R.string.explore_price_fixed)
+                        } else {
+                            priceFilter.unit?.let { stringResource(it.labelRes) }
+                                ?: stringResource(R.string.explore_price_any_unit)
+                        }
                         Text(stringResource(R.string.explore_price_summary, low, high, unit))
                     }
                     TextButton(onClick = { onPriceFilterCleared(selectedScope) }) {

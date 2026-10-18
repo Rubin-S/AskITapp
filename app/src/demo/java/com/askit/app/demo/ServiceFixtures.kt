@@ -24,6 +24,7 @@ internal fun sampleServiceDetail(serviceId: String): ServiceDetailData? = when (
             "90-day comprehensive service warranty",
         ),
     )
+
     "srv-2" -> ServiceDetailData(
         id = serviceId,
         title = "Residential Electrical Repairs & Panels",
@@ -44,6 +45,7 @@ internal fun sampleServiceDetail(serviceId: String): ServiceDetailData? = when (
             "Full labor warranty & permit support",
         ),
     )
+
     "srv-3" -> ServiceDetailData(
         id = serviceId,
         title = "Custom Cabinetry & Woodworking",
@@ -64,5 +66,6 @@ internal fun sampleServiceDetail(serviceId: String): ServiceDetailData? = when (
             "Delivery and seamless installation",
         ),
     )
+
     else -> null
 }

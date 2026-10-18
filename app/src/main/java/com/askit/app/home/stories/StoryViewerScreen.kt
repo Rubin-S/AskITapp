@@ -1,6 +1,5 @@
 package com.askit.app.home.stories
 
-import com.askit.app.home.model.isShareable
 import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animate
@@ -8,11 +7,11 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,19 +29,20 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.currentStateAsState
 import com.askit.app.home.model.Story
-import com.askit.app.story.editor.StoryCanvas
-import com.askit.app.story.editor.StoryStage
-import com.askit.app.story.editor.StoryFrame
+import com.askit.app.home.model.isShareable
 import com.askit.app.story.StoryMediaType
+import com.askit.app.story.editor.StoryCanvas
+import com.askit.app.story.editor.StoryFrame
+import com.askit.app.story.editor.StoryStage
 import com.askit.app.story.stickers.PostReshareSticker
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
@@ -145,15 +145,17 @@ internal fun StoryViewerScreen(
     // A reader, not a value: the progress bar reads it while drawing, so playback ticks no
     // longer recompose the whole viewer every frame.
     val itemProgressFraction: () -> Float =
-        if (state.isLoading || state.groups.isEmpty()) NO_PROGRESS
-        else if (state.currentStory?.content?.mediaType == StoryMediaType.Video) {
+        if (state.isLoading || state.groups.isEmpty()) {
+            NO_PROGRESS
+        } else if (state.currentStory?.content?.mediaType == StoryMediaType.Video) {
             remember(restartKey) { { videoProgress } }
+        } else {
+            rememberStoryItemProgress(
+                restartKey = restartKey,
+                paused = effectivePaused,
+                onFinished = onNext,
+            )
         }
-        else rememberStoryItemProgress(
-            restartKey = restartKey,
-            paused = effectivePaused,
-            onFinished = onNext,
-        )
 
     Box(
         modifier = modifier
@@ -167,8 +169,13 @@ internal fun StoryViewerScreen(
                 Box(modifier = Modifier.fillMaxSize())
             } else {
                 val groupKeys = remember(state.groups) { state.groups.map { it.authorId ?: it.stories.first().id } }
-                SyncPagerWithState(pagerState = pagerState, groupIndex = state.groupIndex, groupKeys = groupKeys, onSelectGroup = onSelectGroup)
-    
+                SyncPagerWithState(
+                    pagerState = pagerState,
+                    groupIndex = state.groupIndex,
+                    groupKeys = groupKeys,
+                    onSelectGroup = onSelectGroup,
+                )
+
                 HorizontalPager(
                     state = pagerState,
                     key = { page -> state.groups[page].authorId ?: state.groups[page].stories.first().id },
@@ -222,7 +229,7 @@ internal fun StoryViewerScreen(
                         onVideoFinished = onNext,
                     )
                 }
-    
+
                 val currentContent = state.currentStory?.content
                 currentContent?.sharedPost?.let { sharedPost ->
                     StoryFrame(currentContent.viewport) {
@@ -247,16 +254,22 @@ internal fun StoryViewerScreen(
                         }
                     }
                 }
-    
+
                 TopAndBottomScrims()
-    
+
                 val isOwn = state.currentStory?.isOwn == true
                 state.currentGroup?.let { group ->
                     StoryTopOverlay(
                         group = group,
                         itemIndex = state.itemIndex,
                         itemProgressFraction = itemProgressFraction,
-                        timeLabel = if (retainedPlayback) stringResource(com.askit.app.R.string.profile_highlight_label) else relativeTimeLabel(state.currentStory),
+                        timeLabel = if (retainedPlayback) {
+                            stringResource(
+                                com.askit.app.R.string.profile_highlight_label,
+                            )
+                        } else {
+                            relativeTimeLabel(state.currentStory)
+                        },
                         onClose = onDismiss,
                         modifier = Modifier.align(Alignment.TopCenter),
                         isOwnStory = isOwn && !retainedPlayback,
@@ -264,14 +277,16 @@ internal fun StoryViewerScreen(
                         onAddStory = onAddStory,
                         showFollow = showFollow, canFollow = canFollow, onFollow = onFollow, onMore = onMore,
                     )
-                    if (!retainedPlayback) StoryBottomBar(
-                        isLiked = state.currentStory?.id in socialLikes,
-                        onLikeClick = onLikeClick,
-                        onShareClick = onShareClick,
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        isOwnStory = isOwn,
-                        canShare = state.currentStory?.isShareable == true,
-                    )
+                    if (!retainedPlayback) {
+                        StoryBottomBar(
+                            isLiked = state.currentStory?.id in socialLikes,
+                            onLikeClick = onLikeClick,
+                            onShareClick = onShareClick,
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                            isOwnStory = isOwn,
+                            canShare = state.currentStory?.isShareable == true,
+                        )
+                    }
                 }
             }
         }
@@ -316,12 +331,7 @@ private fun StoryPageContent(
 
 /** Keeps the pager page and the view model's selected group in sync both ways. */
 @Composable
-private fun SyncPagerWithState(
-    pagerState: PagerState,
-    groupIndex: Int,
-    groupKeys: List<String>,
-    onSelectGroup: (Int) -> Unit,
-) {
+private fun SyncPagerWithState(pagerState: PagerState, groupIndex: Int, groupKeys: List<String>, onSelectGroup: (Int) -> Unit) {
     LaunchedEffect(pagerState, groupKeys) {
         snapshotFlow { pagerState.settledPage }
             .drop(1)

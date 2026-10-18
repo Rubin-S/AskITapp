@@ -47,12 +47,7 @@ import com.askit.app.story.StoryViewModel
 private val STORY_TEXT_COLORS = listOf(0xFFFFFFFF, 0xFF000000, 0xFF7CE605, 0xFF3D7100)
 
 @Composable
-fun StoryTextEditor(
-    viewModel: StoryViewModel,
-    layer: StoryLayer.Text,
-    onDone: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun StoryTextEditor(viewModel: StoryViewModel, layer: StoryLayer.Text, onDone: () -> Unit, modifier: Modifier = Modifier) {
     val chipColors = FilterChipDefaults.filterChipColors(
         containerColor = Color.White.copy(alpha = 0.12f),
         labelColor = Color.White,
@@ -186,12 +181,7 @@ fun StoryTextEditor(
 }
 
 @Composable
-private fun AlignmentIcon(
-    icon: ImageVector,
-    description: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
+private fun AlignmentIcon(icon: ImageVector, description: String, selected: Boolean, onClick: () -> Unit) {
     IconButton(onClick = onClick) {
         Icon(
             imageVector = icon,
@@ -208,11 +198,7 @@ private fun AlignmentIcon(
 }
 
 @Composable
-private fun StoryTextSizeSlider(
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun StoryTextSizeSlider(value: Float, onValueChange: (Float) -> Unit, modifier: Modifier = Modifier) {
     val sizeDescription = stringResource(R.string.story_text_size)
     Box(
         modifier = modifier

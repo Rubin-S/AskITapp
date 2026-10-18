@@ -1,8 +1,5 @@
 package com.askit.app.posttask
 
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.withFrameNanos
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,7 +20,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import com.askit.designsystem.dialogs.AskITAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -40,8 +36,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -57,14 +56,11 @@ import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
 import com.askit.app.explore.SearchAreaScreen
 import com.askit.app.media.persistPhotoPickerReadAccess
+import com.askit.designsystem.dialogs.AskITAlertDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PostTaskRoute(
-    viewModel: PostTaskViewModel,
-    onBack: () -> Unit,
-    onCompleteDraft: (PostTaskDraft) -> Unit = {},
-) {
+fun PostTaskRoute(viewModel: PostTaskViewModel, onBack: () -> Unit, onCompleteDraft: (PostTaskDraft) -> Unit = {}) {
     val state by viewModel.formState.collectAsStateWithLifecycle()
     val submissionError by viewModel.submissionError.collectAsStateWithLifecycle()
     var showLocationPicker by rememberSaveable { mutableStateOf(false) }
@@ -200,7 +196,19 @@ private fun PostTaskScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(if (viewModel.editingTaskId != null) R.string.task_edit_title else R.string.post_task_title)) },
+                title = {
+                    Text(
+                        stringResource(
+                            if (viewModel.editingTaskId !=
+                                null
+                            ) {
+                                R.string.task_edit_title
+                            } else {
+                                R.string.post_task_title
+                            },
+                        ),
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -216,8 +224,11 @@ private fun PostTaskScreen(
                 Column(Modifier.navigationBarsPadding()) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     submissionError?.let {
-                        Text(stringResource(it), color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                        Text(
+                            stringResource(it),
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
                     }
                     Button(
                         onClick = {

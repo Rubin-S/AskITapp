@@ -20,9 +20,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
@@ -71,10 +71,7 @@ internal fun LazyListScope.addPersonResultRows(
     }
 }
 
-internal fun LazyListScope.addServiceResultRows(
-    people: List<ExplorePersonResult>,
-    onClick: ((String) -> Unit)?,
-) {
+internal fun LazyListScope.addServiceResultRows(people: List<ExplorePersonResult>, onClick: ((String) -> Unit)?) {
     buildExplorePersonRenderRows(distinctPeopleById(people)).forEachIndexed { index, row ->
         val person = row.result
         item(
@@ -160,11 +157,7 @@ internal fun LazyListScope.addTaskResultRows(
 }
 
 @Composable
-internal fun ExploreResultSectionHeading(
-    heading: String,
-    testTag: String,
-    onViewMore: (() -> Unit)? = null,
-) {
+internal fun ExploreResultSectionHeading(heading: String, testTag: String, onViewMore: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

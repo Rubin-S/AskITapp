@@ -9,15 +9,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 
-internal data class ExploreListPosition(
-    val index: Int,
-    val offset: Int,
-)
+internal data class ExploreListPosition(val index: Int, val offset: Int)
 
-internal data class ExploreListPositionState(
-    val index: MutableIntState,
-    val offset: MutableIntState,
-)
+internal data class ExploreListPositionState(val index: MutableIntState, val offset: MutableIntState)
 
 /**
  * Keeps one LazyColumn while remembering the last viewport for each logical result scope.

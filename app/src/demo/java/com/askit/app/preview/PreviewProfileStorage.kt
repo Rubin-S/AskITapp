@@ -3,8 +3,8 @@ package com.askit.app.preview
 import android.content.Context
 import android.net.Uri
 import com.askit.app.BuildConfig
-import com.askit.app.session.SessionProfile
 import com.askit.app.listservice.toServiceListing
+import com.askit.app.session.SessionProfile
 import com.askit.app.story.StoryLayer
 import com.askit.app.story.StoryStickerKind
 import com.askit.app.variant.ProfileSnapshotStorage
@@ -16,7 +16,10 @@ import java.security.MessageDigest
 /** Preview-only durable snapshots and retained media, isolated by stable account ID. */
 internal class PreviewProfileStorage(private val context: Context) : ProfileSnapshotStorage {
     private val preferences = context.getSharedPreferences("preview_profiles_v1", Context.MODE_PRIVATE)
-    private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
 
     override fun loadRelationships(): Map<String, Set<String>> {
         check(BuildConfig.CLIENT_PREVIEW)
@@ -28,16 +31,20 @@ internal class PreviewProfileStorage(private val context: Context) : ProfileSnap
     @android.annotation.SuppressLint("UseKtx")
     override fun saveRelationships(relationships: Map<String, Set<String>>) {
         check(BuildConfig.CLIENT_PREVIEW)
-        check(context.getSharedPreferences("preview_relationships_v1", Context.MODE_PRIVATE).edit()
-            .putString("relationships", json.encodeToString(relationships)).commit())
+        check(
+            context.getSharedPreferences("preview_relationships_v1", Context.MODE_PRIVATE).edit()
+                .putString("relationships", json.encodeToString(relationships)).commit(),
+        )
     }
 
     override fun load(accountId: String): SessionProfile? {
         check(BuildConfig.CLIENT_PREVIEW)
         return preferences.getString(accountId, null)?.let { saved ->
             json.decodeFromString<SessionProfile>(saved).also { require(it.accountId == accountId) }.let { profile ->
-                profile.copy(listing = profile.listingDraft?.toServiceListing(profile.listing?.category ?: profile.listingDraft.categoryId)
-                    ?.copy(live = profile.listing?.live ?: profile.availability.available) ?: profile.listing)
+                profile.copy(
+                    listing = profile.listingDraft?.toServiceListing(profile.listing?.category ?: profile.listingDraft.categoryId)
+                        ?.copy(live = profile.listing?.live ?: profile.availability.available) ?: profile.listing,
+                )
             }
         }
     }
@@ -50,16 +57,22 @@ internal class PreviewProfileStorage(private val context: Context) : ProfileSnap
             avatarUrl = retain(profile.accountId, profile.avatarUrl),
             bannerUrl = retain(profile.accountId, profile.bannerUrl),
             highlights = profile.highlights.map { collection ->
-                collection.copy(stories = collection.stories.map { story ->
-                    story.copy(content = story.content.copy(
-                        mediaUri = retain(profile.accountId, story.content.mediaUri),
-                        layers = story.content.layers.map { layer ->
-                            if (layer is StoryLayer.Sticker && layer.kind == StoryStickerKind.Photo) {
-                                layer.copy(payload = retain(profile.accountId, layer.payload).orEmpty())
-                            } else layer
-                        },
-                    ))
-                })
+                collection.copy(
+                    stories = collection.stories.map { story ->
+                        story.copy(
+                            content = story.content.copy(
+                                mediaUri = retain(profile.accountId, story.content.mediaUri),
+                                layers = story.content.layers.map { layer ->
+                                    if (layer is StoryLayer.Sticker && layer.kind == StoryStickerKind.Photo) {
+                                        layer.copy(payload = retain(profile.accountId, layer.payload).orEmpty())
+                                    } else {
+                                        layer
+                                    }
+                                },
+                            ),
+                        )
+                    },
+                )
             },
         )
         check(preferences.edit().putString(profile.accountId, json.encodeToString(durable)).commit())
@@ -81,7 +94,10 @@ internal class PreviewProfileStorage(private val context: Context) : ProfileSnap
         if (uri.scheme !in setOf("content", "file")) return value
         val directory = File(context.filesDir, "preview_profile_media/${hash(accountId)}").apply { check(isDirectory || mkdirs()) }
         if (uri.scheme == "file") return Uri.fromFile(retainPreviewFile(File(requireNotNull(uri.path)), directory)).toString()
-        val target = File(directory, hash(value) + if (context.contentResolver.getType(uri)?.startsWith("video/") == true) ".mp4" else ".image")
+        val target = File(
+            directory,
+            hash(value) + if (context.contentResolver.getType(uri)?.startsWith("video/") == true) ".mp4" else ".image",
+        )
         if (!target.exists()) {
             val temporary = File(directory, target.name + ".tmp")
             try {
@@ -89,7 +105,9 @@ internal class PreviewProfileStorage(private val context: Context) : ProfileSnap
                     temporary.outputStream().use { output -> input.copyTo(output) }
                 } ?: error("Media unavailable")
                 check(temporary.length() > 0 && temporary.renameTo(target))
-            } finally { temporary.delete() }
+            } finally {
+                temporary.delete()
+            }
         }
         return Uri.fromFile(target).toString()
     }
@@ -111,7 +129,9 @@ internal fun retainPreviewFile(source: File, directory: File): File {
         try {
             source.inputStream().use { input -> temporary.outputStream().use { input.copyTo(it) } }
             check(temporary.length() > 0 && temporary.renameTo(target))
-        } finally { temporary.delete() }
+        } finally {
+            temporary.delete()
+        }
     }
     return target
 }

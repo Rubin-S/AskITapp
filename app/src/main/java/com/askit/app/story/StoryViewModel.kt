@@ -85,7 +85,9 @@ class StoryViewModel(
         val trimEnd = when {
             type == StoryMediaType.Video && durationMs != null && durationMs > STORY_MAX_DURATION_MS ->
                 STORY_MAX_DURATION_MS
+
             type == StoryMediaType.Video && durationMs != null -> durationMs
+
             else -> null
         }
         setState(
@@ -166,7 +168,6 @@ class StoryViewModel(
         )
     }
 
-
     fun setAudience(audience: StoryAudience) = update { copy(audience = audience) }
 
     fun setActiveTool(tool: StoryEditorTool?) = update {
@@ -212,33 +213,32 @@ class StoryViewModel(
 
     fun selectLayer(id: String?) = update { copy(selectedLayerId = id) }
 
-    fun updateLayerTransform(
-        id: String,
-        offsetX: Float,
-        offsetY: Float,
-        rotation: Float,
-        scale: Float,
-    ) = updateLayers { layer ->
-        if (layer.id != id) layer
-        else when (layer) {
-            is StoryLayer.Text -> layer.copy(
-                offsetX = offsetX,
-                offsetY = offsetY,
-                rotation = rotation,
-                scale = scale,
-            )
-            is StoryLayer.Sticker -> layer.copy(
-                offsetX = offsetX,
-                offsetY = offsetY,
-                rotation = rotation,
-                scale = scale,
-            )
-            is StoryLayer.Draw -> layer.copy(
-                offsetX = offsetX,
-                offsetY = offsetY,
-                rotation = rotation,
-                scale = scale,
-            )
+    fun updateLayerTransform(id: String, offsetX: Float, offsetY: Float, rotation: Float, scale: Float) = updateLayers { layer ->
+        if (layer.id != id) {
+            layer
+        } else {
+            when (layer) {
+                is StoryLayer.Text -> layer.copy(
+                    offsetX = offsetX,
+                    offsetY = offsetY,
+                    rotation = rotation,
+                    scale = scale,
+                )
+
+                is StoryLayer.Sticker -> layer.copy(
+                    offsetX = offsetX,
+                    offsetY = offsetY,
+                    rotation = rotation,
+                    scale = scale,
+                )
+
+                is StoryLayer.Draw -> layer.copy(
+                    offsetX = offsetX,
+                    offsetY = offsetY,
+                    rotation = rotation,
+                    scale = scale,
+                )
+            }
         }
     }
 
@@ -268,16 +268,19 @@ class StoryViewModel(
         backgroundArgb: Long? = null,
         alignment: StoryTextAlignment? = null,
     ) = updateLayers { layer ->
-        if (layer.id != id || layer !is StoryLayer.Text) layer
-        else layer.copy(
-            text = text ?: layer.text,
-            fontFamily = fontFamily ?: layer.fontFamily,
-            textSize = textSize ?: layer.textSize,
-            colorArgb = colorArgb ?: layer.colorArgb,
-            hasBackground = hasBackground ?: layer.hasBackground,
-            backgroundArgb = backgroundArgb ?: layer.backgroundArgb,
-            alignment = alignment ?: layer.alignment,
-        )
+        if (layer.id != id || layer !is StoryLayer.Text) {
+            layer
+        } else {
+            layer.copy(
+                text = text ?: layer.text,
+                fontFamily = fontFamily ?: layer.fontFamily,
+                textSize = textSize ?: layer.textSize,
+                colorArgb = colorArgb ?: layer.colorArgb,
+                hasBackground = hasBackground ?: layer.hasBackground,
+                backgroundArgb = backgroundArgb ?: layer.backgroundArgb,
+                alignment = alignment ?: layer.alignment,
+            )
+        }
     }
 
     fun finishTextEditing() = update { copy(editingTextLayerId = null, activeTool = null) }
@@ -336,8 +339,7 @@ class StoryViewModel(
         // Bookmark action keeps the user on the editor with the current draft intact.
     }
 
-    fun solidBackgroundArgb(): Long =
-        STORY_SOLID_BACKGROUNDS[_formState.value.solidBackgroundIndex]
+    fun solidBackgroundArgb(): Long = STORY_SOLID_BACKGROUNDS[_formState.value.solidBackgroundIndex]
 
     fun needsTrimmer(): Boolean {
         val state = _formState.value
@@ -454,8 +456,7 @@ class StoryViewModel(
         )
     }
 
-    private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? =
-        this?.let { runCatching { enumValueOf<T>(it) }.getOrNull() }
+    private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? = this?.let { runCatching { enumValueOf<T>(it) }.getOrNull() }
 
     companion object {
         private const val SCREEN_MODE_KEY = "story_screen_mode"

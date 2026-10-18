@@ -19,7 +19,10 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 internal enum class PostPhotoRatio(val x: Int, val y: Int) {
-    LANDSCAPE(4, 3), PORTRAIT(3, 4);
+    LANDSCAPE(4, 3),
+    PORTRAIT(3, 4),
+    ;
+
     val value: Float get() = x.toFloat() / y
     companion object {
         fun fromSize(width: Int, height: Int): PostPhotoRatio? =
@@ -66,11 +69,23 @@ internal fun loadCropBitmap(context: Context, source: String): Bitmap {
     val matrix = Matrix().apply {
         when (orientation) {
             ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> setScale(-1f, 1f)
+
             ExifInterface.ORIENTATION_ROTATE_180 -> setRotate(180f)
+
             ExifInterface.ORIENTATION_FLIP_VERTICAL -> setScale(1f, -1f)
-            ExifInterface.ORIENTATION_TRANSPOSE -> { setRotate(90f); postScale(-1f, 1f) }
+
+            ExifInterface.ORIENTATION_TRANSPOSE -> {
+                setRotate(90f)
+                postScale(-1f, 1f)
+            }
+
             ExifInterface.ORIENTATION_ROTATE_90 -> setRotate(90f)
-            ExifInterface.ORIENTATION_TRANSVERSE -> { setRotate(-90f); postScale(-1f, 1f) }
+
+            ExifInterface.ORIENTATION_TRANSVERSE -> {
+                setRotate(-90f)
+                postScale(-1f, 1f)
+            }
+
             ExifInterface.ORIENTATION_ROTATE_270 -> setRotate(-90f)
         }
     }
@@ -87,7 +102,8 @@ internal fun cropWindow(bitmap: Bitmap, ratio: PostPhotoRatio, zoom: Float, cent
     return CropWindow(
         (centerX * bitmap.width - width / 2).coerceIn(0f, bitmap.width - width),
         (centerY * bitmap.height - height / 2).coerceIn(0f, bitmap.height - height),
-        width, height,
+        width,
+        height,
     )
 }
 

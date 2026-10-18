@@ -5,9 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -15,13 +14,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -113,17 +113,27 @@ fun StoryCanvas(
                     var failed by remember(mediaUri) { mutableStateOf(false) }
                     var retry by remember(mediaUri) { mutableIntStateOf(0) }
                     key(retry) {
-                        AsyncImage(model = mediaUri, contentDescription = null,
-                            modifier = mediaModifier, contentScale = ContentScale.Crop,
-                            onError = { failed = true })
+                        AsyncImage(
+                            model = mediaUri,
+                            contentDescription = null,
+                            modifier = mediaModifier,
+                            contentScale = ContentScale.Crop,
+                            onError = { failed = true },
+                        )
                     }
-                    if (failed) Column(Modifier.align(Alignment.Center)) {
-                        Text(stringResource(R.string.profile_highlight_unavailable), color = Color.White)
-                        TextButton(onClick = { failed = false; retry++ }) {
-                            Text(stringResource(R.string.explore_retry))
+                    if (failed) {
+                        Column(Modifier.align(Alignment.Center)) {
+                            Text(stringResource(R.string.profile_highlight_unavailable), color = Color.White)
+                            TextButton(onClick = {
+                                failed = false
+                                retry++
+                            }) {
+                                Text(stringResource(R.string.explore_retry))
+                            }
                         }
                     }
                 }
+
                 StoryMediaType.Video -> {
                     StoryVideo(
                         uri = mediaUri,
@@ -152,6 +162,7 @@ fun StoryCanvas(
                         )
                     }
                 }
+
                 StoryMediaType.SolidBackground -> {
                     Box(
                         modifier = Modifier
@@ -159,6 +170,7 @@ fun StoryCanvas(
                             .background(Color(solidBackgroundArgb ?: 0xFF000000)),
                     )
                 }
+
                 null -> Unit
             }
         }
@@ -174,12 +186,14 @@ fun StoryCanvas(
                     onTransformChanged = onLayerTransformChanged,
                     onTextChanged = { onTextChanged(layer.id, it) },
                 )
+
                 is StoryLayer.Sticker -> StoryStickerLayer(
                     layer = layer,
                     readOnly = readOnly,
                     onSelected = { onLayerSelected(layer.id) },
                     onTransformChanged = onLayerTransformChanged,
                 )
+
                 is StoryLayer.Draw -> StoryDrawLayer(
                     layer = layer,
                 )
@@ -355,16 +369,16 @@ private fun StoryStickerLayer(
 }
 
 @Composable
-private fun StoryDrawLayer(
-    layer: StoryLayer.Draw,
-) {
-    Canvas(modifier = Modifier.fillMaxSize().graphicsLayer {
-        translationX = layer.offsetX
-        translationY = layer.offsetY
-        rotationZ = layer.rotation
-        scaleX = layer.scale
-        scaleY = layer.scale
-    }) {
+private fun StoryDrawLayer(layer: StoryLayer.Draw) {
+    Canvas(
+        modifier = Modifier.fillMaxSize().graphicsLayer {
+            translationX = layer.offsetX
+            translationY = layer.offsetY
+            rotationZ = layer.rotation
+            scaleX = layer.scale
+            scaleY = layer.scale
+        },
+    ) {
         val path = Path()
         layer.points.forEachIndexed { index, point ->
             val offset = Offset(point.first, point.second)

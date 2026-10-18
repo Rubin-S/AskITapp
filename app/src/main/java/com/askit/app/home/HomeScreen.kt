@@ -4,9 +4,6 @@ import android.content.ClipData
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.platform.testTag
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -43,6 +41,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -174,6 +174,7 @@ fun HomeScreen(
                                             onSaveClick = { postAction(viewModel.posts.toggleSaved(item.post.id, currentAccountId())) },
                                         )
                                     }
+
                                     is FeedItem.TaskSection -> {
                                         HomeTasksSection(
                                             section = item,
@@ -181,6 +182,7 @@ fun HomeScreen(
                                             onTaskClick = onTaskClick,
                                         )
                                     }
+
                                     is FeedItem.ServiceSection -> {
                                         HomeServicesSection(
                                             section = item,
@@ -188,6 +190,7 @@ fun HomeScreen(
                                             onServiceClick = onServiceClick,
                                         )
                                     }
+
                                     is FeedItem.PeopleSection -> {
                                         HomePeopleSection(
                                             section = item,
@@ -230,15 +233,26 @@ fun HomeScreen(
         }
     }
 
-    menuPostId?.let { id -> com.askit.app.home.posts.PostActionsSheet(id, viewModel.posts, currentAccountId,
-        onDismiss = { menuPostId = null }, onEdit = onEditPost) }
+    menuPostId?.let { id ->
+        com.askit.app.home.posts.PostActionsSheet(
+            id,
+            viewModel.posts,
+            currentAccountId,
+            onDismiss = { menuPostId = null },
+            onEdit = onEditPost,
+        )
+    }
     activeCommentPost?.let { selected ->
         val live = postRecords[selected.id]?.takeUnless { it.archived }
-        if (live != null) CommentsBottomSheet(
-            onDismiss = { activeCommentPost = null },
-            canComment = live.commentsEnabled && viewModel.posts.isCurrentAccount(currentAccountId()),
-            disabledMessage = stringResource(if (!live.commentsEnabled) R.string.post_comments_disabled else R.string.post_action_sign_in),
-        )
+        if (live != null) {
+            CommentsBottomSheet(
+                onDismiss = { activeCommentPost = null },
+                canComment = live.commentsEnabled && viewModel.posts.isCurrentAccount(currentAccountId()),
+                disabledMessage = stringResource(
+                    if (!live.commentsEnabled) R.string.post_comments_disabled else R.string.post_action_sign_in,
+                ),
+            )
+        }
     }
 
     activeSharePost?.let { post ->
@@ -305,9 +319,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeTopBar(
-    modifier: Modifier = Modifier,
-) {
+private fun HomeTopBar(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -328,10 +340,7 @@ private fun HomeTopBar(
 }
 
 @Composable
-private fun HomeEmptyState(
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun HomeEmptyState(onRefresh: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -361,11 +370,7 @@ private fun HomeEmptyState(
 }
 
 @Composable
-private fun HomeErrorState(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun HomeErrorState(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()

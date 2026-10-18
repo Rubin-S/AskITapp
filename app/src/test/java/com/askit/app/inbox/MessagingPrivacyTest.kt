@@ -45,12 +45,17 @@ class MessagingPrivacyTest {
         assertFalse(store.sendText(contact.id, "Denied"))
         assertFalse(store.sendPhoto(contact.id, "content://photo"))
     }
+
     @Test fun sharedStoriesUseTheSameLivePolicy() {
         var access = MessageAccess.ContactsOnly
         val store = InboxStore(InboxSeed(contacts = listOf(ChatContact("priya", "Priya"))), messageAccess = { access })
         val contact = store.contacts.first()
-        val story = com.askit.app.home.model.Story("story", "Author",
-            content = com.askit.app.story.StoryDraft(), createdAtMillis = System.currentTimeMillis())
+        val story = com.askit.app.home.model.Story(
+            "story",
+            "Author",
+            content = com.askit.app.story.StoryDraft(),
+            createdAtMillis = System.currentTimeMillis(),
+        )
         assertFalse(store.sendStory(contact, story))
         access = MessageAccess.Allowed
         assertTrue(store.sendStory(contact, story))
@@ -93,5 +98,4 @@ class MessagingPrivacyTest {
         assertFalse(profile.updateWhoCanMessage("Contacts only"))
         assertEquals("Everyone", store.profile.value.whoCanMessage)
     }
-
 }

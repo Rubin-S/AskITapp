@@ -30,8 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -170,7 +170,11 @@ fun ProviderDashboardScreen(
                 item(key = "section_incoming_title") {
                     SectionHeader(
                         title = stringResource(R.string.provider_section_incoming),
-                        badgeText = pluralStringResource(R.plurals.provider_incoming_count, uiState.incomingRequests.size, uiState.incomingRequests.size),
+                        badgeText = pluralStringResource(
+                            R.plurals.provider_incoming_count,
+                            uiState.incomingRequests.size,
+                            uiState.incomingRequests.size,
+                        ),
                     )
                 }
                 items(
@@ -254,11 +258,7 @@ fun ProviderDashboardScreen(
 }
 
 @Composable
-private fun SectionHeader(
-    title: String,
-    modifier: Modifier = Modifier,
-    badgeText: String? = null,
-) {
+private fun SectionHeader(title: String, modifier: Modifier = Modifier, badgeText: String? = null) {
     Row(
         modifier = modifier
             .fillMaxWidth()

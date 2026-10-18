@@ -56,32 +56,19 @@ data class ProviderOperatingKpis(
  * Provider trust and marketplace reputation metrics.
  */
 @Immutable
-data class ProviderTrustScore(
-    val score: Int,
-    val percentileRank: Int,
-    val weeklyDelta: Int,
-)
+data class ProviderTrustScore(val score: Int, val percentileRank: Int, val weeklyDelta: Int)
 
 /**
  * Provider profile strength and verification tier progression.
  */
 @Immutable
-data class ProviderTierProgress(
-    val strengthPercent: Int,
-    val currentTier: String,
-    val nextTier: String,
-    val hint: String,
-)
+data class ProviderTierProgress(val strengthPercent: Int, val currentTier: String, val nextTier: String, val hint: String)
 
 /**
  * Operational alert or priority notification for the provider.
  */
 @Immutable
-data class ProviderAlertItem(
-    val id: String,
-    val title: String,
-    val timestampLabel: String,
-)
+data class ProviderAlertItem(val id: String, val title: String, val timestampLabel: String)
 
 /**
  * Comprehensive immutable UI state for the Provider Dashboard.

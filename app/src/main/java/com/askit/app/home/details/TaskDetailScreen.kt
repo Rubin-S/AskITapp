@@ -9,65 +9,65 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.askit.app.R
-import coil3.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.askit.app.R
 import com.askit.app.task.Task
-import com.askit.app.task.presentation
+import com.askit.app.task.TaskActionDialogs
+import com.askit.app.task.TaskActionDraft
+import com.askit.app.task.TaskActionPolicy
+import com.askit.app.task.TaskActionsViewModel
+import com.askit.app.task.TaskCommentAuthor
+import com.askit.app.task.TaskDiscussionSheet
+import com.askit.app.task.TaskDiscussionViewModel
 import com.askit.app.task.TaskPhotoGallery
 import com.askit.app.task.TaskPreferencesSummary
 import com.askit.app.task.TaskProviderPreferences
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
 import com.askit.app.task.TaskRepository
-import com.askit.app.task.TaskActionPolicy
-import com.askit.app.task.TaskActionsViewModel
-import com.askit.app.task.TaskActionDraft
-import com.askit.app.task.TaskActionDialogs
 import com.askit.app.task.actionPolicy
-import com.askit.app.task.TaskCommentAuthor
-import com.askit.app.task.TaskDiscussionViewModel
-import com.askit.app.task.TaskDiscussionSheet
+import com.askit.app.task.presentation
 import com.askit.designsystem.R as DsR
 
 @Composable
@@ -107,7 +107,9 @@ fun TaskDetailScreen(
         val actionDraft = if (actionsViewModel != null) {
             val drafts by actionsViewModel.drafts.collectAsStateWithLifecycle()
             if (actionsViewModel.isActiveAccount(accountId)) drafts[task.id] ?: TaskActionDraft() else TaskActionDraft()
-        } else TaskActionDraft()
+        } else {
+            TaskActionDraft()
+        }
         LaunchedEffect(actionDraft.feedbackRes) {
             actionDraft.feedbackRes?.let {
                 snackbar.showSnackbar(resources.getString(it))
@@ -166,7 +168,6 @@ fun TaskDetailScreen(
     onReport: () -> Unit = {},
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-
     val display = task.presentation(LocalContext.current)
     var showMenu by rememberSaveable(task.id, policy.signedIn, policy.isOwner) { mutableStateOf(false) }
     Scaffold(
@@ -198,7 +199,10 @@ fun TaskDetailScreen(
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.task_report)) },
                                     enabled = policy.canReport,
-                                    onClick = { showMenu = false; onReport() },
+                                    onClick = {
+                                        showMenu = false
+                                        onReport()
+                                    },
                                 )
                             }
                         }
@@ -231,7 +235,8 @@ fun TaskDetailScreen(
                     } else {
                         OutlinedButton(
                             onClick = { onMessage(task) },
-                            enabled = !task.posterId.isNullOrBlank(), modifier = Modifier.weight(1f),
+                            enabled = !task.posterId.isNullOrBlank(),
+                            modifier = Modifier.weight(1f),
                         ) { Text(stringResource(DsR.string.profile_action_message)) }
                         if (policy.showApply) {
                             Button(onClick = { onApply(task) }, enabled = policy.canApply, modifier = Modifier.weight(1.5f)) {
@@ -348,8 +353,12 @@ fun TaskDetailScreen(
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                     task.posterAvatarUrl?.takeIf(String::isNotBlank)?.let { avatar ->
-                        AsyncImage(model = avatar, contentDescription = null,
-                            contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                        AsyncImage(
+                            model = avatar,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
                 }
 
@@ -371,10 +380,13 @@ fun TaskDetailScreen(
                 OutlinedButton(onClick = onLike, enabled = policy.canLike, modifier = Modifier.weight(1f)) {
                     Icon(
                         painterResource(if (isLiked) DsR.drawable.ic_heart_filled else DsR.drawable.ic_heart_outline),
-                        contentDescription = null, modifier = Modifier.size(18.dp),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
                     )
-                    Text(stringResource(if (isLiked) R.string.task_liked_count else R.string.task_like_count, likeCount),
-                        modifier = Modifier.padding(start = 6.dp))
+                    Text(
+                        stringResource(if (isLiked) R.string.task_liked_count else R.string.task_like_count, likeCount),
+                        modifier = Modifier.padding(start = 6.dp),
+                    )
                 }
                 OutlinedButton(onClick = onComment, modifier = Modifier.weight(1f)) {
                     Text(stringResource(R.string.task_discussion_comment))
@@ -432,11 +444,7 @@ fun TaskDetailScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TaskNotFoundContent(
-    taskId: String,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun TaskNotFoundContent(taskId: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {

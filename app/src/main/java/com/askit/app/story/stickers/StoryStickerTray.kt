@@ -1,8 +1,5 @@
 package com.askit.app.story.stickers
 
-import com.askit.designsystem.dialogs.AskITAlertDialog
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,33 +13,32 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ModalBottomSheet
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
-import com.askit.app.explore.SearchAreaScreen
 import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
+import com.askit.app.explore.SearchAreaScreen
 import com.askit.app.media.persistPhotoPickerReadAccess
 import com.askit.app.story.StoryStickerKind
 import com.askit.app.story.StoryViewModel
+import com.askit.designsystem.dialogs.AskITAlertDialog
+import com.askit.designsystem.inputs.AskITTextField
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun StoryStickerTray(
-    viewModel: StoryViewModel,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun StoryStickerTray(viewModel: StoryViewModel, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
     val photoLabel = stringResource(R.string.story_sticker_photo)
@@ -258,10 +254,7 @@ fun StoryStickerTray(
 }
 
 @Composable
-private fun StickerChip(
-    titleRes: Int,
-    onClick: () -> Unit,
-) {
+private fun StickerChip(titleRes: Int, onClick: () -> Unit) {
     FilterChip(
         selected = false,
         onClick = onClick,
@@ -301,12 +294,7 @@ private fun StickerInputDialog(
 }
 
 @Composable
-private fun StickerMultiInputDialog(
-    title: String,
-    fields: List<String>,
-    onDismiss: () -> Unit,
-    onConfirm: (List<String>) -> Unit,
-) {
+private fun StickerMultiInputDialog(title: String, fields: List<String>, onDismiss: () -> Unit, onConfirm: (List<String>) -> Unit) {
     var values by remember(fields) { mutableStateOf(fields) }
     AskITAlertDialog(
         onDismissRequest = onDismiss,

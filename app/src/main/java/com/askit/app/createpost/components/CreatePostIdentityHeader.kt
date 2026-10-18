@@ -28,8 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.askit.app.R
-import com.askit.designsystem.R as DesignR
 import com.askit.designsystem.people.AskITAvatar
+import com.askit.designsystem.R as DesignR
 
 @Composable
 fun CreatePostIdentityHeader(

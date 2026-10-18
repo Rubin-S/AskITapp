@@ -9,13 +9,11 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.os.Build
-import androidx.annotation.StringRes
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -26,12 +24,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -78,17 +78,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.askit.app.R
 import com.askit.app.BuildConfig
+import com.askit.app.R
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.AddressComponent
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken
-import com.google.android.libraries.places.api.model.AddressComponent
 import com.google.android.libraries.places.api.model.CircularBounds
-import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.PlaceTypes
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
@@ -148,11 +148,7 @@ fun SearchAreaRoute(
 }
 
 @Composable
-fun SearchAreaScreen(
-    confirmedArea: ExploreSearchArea,
-    onBack: () -> Unit,
-    onApply: (ExploreSearchArea) -> Unit,
-) {
+fun SearchAreaScreen(confirmedArea: ExploreSearchArea, onBack: () -> Unit, onApply: (ExploreSearchArea) -> Unit) {
     SearchAreaScreen(
         confirmedArea = confirmedArea,
         onBack = onBack,
@@ -216,7 +212,8 @@ fun SearchAreaScreen(
     var priceMaximum by rememberSaveable(filterScope) { mutableStateOf(initialPriceFilter.maximum) }
     var priceUnitName by rememberSaveable(filterScope) { mutableStateOf(initialPriceFilter.unit?.name) }
     val priceDraft = ExplorePriceFilter(
-        priceMinimum, priceMaximum,
+        priceMinimum,
+        priceMaximum,
         ExploreRateUnit.entries.firstOrNull { it.name == priceUnitName },
     )
 
@@ -416,7 +413,9 @@ fun SearchAreaScreen(
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showPreviewLocations = false }) { Text(stringResource(R.string.location_demo_cancel)) } },
+            confirmButton = {
+                TextButton(onClick = { showPreviewLocations = false }) { Text(stringResource(R.string.location_demo_cancel)) }
+            },
         )
     }
 
@@ -702,7 +701,6 @@ fun SearchAreaScreen(
                     }
                 }
             }
-
         }
     }
 }
@@ -806,11 +804,7 @@ private fun fetchSelectedPlace(
         .addOnFailureListener { onFailure() }
 }
 
-private fun Place.toExploreSearchArea(
-    placeId: String,
-    location: LatLng,
-    fallbackDisplayName: String,
-): ExploreSearchArea {
+private fun Place.toExploreSearchArea(placeId: String, location: LatLng, fallbackDisplayName: String): ExploreSearchArea {
     val components = addressComponents?.asList().orEmpty()
     val locality = components.componentName("locality")
     val district = components.componentName("administrative_area_level_2")
@@ -834,13 +828,9 @@ private fun Place.toExploreSearchArea(
     )
 }
 
-private fun List<AddressComponent>.componentName(type: String): String? =
-    firstOrNull { type in it.types }?.name
+private fun List<AddressComponent>.componentName(type: String): String? = firstOrNull { type in it.types }?.name
 
-private data class LocalityLabel(
-    val displayName: String,
-    val supportingText: String?,
-)
+private data class LocalityLabel(val displayName: String, val supportingText: String?)
 
 private suspend fun reverseGeocode(context: Context, location: Location): LocalityLabel? {
     if (!Geocoder.isPresent()) return null

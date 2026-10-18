@@ -3,8 +3,8 @@ package com.askit.app.explore
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -23,11 +23,11 @@ private val DEFAULT_SEARCH_AREA = ExploreSearchArea(
 enum class ExploreLocationSource {
     SAVED,
     GOOGLE_PLACES,
-    CURRENT_LOCATION;
+    CURRENT_LOCATION,
+    ;
 
     companion object {
-        fun fromName(value: String): ExploreLocationSource =
-            entries.firstOrNull { it.name == value } ?: SAVED
+        fun fromName(value: String): ExploreLocationSource = entries.firstOrNull { it.name == value } ?: SAVED
     }
 }
 
@@ -50,9 +50,7 @@ data class ExploreUiState(
     val recentSearches: List<String> = emptyList(),
 )
 
-class ExploreViewModel(
-    private val savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+class ExploreViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
 
     private val queryState = savedStateHandle.getStateFlow(QUERY_KEY, "")
     private val recentSearchesState = savedStateHandle.getStateFlow(
@@ -243,11 +241,8 @@ class ExploreViewModel(
         const val SEARCH_AREA_SOURCE_KEY = "explore_search_area_source"
         const val FILTER_SCOPE_KEY = "explore_filter_scope"
 
-        fun filterOptionsKey(scope: ExploreResultScope): String =
-            "explore_filter_options_${scope.name.lowercase()}"
-
+        fun filterOptionsKey(scope: ExploreResultScope): String = "explore_filter_options_${scope.name.lowercase()}"
     }
 }
 
-internal fun normalizeExploreQuery(query: String): String =
-    query.trim().replace(Regex("\\s+"), " ")
+internal fun normalizeExploreQuery(query: String): String = query.trim().replace(Regex("\\s+"), " ")

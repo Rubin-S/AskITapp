@@ -15,6 +15,7 @@ class ProfilePrivacyTest {
         assertNull(consented.approximateDistance("641001", -1.0))
         assertEquals(4, consented.approximateDistance("641001", 3.5))
     }
+
     @Test fun bannerMapsToOwnerAndReadOnlyPublicPreview() {
         val profile = SessionProfile(bannerUrl = "content://photo/banner")
         assertTrue(profile.toUiState().canEditMedia)
@@ -23,14 +24,21 @@ class ProfilePrivacyTest {
         assertEquals(profile.bannerUrl, profile.toUiState().bannerUrl)
         assertEquals(profile.bannerUrl, profile.toUiState(isPublicPreview = true).bannerUrl)
     }
+
     @Test fun removingBannerRestoresNeutralCover() {
         val store = com.askit.app.session.SessionProfileStore(SessionProfile(accountId = "owner", bannerUrl = "content://banner"))
         store.setBanner("owner", null)
         assertNull(store.profile.value.toUiState().bannerUrl)
     }
+
     @Test fun publicDistanceMappingIsPrivateUnlessAllInputsExist() {
-        val user = com.askit.app.home.details.UserProfileData("other", "other", "Other",
-            discloseApproximateLocation = true, postcodeDistanceKm = 2.7)
+        val user = com.askit.app.home.details.UserProfileData(
+            "other",
+            "other",
+            "Other",
+            discloseApproximateLocation = true,
+            postcodeDistanceKm = 2.7,
+        )
         assertNull(user.toUiState().approximateDistanceKm)
         assertEquals(3, user.toUiState(viewerPostcode = "641001").approximateDistanceKm)
         assertNull(user.copy(discloseApproximateLocation = false).toUiState(viewerPostcode = "641001").approximateDistanceKm)

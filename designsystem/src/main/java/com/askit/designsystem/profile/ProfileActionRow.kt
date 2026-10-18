@@ -15,12 +15,18 @@ data class ProfileActionConfig(val actions: List<ProfileAction>)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileActionRow(config: ProfileActionConfig, modifier: Modifier = Modifier) {
-    FlowRow(modifier.fillMaxWidth().testTag("profile_action_row"),
-        horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(
+        modifier.fillMaxWidth().testTag("profile_action_row"),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         config.actions.forEach { action ->
-            OutlinedButton(onClick = action.onClick, enabled = action.enabled,
+            OutlinedButton(
+                onClick = action.onClick,
+                enabled = action.enabled,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                modifier = Modifier.widthIn(min = 112.dp).weight(1f).heightIn(min = 48.dp).testTag("profile_action_${action.id}")) {
+                modifier = Modifier.widthIn(min = 112.dp).weight(1f).heightIn(min = 48.dp).testTag("profile_action_${action.id}"),
+            ) {
                 Text(action.label)
             }
         }

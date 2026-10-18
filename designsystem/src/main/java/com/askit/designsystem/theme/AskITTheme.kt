@@ -111,10 +111,7 @@ private val DarkScheme = darkColorScheme(
 )
 
 @Composable
-fun AskITTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
+fun AskITTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = if (darkTheme) DarkScheme else LightScheme,
         content = content,

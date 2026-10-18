@@ -58,7 +58,10 @@ class AppContainerTest {
             config = AppConfig(backendBaseUrl = null, clientPreview = false),
             content = AppVariant,
             previewStorage = { null },
-            authSessionStore = { sessionStoresBuilt++; null },
+            authSessionStore = {
+                sessionStoresBuilt++
+                null
+            },
         )
         container.create<com.askit.app.auth.AuthViewModel>(container.newSessionGraph())
         assertTrue(sessionStoresBuilt == 0)

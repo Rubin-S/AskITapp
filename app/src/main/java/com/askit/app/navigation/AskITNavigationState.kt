@@ -108,9 +108,7 @@ internal class AskITNavigationState(
 }
 
 @Composable
-internal fun rememberAskITNavigationState(
-    initialRoute: AppDestination = AppDestination.Home,
-): AskITNavigationState {
+internal fun rememberAskITNavigationState(initialRoute: AppDestination = AppDestination.Home): AskITNavigationState {
     val topLevelRoute = rememberSerializable(
         serializer = MutableStateSerializer(NavKeySerializer()),
     ) {

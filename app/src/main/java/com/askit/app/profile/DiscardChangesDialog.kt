@@ -1,6 +1,5 @@
 package com.askit.app.profile
 
-import com.askit.designsystem.dialogs.AskITAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -9,12 +8,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.askit.app.R
+import com.askit.designsystem.dialogs.AskITAlertDialog
 
 @Composable
-fun DiscardChangesDialog(
-    onDismiss: () -> Unit,
-    onDiscard: () -> Unit,
-) {
+fun DiscardChangesDialog(onDismiss: () -> Unit, onDiscard: () -> Unit) {
     AskITAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.profile_discard_title)) },

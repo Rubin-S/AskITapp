@@ -20,15 +20,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.profile.UniversalProfileScaffold
-import com.askit.app.profile.withPeople
 import com.askit.app.profile.toUiState
+import com.askit.app.profile.withPeople
 
-data class UserReviewData(
-    val reviewerName: String,
-    val rating: Double,
-    val date: String,
-    val comment: String,
-)
+data class UserReviewData(val reviewerName: String, val rating: Double, val date: String, val comment: String)
 
 data class UserProfileData(
     val id: String,
@@ -92,8 +87,13 @@ fun UserProfileScreen(
     Scaffold(
         modifier = modifier.fillMaxSize().testTag("user_profile_screen"),
         topBar = {
-            com.askit.app.profile.ProfileOverflowTopBar(user?.toUiState() ?: com.askit.app.profile.ProfileUiState(),
-                viewerAccountId, publicProfileUrl, onBack = onBack, onModerate = onModerate)
+            com.askit.app.profile.ProfileOverflowTopBar(
+                user?.toUiState() ?: com.askit.app.profile.ProfileUiState(),
+                viewerAccountId,
+                publicProfileUrl,
+                onBack = onBack,
+                onModerate = onModerate,
+            )
         },
     ) { padding ->
         if (user == null || isBlocked) {
@@ -105,14 +105,22 @@ fun UserProfileScreen(
             }
             return@Scaffold
         }
-        val uiState = user.toUiState(isFollowing = following, selectedSectionId = sectionId, viewerPostcode = viewerPostcode).withPeople(people)
+        val uiState = user.toUiState(
+            isFollowing = following,
+            selectedSectionId = sectionId,
+            viewerPostcode = viewerPostcode,
+        ).withPeople(people)
         var showContact by rememberSaveable(userId) { mutableStateOf(false) }
         if (showContact) com.askit.app.profile.ProfileContactDialog(uiState.listing, false) { showContact = false }
-        val actionConfig = com.askit.app.profile.profileActions(uiState, viewerAccountId, mapOf(
-            com.askit.app.profile.ProfileActionId.FOLLOW to { onToggleFollow?.invoke() },
-            com.askit.app.profile.ProfileActionId.MESSAGE to onMessage,
-            com.askit.app.profile.ProfileActionId.CONTACT to { showContact = true },
-        ))
+        val actionConfig = com.askit.app.profile.profileActions(
+            uiState,
+            viewerAccountId,
+            mapOf(
+                com.askit.app.profile.ProfileActionId.FOLLOW to { onToggleFollow?.invoke() },
+                com.askit.app.profile.ProfileActionId.MESSAGE to onMessage,
+                com.askit.app.profile.ProfileActionId.CONTACT to { showContact = true },
+            ),
+        )
 
         UniversalProfileScaffold(
             uiState = uiState, people = people, onOpenProfile = onOpenProfile, onFollowPerson = onFollowPerson,

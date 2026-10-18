@@ -13,11 +13,7 @@ import androidx.compose.ui.input.pointer.pointerInput
  * and holding anywhere pauses until release.
  */
 @Composable
-fun Modifier.storyTapGestures(
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
-    onHoldChanged: (Boolean) -> Unit,
-): Modifier {
+fun Modifier.storyTapGestures(onPrevious: () -> Unit, onNext: () -> Unit, onHoldChanged: (Boolean) -> Unit): Modifier {
     val latestPrevious by rememberUpdatedState(onPrevious)
     val latestNext by rememberUpdatedState(onNext)
     val latestHoldChanged by rememberUpdatedState(onHoldChanged)
@@ -43,10 +39,7 @@ fun Modifier.storyTapGestures(
  * caller to settle (dismiss or spring back) when the gesture ends.
  */
 @Composable
-fun Modifier.storyVerticalDrag(
-    onDragDeltaY: (Float) -> Unit,
-    onSettle: () -> Unit,
-): Modifier {
+fun Modifier.storyVerticalDrag(onDragDeltaY: (Float) -> Unit, onSettle: () -> Unit): Modifier {
     val latestDrag by rememberUpdatedState(onDragDeltaY)
     val latestSettle by rememberUpdatedState(onSettle)
     return pointerInput(Unit) {

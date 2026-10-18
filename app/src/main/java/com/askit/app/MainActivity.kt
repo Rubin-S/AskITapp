@@ -1,11 +1,11 @@
 package com.askit.app
 
-import android.os.Bundle
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -15,14 +15,13 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.Modifier
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.auth.AuthViewModel
-import com.askit.app.createpost.CreatePostViewModel
-import com.askit.app.providerdashboard.ProviderDashboardViewModel
 import com.askit.app.config.AppLinksViewModel
+import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.creatordashboard.CreatorDashboardViewModel
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.defaultExploreFilterOptions
@@ -31,11 +30,12 @@ import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.InboxViewModel
 import com.askit.app.jobs.JobsViewModel
 import com.askit.app.listservice.ListServiceViewModel
-import com.askit.app.task.TaskDiscussionViewModel
-import com.askit.app.task.TaskActionsViewModel
 import com.askit.app.posttask.PostTaskViewModel
 import com.askit.app.profile.ProfileViewModel
+import com.askit.app.providerdashboard.ProviderDashboardViewModel
 import com.askit.app.story.StoryViewModel
+import com.askit.app.task.TaskActionsViewModel
+import com.askit.app.task.TaskDiscussionViewModel
 import com.askit.designsystem.theme.AskITTheme
 import com.google.android.libraries.places.api.Places
 
@@ -76,9 +76,11 @@ class MainActivity : AppCompatActivity() {
             tasks = emptyList(),
         )
         val exploreBrowseState = container.content.exploreBrowseState()
-        val initialRoute = if (BuildConfig.CLIENT_PREVIEW || (BuildConfig.DEBUG &&
-            intent.getBooleanExtra("extra_start_at_home", false) &&
-            !intent.getBooleanExtra("extra_start_entry", false))
+        val initialRoute = if (BuildConfig.CLIENT_PREVIEW || (
+                BuildConfig.DEBUG &&
+                    intent.getBooleanExtra("extra_start_at_home", false) &&
+                    !intent.getBooleanExtra("extra_start_entry", false)
+                )
         ) {
             com.askit.app.navigation.AppDestination.Home
         } else {

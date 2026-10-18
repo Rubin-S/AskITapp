@@ -25,21 +25,18 @@ enum class JobBannerTone {
 }
 
 @Composable
-fun JobStatusBanner(
-    title: String,
-    supporting: String,
-    tone: JobBannerTone,
-    modifier: Modifier = Modifier,
-) {
+fun JobStatusBanner(title: String, supporting: String, tone: JobBannerTone, modifier: Modifier = Modifier) {
     val colors = when (tone) {
         JobBannerTone.Neutral -> CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         )
+
         JobBannerTone.Progress -> CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
         )
+
         JobBannerTone.Warning -> CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
             contentColor = MaterialTheme.colorScheme.onTertiaryContainer,

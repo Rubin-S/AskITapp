@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
-import com.askit.designsystem.dialogs.AskITAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -33,8 +32,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -60,6 +59,7 @@ import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
 import com.askit.app.explore.SearchAreaScreen
 import com.askit.app.media.persistPhotoPickerReadAccess
+import com.askit.designsystem.dialogs.AskITAlertDialog
 import com.askit.designsystem.posts.PostFeedAuthor
 import com.askit.designsystem.posts.PostFeedContent
 import com.askit.designsystem.posts.PostFeedItem
@@ -69,11 +69,7 @@ import com.askit.designsystem.posts.PostFeedPoll
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreatePostRoute(
-    viewModel: CreatePostViewModel,
-    onBack: () -> Unit,
-    onCompleteDraft: (PostDraft) -> Unit = {},
-) {
+fun CreatePostRoute(viewModel: CreatePostViewModel, onBack: () -> Unit, onCompleteDraft: (PostDraft) -> Unit = {}) {
     val state by viewModel.formState.collectAsStateWithLifecycle()
     val cropSession by viewModel.cropSession.collectAsStateWithLifecycle()
     if (cropSession != null) {
@@ -203,15 +199,19 @@ private fun CreatePostScreen(
                     bodyBringIntoView.bringIntoView()
                     bodyFocusRequester.requestFocus()
                 }
+
                 PostValidationField.BEFORE_PHOTO,
                 PostValidationField.AFTER_PHOTO,
                 PostValidationField.PHOTO_RATIO,
                 -> mediaBringIntoView.bringIntoView()
+
                 PostValidationField.POLL_QUESTION -> {
                     pollQuestionBringIntoView.bringIntoView()
                     pollQuestionFocusRequester.requestFocus()
                 }
+
                 PostValidationField.POLL_OPTIONS -> pollOptionsBringIntoView.bringIntoView()
+
                 PostValidationField.POLL_CLOSING -> Unit
             }
         }
@@ -232,10 +232,13 @@ private fun CreatePostScreen(
             persistPhotoPickerReadAccess(contentResolver, listOf(uri))
             when (beforeAfterSlot) {
                 BeforeAfterSlot.BEFORE -> viewModel.beginPhotoCrop(listOf(uri.toString()), 0)
+
                 BeforeAfterSlot.AFTER -> viewModel.beginPhotoCrop(listOf(uri.toString()), 1)
+
                 BeforeAfterSlot.REPLACE -> {
                     viewModel.beginPhotoCrop(listOf(uri.toString()), replacementIndex)
                 }
+
                 null -> viewModel.beginPhotoCrop(listOf(uri.toString()))
             }
         }
@@ -280,7 +283,17 @@ private fun CreatePostScreen(
                                 .heightIn(min = 52.dp)
                                 .testTag("create_post_complete"),
                         ) {
-                            Text(stringResource(if (viewModel.editingPostId != null) R.string.post_save_changes else R.string.create_post_complete_draft))
+                            Text(
+                                stringResource(
+                                    if (viewModel.editingPostId !=
+                                        null
+                                    ) {
+                                        R.string.post_save_changes
+                                    } else {
+                                        R.string.create_post_complete_draft
+                                    },
+                                ),
+                            )
                         }
                     }
                 }
@@ -301,8 +314,11 @@ private fun CreatePostScreen(
         ) {
             if (cropError != null || PostValidationField.PHOTO_RATIO in validationErrors) {
                 item {
-                    Text(stringResource(cropError ?: R.string.post_crop_invalid),
-                        color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(12.dp))
+                    Text(
+                        stringResource(cropError ?: R.string.post_crop_invalid),
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(12.dp),
+                    )
                 }
             }
             item {
@@ -456,10 +472,7 @@ private fun CreatePostEditor(
 }
 
 @Composable
-private fun CreatePostPreview(
-    state: CreatePostFormState,
-    onEdit: () -> Unit,
-) {
+private fun CreatePostPreview(state: CreatePostFormState, onEdit: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -501,10 +514,13 @@ private fun CreatePostFormState.toFeedContent(): PostFeedContent {
                 before = filled[0].toFeedMedia(),
                 after = filled[1].toFeedMedia(),
             )
+
         filled.size >= 2 -> PostFeedMediaContent.Carousel(
             items = filled.map { it.toFeedMedia() },
         )
+
         filled.size == 1 -> PostFeedMediaContent.Photo(filled[0].toFeedMedia())
+
         else -> null
     }
     val pollContent = poll?.let { draft ->

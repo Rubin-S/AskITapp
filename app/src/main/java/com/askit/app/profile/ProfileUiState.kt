@@ -4,8 +4,8 @@ import com.askit.app.home.details.UserProfileData
 import com.askit.app.jobs.Job
 import com.askit.app.session.ServiceListing
 import com.askit.app.session.SessionProfile
-import com.askit.designsystem.profile.ProfileMetricItem
 import com.askit.designsystem.navigation.SectionTab
+import com.askit.designsystem.profile.ProfileMetricItem
 
 data class ProfileUiState(
     val userId: String = "",
@@ -42,8 +42,14 @@ fun SessionProfile.toUiState(
 ): ProfileUiState {
     val isProviderMode = listing != null
 
-    val metricsList = profileMetrics(accountId, isProviderMode, reviews,
-        jobs.profileCompletedCount(accountId, isProviderMode), followerCount, followingCount)
+    val metricsList = profileMetrics(
+        accountId,
+        isProviderMode,
+        reviews,
+        jobs.profileCompletedCount(accountId, isProviderMode),
+        followerCount,
+        followingCount,
+    )
 
     val tabList = profileTabs(isProviderMode)
 
@@ -77,8 +83,14 @@ fun UserProfileData.toUiState(
     viewerPostcode: String? = null,
     isFollowing: Boolean = false,
 ): ProfileUiState {
-    val metricsList = profileMetrics(id, isProvider, directionalReviews,
-        if (isProvider) completedAsProvider else completedAsSeeker, followerCount, followingCount)
+    val metricsList = profileMetrics(
+        id,
+        isProvider,
+        directionalReviews,
+        if (isProvider) completedAsProvider else completedAsSeeker,
+        followerCount,
+        followingCount,
+    )
 
     val tabList = profileTabs(isProvider)
 

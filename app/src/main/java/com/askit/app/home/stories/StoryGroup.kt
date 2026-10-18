@@ -5,12 +5,7 @@ import com.askit.app.home.model.Story
 /**
  * One author's story set rendered as a single page of the viewer pager.
  */
-data class StoryGroup(
-    val authorName: String,
-    val authorAvatarUrl: String?,
-    val stories: List<Story>,
-    val authorId: String? = null,
-)
+data class StoryGroup(val authorName: String, val authorAvatarUrl: String?, val stories: List<Story>, val authorId: String? = null)
 
 /**
  * Groups flat stories by author, preserving the first-seen order of authors.

@@ -13,16 +13,23 @@ fun jobStatusLabelRes(status: JobStatus, party: JobParty): Int = when (status) {
     } else {
         R.string.job_status_applied
     }
+
     JobStatus.Accepted -> R.string.job_status_accepted
+
     JobStatus.OnTheWay -> R.string.job_status_on_the_way
+
     JobStatus.Started -> R.string.job_status_started
+
     JobStatus.AwaitingSeekerComplete -> R.string.job_status_awaiting_provider
+
     JobStatus.Completed -> R.string.job_status_completed
+
     JobStatus.Canceled -> if (party == JobParty.Applicant) {
         R.string.job_status_you_canceled
     } else {
         R.string.job_status_they_canceled
     }
+
     JobStatus.Rejected -> if (party == JobParty.Receiver) {
         R.string.job_status_you_rejected
     } else {
@@ -37,6 +44,7 @@ fun jobStatusLabelRes(job: Job, party: JobParty): Int = when (job.status) {
     } else {
         R.string.job_status_awaiting_provider
     }
+
     JobStatus.Applied,
     JobStatus.Accepted,
     JobStatus.OnTheWay,
@@ -54,20 +62,27 @@ fun jobBannerSupportingRes(job: Job, party: JobParty): Int = when (job.status) {
     } else {
         R.string.job_banner_applied_applicant
     }
+
     JobStatus.Accepted -> if (job.isSeeker(party)) {
         R.string.job_banner_accepted_seeker
     } else {
         R.string.job_banner_accepted_provider
     }
+
     JobStatus.OnTheWay -> R.string.job_banner_on_the_way
+
     JobStatus.Started -> R.string.job_banner_started
+
     JobStatus.AwaitingSeekerComplete -> if (job.isSeeker(party)) {
         R.string.job_banner_awaiting_seeker
     } else {
         R.string.job_banner_awaiting_provider
     }
+
     JobStatus.Completed -> R.string.job_banner_completed
+
     JobStatus.Canceled -> R.string.job_banner_canceled
+
     JobStatus.Rejected -> R.string.job_banner_rejected
 }
 
@@ -76,10 +91,12 @@ fun jobBannerTone(status: JobStatus): JobBannerTone = when (status) {
     JobStatus.OnTheWay,
     JobStatus.AwaitingSeekerComplete,
     -> JobBannerTone.Neutral
+
     JobStatus.Accepted,
     JobStatus.Started,
     JobStatus.Completed,
     -> JobBannerTone.Progress
+
     JobStatus.Canceled,
     JobStatus.Rejected,
     -> JobBannerTone.Warning
@@ -89,6 +106,7 @@ fun jobBannerTone(status: JobStatus): JobBannerTone = when (status) {
 fun jobBannerTitleRes(job: Job, party: JobParty): Int = when {
     job.status == JobStatus.Applied && party == JobParty.Receiver ->
         R.string.job_badge_new_request
+
     else -> jobStatusLabelRes(job, party)
 }
 
@@ -101,12 +119,7 @@ fun jobStepLabelRes(step: JobStep): Int = when (step) {
     JobStep.Complete -> R.string.job_step_complete
 }
 
-fun jobStepState(
-    step: JobStep,
-    steps: List<JobStep>,
-    current: JobStep,
-    completed: Boolean,
-): JobStepState {
+fun jobStepState(step: JobStep, steps: List<JobStep>, current: JobStep, completed: Boolean): JobStepState {
     if (completed) return JobStepState.Done
     val stepIndex = steps.indexOf(step)
     val currentIndex = steps.indexOf(current)
@@ -123,11 +136,13 @@ internal fun jobCardBadgeRes(job: Job, party: JobParty): Int = when (job.status)
     } else {
         R.string.job_status_applied
     }
+
     JobStatus.Accepted,
     JobStatus.OnTheWay,
     JobStatus.Started,
     JobStatus.AwaitingSeekerComplete,
     -> R.string.job_badge_in_progress
+
     JobStatus.Completed,
     JobStatus.Canceled,
     JobStatus.Rejected,
@@ -140,11 +155,13 @@ internal fun jobCardBadgeTone(status: JobStatus, party: JobParty): JobCardBadgeT
     } else {
         JobCardBadgeTone.Neutral
     }
+
     JobStatus.Accepted,
     JobStatus.OnTheWay,
     JobStatus.Started,
     JobStatus.AwaitingSeekerComplete,
     -> JobCardBadgeTone.Live
+
     JobStatus.Completed,
     JobStatus.Canceled,
     JobStatus.Rejected,

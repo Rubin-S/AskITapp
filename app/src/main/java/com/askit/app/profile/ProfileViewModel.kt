@@ -49,7 +49,10 @@ class ProfileViewModel(
         if (!signupAvailable) return SignupResult.Unavailable
         if (!draft.validation(isPhotoReadable(draft.avatarUri)).isValid) return SignupResult.Invalid
         return runCatching { repository.completeSignup(draft.normalized()) }
-            .fold(onSuccess = { SignupResult.Saved }, onFailure = { emitError(); SignupResult.Failed })
+            .fold(onSuccess = { SignupResult.Saved }, onFailure = {
+                emitError()
+                SignupResult.Failed
+            })
     }
 
     fun saveIdentity(state: EditProfileFormState): Boolean {
@@ -76,35 +79,32 @@ class ProfileViewModel(
     }
 
     fun setAvatar(actorId: String, avatarUrl: String?) {
-        if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) { emitError(); return }
+        if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) {
+            emitError()
+            return
+        }
         runCatching { repository.setAvatar(actorId, avatarUrl) }.onFailure { emitError() }
     }
 
-    fun updateActiveRole(role: String) =
-        runCatching { repository.updateActiveRole(role) }.onFailure { emitError() }
+    fun updateActiveRole(role: String) = runCatching { repository.updateActiveRole(role) }.onFailure { emitError() }
 
-    fun updatePushNotifications(enabled: Boolean) =
-        runCatching { repository.updatePushNotifications(enabled) }.onFailure { emitError() }
+    fun updatePushNotifications(enabled: Boolean) = runCatching { repository.updatePushNotifications(enabled) }.onFailure { emitError() }
 
-    fun updateJobAlerts(enabled: Boolean) =
-        runCatching { repository.updateJobAlerts(enabled) }.onFailure { emitError() }
+    fun updateJobAlerts(enabled: Boolean) = runCatching { repository.updateJobAlerts(enabled) }.onFailure { emitError() }
 
-    fun updateLanguage(lang: String) =
-        runCatching { repository.updateLanguage(lang) }.onFailure { emitError() }
+    fun updateLanguage(lang: String) = runCatching { repository.updateLanguage(lang) }.onFailure { emitError() }
 
-    fun updateLocationServices(enabled: Boolean) =
-        runCatching { repository.updateLocationServices(enabled) }.onFailure { emitError() }
+    fun updateLocationServices(enabled: Boolean) = runCatching { repository.updateLocationServices(enabled) }.onFailure { emitError() }
 
     fun updateWhoCanMessage(option: String): Boolean {
         if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) return false
         return runCatching { repository.updateWhoCanMessage(option) }.isSuccess
     }
 
-    fun resetAppData() =
-        runCatching {
-            repository.resetAppData()
-            _messages.tryEmit(R.string.settings_data_cleared)
-        }.onFailure { emitError() }
+    fun resetAppData() = runCatching {
+        repository.resetAppData()
+        _messages.tryEmit(R.string.settings_data_cleared)
+    }.onFailure { emitError() }
 
     private fun emitError() {
         _messages.tryEmit(R.string.profile_action_error)

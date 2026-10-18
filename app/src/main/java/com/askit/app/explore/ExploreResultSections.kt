@@ -1,8 +1,8 @@
 package com.askit.app.explore
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,9 +19,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.askit.app.R
 import com.askit.designsystem.navigation.AskITSectionTabs
 import com.askit.designsystem.navigation.SectionTab
-import com.askit.app.R
 
 @OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.addSubmittedSearchResults(
@@ -294,12 +294,14 @@ private fun LazyListScope.addPersonResultSection(
         ) {
             if (filteredEmpty) {
                 ExploreEmptyResultBody(ExploreResultState.EmptyReason.Filters, onBrowseChangeArea ?: {})
-            } else BrowseSectionStateCard(
-                section = ExploreBrowseSection.Professionals,
-                status = browseStatus ?: ExploreBrowseStatus.Empty,
-                onChangeArea = onBrowseChangeArea,
-                onRetry = onBrowseRetry,
-            )
+            } else {
+                BrowseSectionStateCard(
+                    section = ExploreBrowseSection.Professionals,
+                    status = browseStatus ?: ExploreBrowseStatus.Empty,
+                    onChangeArea = onBrowseChangeArea,
+                    onRetry = onBrowseRetry,
+                )
+            }
         }
         return
     }
@@ -343,12 +345,14 @@ private fun LazyListScope.addTaskResultSection(
         ) {
             if (filteredEmpty) {
                 ExploreEmptyResultBody(ExploreResultState.EmptyReason.Filters, onBrowseChangeArea ?: {})
-            } else BrowseSectionStateCard(
-                section = ExploreBrowseSection.Tasks,
-                status = browseStatus ?: ExploreBrowseStatus.Empty,
-                onChangeArea = onBrowseChangeArea,
-                onRetry = onBrowseRetry,
-            )
+            } else {
+                BrowseSectionStateCard(
+                    section = ExploreBrowseSection.Tasks,
+                    status = browseStatus ?: ExploreBrowseStatus.Empty,
+                    onChangeArea = onBrowseChangeArea,
+                    onRetry = onBrowseRetry,
+                )
+            }
         }
         return
     }

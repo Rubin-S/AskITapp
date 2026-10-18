@@ -1,10 +1,6 @@
 package com.askit.app.listservice
 
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
-
 import androidx.annotation.StringRes
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,51 +8,40 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-
 import androidx.compose.foundation.layout.heightIn
-
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-
 import androidx.compose.material3.FilterChip
-
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import com.askit.designsystem.inputs.AskITTextField
-
 import androidx.compose.material3.Text
-
 import androidx.compose.runtime.Composable
-
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
-
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-
 import androidx.compose.ui.semantics.contentDescription
-
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-
 import coil3.compose.AsyncImage
 import com.askit.app.R
+import com.askit.designsystem.inputs.AskITTextField
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -179,10 +164,7 @@ internal fun ListServicePricingEditor(
 }
 
 @Composable
-internal fun ListServiceMoreDetailsEditor(
-    state: ListServiceFormState,
-    viewModel: ListServiceViewModel,
-) {
+internal fun ListServiceMoreDetailsEditor(state: ListServiceFormState, viewModel: ListServiceViewModel) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         ListServiceOptionalTextField(
             value = state.typicalDuration,
@@ -218,12 +200,7 @@ internal fun ListServiceMoreDetailsEditor(
 }
 
 @Composable
-internal fun ListServiceOptionalTextField(
-    value: String,
-    @StringRes labelRes: Int,
-    testTag: String,
-    onValueChange: (String) -> Unit,
-) {
+internal fun ListServiceOptionalTextField(value: String, @StringRes labelRes: Int, testTag: String, onValueChange: (String) -> Unit) {
     AskITTextField(
         value = value,
         onValueChange = onValueChange,
@@ -238,10 +215,7 @@ internal fun ListServiceOptionalTextField(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun ListServiceCoverageChips(
-    selectedRadius: Int?,
-    onSelectRadius: (Int) -> Unit,
-) {
+internal fun ListServiceCoverageChips(selectedRadius: Int?, onSelectRadius: (Int) -> Unit) {
     FlowRow(
         modifier = Modifier
             .fillMaxWidth()
@@ -271,11 +245,7 @@ internal fun ListServiceCoverageChips(
 }
 
 @Composable
-internal fun ListServiceAreaButton(
-    areaLabel: String,
-    onClick: () -> Unit,
-    testTag: String,
-) {
+internal fun ListServiceAreaButton(areaLabel: String, onClick: () -> Unit, testTag: String) {
     OutlinedButton(
         onClick = onClick,
         modifier = Modifier
@@ -307,10 +277,7 @@ internal fun ListServiceAreaButton(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun PortfolioPhotoList(
-    uris: List<String>,
-    onRemovePhoto: (String) -> Unit,
-) {
+internal fun PortfolioPhotoList(uris: List<String>, onRemovePhoto: (String) -> Unit) {
     if (uris.isEmpty()) return
     FlowRow(
         modifier = Modifier
@@ -361,4 +328,3 @@ internal fun PortfolioPhotoList(
         }
     }
 }
-

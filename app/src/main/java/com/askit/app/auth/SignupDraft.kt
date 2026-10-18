@@ -32,7 +32,9 @@ data class SignupDraft(
         city = city.trim(),
         area = area.trim(),
         pincode = pincode.trim(),
-        phoneNumber = (PhoneNumberValidator.validate(phoneNumber, if (phoneNumber.startsWith('+')) null else "IN") as? PhoneValidation.Valid)?.e164 ?: phoneNumber.trim(),
+        phoneNumber =
+            (PhoneNumberValidator.validate(phoneNumber, if (phoneNumber.startsWith('+')) null else "IN") as? PhoneValidation.Valid)?.e164
+                ?: phoneNumber.trim(),
         email = email?.trim()?.takeIf(String::isNotBlank),
     )
 }
@@ -76,6 +78,7 @@ internal fun isSignupPhotoReadable(contentResolver: ContentResolver, avatarUri: 
 enum class SignupResult {
     Saved,
     Invalid,
+
     /** No server can create accounts yet (release). Nothing was saved; the UI says so plainly. */
     Unavailable,
     Failed,

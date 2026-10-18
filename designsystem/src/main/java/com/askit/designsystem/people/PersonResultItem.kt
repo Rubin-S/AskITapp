@@ -20,8 +20,8 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -153,17 +153,14 @@ fun PersonResultItem(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-        } else null,
+        } else {
+            null
+        },
     )
 }
 
 @Composable
-fun AskITAvatar(
-    avatarUrl: String?,
-    avatarSize: Dp,
-    fallbackIconSize: Dp,
-    modifier: Modifier = Modifier,
-) {
+fun AskITAvatar(avatarUrl: String?, avatarSize: Dp, fallbackIconSize: Dp, modifier: Modifier = Modifier) {
     val fallbackPainter = painterResource(R.drawable.ic_person)
     if (avatarUrl.isNullOrBlank()) {
         Icon(
@@ -190,13 +187,7 @@ fun AskITAvatar(
 }
 
 @Composable
-fun PersonResultMetadata(
-    rating: Double?,
-    reviewCount: Int,
-    locationLabel: String,
-    price: String?,
-    modifier: Modifier = Modifier,
-) {
+fun PersonResultMetadata(rating: Double?, reviewCount: Int, locationLabel: String, price: String?, modifier: Modifier = Modifier) {
     ResultMetadataLine(
         rating = rating,
         reviewCount = reviewCount,
@@ -318,10 +309,7 @@ private fun ResultMetadataLine(
 }
 
 @Composable
-private fun MetadataSegment(
-    showSeparator: Boolean,
-    content: @Composable () -> Unit,
-) {
+private fun MetadataSegment(showSeparator: Boolean, content: @Composable () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (showSeparator) {
             Text(
@@ -335,10 +323,7 @@ private fun MetadataSegment(
     }
 }
 
-private fun summarizeAdditionalServices(
-    primaryService: String,
-    additionalServices: List<String>,
-): Pair<String, Int>? {
+private fun summarizeAdditionalServices(primaryService: String, additionalServices: List<String>): Pair<String, Int>? {
     val primary = primaryService.trim()
     val validServices = additionalServices
         .map(String::trim)

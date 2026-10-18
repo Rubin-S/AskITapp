@@ -41,17 +41,20 @@ fun HomePostItem(
                 ),
             )
         }
+
         is PostMedia.Carousel -> {
             PostFeedMediaContent.Carousel(
                 items = media.urls.map { url -> PostFeedMedia(model = url, aspectRatio = media.aspectRatio) },
             )
         }
+
         is PostMedia.BeforeAfter -> {
             PostFeedMediaContent.BeforeAfter(
                 before = PostFeedMedia(model = media.beforeUrl, aspectRatio = media.aspectRatio),
                 after = PostFeedMedia(model = media.afterUrl, aspectRatio = media.aspectRatio),
             )
         }
+
         null -> null
     }
 

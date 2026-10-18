@@ -15,18 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-data class MetricSpec(
-    val value: String,
-    val label: String,
-)
+data class MetricSpec(val value: String, val label: String)
 
 @Composable
-fun MetricTrio(
-    first: MetricSpec,
-    second: MetricSpec,
-    third: MetricSpec,
-    modifier: Modifier = Modifier,
-) {
+fun MetricTrio(first: MetricSpec, second: MetricSpec, third: MetricSpec, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),

@@ -43,7 +43,10 @@ class AppLinksViewModel(backendUrl: String? = null, client: OkHttpClient = OkHtt
             try {
                 val response = json.decodeFromString<AppLinksResponse>(backend.request("v1/app-config"))
                 mutableLinks.value = AppLinks(
-                    publicProfileBaseUrl = response.publicProfileBaseUrl?.toHttpUrlOrNull()?.takeIf { it.isHttps && it.username.isEmpty() && it.password.isEmpty() }?.toString(),
+                    publicProfileBaseUrl = response.publicProfileBaseUrl?.toHttpUrlOrNull()?.takeIf {
+                        it.isHttps && it.username.isEmpty() &&
+                            it.password.isEmpty()
+                    }?.toString(),
                     privacyPolicyUrl = websiteUrl(response.privacyPolicyUrl),
                     termsUrl = websiteUrl(response.termsUrl),
                     helpCenterUrl = websiteUrl(response.helpCenterUrl),
@@ -75,7 +78,7 @@ class AppLinksViewModel(backendUrl: String? = null, client: OkHttpClient = OkHtt
         val helpCenterUrl: String? = null,
         val supportUrl: String? = null,
         val supportEmail: String? = null,
-    val publicProfileBaseUrl: String? = null,
+        val publicProfileBaseUrl: String? = null,
     )
 }
 

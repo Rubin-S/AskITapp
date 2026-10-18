@@ -41,7 +41,7 @@ fun CreatorTrendGraph(
 
                 val maxVal = maxOf(
                     upperBounds.maxOrNull() ?: 1f,
-                    points.maxOrNull() ?: 1f
+                    points.maxOrNull() ?: 1f,
                 ).coerceAtLeast(1f) * 1.15f
                 val minVal = 0f
 
@@ -121,6 +121,6 @@ fun CreatorTrendGraph(
                         center = Offset(lastX, lastY),
                     )
                 }
-            }
+            },
     )
 }

@@ -37,9 +37,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
-import com.askit.designsystem.R as DsR
 import com.askit.designsystem.chat.MessageBubble
 import com.askit.designsystem.people.AskITAvatar
+import com.askit.designsystem.R as DsR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -208,14 +208,16 @@ fun ChatThread(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = if (fromLocal) Arrangement.End else Arrangement.Start) {
                         com.askit.app.home.stories.SharedStoryCard(message.sharedStory, resolveStory, onOpenStory)
                     }
-                } else MessageBubble(
-                    body = message.body,
-                    photoModel = message.photoUri,
-                    fromLocalUser = fromLocal,
-                    showAvatar = !fromLocal && !sameAuthor,
-                    avatarUrl = conversation.contact.avatarUrl,
-                    modifier = Modifier.padding(bottom = if (sameAuthor) 4.dp else 0.dp),
-                )
+                } else {
+                    MessageBubble(
+                        body = message.body,
+                        photoModel = message.photoUri,
+                        fromLocalUser = fromLocal,
+                        showAvatar = !fromLocal && !sameAuthor,
+                        avatarUrl = conversation.contact.avatarUrl,
+                        modifier = Modifier.padding(bottom = if (sameAuthor) 4.dp else 0.dp),
+                    )
+                }
             }
         }
     }

@@ -24,9 +24,7 @@ interface TaskRepository {
 }
 
 /** Local, process-scoped task store. It starts empty unless a debug/preview build passes fixtures. */
-class InMemoryTaskRepository(
-    initialTasks: List<Task> = emptyList(),
-) : TaskRepository {
+class InMemoryTaskRepository(initialTasks: List<Task> = emptyList()) : TaskRepository {
 
     private val _tasks = MutableStateFlow(initialTasks)
     override val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
@@ -35,9 +33,7 @@ class InMemoryTaskRepository(
 
     private var nextId = 100
 
-    override fun getTask(id: String): Task? {
-        return _tasks.value.firstOrNull { it.id == id }
-    }
+    override fun getTask(id: String): Task? = _tasks.value.firstOrNull { it.id == id }
 
     private val ownerDrafts = mutableMapOf<String, PostTaskDraft>()
     private val mutableLikes = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
@@ -69,8 +65,11 @@ class InMemoryTaskRepository(
         if (!draft.isValid) return reject(TaskActionFailure.INVALID_DRAFT)
         val snapshot = draft.snapshot()
         val updated = snapshot.toPublicTask(taskId, task.posterName).copy(
-            posterId = task.posterId, posterAvatarUrl = task.posterAvatarUrl,
-            createdAtMillis = task.createdAtMillis, postedTime = task.postedTime, status = task.status,
+            posterId = task.posterId,
+            posterAvatarUrl = task.posterAvatarUrl,
+            createdAtMillis = task.createdAtMillis,
+            postedTime = task.postedTime,
+            status = task.status,
         )
         ownerDrafts[taskId] = snapshot
         _tasks.update { current -> current.map { if (it.id == taskId) updated else it } }
@@ -112,7 +111,8 @@ class InMemoryTaskRepository(
     }
 
     private fun reject(reason: TaskActionFailure) = TaskMutationResult.Rejected(reason)
-    private fun denied(accountId: String?) = reject(if (accountId.isNullOrBlank()) TaskActionFailure.SIGN_IN_REQUIRED else TaskActionFailure.NOT_ALLOWED)
+    private fun denied(accountId: String?) =
+        reject(if (accountId.isNullOrBlank()) TaskActionFailure.SIGN_IN_REQUIRED else TaskActionFailure.NOT_ALLOWED)
 
     @Synchronized
     override fun addComment(taskId: String, author: TaskCommentAuthor?, text: String, replyToId: String?): TaskCommentResult {
@@ -141,4 +141,5 @@ class InMemoryTaskRepository(
 }
 
 // Keep mutable collection references out of the owner-only stored snapshot.
-private fun PostTaskDraft.snapshot() = copy(photos = photos.toList(), preferences = preferences.copy(languages = preferences.languages.toSet()))
+private fun PostTaskDraft.snapshot() =
+    copy(photos = photos.toList(), preferences = preferences.copy(languages = preferences.languages.toSet()))

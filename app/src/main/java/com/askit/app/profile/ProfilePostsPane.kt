@@ -33,25 +33,43 @@ fun ProfilePostsPane(posts: List<FeedPost>, onOpen: (String) -> Unit) {
                     val title = post.content.ifBlank { post.poll?.question.orEmpty() }
                         .ifBlank { stringResource(R.string.post_detail_title) }
                     val pinned = stringResource(R.string.post_pinned)
-                    Surface(onClick = { onOpen(post.id) }, shape = RoundedCornerShape(8.dp),
+                    Surface(
+                        onClick = { onOpen(post.id) },
+                        shape = RoundedCornerShape(8.dp),
                         color = MaterialTheme.colorScheme.surfaceContainerHighest,
                         modifier = Modifier.weight(1f).aspectRatio(3f / 4f).testTag("profile_post_${post.id}")
-                            .semantics { contentDescription = if (post.pinnedAtMillis != null) "$pinned. $title" else title }) {
+                            .semantics { contentDescription = if (post.pinnedAtMillis != null) "$pinned. $title" else title },
+                    ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text(title, Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall,
-                                maxLines = 4, overflow = TextOverflow.Ellipsis)
+                            Text(
+                                title,
+                                Modifier.padding(12.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 4,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                             val image = when (val media = post.media) {
                                 is PostMedia.SinglePhoto -> media.url
                                 is PostMedia.Carousel -> media.urls.firstOrNull()
                                 is PostMedia.BeforeAfter -> media.beforeUrl
                                 null -> null
                             }
-                            if (image != null) AsyncImage(model = image, contentDescription = null,
-                                contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                            if (image != null) {
+                                AsyncImage(
+                                    model = image,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
                             if (post.pinnedAtMillis != null) {
-                                Text(pinned, color = Color.White, style = MaterialTheme.typography.labelSmall,
+                                Text(
+                                    pinned,
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
-                                        .background(Color.Black.copy(alpha = .8f), RoundedCornerShape(8.dp)).padding(6.dp))
+                                        .background(Color.Black.copy(alpha = .8f), RoundedCornerShape(8.dp)).padding(6.dp),
+                                )
                             }
                         }
                     }

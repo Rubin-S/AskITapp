@@ -70,8 +70,7 @@ fun JobParty.other(): JobParty = when (this) {
     JobParty.Receiver -> JobParty.Applicant
 }
 
-fun Job.visibleParty(viewAsOtherParty: Boolean): JobParty =
-    if (viewAsOtherParty) localParty.other() else localParty
+fun Job.visibleParty(viewAsOtherParty: Boolean): JobParty = if (viewAsOtherParty) localParty.other() else localParty
 
 fun Job.isSeeker(party: JobParty): Boolean = when (kind) {
     JobKind.TaskApplication -> party == JobParty.Receiver
@@ -85,6 +84,7 @@ fun Job.isTerminal(): Boolean = when (status) {
     JobStatus.Canceled,
     JobStatus.Rejected,
     -> true
+
     JobStatus.Applied,
     JobStatus.Accepted,
     JobStatus.OnTheWay,
@@ -110,10 +110,14 @@ fun Job.currentStep(): JobStep = when (status) {
     JobStatus.Canceled,
     JobStatus.Rejected,
     -> JobStep.Applied
+
     JobStatus.Accepted -> JobStep.Accepted
+
     JobStatus.OnTheWay -> JobStep.OnTheWay
+
     JobStatus.Started,
     JobStatus.AwaitingSeekerComplete,
     -> JobStep.Started
+
     JobStatus.Completed -> JobStep.Complete
 }

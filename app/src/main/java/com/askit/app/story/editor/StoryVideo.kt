@@ -20,13 +20,13 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -81,7 +81,10 @@ internal fun StoryVideo(
     var player by remember { mutableStateOf<Player?>(null) }
     var retry by remember(uri, trimStartMs, trimEndMs) { mutableIntStateOf(0) }
     var position by rememberSaveable(
-        uri, trimStartMs, trimEndMs, active,
+        uri,
+        trimStartMs,
+        trimEndMs,
+        active,
         saver = Saver<MutableLongState, Long>(
             save = { player?.currentPosition ?: it.longValue },
             restore = { mutableLongStateOf(it) },
@@ -139,10 +142,12 @@ internal fun StoryVideo(
                 val start = trimStartMs.coerceAtLeast(0)
                 val end = (trimEndMs ?: (start + STORY_MAX_DURATION_MS))
                     .coerceIn(start + 1, start + STORY_MAX_DURATION_MS)
-                current.setMediaItem(MediaItem.Builder().setUri(uri).setClippingConfiguration(
-                    MediaItem.ClippingConfiguration.Builder()
-                        .setStartPositionMs(start).setEndPositionMs(end).build(),
-                ).build())
+                current.setMediaItem(
+                    MediaItem.Builder().setUri(uri).setClippingConfiguration(
+                        MediaItem.ClippingConfiguration.Builder()
+                            .setStartPositionMs(start).setEndPositionMs(end).build(),
+                    ).build(),
+                )
                 current.seekTo(position)
                 current.repeatMode = if (latestLoop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
                 current.playWhenReady = latestPlaying && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)

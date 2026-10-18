@@ -17,13 +17,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
-data class GeoLocationResult(
-    val city: String,
-    val pincode: String,
-    val latitude: Double,
-    val longitude: Double,
-    val area: String = "",
-)
+data class GeoLocationResult(val city: String, val pincode: String, val latitude: Double, val longitude: Double, val area: String = "")
 
 object LocationHelper {
 
@@ -54,13 +48,18 @@ object LocationHelper {
                 val location = suspendCancellableCoroutine<Location?> { continuation ->
                     val cancellationSignal = CancellationSignal()
                     continuation.invokeOnCancellation { cancellationSignal.cancel() }
-                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                        PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                        PackageManager.PERMISSION_GRANTED
                     ) {
                         continuation.resume(null)
                     } else {
                         LocationManagerCompat.getCurrentLocation(
-                            locationManager, provider, cancellationSignal, { it.run() },
+                            locationManager,
+                            provider,
+                            cancellationSignal,
+                            { it.run() },
                         ) { continuation.resume(it) }
                     }
                 } ?: return@withTimeoutOrNull Result.failure(IllegalStateException("Location unavailable"))
@@ -90,45 +89,47 @@ object LocationHelper {
     }
 
     @Suppress("DEPRECATION")
-    private suspend fun reverseGeocode(
-        context: Context,
-        latitude: Double,
-        longitude: Double,
-    ): Triple<String, String, String> = withContext(Dispatchers.IO) {
-        try {
-            val geocoder = Geocoder(context, context.resources.configuration.locales[0])
-            if (!Geocoder.isPresent()) {
-                return@withContext Triple("", "", "")
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                suspendCancellableCoroutine { continuation ->
-                    geocoder.getFromLocation(latitude, longitude, 1, object : Geocoder.GeocodeListener {
-                        override fun onGeocode(addresses: MutableList<android.location.Address>) {
-                            val addr = addresses.firstOrNull()
-                            val area = addr?.subLocality ?: addr?.thoroughfare.orEmpty()
-                            val city = addr?.locality ?: addr?.subAdminArea ?: addr?.adminArea.orEmpty()
-                            val pincode = addr?.postalCode.orEmpty()
-                            continuation.resume(Triple(area, city, pincode))
-                        }
-
-                        override fun onError(errorMessage: String?) {
-                            continuation.resume(Triple("", "", ""))
-                        }
-                    })
+    private suspend fun reverseGeocode(context: Context, latitude: Double, longitude: Double): Triple<String, String, String> =
+        withContext(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context, context.resources.configuration.locales[0])
+                if (!Geocoder.isPresent()) {
+                    return@withContext Triple("", "", "")
                 }
-            } else {
-                val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                val addr = addresses?.firstOrNull()
-                val area = addr?.subLocality ?: addr?.thoroughfare.orEmpty()
-                val city = addr?.locality ?: addr?.subAdminArea ?: addr?.adminArea.orEmpty()
-                val pincode = addr?.postalCode.orEmpty()
-                Triple(area, city, pincode)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    suspendCancellableCoroutine { continuation ->
+                        geocoder.getFromLocation(
+                            latitude,
+                            longitude,
+                            1,
+                            object : Geocoder.GeocodeListener {
+                                override fun onGeocode(addresses: MutableList<android.location.Address>) {
+                                    val addr = addresses.firstOrNull()
+                                    val area = addr?.subLocality ?: addr?.thoroughfare.orEmpty()
+                                    val city = addr?.locality ?: addr?.subAdminArea ?: addr?.adminArea.orEmpty()
+                                    val pincode = addr?.postalCode.orEmpty()
+                                    continuation.resume(Triple(area, city, pincode))
+                                }
+
+                                override fun onError(errorMessage: String?) {
+                                    continuation.resume(Triple("", "", ""))
+                                }
+                            },
+                        )
+                    }
+                } else {
+                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                    val addr = addresses?.firstOrNull()
+                    val area = addr?.subLocality ?: addr?.thoroughfare.orEmpty()
+                    val city = addr?.locality ?: addr?.subAdminArea ?: addr?.adminArea.orEmpty()
+                    val pincode = addr?.postalCode.orEmpty()
+                    Triple(area, city, pincode)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                Triple("", "", "")
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            Triple("", "", "")
         }
-    }
 }

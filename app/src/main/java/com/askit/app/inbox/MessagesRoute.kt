@@ -23,11 +23,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.askit.designsystem.navigation.AskITSectionTabs
-import com.askit.designsystem.navigation.SectionTab
 import com.askit.app.R
 import com.askit.app.jobs.Job
 import com.askit.app.jobs.ui.JobsHub
+import com.askit.designsystem.navigation.AskITSectionTabs
+import com.askit.designsystem.navigation.SectionTab
 import com.askit.designsystem.R as DsR
 
 enum class MessagesPane {
@@ -81,8 +81,12 @@ fun MessagesRoute(
                 ),
             )
             AskITSectionTabs(
-                tabs = panes.map { pane -> SectionTab(pane.name, stringResource(
-                    if (pane == MessagesPane.Chats) R.string.messages_tab_chats else R.string.messages_tab_jobs)) },
+                tabs = panes.map { pane ->
+                    SectionTab(
+                        pane.name,
+                        stringResource(if (pane == MessagesPane.Chats) R.string.messages_tab_chats else R.string.messages_tab_jobs),
+                    )
+                },
                 selectedId = selectedPane.name,
                 onSelect = { selectedId = it },
                 modifier = Modifier.testTag("messages_segments"),
@@ -95,6 +99,7 @@ fun MessagesRoute(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = listPadding,
                 )
+
                 MessagesPane.Jobs -> JobsHub(
                     jobs = jobs,
                     onOpenJob = onOpenJob,

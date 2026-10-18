@@ -3,20 +3,10 @@ package com.askit.app.profile
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ProfileGalleryItem(
-    val id: String,
-    val uri: String,
-    val isCarousel: Boolean = false,
-)
+data class ProfileGalleryItem(val id: String, val uri: String, val isCarousel: Boolean = false)
 
 @Serializable
-data class SavedProfessional(
-    val id: String,
-    val name: String,
-    val trade: String,
-    val rating: String,
-    val avatarUrl: String? = null,
-)
+data class SavedProfessional(val id: String, val name: String, val trade: String, val rating: String, val avatarUrl: String? = null)
 
 @Serializable
 data class ProfileReview(

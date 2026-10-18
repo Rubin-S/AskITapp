@@ -34,11 +34,7 @@ import com.askit.app.creatordashboard.CreatorMetricItem
 import com.askit.app.creatordashboard.MetricTrend
 
 @Composable
-fun CreatorMetricCard(
-    item: CreatorMetricItem,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
-) {
+fun CreatorMetricCard(item: CreatorMetricItem, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     val title = stringResource(item.titleRes)
     val (trendColor, trendContainerColor, trendIcon) = when (item.trend) {
         MetricTrend.Positive -> Triple(
@@ -46,11 +42,13 @@ fun CreatorMetricCard(
             MaterialTheme.colorScheme.secondaryContainer,
             Icons.Default.ArrowDropUp,
         )
+
         MetricTrend.Negative -> Triple(
             MaterialTheme.colorScheme.error,
             MaterialTheme.colorScheme.errorContainer,
             Icons.Default.ArrowDropDown,
         )
+
         MetricTrend.Neutral -> Triple(
             MaterialTheme.colorScheme.onSurfaceVariant,
             MaterialTheme.colorScheme.surfaceContainerHighest,

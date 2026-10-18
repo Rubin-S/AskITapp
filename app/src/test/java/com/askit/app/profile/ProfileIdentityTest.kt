@@ -8,8 +8,11 @@ import org.junit.Test
 
 class ProfileIdentityTest {
     @Test fun providerIdentityUsesTheSharedServiceTitleAndDescription() {
-        val profile = SessionProfile(displayName = "Arun Kumar", bio = "Personal account text",
-            listing = DefaultCarpentryListing.copy(title = "Master plumber", category = "Plumbing", description = "Licensed plumber"))
+        val profile = SessionProfile(
+            displayName = "Arun Kumar",
+            bio = "Personal account text",
+            listing = DefaultCarpentryListing.copy(title = "Master plumber", category = "Plumbing", description = "Licensed plumber"),
+        )
         val state = profile.toUiState()
         assertTrue(state.isProvider)
         assertEquals("Arun Kumar", state.displayName)
@@ -36,8 +39,14 @@ class ProfileIdentityTest {
 
     @Test fun visitorIdentityUsesTheSameRulesForBothRoles() {
         for (provider in listOf(false, true)) {
-            val visitor = UserProfileData(id = "account-1", username = "arun", name = "Arun Kumar",
-                trade = "Master plumber", bio = "Public description", isProvider = provider).toUiState()
+            val visitor = UserProfileData(
+                id = "account-1",
+                username = "arun",
+                name = "Arun Kumar",
+                trade = "Master plumber",
+                bio = "Public description",
+                isProvider = provider,
+            ).toUiState()
             assertEquals("account-1", visitor.userId)
             assertEquals("arun", visitor.displayUsername)
             assertEquals("Arun Kumar", visitor.displayName)
@@ -46,6 +55,7 @@ class ProfileIdentityTest {
             assertFalse(visitor.isOwner)
         }
     }
+
     @org.junit.Test fun publicAdapterPreservesOptionalSeekerIdentity() {
         val seeker = com.askit.app.session.SessionProfile(accountId = "owner", title = "Homeowner", bio = "Planning repairs")
         val visitor = seeker.toPublicProfile().toUiState()

@@ -23,7 +23,10 @@ import org.junit.Test
 
 class StoryAudienceTest {
     private fun story(id: String, audience: StoryAudience, author: String = "owner") = Story(
-        id = id, authorName = "Owner", authorId = author, content = StoryDraft(audience = audience),
+        id = id,
+        authorName = "Owner",
+        authorId = author,
+        content = StoryDraft(audience = audience),
         createdAtMillis = System.currentTimeMillis(),
     )
 

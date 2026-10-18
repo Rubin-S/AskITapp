@@ -271,7 +271,6 @@ internal object HomeFixtures {
         ),
     )
 
-
     fun feed(): HomeFeedFixtures {
         val allPosts = (listOf(post1, post2, post3) + page2Items + page3Items)
             .filterIsInstance<FeedItem.PostItem>()

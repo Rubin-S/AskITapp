@@ -1,7 +1,7 @@
 package com.askit.app.profile
 
-import com.askit.app.home.model.isVisibleTo
 import com.askit.app.home.model.Story
+import com.askit.app.home.model.isVisibleTo
 import com.askit.app.story.StoryAudience
 import kotlinx.serialization.Serializable
 

@@ -1,7 +1,5 @@
 package com.askit.designsystem.posts
 
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -40,21 +38,22 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -62,9 +61,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
 import com.askit.designsystem.R
+import com.askit.designsystem.inputs.AskITTextField
 import com.askit.designsystem.people.AskITAvatar
+import kotlinx.coroutines.delay
 
 data class CommentItem(
     val id: String,
@@ -105,7 +105,9 @@ fun CommentsBottomSheet(
                 val parent = comments[parentIndex]
                 val cleanText = if (trimmed.startsWith("@$targetName ")) {
                     trimmed.removePrefix("@$targetName ")
-                } else trimmed
+                } else {
+                    trimmed
+                }
 
                 val newReply = CommentItem(
                     id = "r-${System.currentTimeMillis()}",
@@ -167,16 +169,28 @@ fun CommentsBottomSheet(
             val index = comments.indexOfFirst { it.id == id }
             if (index >= 0) {
                 val current = comments[index]
-                comments[index] = current.copy(isLiked = !current.isLiked,
-                    likesCount = (current.likesCount + if (current.isLiked) -1 else 1).coerceAtLeast(0))
+                comments[index] = current.copy(
+                    isLiked = !current.isLiked,
+                    likesCount = (current.likesCount + if (current.isLiked) -1 else 1).coerceAtLeast(0),
+                )
             }
         },
         onLikeReply = { id ->
             val index = comments.indexOfFirst { parent -> parent.replies.any { it.id == id } }
-            if (index >= 0) comments[index] = comments[index].copy(replies = comments[index].replies.map {
-                if (it.id == id) it.copy(isLiked = !it.isLiked,
-                    likesCount = (it.likesCount + if (it.isLiked) -1 else 1).coerceAtLeast(0)) else it
-            })
+            if (index >= 0) {
+                comments[index] = comments[index].copy(
+                    replies = comments[index].replies.map {
+                        if (it.id == id) {
+                            it.copy(
+                                isLiked = !it.isLiked,
+                                likesCount = (it.likesCount + if (it.isLiked) -1 else 1).coerceAtLeast(0),
+                            )
+                        } else {
+                            it
+                        }
+                    },
+                )
+            }
         },
     )
 }
@@ -247,8 +261,12 @@ fun ControlledCommentsBottomSheet(
             )
 
             subtitle?.let {
-                Text(it, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    it,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             HorizontalDivider(color = DividerDefaults.color.copy(alpha = 0.5f))
 
@@ -265,7 +283,11 @@ fun ControlledCommentsBottomSheet(
 
                 if (comments.isEmpty() && emptyMessage != null) {
                     item {
-                        Text(emptyMessage, modifier = Modifier.padding(vertical = 20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            emptyMessage,
+                            modifier = Modifier.padding(vertical = 20.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
                 items(comments, key = { it.id }) { comment ->
@@ -351,7 +373,6 @@ fun ControlledCommentsBottomSheet(
                         }
                     }
                 }
-
             }
             if (canComment) {
                 // Comment Input Row
@@ -417,7 +438,6 @@ private fun CommentRow(
     onLikeReplyClick: ((replyId: String) -> Unit)?,
     revealedCommentId: String?,
 ) {
-
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -476,28 +496,30 @@ private fun CommentRow(
             }
 
             // Comment Like
-            if (onLikeClick != null) Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clickable(onClick = onLikeClick)
-                    .padding(4.dp),
-            ) {
-                Icon(
-                    painter = painterResource(
-                        if (comment.isLiked) R.drawable.ic_heart_filled else R.drawable.ic_heart_outline
-                    ),
-                    contentDescription = stringResource(
-                        if (comment.isLiked) R.string.comments_unlike else R.string.comments_like
-                    ),
-                    tint = if (comment.isLiked) Color(0xFFE91E63) else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp),
-                )
-                if (comment.likesCount > 0) {
-                    Text(
-                        text = comment.likesCount.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+            if (onLikeClick != null) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clickable(onClick = onLikeClick)
+                        .padding(4.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (comment.isLiked) R.drawable.ic_heart_filled else R.drawable.ic_heart_outline,
+                        ),
+                        contentDescription = stringResource(
+                            if (comment.isLiked) R.string.comments_unlike else R.string.comments_like,
+                        ),
+                        tint = if (comment.isLiked) Color(0xFFE91E63) else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
                     )
+                    if (comment.likesCount > 0) {
+                        Text(
+                            text = comment.likesCount.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
@@ -558,12 +580,7 @@ private fun CommentRow(
 }
 
 @Composable
-private fun ReplyRow(
-    reply: CommentItem,
-    onLikeClick: (() -> Unit)?,
-    onReplyClick: (() -> Unit)?,
-    revealed: Boolean,
-) {
+private fun ReplyRow(reply: CommentItem, onLikeClick: (() -> Unit)?, onReplyClick: (() -> Unit)?, revealed: Boolean) {
     val requester = remember { BringIntoViewRequester() }
     LaunchedEffect(revealed) {
         if (revealed) {
@@ -619,39 +636,43 @@ private fun ReplyRow(
 
             Spacer(Modifier.height(4.dp))
 
-            if (onReplyClick != null) Text(
-                text = stringResource(R.string.comments_reply),
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .clickable(onClick = onReplyClick)
-                    .padding(vertical = 2.dp),
-            )
+            if (onReplyClick != null) {
+                Text(
+                    text = stringResource(R.string.comments_reply),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .clickable(onClick = onReplyClick)
+                        .padding(vertical = 2.dp),
+                )
+            }
         }
 
         // Reply Like
-        if (onLikeClick != null) Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .clickable(onClick = onLikeClick)
-                .padding(4.dp),
-        ) {
-            Icon(
-                painter = painterResource(
-                    if (reply.isLiked) R.drawable.ic_heart_filled else R.drawable.ic_heart_outline
-                ),
-                contentDescription = stringResource(
-                    if (reply.isLiked) R.string.comments_unlike else R.string.comments_like
-                ),
-                tint = if (reply.isLiked) Color(0xFFE91E63) else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(14.dp),
-            )
-            if (reply.likesCount > 0) {
-                Text(
-                    text = reply.likesCount.toString(),
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        if (onLikeClick != null) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .clickable(onClick = onLikeClick)
+                    .padding(4.dp),
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (reply.isLiked) R.drawable.ic_heart_filled else R.drawable.ic_heart_outline,
+                    ),
+                    contentDescription = stringResource(
+                        if (reply.isLiked) R.string.comments_unlike else R.string.comments_like,
+                    ),
+                    tint = if (reply.isLiked) Color(0xFFE91E63) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(14.dp),
                 )
+                if (reply.likesCount > 0) {
+                    Text(
+                        text = reply.likesCount.toString(),
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }

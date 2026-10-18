@@ -40,15 +40,19 @@ fun Task.presentation(context: Context): TaskPresentation {
         },
         timing = when (data.timingMode) {
             PostTaskTimingMode.ASAP -> context.getString(R.string.post_task_asap)
+
             PostTaskTimingMode.DATE -> data.selectedDateMillis?.let {
                 formatTaskDate(it, context.resources.configuration.locales[0])
             }.orEmpty()
+
             PostTaskTimingMode.FLEXIBLE -> context.getString(R.string.post_task_flexible)
         },
         requirements = requirements + buildList {
             data.itemDetails?.quantityOrMeasurements?.let { add(context.getString(R.string.task_public_quantity, it)) }
             data.itemDetails?.brandOrModel?.let { add(context.getString(R.string.task_public_brand, it)) }
-            data.itemDetails?.materialsPolicy?.let { add(context.getString(R.string.task_public_materials, context.getString(it.labelRes))) }
+            data.itemDetails?.materialsPolicy?.let {
+                add(context.getString(R.string.task_public_materials, context.getString(it.labelRes)))
+            }
         },
         posted = context.getString(R.string.task_just_posted),
     )

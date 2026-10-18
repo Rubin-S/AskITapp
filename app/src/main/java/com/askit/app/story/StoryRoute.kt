@@ -98,6 +98,7 @@ fun StoryRoute(
                 onMediaReady = viewModel::onGalleryMediaSelected,
             )
         }
+
         StoryScreenMode.CreateText -> {
             StoryCreateCanvas(
                 viewModel = viewModel,
@@ -107,6 +108,7 @@ fun StoryRoute(
                 onConfirm = viewModel::confirmCreateText,
             )
         }
+
         StoryScreenMode.Editor -> {
             StoryEditorScreen(
                 viewModel = viewModel,
@@ -120,7 +122,9 @@ fun StoryRoute(
                         val granted = !storyDownloadNeedsLegacyPermission(Build.VERSION.SDK_INT) ||
                             ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
                             PackageManager.PERMISSION_GRANTED
-                        if (granted) download(pending) else {
+                        if (granted) {
+                            download(pending)
+                        } else {
                             pendingDownload = pending
                             storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         }
@@ -150,7 +154,11 @@ fun StoryRoute(
                     viewModel.startNewDraft()
                     onBack()
                 } else if (draft != null) {
-                    android.widget.Toast.makeText(context, com.askit.app.R.string.story_action_sign_in, android.widget.Toast.LENGTH_SHORT).show()
+                    android.widget.Toast.makeText(
+                        context,
+                        com.askit.app.R.string.story_action_sign_in,
+                        android.widget.Toast.LENGTH_SHORT,
+                    ).show()
                 }
             },
         )
@@ -192,9 +200,14 @@ private suspend fun copyMediaToGallery(context: android.content.Context, uri: Ur
         val mimeType = storyGalleryMimeType(runCatching { resolver.getType(uri) }.getOrNull(), mediaType)
         val isVideo = mimeType.startsWith("video")
         val collection = when {
-            isVideo && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            isVideo && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> MediaStore.Video.Media.getContentUri(
+                MediaStore.VOLUME_EXTERNAL_PRIMARY,
+            )
+
             isVideo -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+
             else -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         }
         val values = ContentValues().apply {
@@ -210,7 +223,10 @@ private suspend fun copyMediaToGallery(context: android.content.Context, uri: Ur
             val inserted = resolver.insert(collection, values) ?: return@withContext false
             dest = inserted
             val copied = resolver.openInputStream(uri)?.use { input ->
-                resolver.openOutputStream(inserted)?.use { output -> input.copyTo(output); true }
+                resolver.openOutputStream(inserted)?.use { output ->
+                    input.copyTo(output)
+                    true
+                }
             } ?: false
             if (!copied) error("Story media unavailable")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

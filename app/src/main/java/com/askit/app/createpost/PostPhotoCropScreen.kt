@@ -3,11 +3,11 @@ package com.askit.app.createpost
 import android.graphics.Bitmap
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.core.graphics.withSave
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -25,30 +24,33 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.withSave
 import com.askit.app.R
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun PostPhotoCropScreen(
-    session: PostCropSession,
-    onCancel: () -> Unit,
-    onCropped: (PostMediaDraft) -> Unit,
-) {
+internal fun PostPhotoCropScreen(session: PostCropSession, onCancel: () -> Unit, onCropped: (PostMediaDraft) -> Unit) {
     val context = LocalContext.current.applicationContext
     val scope = rememberCoroutineScope()
     var attempt by remember { mutableIntStateOf(0) }
     val loaded by produceState<Result<Bitmap>?>(null, session.source, attempt) {
         value = null
         value = withContext(Dispatchers.IO) {
-            try { Result.success(loadCropBitmap(context, session.source)) }
-            catch (e: CancellationException) { throw e }
-            catch (e: Exception) { Result.failure(e) }
+            try {
+                Result.success(loadCropBitmap(context, session.source))
+            } catch (
+                e: CancellationException,
+            ) {
+                throw e
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
     }
     var ratioName by rememberSaveable(session.source) { mutableStateOf((session.ratio ?: PostPhotoRatio.LANDSCAPE).name) }
@@ -59,7 +61,11 @@ internal fun PostPhotoCropScreen(
     var saving by remember { mutableStateOf(false) }
     var saveFailed by remember { mutableStateOf(false) }
     val bitmap = loaded?.getOrNull()
-    fun reset() { zoom = 1f; centerX = 0.5f; centerY = 0.5f }
+    fun reset() {
+        zoom = 1f
+        centerX = 0.5f
+        centerY = 0.5f
+    }
     fun shift(dx: Float, dy: Float): Boolean {
         if (saving || bitmap == null) return false
         val window = cropWindow(bitmap, ratio, zoom, centerX + dx, centerY + dy)
@@ -78,7 +84,11 @@ internal fun PostPhotoCropScreen(
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
             val availableCropHeight = (maxHeight * 0.6f).coerceIn(160.dp, 520.dp)
             Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
                     TextButton(onClick = onCancel, enabled = !saving) { Text(stringResource(R.string.post_crop_cancel)) }
                     Spacer(Modifier.weight(1f))
                     Button(
@@ -98,29 +108,74 @@ internal fun PostPhotoCropScreen(
                                     coroutineContext.ensureActive()
                                     onCropped(requireNotNull(output))
                                     delivered = true
-                                } catch (e: CancellationException) { throw e }
-                                catch (e: Exception) { saveFailed = true }
-                                finally { if (!delivered) output?.let(::deletePendingCrop); saving = false }
+                                } catch (
+                                    e: CancellationException,
+                                ) {
+                                    throw e
+                                } catch (
+                                    e: Exception,
+                                ) {
+                                    saveFailed = true
+                                } finally {
+                                    if (!delivered) output?.let(::deletePendingCrop)
+                                    saving = false
+                                }
                             }
                         },
-                    ) { Text(stringResource(if (session.completed.size == session.sources.lastIndex) R.string.post_crop_done else R.string.post_crop_next)) }
+                    ) {
+                        Text(
+                            stringResource(
+                                if (session.completed.size ==
+                                    session.sources.lastIndex
+                                ) {
+                                    R.string.post_crop_done
+                                } else {
+                                    R.string.post_crop_next
+                                },
+                            ),
+                        )
+                    }
                 }
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(
+                    Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
                     Text(stringResource(R.string.post_crop_title), style = MaterialTheme.typography.titleMedium)
-                    Text(stringResource(R.string.post_crop_position, session.completed.size + 1, session.sources.size), style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        stringResource(R.string.post_crop_position, session.completed.size + 1, session.sources.size),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
                     Text(instructions, style = MaterialTheme.typography.bodyMedium)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         PostPhotoRatio.entries.forEach { choice ->
                             FilterChip(
                                 selected = choice == ratio,
                                 enabled = !saving && (session.ratio == null || session.ratio == choice),
-                                onClick = { ratioName = choice.name; reset() },
-                                label = { Text(stringResource(if (choice == PostPhotoRatio.LANDSCAPE) R.string.post_crop_landscape else R.string.post_crop_portrait)) },
+                                onClick = {
+                                    ratioName = choice.name
+                                    reset()
+                                },
+                                label = {
+                                    Text(
+                                        stringResource(
+                                            if (choice ==
+                                                PostPhotoRatio.LANDSCAPE
+                                            ) {
+                                                R.string.post_crop_landscape
+                                            } else {
+                                                R.string.post_crop_portrait
+                                            },
+                                        ),
+                                    )
+                                },
                             )
                         }
                     }
-                    if (session.ratio != null) Text(stringResource(R.string.post_crop_ratio_locked), style = MaterialTheme.typography.bodySmall)
+                    if (session.ratio !=
+                        null
+                    ) {
+                        Text(stringResource(R.string.post_crop_ratio_locked), style = MaterialTheme.typography.bodySmall)
+                    }
                     BoxWithConstraints(Modifier.height(availableCropHeight).fillMaxWidth(), contentAlignment = Alignment.Center) {
                         if (bitmap != null) {
                             val frameWidth = minOf(maxWidth, maxHeight * ratio.value)
@@ -137,14 +192,22 @@ internal fun PostPhotoCropScreen(
                                         )
                                     }
                                     .pointerInput(bitmap, ratio, saving) {
-                                        if (!saving) detectTransformGestures { _, pan, scale, _ ->
-                                            val previous = cropWindow(bitmap, ratio, zoom, centerX, centerY)
-                                            zoom = (zoom * scale).coerceIn(1f, 6f)
-                                            val next = cropWindow(bitmap, ratio, zoom,
-                                                (previous.left + previous.width / 2 - pan.x * previous.width / size.width) / bitmap.width,
-                                                (previous.top + previous.height / 2 - pan.y * previous.height / size.height) / bitmap.height)
-                                            centerX = (next.left + next.width / 2) / bitmap.width
-                                            centerY = (next.top + next.height / 2) / bitmap.height
+                                        if (!saving) {
+                                            detectTransformGestures { _, pan, scale, _ ->
+                                                val previous = cropWindow(bitmap, ratio, zoom, centerX, centerY)
+                                                zoom = (zoom * scale).coerceIn(1f, 6f)
+                                                val next = cropWindow(
+                                                    bitmap,
+                                                    ratio,
+                                                    zoom,
+                                                    (previous.left + previous.width / 2 - pan.x * previous.width / size.width) /
+                                                        bitmap.width,
+                                                    (previous.top + previous.height / 2 - pan.y * previous.height / size.height) /
+                                                        bitmap.height,
+                                                )
+                                                centerX = (next.left + next.width / 2) / bitmap.width
+                                                centerY = (next.top + next.height / 2) / bitmap.height
+                                            }
                                         }
                                     },
                             ) {
@@ -156,8 +219,21 @@ internal fun PostPhotoCropScreen(
                                     drawBitmap(bitmap, 0f, 0f, android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG))
                                 }
                                 for (i in 1..2) {
-                                    drawLine(Color.White.copy(alpha = 0.5f), Offset(size.width * i / 3, 0f), Offset(size.width * i / 3, size.height), 1.dp.toPx())
-                                    drawLine(Color.White.copy(alpha = 0.5f), Offset(0f, size.height * i / 3), Offset(size.width, size.height * i / 3), 1.dp.toPx())
+                                    drawLine(
+                                        Color.White.copy(alpha = 0.5f),
+                                        Offset(size.width * i / 3, 0f),
+                                        Offset(size.width * i / 3, size.height),
+                                        1.dp.toPx(),
+                                    )
+                                    drawLine(
+                                        Color.White.copy(alpha = 0.5f),
+                                        Offset(0f, size.height * i / 3),
+                                        Offset(
+                                            size.width,
+                                            size.height * i / 3,
+                                        ),
+                                        1.dp.toPx(),
+                                    )
                                 }
                             }
                         } else if (loaded == null) {
@@ -174,8 +250,13 @@ internal fun PostPhotoCropScreen(
                 if (saving) LinearProgressIndicator(Modifier.fillMaxWidth())
                 Text(stringResource(R.string.post_crop_zoom), style = MaterialTheme.typography.labelLarge)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Slider(value = zoom, onValueChange = { zoom = it }, valueRange = 1f..6f,
-                        enabled = bitmap != null && !saving, modifier = Modifier.weight(1f).padding(horizontal = 10.dp))
+                    Slider(
+                        value = zoom,
+                        onValueChange = { zoom = it },
+                        valueRange = 1f..6f,
+                        enabled = bitmap != null && !saving,
+                        modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
+                    )
                     TextButton(onClick = { reset() }, enabled = !saving) { Text(stringResource(R.string.post_crop_reset)) }
                 }
             }

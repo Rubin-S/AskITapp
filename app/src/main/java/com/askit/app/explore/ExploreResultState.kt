@@ -30,13 +30,9 @@ sealed interface ExploreResultState {
         val status: ContentStatus? = null,
     ) : ExploreResultState
 
-    data class Empty(
-        val reason: EmptyReason,
-    ) : ExploreResultState
+    data class Empty(val reason: EmptyReason) : ExploreResultState
 
-    data class Failure(
-        val reason: FailureReason,
-    ) : ExploreResultState
+    data class Failure(val reason: FailureReason) : ExploreResultState
 
     enum class EmptyReason {
         Query,
@@ -53,9 +49,7 @@ sealed interface ExploreResultState {
 
         data object OfflineCached : ContentStatus
 
-        data class PartialFailure(
-            val source: Source,
-        ) : ContentStatus
+        data class PartialFailure(val source: Source) : ContentStatus
     }
 
     sealed interface FailureReason {
@@ -63,9 +57,7 @@ sealed interface ExploreResultState {
 
         data object Offline : FailureReason
 
-        data class SourceUnavailable(
-            val source: Source,
-        ) : FailureReason
+        data class SourceUnavailable(val source: Source) : FailureReason
     }
 }
 
@@ -113,6 +105,7 @@ internal fun normalizeExploreResultState(
         }
 
         ExploreResultScope.Tasks -> state.tasks
+
         ExploreResultScope.People,
         ExploreResultScope.Services,
         -> emptyList()
@@ -148,15 +141,14 @@ internal fun normalizeExploreResultState(
     )
 }
 
-internal fun normalizeExploreContentStatus(
-    statuses: Iterable<ExploreResultState.ContentStatus>,
-): ExploreResultState.ContentStatus? = statuses.minByOrNull { status ->
-    when (status) {
-        is ExploreResultState.ContentStatus.PartialFailure -> 0
-        ExploreResultState.ContentStatus.OfflineCached -> 1
-        ExploreResultState.ContentStatus.Stale -> 2
+internal fun normalizeExploreContentStatus(statuses: Iterable<ExploreResultState.ContentStatus>): ExploreResultState.ContentStatus? =
+    statuses.minByOrNull { status ->
+        when (status) {
+            is ExploreResultState.ContentStatus.PartialFailure -> 0
+            ExploreResultState.ContentStatus.OfflineCached -> 1
+            ExploreResultState.ContentStatus.Stale -> 2
+        }
     }
-}
 
 private fun requiredSourceFor(scope: ExploreResultScope): ExploreResultState.Source? = when (scope) {
     ExploreResultScope.People,
@@ -164,5 +156,6 @@ private fun requiredSourceFor(scope: ExploreResultScope): ExploreResultState.Sou
     -> ExploreResultState.Source.PeopleAndServices
 
     ExploreResultScope.Tasks -> ExploreResultState.Source.Tasks
+
     ExploreResultScope.All -> null
 }

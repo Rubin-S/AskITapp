@@ -5,10 +5,10 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 
 /**
@@ -23,11 +23,7 @@ import androidx.compose.runtime.setValue
 private const val STORY_ITEM_DURATION_MS = 5_000
 
 @Composable
-fun rememberStoryItemProgress(
-    restartKey: String,
-    paused: Boolean,
-    onFinished: () -> Unit,
-): () -> Float {
+fun rememberStoryItemProgress(restartKey: String, paused: Boolean, onFinished: () -> Unit): () -> Float {
     val progress = remember(restartKey) { Animatable(0f) }
     var finished by remember(restartKey) { mutableStateOf(false) }
     val currentOnFinished by rememberUpdatedState(onFinished)

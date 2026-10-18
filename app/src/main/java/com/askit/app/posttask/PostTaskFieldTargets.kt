@@ -31,23 +31,32 @@ internal class PostTaskFieldTargets {
     suspend fun reveal(field: PostTaskValidationField) {
         when (field) {
             PostTaskValidationField.CATEGORY -> category.bringIntoView()
+
             PostTaskValidationField.TITLE -> {
                 title.bringIntoView()
                 focusAfterFrame(titleFocus)
             }
+
             PostTaskValidationField.DETAILS -> {
                 details.bringIntoView()
                 focusAfterFrame(detailsFocus)
             }
+
             PostTaskValidationField.WORK_MODE -> workMode.bringIntoView()
+
             PostTaskValidationField.LOCATION -> location.bringIntoView()
+
             PostTaskValidationField.TIMING -> timing.bringIntoView()
+
             PostTaskValidationField.DATE -> date.bringIntoView()
+
             PostTaskValidationField.AGE_PREFERENCE -> preferences.bringIntoView()
+
             PostTaskValidationField.FIXED_BUDGET -> {
                 fixedBudget.bringIntoView()
                 focusAfterFrame(fixedBudgetFocus)
             }
+
             PostTaskValidationField.BUDGET_RANGE -> {
                 rangeBudget.bringIntoView()
                 focusAfterFrame(minimumBudgetFocus)

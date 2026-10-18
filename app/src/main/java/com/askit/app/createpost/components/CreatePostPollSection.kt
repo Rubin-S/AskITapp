@@ -17,7 +17,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,10 +41,11 @@ import com.askit.app.createpost.PollOptionError
 import com.askit.app.createpost.PostPollClosingRule
 import com.askit.app.createpost.PostPollDraft
 import com.askit.app.createpost.PostValidationField
-import com.askit.designsystem.R as DesignR
+import com.askit.designsystem.inputs.AskITTextField
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
+import com.askit.designsystem.R as DesignR
 
 @Composable
 fun CreatePostPollSection(
@@ -273,10 +273,10 @@ fun CreatePostPollSection(
 @Composable
 fun pollClosingSummary(content: PostPollDraft): String = when (content.closingRule) {
     PostPollClosingRule.AFTER_24_HOURS -> stringResource(R.string.create_post_closes_24_hours)
+
     PostPollClosingRule.CUSTOM_DATE -> content.closingAtMillis?.let { millis ->
         stringResource(R.string.create_post_closes_on, formatDate(millis))
     } ?: stringResource(R.string.create_post_closes_24_hours)
 }
 
-private fun formatDate(millis: Long): String =
-    DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).format(Date(millis))
+private fun formatDate(millis: Long): String = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).format(Date(millis))

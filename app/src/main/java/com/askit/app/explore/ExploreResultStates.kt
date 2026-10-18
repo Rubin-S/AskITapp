@@ -12,14 +12,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.InputChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -36,8 +36,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -165,10 +165,7 @@ private fun ExploreResultStateCard(
 }
 
 @Composable
-internal fun ExploreEmptyResultBody(
-    reason: ExploreResultState.EmptyReason,
-    onEditFilters: () -> Unit,
-) {
+internal fun ExploreEmptyResultBody(reason: ExploreResultState.EmptyReason, onEditFilters: () -> Unit) {
     val isFiltered = reason == ExploreResultState.EmptyReason.Filters
     ExploreResultStateCard(
         testTag = "explore_result_empty",
@@ -194,10 +191,7 @@ internal fun ExploreEmptyResultBody(
 }
 
 @Composable
-internal fun ExploreFailureResultBody(
-    reason: ExploreResultState.FailureReason,
-    onRetryResults: (() -> Unit)?,
-) {
+internal fun ExploreFailureResultBody(reason: ExploreResultState.FailureReason, onRetryResults: (() -> Unit)?) {
     val copy = when (reason) {
         ExploreResultState.FailureReason.General -> {
             ExploreResultStateCopy(
@@ -266,14 +260,12 @@ internal fun ExploreFailureResultBody(
 }
 
 @Composable
-internal fun ExploreResultStatus(
-    status: ExploreResultState.ContentStatus,
-    actionEnabled: Boolean,
-    onAction: (() -> Unit)?,
-) {
+internal fun ExploreResultStatus(status: ExploreResultState.ContentStatus, actionEnabled: Boolean, onAction: (() -> Unit)?) {
     val messageRes = when (status) {
         ExploreResultState.ContentStatus.Stale -> R.string.explore_status_stale
+
         ExploreResultState.ContentStatus.OfflineCached -> R.string.explore_status_offline_cached
+
         is ExploreResultState.ContentStatus.PartialFailure -> when (status.source) {
             ExploreResultState.Source.PeopleAndServices -> {
                 R.string.explore_status_people_services_partial_failure
@@ -319,10 +311,7 @@ internal fun ExploreResultStatus(
 }
 
 @Composable
-internal fun AppliedFilterChips(
-    options: List<ExploreFilterOption>,
-    onFilterRemoved: (ExploreFilterOption) -> Unit,
-) {
+internal fun AppliedFilterChips(options: List<ExploreFilterOption>, onFilterRemoved: (ExploreFilterOption) -> Unit) {
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()

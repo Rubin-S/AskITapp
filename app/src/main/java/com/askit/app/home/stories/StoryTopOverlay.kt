@@ -7,17 +7,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.displayCutoutPadding
-import androidx.compose.material3.TextButton
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -140,15 +140,25 @@ fun StoryTopOverlay(
             }
         }
         if (!isOwnStory && showActions) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End,
+            ) {
                 if (showFollow) {
                     TextButton(onClick = onFollow, enabled = canFollow) {
-                        Text(stringResource(com.askit.app.R.string.story_follow), color = Color.White.copy(alpha = if (canFollow) 1f else 0.4f))
+                        Text(
+                            stringResource(com.askit.app.R.string.story_follow),
+                            color = Color.White.copy(alpha = if (canFollow) 1f else 0.4f),
+                        )
                     }
                 }
                 IconButton(onClick = onMore) {
-                    Icon(painterResource(R.drawable.ic_more_horiz), stringResource(com.askit.app.R.string.story_actions_title), tint = Color.White)
+                    Icon(
+                        painterResource(R.drawable.ic_more_horiz),
+                        stringResource(com.askit.app.R.string.story_actions_title),
+                        tint = Color.White,
+                    )
                 }
             }
         }

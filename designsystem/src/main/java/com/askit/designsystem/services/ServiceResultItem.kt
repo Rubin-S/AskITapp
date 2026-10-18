@@ -1,11 +1,11 @@
 package com.askit.designsystem.services
 
-import com.askit.designsystem.listings.ListingBriefCard
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.askit.designsystem.R
+import com.askit.designsystem.listings.ListingBriefCard
 
 /**
  * The single customer-facing service result representation.

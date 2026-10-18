@@ -12,12 +12,7 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ChipRow(
-    chips: List<String>,
-    modifier: Modifier = Modifier,
-    addLabel: String? = null,
-    onAdd: (() -> Unit)? = null,
-) {
+fun ChipRow(chips: List<String>, modifier: Modifier = Modifier, addLabel: String? = null, onAdd: (() -> Unit)? = null) {
     FlowRow(
         modifier = modifier.testTag("profile_chips"),
         horizontalArrangement = Arrangement.spacedBy(8.dp),

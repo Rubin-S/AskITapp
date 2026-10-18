@@ -8,8 +8,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 /** Every translatable English string has a Tamil one and vice versa, in main and in demo. */
 class StringResourceParityTest {
-    private fun moduleFile(path: String): File =
-        listOf(File(path), File("app", path)).firstOrNull(File::exists) ?: error("Missing $path")
+    private fun moduleFile(path: String): File = listOf(File(path), File("app", path)).firstOrNull(File::exists) ?: error("Missing $path")
 
     private fun translatableKeys(path: String): Set<String> {
         val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(moduleFile(path))

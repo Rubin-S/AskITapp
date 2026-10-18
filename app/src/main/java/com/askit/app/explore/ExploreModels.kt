@@ -1,8 +1,8 @@
 package com.askit.app.explore
 
 import androidx.annotation.StringRes
-import com.askit.app.category.ASKIT_SERVICE_CATEGORIES
 import com.askit.app.R
+import com.askit.app.category.ASKIT_SERVICE_CATEGORIES
 import com.askit.designsystem.tasks.TaskResultStatus
 
 internal val EXPLORE_CATEGORIES = ASKIT_SERVICE_CATEGORIES
@@ -59,14 +59,6 @@ data class ExploreTaskResult(
     val sourceTask: com.askit.app.task.Task? = null,
 )
 
-internal data class ExplorePersonRenderRow(
-    val result: ExplorePersonResult,
-    val stableId: String,
-    val uiKey: String,
-)
+internal data class ExplorePersonRenderRow(val result: ExplorePersonResult, val stableId: String, val uiKey: String)
 
-internal data class ExploreTaskRenderRow(
-    val result: ExploreTaskResult,
-    val stableId: String,
-    val uiKey: String,
-)
+internal data class ExploreTaskRenderRow(val result: ExploreTaskResult, val stableId: String, val uiKey: String)

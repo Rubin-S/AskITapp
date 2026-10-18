@@ -36,20 +36,10 @@ enum class JobCardBadgeTone {
 
 sealed interface JobCardActions {
     data object None : JobCardActions
-    data class Incoming(
-        val acceptLabel: String,
-        val declineLabel: String,
-        val onAccept: () -> Unit,
-        val onDecline: () -> Unit,
-    ) : JobCardActions
-    data class OutgoingPending(
-        val cancelLabel: String,
-        val onCancel: () -> Unit,
-    ) : JobCardActions
-    data class Track(
-        val trackLabel: String,
-        val onTrack: () -> Unit,
-    ) : JobCardActions
+    data class Incoming(val acceptLabel: String, val declineLabel: String, val onAccept: () -> Unit, val onDecline: () -> Unit) :
+        JobCardActions
+    data class OutgoingPending(val cancelLabel: String, val onCancel: () -> Unit) : JobCardActions
+    data class Track(val trackLabel: String, val onTrack: () -> Unit) : JobCardActions
 }
 
 @Composable
@@ -149,12 +139,17 @@ private fun InitialsAvatar(name: String) {
 @Composable
 private fun StatusBadge(label: String, tone: JobCardBadgeTone) {
     val (container, content) = when (tone) {
-        JobCardBadgeTone.New -> MaterialTheme.colorScheme.primaryContainer to
-            MaterialTheme.colorScheme.onPrimaryContainer
-        JobCardBadgeTone.Live -> MaterialTheme.colorScheme.secondaryContainer to
-            MaterialTheme.colorScheme.onSecondaryContainer
-        JobCardBadgeTone.Neutral -> MaterialTheme.colorScheme.surfaceContainerHighest to
-            MaterialTheme.colorScheme.onSurface
+        JobCardBadgeTone.New ->
+            MaterialTheme.colorScheme.primaryContainer to
+                MaterialTheme.colorScheme.onPrimaryContainer
+
+        JobCardBadgeTone.Live ->
+            MaterialTheme.colorScheme.secondaryContainer to
+                MaterialTheme.colorScheme.onSecondaryContainer
+
+        JobCardBadgeTone.Neutral ->
+            MaterialTheme.colorScheme.surfaceContainerHighest to
+                MaterialTheme.colorScheme.onSurface
     }
     Surface(
         shape = RoundedCornerShape(8.dp),
@@ -175,6 +170,7 @@ private fun StatusBadge(label: String, tone: JobCardBadgeTone) {
 private fun CardActions(actions: JobCardActions) {
     when (actions) {
         JobCardActions.None -> Unit
+
         is JobCardActions.Incoming -> Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -193,12 +189,14 @@ private fun CardActions(actions: JobCardActions) {
                     .testTag("job_card_decline"),
             ) { Text(actions.declineLabel) }
         }
+
         is JobCardActions.OutgoingPending -> AskITSecondaryButton(
             onClick = actions.onCancel,
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("job_card_cancel"),
         ) { Text(actions.cancelLabel) }
+
         is JobCardActions.Track -> Button(
             onClick = actions.onTrack,
             modifier = Modifier

@@ -29,8 +29,14 @@ class JobStartCodeTest {
 
     @Test fun storeStartsTheJobOnlyWithTheRightCodeBeforeLockout() {
         val job = Job(
-            id = "job-1", title = "Fix wiring", counterpartName = "Priya", kind = JobKind.ServiceRequest,
-            localParty = JobParty.Receiver, status = JobStatus.OnTheWay, workMode = JobWorkMode.OnSite, otp = "4821",
+            id = "job-1",
+            title = "Fix wiring",
+            counterpartName = "Priya",
+            kind = JobKind.ServiceRequest,
+            localParty = JobParty.Receiver,
+            status = JobStatus.OnTheWay,
+            workMode = JobWorkMode.OnSite,
+            otp = "4821",
         )
         val locked = JobsStore(SessionProfileStore(), clock = { 42L }, initialJobs = listOf(job))
         repeat(5) { locked.verifyStartCode("job-1", "1111") }

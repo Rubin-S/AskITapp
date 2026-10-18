@@ -8,8 +8,10 @@ import java.util.UUID
 
 data class StoryAuthor(val id: String, val name: String, val avatarUrl: String?)
 enum class StoryReportReason(val labelRes: Int) {
-    SPAM(R.string.story_report_spam), INAPPROPRIATE(R.string.story_report_inappropriate),
-    MISLEADING(R.string.story_report_misleading), OTHER(R.string.story_report_other),
+    SPAM(R.string.story_report_spam),
+    INAPPROPRIATE(R.string.story_report_inappropriate),
+    MISLEADING(R.string.story_report_misleading),
+    OTHER(R.string.story_report_other),
 }
 data class StoryReport(val reason: StoryReportReason, val createdAtMillis: Long)
 data class StorySocialState(
@@ -21,8 +23,10 @@ data class StorySocialState(
     val likedStoryIds: Set<String> = emptySet(),
 )
 enum class StoryActionFailure(val messageRes: Int) {
-    SIGN_IN(R.string.story_action_sign_in), UNAVAILABLE(R.string.story_action_unavailable),
-    NOT_ALLOWED(R.string.story_action_not_allowed), ALREADY_REPORTED(R.string.story_report_duplicate),
+    SIGN_IN(R.string.story_action_sign_in),
+    UNAVAILABLE(R.string.story_action_unavailable),
+    NOT_ALLOWED(R.string.story_action_not_allowed),
+    ALREADY_REPORTED(R.string.story_report_duplicate),
 }
 sealed interface StoryActionResult {
     data object Success : StoryActionResult
@@ -36,7 +40,9 @@ class StorySocialStore(
     initialRelationships: Map<String, Set<String>> = emptyMap(),
     private val persistRelationships: (Map<String, Set<String>>) -> Unit = {},
 ) {
-    private val accounts = initialRelationships.mapValues { (id, following) -> StorySocialState(accountId = id, following = following) }.toMutableMap()
+    private val accounts = initialRelationships.mapValues { (id, following) ->
+        StorySocialState(accountId = id, following = following)
+    }.toMutableMap()
     private val mutableRelationships = MutableStateFlow(initialRelationships)
     val relationships = mutableRelationships.asStateFlow()
     fun followingIds(id: String): Set<String> = accounts[id]?.following.orEmpty()
@@ -53,9 +59,8 @@ class StorySocialStore(
         mutableFeedback.value = null
     }
 
-    fun canAct(accountId: String?, authorId: String?): Boolean =
-        !accountId.isNullOrBlank() && accountId == state.value.accountId &&
-            !authorId.isNullOrBlank() && authorId != accountId
+    fun canAct(accountId: String?, authorId: String?): Boolean = !accountId.isNullOrBlank() && accountId == state.value.accountId &&
+        !authorId.isNullOrBlank() && authorId != accountId
 
     fun setFollowing(accountId: String?, authorId: String?, following: Boolean): StoryActionResult {
         guard(accountId, authorId)?.let { return it }
@@ -106,13 +111,22 @@ class StorySocialStore(
         if (accountId.isNullOrBlank() || accountId != state.value.accountId || accountId != undo.accountId) {
             return StoryActionResult.Rejected(StoryActionFailure.SIGN_IN)
         }
-        commit(if (undo.isMute) state.value.copy(muted = state.value.muted - undo.targetId)
-            else state.value.copy(hiddenStoryIds = state.value.hiddenStoryIds - undo.targetId))
+        commit(
+            if (undo.isMute) {
+                state.value.copy(muted = state.value.muted - undo.targetId)
+            } else {
+                state.value.copy(hiddenStoryIds = state.value.hiddenStoryIds - undo.targetId)
+            },
+        )
         return StoryActionResult.Success
     }
 
-    fun notify(messageRes: Int, undo: StoryUndo? = null) { mutableFeedback.value = StoryFeedback(messageRes, undo) }
-    fun consumeFeedback(id: String) { if (mutableFeedback.value?.id == id) mutableFeedback.value = null }
+    fun notify(messageRes: Int, undo: StoryUndo? = null) {
+        mutableFeedback.value = StoryFeedback(messageRes, undo)
+    }
+    fun consumeFeedback(id: String) {
+        if (mutableFeedback.value?.id == id) mutableFeedback.value = null
+    }
 
     fun isCurrentAccount(accountId: String?) = !accountId.isNullOrBlank() && accountId == state.value.accountId
 

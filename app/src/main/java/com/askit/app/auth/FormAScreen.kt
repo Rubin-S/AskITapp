@@ -1,7 +1,5 @@
 package com.askit.app.auth
 
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -35,16 +33,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -64,6 +63,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import com.askit.app.R
 import com.askit.app.media.persistPhotoPickerReadAccess
 import com.askit.designsystem.components.AskITPrimaryButton
+import com.askit.designsystem.inputs.AskITTextField
 import com.askit.designsystem.profile.ProfileAvatar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -265,7 +265,9 @@ fun FormAScreen(
                 ProfileAvatar(
                     avatarUrl = avatarUri,
                     cameraContentDescription = stringResource(R.string.form_a_add_photo),
-                    onCamera = if (isSubmitting) null else {
+                    onCamera = if (isSubmitting) {
+                        null
+                    } else {
                         {
                             photoPickerLauncher.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
@@ -411,9 +413,14 @@ fun FormAScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             AccountFormFields(draft, onChange = { updated ->
-                fullName = updated.fullName; username = updated.username; email = updated.email.orEmpty()
-                city = updated.city; pincode = updated.pincode; preferredLanguage = updated.preferredLanguage
-                editablePhone = updated.phoneNumber; isLocationDetected = false
+                fullName = updated.fullName
+                username = updated.username
+                email = updated.email.orEmpty()
+                city = updated.city
+                pincode = updated.pincode
+                preferredLanguage = updated.preferredLanguage
+                editablePhone = updated.phoneNumber
+                isLocationDetected = false
             }, enabled = !isSubmitting, tag = "form_a_input")
 
             if (!com.askit.app.BuildConfig.CLIENT_PREVIEW && editablePhone != phoneNumber) {

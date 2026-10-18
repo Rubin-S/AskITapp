@@ -1,10 +1,10 @@
 package com.askit.app.story.editor
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -21,11 +21,7 @@ import kotlin.math.roundToInt
 
 /** Keeps the authored pixel coordinates and typography together when fitting another screen. */
 @Composable
-internal fun StoryFrame(
-    viewport: StoryViewport?,
-    modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit,
-) {
+internal fun StoryFrame(viewport: StoryViewport?, modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     val density = viewport?.let { Density(it.density, it.fontScale) } ?: LocalDensity.current
     CompositionLocalProvider(LocalDensity provides density) {
         Layout(
@@ -54,13 +50,9 @@ internal fun StoryFrame(
     }
 }
 
-
 // One portrait template, fitted within available safe bounds rather than stretched to the screen.
 @Composable
-internal fun StoryStage(
-    modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit,
-) {
+internal fun StoryStage(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     BoxWithConstraints(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         val width = minOf(maxWidth, maxHeight * (9f / 16f))
         Box(

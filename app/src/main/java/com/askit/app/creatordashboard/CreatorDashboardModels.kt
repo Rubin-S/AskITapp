@@ -29,10 +29,7 @@ data class CreatorMetricItem(
 )
 
 @Immutable
-data class CreatorCategoryMetrics(
-    val discovery: List<CreatorMetricItem>,
-    val community: List<CreatorMetricItem>,
-)
+data class CreatorCategoryMetrics(val discovery: List<CreatorMetricItem>, val community: List<CreatorMetricItem>)
 
 @Immutable
 data class HeroKpiSummary(

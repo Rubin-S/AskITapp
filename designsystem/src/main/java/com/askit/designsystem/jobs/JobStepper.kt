@@ -34,17 +34,10 @@ enum class JobStepState {
     Upcoming,
 }
 
-data class JobStepperItem(
-    val label: String,
-    val state: JobStepState,
-)
+data class JobStepperItem(val label: String, val state: JobStepState)
 
 @Composable
-fun JobStepper(
-    steps: List<JobStepperItem>,
-    stepOfDescription: String,
-    modifier: Modifier = Modifier,
-) {
+fun JobStepper(steps: List<JobStepperItem>, stepOfDescription: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -115,6 +108,7 @@ private fun StepNode(state: JobStepState) {
                 modifier = Modifier.size(16.dp),
             )
         }
+
         JobStepState.Current -> Box(
             modifier = Modifier
                 .size(24.dp)
@@ -129,6 +123,7 @@ private fun StepNode(state: JobStepState) {
                 modifier = Modifier.size(16.dp),
             )
         }
+
         JobStepState.Upcoming -> Box(
             modifier = Modifier
                 .size(24.dp)

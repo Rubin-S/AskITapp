@@ -25,16 +25,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.jobs.Job
-import com.askit.designsystem.R as DsR
 import com.askit.designsystem.jobs.OtpBoxes
+import com.askit.designsystem.R as DsR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JobVerifyShare(
-    job: Job,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun JobVerifyShare(job: Job, onBack: () -> Unit, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {

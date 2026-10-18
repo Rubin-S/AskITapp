@@ -44,10 +44,14 @@ internal fun sampleIncomingLeads(): List<Job> = listOf(
 
 /** Two demo jobs that let preview reviewers exercise start-code entry and review. */
 internal fun clientPreviewJobs(): List<Job> = listOf(
-    Job("preview-verify", "Demo: start an electrical repair", "Priya", kind = JobKind.ServiceRequest,
+    Job(
+        "preview-verify", "Demo: start an electrical repair", "Priya", kind = JobKind.ServiceRequest,
         localParty = JobParty.Receiver, status = JobStatus.OnTheWay, workMode = JobWorkMode.OnSite,
-        locationLabel = "Coimbatore", otp = "1234", providerAccountId = "preview-owner", seekerAccountId = "preview-visitor"),
-    Job("preview-review", "Demo: completed lighting installation", "Karthik", kind = JobKind.ServiceRequest,
+        locationLabel = "Coimbatore", otp = "1234", providerAccountId = "preview-owner", seekerAccountId = "preview-visitor",
+    ),
+    Job(
+        "preview-review", "Demo: completed lighting installation", "Karthik", kind = JobKind.ServiceRequest,
         localParty = JobParty.Applicant, status = JobStatus.AwaitingSeekerComplete, workMode = JobWorkMode.OnSite,
-        locationLabel = "Coimbatore", otp = "1234", providerAccountId = "preview-visitor", seekerAccountId = "preview-owner"),
+        locationLabel = "Coimbatore", otp = "1234", providerAccountId = "preview-visitor", seekerAccountId = "preview-owner",
+    ),
 )

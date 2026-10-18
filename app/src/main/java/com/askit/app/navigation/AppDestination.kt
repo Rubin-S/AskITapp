@@ -164,13 +164,12 @@ sealed interface AppDestination : NavKey {
     }
 
     companion object {
-        fun fromBottomBarDestination(destination: AskITDestination): AppDestination =
-            when (destination) {
-                AskITDestination.Home -> Home
-                AskITDestination.Explore -> Explore
-                AskITDestination.Inbox -> Inbox
-                AskITDestination.Profile -> Profile
-            }
+        fun fromBottomBarDestination(destination: AskITDestination): AppDestination = when (destination) {
+            AskITDestination.Home -> Home
+            AskITDestination.Explore -> Explore
+            AskITDestination.Inbox -> Inbox
+            AskITDestination.Profile -> Profile
+        }
     }
 }
 

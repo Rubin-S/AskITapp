@@ -30,8 +30,10 @@ internal object PhoneNumberValidator {
         }
         val inferredRegion = phoneUtil.getRegionCodeForNumber(number)
         if (countryIso != null && international &&
-            (number.countryCode != phoneUtil.getCountryCodeForRegion(countryIso) ||
-                (inferredRegion != null && inferredRegion != countryIso && phoneUtil.isValidNumber(number)))
+            (
+                number.countryCode != phoneUtil.getCountryCodeForRegion(countryIso) ||
+                    (inferredRegion != null && inferredRegion != countryIso && phoneUtil.isValidNumber(number))
+                )
         ) {
             return PhoneValidation.CountryMismatch
         }
@@ -62,16 +64,21 @@ internal object PhoneNumberValidator {
             when {
                 Character.getType(codePoint) == Character.DECIMAL_DIGIT_NUMBER.toInt() ->
                     normalized.append(Character.digit(codePoint, 10))
+
                 Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint) || codePoint == '-'.code -> Unit
+
                 codePoint == '+'.code -> normalized.append('+')
+
                 codePoint == '('.code -> {
                     if (parenthesesOpen) return null
                     parenthesesOpen = true
                 }
+
                 codePoint == ')'.code -> {
                     if (!parenthesesOpen) return null
                     parenthesesOpen = false
                 }
+
                 else -> return null
             }
         }

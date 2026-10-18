@@ -2,12 +2,12 @@ package com.askit.app.task
 
 import com.askit.app.explore.ExploreTaskResult
 import com.askit.app.home.model.TaskPreview
-import com.askit.designsystem.tasks.TaskResultStatus
 import com.askit.app.posttask.PostTaskBudget
 import com.askit.app.posttask.PostTaskDraft
 import com.askit.app.posttask.PostTaskItemDetails
 import com.askit.app.posttask.PostTaskTimingMode
 import com.askit.app.posttask.PostTaskWorkMode
+import com.askit.designsystem.tasks.TaskResultStatus
 
 /** Public fields only: exact addresses, coordinates and access instructions stay in the draft. */
 data class TaskPublicDetails(

@@ -1,6 +1,5 @@
 package com.askit.app.explore
 
-import com.askit.designsystem.inputs.AskITInputDefaults
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,14 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExpandedFullScreenSearchBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,13 +48,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
+import com.askit.designsystem.inputs.AskITInputDefaults
 import kotlinx.coroutines.launch
 
 @Composable
@@ -132,7 +132,9 @@ internal fun ExploreHeader(
             } else {
                 val radius = pluralStringResource(R.plurals.explore_radius_km, searchArea.radiusKm, searchArea.radiusKm)
                 val areaDescription = stringResource(
-                    R.string.explore_change_area_description, searchArea.displayName, radius,
+                    R.string.explore_change_area_description,
+                    searchArea.displayName,
+                    radius,
                 )
                 TextButton(
                     onClick = onSearchAreaClick,
@@ -252,7 +254,9 @@ internal fun ExploreHeader(
                 colors = inputFieldColors,
                 placeholder = {
                     Text(
-                        text = stringResource(if (isExpandedField) R.string.explore_search_placeholder else R.string.explore_search_short_placeholder),
+                        text = stringResource(
+                            if (isExpandedField) R.string.explore_search_placeholder else R.string.explore_search_short_placeholder,
+                        ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -282,8 +286,11 @@ internal fun ExploreHeader(
                         Text(
                             inputQuery.ifEmpty { stringResource(R.string.explore_search_short_placeholder) },
                             style = MaterialTheme.typography.bodyLarge,
-                            color = if (inputQuery.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant
-                                else MaterialTheme.colorScheme.onSurface,
+                            color = if (inputQuery.isEmpty()) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )

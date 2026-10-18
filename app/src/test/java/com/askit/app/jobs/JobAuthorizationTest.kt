@@ -10,8 +10,14 @@ import org.junit.Test
 class JobAuthorizationTest {
     // A service request where this device is the provider (Receiver).
     private fun providerJob(status: JobStatus) = Job(
-        id = "job-1", title = "Fix wiring", counterpartName = "Priya", kind = JobKind.ServiceRequest,
-        localParty = JobParty.Receiver, status = status, workMode = JobWorkMode.OnSite, otp = "4821",
+        id = "job-1",
+        title = "Fix wiring",
+        counterpartName = "Priya",
+        kind = JobKind.ServiceRequest,
+        localParty = JobParty.Receiver,
+        status = status,
+        workMode = JobWorkMode.OnSite,
+        otp = "4821",
     )
 
     private fun store(job: Job, allowViewAs: Boolean) =

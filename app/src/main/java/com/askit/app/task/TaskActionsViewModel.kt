@@ -14,10 +14,7 @@ data class TaskActionDraft(
     val feedbackRes: Int? = null,
 )
 
-class TaskActionsViewModel(
-    private val repository: TaskRepository,
-    private val savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+class TaskActionsViewModel(private val repository: TaskRepository, private val savedStateHandle: SavedStateHandle) : ViewModel() {
     private var accountId: String? = savedStateHandle["task_actions_account"]
     private val mutableDrafts = MutableStateFlow(restore())
     val drafts = mutableDrafts.asStateFlow()
@@ -49,7 +46,9 @@ class TaskActionsViewModel(
         if (!repository.getTask(taskId).actionPolicy(currentAccountId).canReport) return
         if (repository.reports.value[taskId].orEmpty().any { it.accountId == currentAccountId }) {
             feedback(taskId, R.string.task_report_already_saved)
-        } else update(taskId) { copy(reportOpen = true, reason = null) }
+        } else {
+            update(taskId) { copy(reportOpen = true, reason = null) }
+        }
     }
 
     fun selectReason(taskId: String, reason: TaskReportReason) = update(taskId) { copy(reason = reason) }
@@ -62,6 +61,7 @@ class TaskActionsViewModel(
         val reason = draft.reason ?: return
         when (val result = repository.reportTask(taskId, currentAccountId, reason)) {
             is TaskMutationResult.Rejected -> feedback(taskId, result.reason.messageRes)
+
             is TaskMutationResult.Success -> update(taskId) {
                 copy(reportOpen = false, reason = null, feedbackRes = R.string.task_report_saved_locally)
             }
@@ -106,22 +106,29 @@ class TaskActionsViewModel(
     private fun persist() {
         savedStateHandle["task_actions_account"] = accountId
         savedStateHandle["task_action_drafts"] = Bundle().apply {
-            mutableDrafts.value.forEach { (id, draft) -> putBundle(id, Bundle().apply {
-                putBoolean("report", draft.reportOpen)
-                putString("reason", draft.reason?.name)
-                putBoolean("delete", draft.deleteOpen)
-            }) }
+            mutableDrafts.value.forEach { (id, draft) ->
+                putBundle(
+                    id,
+                    Bundle().apply {
+                        putBoolean("report", draft.reportOpen)
+                        putString("reason", draft.reason?.name)
+                        putBoolean("delete", draft.deleteOpen)
+                    },
+                )
+            }
         }
     }
 
     private fun restore(): Map<String, TaskActionDraft> {
         val bundle = savedStateHandle.get<Bundle>("task_action_drafts") ?: return emptyMap()
-        return bundle.keySet().mapNotNull { id -> bundle.getBundle(id)?.let {
-            id to TaskActionDraft(
-                reportOpen = it.getBoolean("report"),
-                reason = TaskReportReason.entries.firstOrNull { reason -> reason.name == it.getString("reason") },
-                deleteOpen = it.getBoolean("delete"),
-            )
-        } }.toMap()
+        return bundle.keySet().mapNotNull { id ->
+            bundle.getBundle(id)?.let {
+                id to TaskActionDraft(
+                    reportOpen = it.getBoolean("report"),
+                    reason = TaskReportReason.entries.firstOrNull { reason -> reason.name == it.getString("reason") },
+                    deleteOpen = it.getBoolean("delete"),
+                )
+            }
+        }.toMap()
     }
 }

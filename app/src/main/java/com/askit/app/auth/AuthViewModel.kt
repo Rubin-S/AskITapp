@@ -59,14 +59,21 @@ class AuthViewModel(
         if (!clientPreview) return
         session?.userId?.let { previewProfiles[it] = profileStore.profile.value }
         val next = runCatching { previewProfiles[id] ?: checkNotNull(previewProfileLoader(id)) }
-            .getOrElse { mutableState.value = mutableState.value.copy(errorRes = R.string.profile_load_error); return }
+            .getOrElse {
+                mutableState.value = mutableState.value.copy(errorRes = R.string.profile_load_error)
+                return
+            }
         profileStore.replaceAccount(next)
         session = AuthSession("local-preview", "local-preview", 86_400, true, id)
         mutableState.value = AuthUiState(phoneNumber = profileStore.profile.value.phoneNumber, destination = AuthDestination.Home)
     }
 
     fun restoreSession() {
-        if (restorationStarted || state.value.signedOut || request?.isActive == true || session != null || state.value.challenge != null) return
+        if (restorationStarted || state.value.signedOut || request?.isActive == true || session != null ||
+            state.value.challenge != null
+        ) {
+            return
+        }
         restorationStarted = true
         if (api == null || sessionStore == null) {
             mutableState.value = AuthUiState(destination = AuthDestination.Entry)
@@ -79,7 +86,9 @@ class AuthViewModel(
     fun retryAccountLoad() {
         if (state.value.operation !in setOf(AuthOperation.RestoreSession, AuthOperation.LoadAccount) ||
             request?.isActive == true || state.value.errorRes == R.string.auth_session_expired
-        ) return
+        ) {
+            return
+        }
         mutableState.value = state.value.copy(errorRes = null)
         request = viewModelScope.launch {
             try {
@@ -119,10 +128,16 @@ class AuthViewModel(
         if (account.userId != loadedSession.userId) throw AuthApiException(AuthError.InvalidResponse)
         val profileComplete = account.profile != null
         if (profileComplete != loadedSession.profileComplete) {
-            persistSession(AuthSession(
-                loadedSession.accessToken, loadedSession.refreshToken, loadedSession.expiresInSeconds,
-                profileComplete, loadedSession.userId,
-            ), store)
+            persistSession(
+                AuthSession(
+                    loadedSession.accessToken,
+                    loadedSession.refreshToken,
+                    loadedSession.expiresInSeconds,
+                    profileComplete,
+                    loadedSession.userId,
+                ),
+                store,
+            )
         }
         account.profile?.let(profileStore::replaceAccount)
         mutableState.value = AuthUiState(
@@ -134,9 +149,16 @@ class AuthViewModel(
     private suspend fun refreshSession(stored: StoredAuthSession, api: AuthApi, store: AuthSessionStore) {
         val tokens = api.refreshSession(stored.refreshToken)
         accessExpiresAtMillis = retryDeadline(tokens.expiresInSeconds)
-        persistSession(AuthSession(
-            tokens.accessToken, tokens.refreshToken, tokens.expiresInSeconds, stored.profileComplete, stored.userId,
-        ), store)
+        persistSession(
+            AuthSession(
+                tokens.accessToken,
+                tokens.refreshToken,
+                tokens.expiresInSeconds,
+                stored.profileComplete,
+                stored.userId,
+            ),
+            store,
+        )
     }
 
     private suspend fun persistSession(value: AuthSession, store: AuthSessionStore) {
@@ -147,11 +169,13 @@ class AuthViewModel(
     }
 
     private fun accountLoadFailed(error: IOException) {
-        mutableState.value = state.value.copy(errorRes = when {
-            sessionPendingStorage != null -> R.string.auth_session_storage_failed
-            error is AuthApiException && error.error == AuthError.SessionExpired -> R.string.auth_session_expired
-            else -> R.string.auth_account_load_failed
-        })
+        mutableState.value = state.value.copy(
+            errorRes = when {
+                sessionPendingStorage != null -> R.string.auth_session_storage_failed
+                error is AuthApiException && error.error == AuthError.SessionExpired -> R.string.auth_session_expired
+                else -> R.string.auth_account_load_failed
+            },
+        )
     }
 
     fun requestCode(phoneNumber: String) {
@@ -165,8 +189,11 @@ class AuthViewModel(
         if (clientPreview) {
             session?.userId?.let { previewProfiles[it] = profileStore.profile.value }
             session = null
-            mutableState.value = AuthUiState(phoneNumber = normalized,
-                challenge = OtpChallenge("preview-${clock()}", 300, 0), destination = AuthDestination.Code)
+            mutableState.value = AuthUiState(
+                phoneNumber = normalized,
+                challenge = OtpChallenge("preview-${clock()}", 300, 0),
+                destination = AuthDestination.Code,
+            )
             return
         }
         if (api == null || sessionStore == null) {
@@ -189,7 +216,12 @@ class AuthViewModel(
             mutableState.value = current.copy(challenge = OtpChallenge("preview-${clock()}", 300, 0), errorRes = null)
             return
         }
-        if (current.isSubmitting || current.signedOut || session != null || sessionPendingStorage != null || api == null || sessionStore == null || current.challenge == null) return
+        if (current.isSubmitting || current.signedOut || session != null || sessionPendingStorage != null || api == null ||
+            sessionStore == null ||
+            current.challenge == null
+        ) {
+            return
+        }
         if (clock() < current.resendAvailableAtMillis) return
         mutableState.value = current.copy(operation = AuthOperation.ResendCode, errorRes = null)
         submitCodeRequest(api, sessionStore, current.phoneNumber, isResend = true)
@@ -280,11 +312,17 @@ class AuthViewModel(
                 mutableState.value = state.value.copy(
                     operation = null,
                     resendAvailableAtMillis = retryAfter?.let(::retryDeadline) ?: state.value.resendAvailableAtMillis,
-                    errorRes = if (sessionPendingStorage != null) R.string.auth_session_storage_failed else when ((error as? AuthApiException)?.error) {
-                        AuthError.InvalidCode -> R.string.auth_invalid_code
-                        AuthError.ExpiredCode -> R.string.auth_expired_code
-                        AuthError.RateLimited -> R.string.auth_rate_limited
-                        else -> R.string.auth_verification_failed
+                    errorRes = if (sessionPendingStorage !=
+                        null
+                    ) {
+                        R.string.auth_session_storage_failed
+                    } else {
+                        when ((error as? AuthApiException)?.error) {
+                            AuthError.InvalidCode -> R.string.auth_invalid_code
+                            AuthError.ExpiredCode -> R.string.auth_expired_code
+                            AuthError.RateLimited -> R.string.auth_rate_limited
+                            else -> R.string.auth_verification_failed
+                        }
                     },
                 )
             }

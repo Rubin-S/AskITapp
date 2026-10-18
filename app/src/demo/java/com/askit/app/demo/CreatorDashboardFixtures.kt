@@ -103,6 +103,7 @@ internal object CreatorDashboardFixtures {
             envelopeLowerBounds = listOf(80f, 120f, 190f, 240f, 350f, 480f, 700f, 950f),
             envelopeUpperBounds = listOf(150f, 220f, 320f, 380f, 560f, 750f, 1100f, 1400f),
         )
+
         CreatorTimeRange.ThisWeek -> HeroKpiSummary(
             reachValue = "18.4k",
             reachDelta = "+8.3%",
@@ -114,6 +115,7 @@ internal object CreatorDashboardFixtures {
             envelopeLowerBounds = listOf(1800f, 1900f, 1700f, 2100f, 2300f, 2700f, 3200f),
             envelopeUpperBounds = listOf(2500f, 2700f, 2600f, 3200f, 3700f, 4200f, 4800f),
         )
+
         CreatorTimeRange.ThisMonth -> HeroKpiSummary(
             reachValue = "74.8k",
             reachDelta = "+16.5%",
@@ -125,6 +127,7 @@ internal object CreatorDashboardFixtures {
             envelopeLowerBounds = listOf(12_000f, 15_000f, 18_000f, 22_000f, 27_000f, 33_000f, 40_000f, 49_000f, 58_000f),
             envelopeUpperBounds = listOf(18_000f, 23_000f, 27_000f, 34_000f, 41_000f, 50_000f, 60_000f, 72_000f, 85_000f),
         )
+
         CreatorTimeRange.Last90Days -> HeroKpiSummary(
             reachValue = "210.5k",
             reachDelta = "+24.0%",
@@ -147,12 +150,27 @@ internal object CreatorDashboardFixtures {
             ),
             community = listOf(
                 CreatorMetricItem("likes", R.string.creator_metric_likes, "340", "+15%", MetricTrend.Positive, Icons.Default.Favorite),
-                CreatorMetricItem("comments", R.string.creator_metric_comments, "48", "+9%", MetricTrend.Positive, Icons.Default.ChatBubbleOutline),
+                CreatorMetricItem(
+                    "comments",
+                    R.string.creator_metric_comments,
+                    "48",
+                    "+9%",
+                    MetricTrend.Positive,
+                    Icons.Default.ChatBubbleOutline,
+                ),
                 CreatorMetricItem("dms", R.string.creator_metric_dms, "12", "+3%", MetricTrend.Positive, Icons.Default.MailOutline),
                 CreatorMetricItem("saves", R.string.creator_metric_saves, "35", "+18%", MetricTrend.Positive, Icons.Default.BookmarkBorder),
-                CreatorMetricItem("followers", R.string.creator_metric_new_followers, "+14", "+7%", MetricTrend.Positive, Icons.Default.PersonAdd),
+                CreatorMetricItem(
+                    "followers",
+                    R.string.creator_metric_new_followers,
+                    "+14",
+                    "+7%",
+                    MetricTrend.Positive,
+                    Icons.Default.PersonAdd,
+                ),
             ),
         )
+
         CreatorTimeRange.ThisWeek -> CreatorCategoryMetrics(
             discovery = listOf(
                 CreatorMetricItem("views", R.string.creator_metric_views, "18.4k", "+8.3%", MetricTrend.Positive, Icons.Default.Visibility),
@@ -161,38 +179,131 @@ internal object CreatorDashboardFixtures {
             ),
             community = listOf(
                 CreatorMetricItem("likes", R.string.creator_metric_likes, "9.2k", "+9.4%", MetricTrend.Positive, Icons.Default.Favorite),
-                CreatorMetricItem("comments", R.string.creator_metric_comments, "1.4k", "+6.1%", MetricTrend.Positive, Icons.Default.ChatBubbleOutline),
+                CreatorMetricItem(
+                    "comments",
+                    R.string.creator_metric_comments,
+                    "1.4k",
+                    "+6.1%",
+                    MetricTrend.Positive,
+                    Icons.Default.ChatBubbleOutline,
+                ),
                 CreatorMetricItem("dms", R.string.creator_metric_dms, "148", "+12.5%", MetricTrend.Positive, Icons.Default.MailOutline),
-                CreatorMetricItem("saves", R.string.creator_metric_saves, "1.1k", "+14.3%", MetricTrend.Positive, Icons.Default.BookmarkBorder),
-                CreatorMetricItem("followers", R.string.creator_metric_new_followers, "+210", "+8.3%", MetricTrend.Positive, Icons.Default.PersonAdd),
+                CreatorMetricItem(
+                    "saves",
+                    R.string.creator_metric_saves,
+                    "1.1k",
+                    "+14.3%",
+                    MetricTrend.Positive,
+                    Icons.Default.BookmarkBorder,
+                ),
+                CreatorMetricItem(
+                    "followers",
+                    R.string.creator_metric_new_followers,
+                    "+210",
+                    "+8.3%",
+                    MetricTrend.Positive,
+                    Icons.Default.PersonAdd,
+                ),
             ),
         )
+
         CreatorTimeRange.ThisMonth -> CreatorCategoryMetrics(
             discovery = listOf(
-                CreatorMetricItem("views", R.string.creator_metric_views, "74.8k", "+16.5%", MetricTrend.Positive, Icons.Default.Visibility),
-                CreatorMetricItem("clicks", R.string.creator_metric_link_clicks, "1.5k", "+10.2%", MetricTrend.Positive, Icons.Default.Link),
+                CreatorMetricItem(
+                    "views",
+                    R.string.creator_metric_views,
+                    "74.8k",
+                    "+16.5%",
+                    MetricTrend.Positive,
+                    Icons.Default.Visibility,
+                ),
+                CreatorMetricItem(
+                    "clicks",
+                    R.string.creator_metric_link_clicks,
+                    "1.5k",
+                    "+10.2%",
+                    MetricTrend.Positive,
+                    Icons.Default.Link,
+                ),
                 CreatorMetricItem("shares", R.string.creator_metric_shares, "2.8k", "+18.0%", MetricTrend.Positive, Icons.Default.Share),
             ),
             community = listOf(
                 CreatorMetricItem("likes", R.string.creator_metric_likes, "36.5k", "+14.8%", MetricTrend.Positive, Icons.Default.Favorite),
-                CreatorMetricItem("comments", R.string.creator_metric_comments, "5.2k", "+11.4%", MetricTrend.Positive, Icons.Default.ChatBubbleOutline),
+                CreatorMetricItem(
+                    "comments",
+                    R.string.creator_metric_comments,
+                    "5.2k",
+                    "+11.4%",
+                    MetricTrend.Positive,
+                    Icons.Default.ChatBubbleOutline,
+                ),
                 CreatorMetricItem("dms", R.string.creator_metric_dms, "580", "+15.0%", MetricTrend.Positive, Icons.Default.MailOutline),
-                CreatorMetricItem("saves", R.string.creator_metric_saves, "4.3k", "+21.2%", MetricTrend.Positive, Icons.Default.BookmarkBorder),
-                CreatorMetricItem("followers", R.string.creator_metric_new_followers, "+840", "+12.4%", MetricTrend.Positive, Icons.Default.PersonAdd),
+                CreatorMetricItem(
+                    "saves",
+                    R.string.creator_metric_saves,
+                    "4.3k",
+                    "+21.2%",
+                    MetricTrend.Positive,
+                    Icons.Default.BookmarkBorder,
+                ),
+                CreatorMetricItem(
+                    "followers",
+                    R.string.creator_metric_new_followers,
+                    "+840",
+                    "+12.4%",
+                    MetricTrend.Positive,
+                    Icons.Default.PersonAdd,
+                ),
             ),
         )
+
         CreatorTimeRange.Last90Days -> CreatorCategoryMetrics(
             discovery = listOf(
-                CreatorMetricItem("views", R.string.creator_metric_views, "210.5k", "+24.0%", MetricTrend.Positive, Icons.Default.Visibility),
-                CreatorMetricItem("clicks", R.string.creator_metric_link_clicks, "4.2k", "+18.6%", MetricTrend.Positive, Icons.Default.Link),
+                CreatorMetricItem(
+                    "views",
+                    R.string.creator_metric_views,
+                    "210.5k",
+                    "+24.0%",
+                    MetricTrend.Positive,
+                    Icons.Default.Visibility,
+                ),
+                CreatorMetricItem(
+                    "clicks",
+                    R.string.creator_metric_link_clicks,
+                    "4.2k",
+                    "+18.6%",
+                    MetricTrend.Positive,
+                    Icons.Default.Link,
+                ),
                 CreatorMetricItem("shares", R.string.creator_metric_shares, "8.1k", "+26.5%", MetricTrend.Positive, Icons.Default.Share),
             ),
             community = listOf(
                 CreatorMetricItem("likes", R.string.creator_metric_likes, "98.0k", "+22.1%", MetricTrend.Positive, Icons.Default.Favorite),
-                CreatorMetricItem("comments", R.string.creator_metric_comments, "14.8k", "+17.9%", MetricTrend.Positive, Icons.Default.ChatBubbleOutline),
+                CreatorMetricItem(
+                    "comments",
+                    R.string.creator_metric_comments,
+                    "14.8k",
+                    "+17.9%",
+                    MetricTrend.Positive,
+                    Icons.Default.ChatBubbleOutline,
+                ),
                 CreatorMetricItem("dms", R.string.creator_metric_dms, "1.6k", "+19.4%", MetricTrend.Positive, Icons.Default.MailOutline),
-                CreatorMetricItem("saves", R.string.creator_metric_saves, "12.4k", "+28.0%", MetricTrend.Positive, Icons.Default.BookmarkBorder),
-                CreatorMetricItem("followers", R.string.creator_metric_new_followers, "+2.4k", "+16.8%", MetricTrend.Positive, Icons.Default.PersonAdd),
+                CreatorMetricItem(
+                    "saves",
+                    R.string.creator_metric_saves,
+                    "12.4k",
+                    "+28.0%",
+                    MetricTrend.Positive,
+                    Icons.Default.BookmarkBorder,
+                ),
+                CreatorMetricItem(
+                    "followers",
+                    R.string.creator_metric_new_followers,
+                    "+2.4k",
+                    "+16.8%",
+                    MetricTrend.Positive,
+                    Icons.Default.PersonAdd,
+                ),
             ),
         )
     }

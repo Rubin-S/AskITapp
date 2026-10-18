@@ -70,22 +70,35 @@ fun AskITSectionTabs(
         LaunchedEffect(activeId, widths, viewport, scroll.maxValue) {
             if (scroll.maxValue != Int.MAX_VALUE) scroll.animateScrollTo(target.coerceIn(0, scroll.maxValue))
         }
-        Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceContainerLow,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))) {
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f)),
+        ) {
             Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f).horizontalScroll(scroll).selectableGroup(), verticalAlignment = Alignment.CenterVertically) {
                     tabs.forEachIndexed { index, tab ->
                         val selected = tab.id == activeId
                         val container by animateColorAsState(
                             if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow,
-                            label = "section_tab_container")
-                        Surface(color = container, shape = RoundedCornerShape(13.dp),
-                            modifier = Modifier.width(widths[index]).heightIn(min = 48.dp)) {
-                            Box(Modifier.selectable(selected, onClick = { onSelect(tab.id) }, role = Role.Tab)
-                                .testTag(tabTagPrefix + tab.id).padding(horizontal = 11.dp, vertical = 12.dp),
-                                contentAlignment = Alignment.Center) {
-                                Text(tab.label, style = textStyle, softWrap = true,
-                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                            label = "section_tab_container",
+                        )
+                        Surface(
+                            color = container,
+                            shape = RoundedCornerShape(13.dp),
+                            modifier = Modifier.width(widths[index]).heightIn(min = 48.dp),
+                        ) {
+                            Box(
+                                Modifier.selectable(selected, onClick = { onSelect(tab.id) }, role = Role.Tab)
+                                    .testTag(tabTagPrefix + tab.id).padding(horizontal = 11.dp, vertical = 12.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    tab.label,
+                                    style = textStyle,
+                                    softWrap = true,
+                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
                             }
                         }
                     }
@@ -99,9 +112,13 @@ fun AskITSectionTabs(
                             scroll.animateScrollTo(targetOffset.roundToInt().coerceIn(0, scroll.maxValue))
                         }
                     }, modifier = Modifier.size(48.dp).testTag(tabTagPrefix + "overflow")) {
-                        Icon(painterResource(R.drawable.ic_chevron_right),
-                            contentDescription = stringResource(if (forward) R.string.section_tabs_more else R.string.section_tabs_previous),
-                            modifier = Modifier.size(20.dp).rotate(if (forward == (direction == LayoutDirection.Ltr)) 0f else 180f))
+                        Icon(
+                            painterResource(R.drawable.ic_chevron_right),
+                            contentDescription = stringResource(
+                                if (forward) R.string.section_tabs_more else R.string.section_tabs_previous,
+                            ),
+                            modifier = Modifier.size(20.dp).rotate(if (forward == (direction == LayoutDirection.Ltr)) 0f else 180f),
+                        )
                     }
                 }
             }

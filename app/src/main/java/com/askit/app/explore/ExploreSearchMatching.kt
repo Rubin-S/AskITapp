@@ -8,10 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import java.util.Locale
 
-internal fun matchingRecentSearches(
-    recentSearches: List<String>,
-    normalizedQuery: String,
-): List<String> {
+internal fun matchingRecentSearches(recentSearches: List<String>, normalizedQuery: String): List<String> {
     val matches = recentSearches.filter { recentQuery ->
         matchStrength(normalizedMatchValue(recentQuery), normalizedQuery) != null
     }
@@ -22,11 +19,7 @@ internal fun matchingRecentSearches(
     }.take(2)
 }
 
-internal fun matchingServiceCategories(
-    categories: List<String>,
-    normalizedQuery: String,
-    recentSuggestions: List<String>,
-): List<String> {
+internal fun matchingServiceCategories(categories: List<String>, normalizedQuery: String, recentSuggestions: List<String>): List<String> {
     val usedValues = recentSuggestions
         .mapTo(mutableSetOf(), ::normalizedMatchValue)
     return buildList {
@@ -55,13 +48,9 @@ private fun matchStrength(normalizedLabel: String, normalizedQuery: String): Int
     }
 }
 
-internal fun normalizedMatchValue(value: String): String =
-    normalizeExploreQuery(value).lowercase(Locale.ROOT)
+internal fun normalizedMatchValue(value: String): String = normalizeExploreQuery(value).lowercase(Locale.ROOT)
 
-internal fun predictiveCategoryText(
-    category: String,
-    normalizedQuery: String,
-): AnnotatedString {
+internal fun predictiveCategoryText(category: String, normalizedQuery: String): AnnotatedString {
     if (
         !category.startsWith(normalizedQuery, ignoreCase = true) ||
         normalizedQuery.isEmpty() ||

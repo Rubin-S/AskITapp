@@ -21,10 +21,7 @@ import com.askit.app.R
 import com.askit.app.providerdashboard.ProviderOperatingKpis
 
 @Composable
-fun ProviderKpiGrid(
-    kpis: ProviderOperatingKpis,
-    modifier: Modifier = Modifier,
-) {
+fun ProviderKpiGrid(kpis: ProviderOperatingKpis, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -74,13 +71,7 @@ fun ProviderKpiGrid(
 }
 
 @Composable
-private fun ProviderSingleKpiCard(
-    headline: String,
-    value: String,
-    supporting: String,
-    testTag: String,
-    modifier: Modifier = Modifier,
-) {
+private fun ProviderSingleKpiCard(headline: String, value: String, supporting: String, testTag: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .testTag(testTag)

@@ -21,12 +21,7 @@ import com.askit.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PhotoSourceSheet(
-    onDismiss: () -> Unit,
-    onCamera: () -> Unit,
-    onLibrary: () -> Unit,
-    onRemove: () -> Unit,
-) {
+fun PhotoSourceSheet(onDismiss: () -> Unit, onCamera: () -> Unit, onLibrary: () -> Unit, onRemove: () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),

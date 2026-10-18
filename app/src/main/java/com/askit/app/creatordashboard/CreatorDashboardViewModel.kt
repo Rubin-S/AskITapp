@@ -39,14 +39,18 @@ class CreatorDashboardViewModel(
             selectedTimeRange = timeRange,
             isLoading = false,
         )
-        if (sample == null) base else base.copy(
-            heroKpi = sample.heroKpi,
-            categoryMetrics = sample.categoryMetrics,
-            aiInsight = sample.aiInsight.takeUnless { isAiDismissed },
-            milestone = sample.milestone,
-            recentActivities = sample.recentActivities,
-            metricsAvailable = true,
-        )
+        if (sample == null) {
+            base
+        } else {
+            base.copy(
+                heroKpi = sample.heroKpi,
+                categoryMetrics = sample.categoryMetrics,
+                aiInsight = sample.aiInsight.takeUnless { isAiDismissed },
+                milestone = sample.milestone,
+                recentActivities = sample.recentActivities,
+                metricsAvailable = true,
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),

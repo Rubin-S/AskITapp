@@ -1,6 +1,5 @@
 package com.askit.app.auth
 
-import androidx.compose.runtime.setValue
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,8 +35,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import com.askit.designsystem.inputs.AskITInputDefaults
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -47,6 +44,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,6 +67,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.askit.app.R
 import com.askit.designsystem.components.AskITPrimaryButton
+import com.askit.designsystem.inputs.AskITInputDefaults
+import com.askit.designsystem.inputs.AskITTextField
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -104,12 +104,16 @@ fun AuthPhoneScreen(
     val validatedPhone = validation as? PhoneValidation.Valid
     val isValidPhone = validatedPhone != null
     val validationError = if (showValidationError && phoneNumber.isNotBlank() && !isValidPhone) {
-        stringResource(when {
-            validation == PhoneValidation.CountryMismatch -> R.string.auth_phone_country_mismatch
-            selectedCountry.isoCode == "IN" -> R.string.auth_phone_invalid_india
-            else -> R.string.auth_phone_invalid_mobile
-        })
-    } else null
+        stringResource(
+            when {
+                validation == PhoneValidation.CountryMismatch -> R.string.auth_phone_country_mismatch
+                selectedCountry.isoCode == "IN" -> R.string.auth_phone_invalid_india
+                else -> R.string.auth_phone_invalid_mobile
+            },
+        )
+    } else {
+        null
+    }
     val displayedError = validationError ?: errorMessage
 
     Surface(

@@ -63,19 +63,10 @@ enum class StoryEditorTool {
 }
 
 @Serializable
-data class StoryTransform(
-    val panX: Float = 0f,
-    val panY: Float = 0f,
-    val zoom: Float = 1f,
-)
+data class StoryTransform(val panX: Float = 0f, val panY: Float = 0f, val zoom: Float = 1f)
 
 @Serializable
-data class StoryViewport(
-    val widthPx: Int,
-    val heightPx: Int,
-    val density: Float,
-    val fontScale: Float,
-) {
+data class StoryViewport(val widthPx: Int, val heightPx: Int, val density: Float, val fontScale: Float) {
     init {
         require(widthPx > 0 && heightPx > 0)
         require(density.isFinite() && density > 0 && fontScale.isFinite() && fontScale > 0)
@@ -136,10 +127,7 @@ sealed class StoryLayer {
 }
 
 @Serializable
-data class StoryPollSticker(
-    val question: String,
-    val options: List<String>,
-)
+data class StoryPollSticker(val question: String, val options: List<String>)
 
 @Serializable
 data class StoryDraft(

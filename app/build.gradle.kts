@@ -17,8 +17,10 @@ val backendBaseUrl = providers.gradleProperty("askitBackendBaseUrl")
     .getOrElse("")
 if (backendBaseUrl.isNotEmpty()) {
     val uri = runCatching { URI(backendBaseUrl) }.getOrNull()
-    require(uri != null && uri.scheme == "https" && !uri.host.isNullOrBlank() &&
-        uri.userInfo == null && uri.query == null && uri.fragment == null) {
+    require(
+        uri != null && uri.scheme == "https" && !uri.host.isNullOrBlank() &&
+            uri.userInfo == null && uri.query == null && uri.fragment == null,
+    ) {
         "ASKIT_BACKEND_BASE_URL must be an HTTPS URL without credentials, query, or fragment."
     }
 }

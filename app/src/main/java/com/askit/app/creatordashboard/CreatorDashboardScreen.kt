@@ -44,23 +44,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.askit.designsystem.navigation.AskITSectionTabs
-import com.askit.designsystem.navigation.SectionTab
 import com.askit.app.R
-import com.askit.app.dashboard.DashboardDataUnavailable
 import com.askit.app.creatordashboard.components.CreatorAiInsightCard
 import com.askit.app.creatordashboard.components.CreatorMetricCard
 import com.askit.app.creatordashboard.components.CreatorTrendGraph
+import com.askit.app.dashboard.DashboardDataUnavailable
+import com.askit.designsystem.navigation.AskITSectionTabs
+import com.askit.designsystem.navigation.SectionTab
 import com.askit.designsystem.people.AskITAvatar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -266,8 +266,11 @@ fun CreatorDashboardScreen(
                     onClick = {
                         when (activity.type) {
                             CreatorActivityType.DirectMessage -> onOpenChat(activity.targetId)
+
                             CreatorActivityType.PostLike,
-                            CreatorActivityType.PostComment -> onOpenPostDetail(activity.targetId)
+                            CreatorActivityType.PostComment,
+                            -> onOpenPostDetail(activity.targetId)
+
                             CreatorActivityType.NewFollower -> onOpenProfile(activity.targetId)
                         }
                     },
@@ -328,8 +331,11 @@ private fun CreatorIdentityHeader(
                     ) {
                         Text(
                             text = stringResource(
-                                if (isServiceProvider) R.string.creator_badge_verified_pro
-                                else R.string.creator_badge_community_creator,
+                                if (isServiceProvider) {
+                                    R.string.creator_badge_verified_pro
+                                } else {
+                                    R.string.creator_badge_community_creator
+                                },
                             ),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -367,10 +373,7 @@ private fun CreatorIdentityHeader(
 }
 
 @Composable
-private fun HeroKpiCard(
-    hero: HeroKpiSummary,
-    modifier: Modifier = Modifier,
-) {
+private fun HeroKpiCard(hero: HeroKpiSummary, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -460,10 +463,7 @@ private fun HeroKpiCard(
 }
 
 @Composable
-private fun MilestoneCard(
-    milestone: FollowerMilestone,
-    modifier: Modifier = Modifier,
-) {
+private fun MilestoneCard(milestone: FollowerMilestone, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -534,11 +534,7 @@ private fun MilestoneCard(
 }
 
 @Composable
-private fun ActivityRow(
-    activity: CreatorActivityItem,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun ActivityRow(activity: CreatorActivityItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -608,10 +604,7 @@ private fun ActivityRow(
 }
 
 @Composable
-private fun SectionHeader(
-    title: String,
-    modifier: Modifier = Modifier,
-) {
+private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),

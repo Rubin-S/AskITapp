@@ -2,41 +2,43 @@ package com.askit.app.profile
 
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import com.askit.app.R
-import com.askit.app.auth.isSignupPhotoReadable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import com.askit.app.R
+import com.askit.app.auth.isSignupPhotoReadable
 import com.askit.app.media.createCaptureImageUri
 import com.askit.app.media.persistPhotoPickerReadAccess
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class ProfilePhotoActions(
-    val launchLibrary: () -> Unit,
-    val launchCamera: () -> Unit,
-)
+class ProfilePhotoActions(val launchLibrary: () -> Unit, val launchCamera: () -> Unit)
 
 @Composable
 fun rememberProfilePhotoActions(onUri: (String) -> Unit): ProfilePhotoActions {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val latestUri by rememberUpdatedState(onUri)
-    fun failure() { Toast.makeText(context, R.string.profile_photo_unavailable, Toast.LENGTH_LONG).show() }
+    fun failure() {
+        Toast.makeText(context, R.string.profile_photo_unavailable, Toast.LENGTH_LONG).show()
+    }
     fun deliver(uri: Uri) {
         scope.launch {
-            if (withContext(Dispatchers.IO) { isSignupPhotoReadable(context.contentResolver, uri.toString()) }) latestUri(uri.toString())
-            else failure()
+            if (withContext(Dispatchers.IO) { isSignupPhotoReadable(context.contentResolver, uri.toString()) }) {
+                latestUri(uri.toString())
+            } else {
+                failure()
+            }
         }
     }
     var pendingCapture by rememberSaveable(stateSaver = CaptureUriSaver) {
@@ -58,14 +60,19 @@ fun rememberProfilePhotoActions(onUri: (String) -> Unit): ProfilePhotoActions {
     }
     return ProfilePhotoActions(
         launchLibrary = {
-            runCatching { library.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }.onFailure { failure() }
+            runCatching {
+                library.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }.onFailure { failure() }
         },
         launchCamera = {
             runCatching {
                 val uri = createCaptureImageUri(context)
                 pendingCapture = uri
                 camera.launch(uri)
-            }.onFailure { pendingCapture = null; failure() }
+            }.onFailure {
+                pendingCapture = null
+                failure()
+            }
         },
     )
 }

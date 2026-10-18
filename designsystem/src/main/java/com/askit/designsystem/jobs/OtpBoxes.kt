@@ -8,7 +8,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import com.askit.designsystem.inputs.AskITInputDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -54,8 +53,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.math.roundToInt
 import com.askit.designsystem.R
+import com.askit.designsystem.inputs.AskITInputDefaults
+import kotlin.math.roundToInt
 
 @Composable
 fun OtpBoxes(

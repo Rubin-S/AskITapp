@@ -4,8 +4,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -23,9 +23,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,8 +52,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -64,50 +62,30 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImagePainter
-import coil3.compose.rememberConstraintsSizeResolver
 import coil3.compose.rememberAsyncImagePainter
+import coil3.compose.rememberConstraintsSizeResolver
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.askit.designsystem.R
 import com.askit.designsystem.people.AskITAvatar
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-data class PostFeedAuthor(
-    val displayName: String,
-    val avatarUrl: String? = null,
-)
+data class PostFeedAuthor(val displayName: String, val avatarUrl: String? = null)
 
-data class PostFeedMedia(
-    val model: Any,
-    val contentDescription: String? = null,
-    val aspectRatio: Float = 4f / 3f,
-)
+data class PostFeedMedia(val model: Any, val contentDescription: String? = null, val aspectRatio: Float = 4f / 3f)
 
 sealed interface PostFeedMediaContent {
-    data class Photo(
-        val image: PostFeedMedia,
-    ) : PostFeedMediaContent
+    data class Photo(val image: PostFeedMedia) : PostFeedMediaContent
 
-    data class Carousel(
-        val items: List<PostFeedMedia>,
-    ) : PostFeedMediaContent
+    data class Carousel(val items: List<PostFeedMedia>) : PostFeedMediaContent
 
-    data class BeforeAfter(
-        val before: PostFeedMedia,
-        val after: PostFeedMedia,
-    ) : PostFeedMediaContent
+    data class BeforeAfter(val before: PostFeedMedia, val after: PostFeedMedia) : PostFeedMediaContent
 }
 
-data class PostFeedPoll(
-    val question: String,
-    val options: List<String>,
-    val closingSummary: String,
-)
+data class PostFeedPoll(val question: String, val options: List<String>, val closingSummary: String)
 
-data class PostFeedContent(
-    val media: PostFeedMediaContent? = null,
-    val body: String? = null,
-    val poll: PostFeedPoll? = null,
-)
+data class PostFeedContent(val media: PostFeedMediaContent? = null, val body: String? = null, val poll: PostFeedPoll? = null)
 
 /**
  * The canonical flat social Post renderer used by creation Preview and future Home content.
@@ -191,7 +169,9 @@ fun PostFeedItem(
                         media = media.image,
                         modifier = Modifier.fillMaxWidth(),
                     )
+
                     is PostFeedMediaContent.Carousel -> CarouselPostBody(items = media.items)
+
                     is PostFeedMediaContent.BeforeAfter -> BeforeAfterSlider(
                         before = media.before,
                         after = media.after,
@@ -223,10 +203,7 @@ fun PostFeedItem(
 }
 
 @Composable
-private fun DoubleTapHeartBurst(
-    trigger: Int,
-    modifier: Modifier = Modifier,
-) {
+private fun DoubleTapHeartBurst(trigger: Int, modifier: Modifier = Modifier) {
     if (trigger == 0) return
     val scale = remember(trigger) { Animatable(0f) }
     val alpha = remember(trigger) { Animatable(1f) }
@@ -388,10 +365,10 @@ private fun PostActionBar(
             ) {
                 Icon(
                     painter = painterResource(
-                        if (localLiked) R.drawable.ic_heart_filled else R.drawable.ic_heart_outline
+                        if (localLiked) R.drawable.ic_heart_filled else R.drawable.ic_heart_outline,
                     ),
                     contentDescription = stringResource(
-                        if (localLiked) R.string.post_feed_unlike else R.string.post_feed_like
+                        if (localLiked) R.string.post_feed_unlike else R.string.post_feed_like,
                     ),
                     tint = if (localLiked) Color(0xFFE91E63) else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(24.dp),
@@ -461,10 +438,10 @@ private fun PostActionBar(
         ) {
             Icon(
                 painter = painterResource(
-                    if (localSaved) R.drawable.ic_bookmark_filled else R.drawable.ic_bookmark_outline
+                    if (localSaved) R.drawable.ic_bookmark_filled else R.drawable.ic_bookmark_outline,
                 ),
                 contentDescription = stringResource(
-                    if (localSaved) R.string.post_feed_unsave else R.string.post_feed_save
+                    if (localSaved) R.string.post_feed_unsave else R.string.post_feed_save,
                 ),
                 tint = if (localSaved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(24.dp),
@@ -474,10 +451,7 @@ private fun PostActionBar(
 }
 
 @Composable
-private fun TextPostBody(
-    body: String,
-    authorName: String? = null,
-) {
+private fun TextPostBody(body: String, authorName: String? = null) {
     var expanded by rememberSaveable(body) { mutableStateOf(false) }
     var hasOverflow by remember(body) { mutableStateOf(false) }
     val visibleBody = body.trim()
@@ -570,9 +544,7 @@ private fun PostImageMedia(
 }
 
 @Composable
-private fun CarouselPostBody(
-    items: List<PostFeedMedia>,
-) {
+private fun CarouselPostBody(items: List<PostFeedMedia>) {
     if (items.isEmpty()) return
     val pagerState = rememberPagerState(pageCount = { items.size })
     val page = pagerState.currentPage.coerceIn(items.indices)

@@ -7,7 +7,6 @@ import com.askit.app.home.model.FeedItem
 import com.askit.app.home.model.Story
 import com.askit.app.session.SessionProfile
 import com.askit.app.story.StoryDraft
-import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,10 +16,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.UUID
 
-class HomeViewModel(
-    private val repository: HomeRepository,
-) : ViewModel() {
+class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
     val posts = repository.posts
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)

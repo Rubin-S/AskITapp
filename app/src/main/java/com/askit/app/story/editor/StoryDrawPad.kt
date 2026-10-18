@@ -25,12 +25,7 @@ import com.askit.app.story.StoryViewModel
 private val DRAW_COLORS = listOf(0xFFFFFFFF, 0xFF000000, 0xFF7CE605, 0xFFFF5252)
 
 @Composable
-fun StoryDrawPad(
-    viewModel: StoryViewModel,
-    selectedColorArgb: Long,
-    onDone: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun StoryDrawPad(viewModel: StoryViewModel, selectedColorArgb: Long, onDone: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()

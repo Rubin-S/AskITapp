@@ -23,8 +23,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,16 +33,15 @@ import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Photo
-import androidx.compose.material3.CircularProgressIndicator
-import com.askit.designsystem.dialogs.AskITAlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,12 +60,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -74,17 +73,18 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import coil3.compose.AsyncImage
-import com.askit.app.story.editor.StoryStage
 import com.askit.app.R
 import com.askit.app.media.persistPhotoPickerReadAccess
 import com.askit.app.story.STORY_MAX_DURATION_MS
 import com.askit.app.story.StoryMediaType
 import com.askit.app.story.StoryViewModel
-import kotlinx.coroutines.withTimeoutOrNull
+import com.askit.app.story.editor.StoryStage
+import com.askit.designsystem.dialogs.AskITAlertDialog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 private const val HOLD_TO_RECORD_MS = 400L
 
@@ -145,7 +145,8 @@ fun StoryCaptureScreen(
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         hasCameraPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-        hasAudioPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        hasAudioPermission =
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
     }
 
     LaunchedEffect(useFakePreview) {
@@ -183,7 +184,9 @@ fun StoryCaptureScreen(
                             } finally {
                                 retriever.release()
                             }
-                        } else null
+                        } else {
+                            null
+                        }
                         persistPhotoPickerReadAccess(context.contentResolver, listOf(uri))
                         mediaType to duration
                     }
@@ -210,7 +213,8 @@ fun StoryCaptureScreen(
 
     val startRecording by rememberUpdatedState {
         if (cameraController.isReady && !isBusy) {
-            hasAudioPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+            hasAudioPermission =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
             if (!hasAudioPermission && !audioRequested) {
                 showAudioExplanation = true
             } else {
@@ -225,20 +229,22 @@ fun StoryCaptureScreen(
             .background(Color.Black)
             .testTag("story_capture"),
     ) {
-        if (hasCameraPermission || useFakePreview) StoryStage {
-            StoryCamera(
-                flashEnabled = flashEnabled,
-                useFrontCamera = useFrontCamera,
-                useFakePreview = useFakePreview,
-                controller = cameraController,
-                modifier = Modifier.fillMaxSize(),
-                onPhotoCaptured = { uri ->
-                    latestMediaReady(uri.toString(), StoryMediaType.Photo, null)
-                },
-                onVideoCaptured = { uri, duration ->
-                    latestMediaReady(uri.toString(), StoryMediaType.Video, duration)
-                },
-            )
+        if (hasCameraPermission || useFakePreview) {
+            StoryStage {
+                StoryCamera(
+                    flashEnabled = flashEnabled,
+                    useFrontCamera = useFrontCamera,
+                    useFakePreview = useFakePreview,
+                    controller = cameraController,
+                    modifier = Modifier.fillMaxSize(),
+                    onPhotoCaptured = { uri ->
+                        latestMediaReady(uri.toString(), StoryMediaType.Photo, null)
+                    },
+                    onVideoCaptured = { uri, duration ->
+                        latestMediaReady(uri.toString(), StoryMediaType.Video, duration)
+                    },
+                )
+            }
         }
 
         if (!useFakePreview && (!hasCameraPermission || cameraController.cameraUnavailable)) {
@@ -255,24 +261,32 @@ fun StoryCaptureScreen(
                 Button(onClick = {
                     when {
                         hasCameraPermission -> cameraController.retry()
+
                         cameraNeedsSettings -> {
                             try {
-                                context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
+                                context.startActivity(
+                                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()),
+                                )
                             } catch (_: ActivityNotFoundException) {
                                 cameraController.error = R.string.story_settings_unavailable
                             }
                         }
+
                         else -> {
                             cameraRequested = true
                             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                         }
                     }
                 }) {
-                    Text(stringResource(when {
-                        hasCameraPermission -> R.string.explore_retry
-                        cameraNeedsSettings -> R.string.story_open_settings
-                        else -> R.string.story_allow_camera
-                    }))
+                    Text(
+                        stringResource(
+                            when {
+                                hasCameraPermission -> R.string.explore_retry
+                                cameraNeedsSettings -> R.string.story_open_settings
+                                else -> R.string.story_allow_camera
+                            },
+                        ),
+                    )
                 }
             }
         } else if (isLoadingMedia || (!useFakePreview && !cameraController.isReady)) {
@@ -414,8 +428,11 @@ fun StoryCaptureScreen(
                                 contentDescription = if (isRecording) stopLabel else shutterLabel
                                 if (!cameraController.isReady || (isBusy && !isRecording)) disabled()
                                 onClick {
-                                    if (cameraController.isRecording) cameraController.stopRecording()
-                                    else if (!isLoadingMedia) cameraController.takePhoto()
+                                    if (cameraController.isRecording) {
+                                        cameraController.stopRecording()
+                                    } else if (!isLoadingMedia) {
+                                        cameraController.takePhoto()
+                                    }
                                     true
                                 }
                                 onLongClick(label = recordLabel) {
@@ -434,7 +451,9 @@ fun StoryCaptureScreen(
                                         val released = withTimeoutOrNull(HOLD_TO_RECORD_MS) { tryAwaitRelease() }
                                         when (released) {
                                             true -> cameraController.takePhoto()
+
                                             false -> Unit
+
                                             null -> {
                                                 startRecording()
                                                 try {

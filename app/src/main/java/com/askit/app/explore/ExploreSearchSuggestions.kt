@@ -29,9 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
@@ -117,12 +117,7 @@ private fun SuggestionSectionHeading(text: String) {
 }
 
 @Composable
-private fun SuggestionRow(
-    text: AnnotatedString,
-    @DrawableRes iconRes: Int,
-    actionLabel: String,
-    onClick: () -> Unit,
-) {
+private fun SuggestionRow(text: AnnotatedString, @DrawableRes iconRes: Int, actionLabel: String, onClick: () -> Unit) {
     ListItem(
         modifier = Modifier
             .fillMaxWidth()
@@ -191,11 +186,7 @@ internal fun RecentSearches(
 }
 
 @Composable
-private fun RecentSearchRow(
-    query: String,
-    onSelect: () -> Unit,
-    onRemove: () -> Unit,
-) {
+private fun RecentSearchRow(query: String, onSelect: () -> Unit, onRemove: () -> Unit) {
     val searchAction = stringResource(R.string.explore_search_recent_query, query)
     val removeAction = stringResource(R.string.explore_remove_recent_search, query)
 

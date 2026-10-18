@@ -26,9 +26,7 @@ internal fun distinctPeopleById(people: List<ExplorePersonResult>): List<Explore
     return merged
 }
 
-internal fun buildExplorePersonRenderRows(
-    people: List<ExplorePersonResult>,
-): List<ExplorePersonRenderRow> {
+internal fun buildExplorePersonRenderRows(people: List<ExplorePersonResult>): List<ExplorePersonRenderRow> {
     val anonymousOccurrences = mutableMapOf<String, Int>()
     return people.map { person ->
         val stableId = person.id.trim()
@@ -48,9 +46,7 @@ internal fun buildExplorePersonRenderRows(
     }
 }
 
-internal fun buildExploreTaskRenderRows(
-    tasks: List<ExploreTaskResult>,
-): List<ExploreTaskRenderRow> {
+internal fun buildExploreTaskRenderRows(tasks: List<ExploreTaskResult>): List<ExploreTaskRenderRow> {
     val anonymousOccurrences = mutableMapOf<String, Int>()
     return tasks.map { task ->
         val stableId = task.id.trim()
@@ -124,10 +120,7 @@ internal fun exploreStatusKey(status: ExploreResultState.ContentStatus): String 
     is ExploreResultState.ContentStatus.PartialFailure -> "partial-${status.source.name.lowercase()}"
 }
 
-internal fun exploreRequestKey(
-    query: String,
-    searchArea: ExploreSearchArea,
-): String = buildString {
+internal fun exploreRequestKey(query: String, searchArea: ExploreSearchArea): String = buildString {
     append(query)
     append('|')
     append(searchArea.placeId.orEmpty())

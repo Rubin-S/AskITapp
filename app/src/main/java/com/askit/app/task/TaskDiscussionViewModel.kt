@@ -15,10 +15,7 @@ data class TaskDiscussionDraft(
     val revealedCommentId: String? = null,
 )
 
-class TaskDiscussionViewModel(
-    private val repository: TaskRepository,
-    private val savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+class TaskDiscussionViewModel(private val repository: TaskRepository, private val savedStateHandle: SavedStateHandle) : ViewModel() {
     val discussions = repository.discussions
     private var accountId: String? = savedStateHandle["discussion_account"]
     private val mutableDrafts = MutableStateFlow(restoreDrafts())
@@ -68,9 +65,12 @@ class TaskDiscussionViewModel(
         if (draft.text.isBlank()) return
         when (val result = repository.addComment(taskId, author, draft.text, draft.replyToId)) {
             is TaskCommentResult.Rejected -> update(taskId) { copy(error = result.reason) }
+
             is TaskCommentResult.Added -> update(taskId) {
                 copy(
-                    text = "", replyToId = null, error = null,
+                    text = "",
+                    replyToId = null,
+                    error = null,
                     expandedThreadIds = result.comment.parentId?.let { expandedThreadIds + it } ?: expandedThreadIds,
                     revealedCommentId = result.comment.id,
                 )
@@ -87,12 +87,15 @@ class TaskDiscussionViewModel(
         savedStateHandle["discussion_account"] = accountId
         savedStateHandle["discussion_drafts"] = Bundle().apply {
             mutableDrafts.value.forEach { (taskId, draft) ->
-                putBundle(taskId, Bundle().apply {
-                    putString("text", draft.text)
-                    putString("reply", draft.replyToId)
-                    putBoolean("open", draft.isOpen)
-                    putStringArrayList("expanded", ArrayList(draft.expandedThreadIds))
-                })
+                putBundle(
+                    taskId,
+                    Bundle().apply {
+                        putString("text", draft.text)
+                        putString("reply", draft.replyToId)
+                        putBoolean("open", draft.isOpen)
+                        putStringArrayList("expanded", ArrayList(draft.expandedThreadIds))
+                    },
+                )
             }
         }
     }

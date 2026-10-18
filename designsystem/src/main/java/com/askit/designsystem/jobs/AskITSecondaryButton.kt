@@ -11,11 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AskITSecondaryButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable RowScope.() -> Unit,
-) {
+fun AskITSecondaryButton(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     OutlinedButton(
         onClick = onClick,
         modifier = modifier.heightIn(min = 48.dp),

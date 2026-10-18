@@ -4,17 +4,17 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.CameraState
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
-import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FileOutputOptions
-import androidx.camera.video.Recording
 import androidx.camera.video.Recorder
+import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.compose.foundation.background
@@ -24,19 +24,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.Observer
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.askit.app.R
 import com.askit.app.story.STORY_MAX_DURATION_MS
 import java.io.File
@@ -233,11 +233,13 @@ fun StoryCamera(
                                 controller.isRecording = true
                             }
                         }
+
                         is VideoRecordEvent.Status -> {
                             if (active && captureGeneration == generation) {
                                 controller.recordedDurationMs = event.recordingStats.recordedDurationNanos / 1_000_000
                             }
                         }
+
                         is VideoRecordEvent.Finalize -> {
                             activeRecording = null
                             if (active) {
@@ -253,6 +255,7 @@ fun StoryCamera(
                                 controller.error = R.string.story_video_failed
                             }
                         }
+
                         else -> Unit
                     }
                 }

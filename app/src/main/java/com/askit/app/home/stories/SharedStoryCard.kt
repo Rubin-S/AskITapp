@@ -60,13 +60,20 @@ fun SharedStoryCard(reference: StoryReference, resolveStory: (String) -> Story?,
                         }
                     }
                     if (draft.mediaType == StoryMediaType.Video) {
-                        Text("▶", color = Color.White, style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.background(Color.Black.copy(alpha = .5f), RoundedCornerShape(50)).padding(8.dp))
+                        Text(
+                            "▶",
+                            color = Color.White,
+                            style = MaterialTheme.typography.headlineMedium,
+                            modifier = Modifier.background(Color.Black.copy(alpha = .5f), RoundedCornerShape(50)).padding(8.dp),
+                        )
                     }
                 }
             }
-            Text(stringResource(R.string.story_shared_author, reference.authorName),
-                style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(12.dp))
+            Text(
+                stringResource(R.string.story_shared_author, reference.authorName),
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(12.dp),
+            )
         }
     }
 }

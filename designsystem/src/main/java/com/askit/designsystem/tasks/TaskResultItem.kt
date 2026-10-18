@@ -1,6 +1,5 @@
 package com.askit.designsystem.tasks
 
-import com.askit.designsystem.listings.ListingBriefCard
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -31,6 +30,7 @@ import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.askit.designsystem.R
+import com.askit.designsystem.listings.ListingBriefCard
 import com.askit.designsystem.theme.AskITTheme
 
 enum class TaskResultStatus {

@@ -23,9 +23,13 @@ import com.askit.designsystem.jobs.AskITSecondaryButton
 
 internal fun Job.hasDetailActions(party: JobParty): Boolean = when (status) {
     JobStatus.Applied -> true
+
     JobStatus.Accepted, JobStatus.OnTheWay -> true
+
     JobStatus.Started -> isProvider(party)
+
     JobStatus.AwaitingSeekerComplete -> isSeeker(party)
+
     JobStatus.Completed,
     JobStatus.Canceled,
     JobStatus.Rejected,
@@ -45,12 +49,14 @@ internal fun JobDetailActions(
     Column(modifier = modifier.fillMaxWidth()) {
         when (job.status) {
             JobStatus.Applied -> AppliedActions(job, party, store)
+
             JobStatus.Accepted, JobStatus.OnTheWay -> VerifyActions(
                 job = job,
                 party = party,
                 onShareCode = onShareCode,
                 onEnterCode = onEnterCode,
             )
+
             JobStatus.Started -> if (job.isProvider(party)) {
                 Button(
                     onClick = { store.requestComplete(job.id) },
@@ -60,6 +66,7 @@ internal fun JobDetailActions(
                         .testTag("job_request_complete"),
                 ) { Text(stringResource(R.string.job_request_complete)) }
             }
+
             JobStatus.AwaitingSeekerComplete -> if (job.isSeeker(party)) {
                 Button(
                     onClick = onReview,
@@ -69,6 +76,7 @@ internal fun JobDetailActions(
                         .testTag("job_mark_complete"),
                 ) { Text(stringResource(R.string.job_mark_complete)) }
             }
+
             JobStatus.Completed,
             JobStatus.Canceled,
             JobStatus.Rejected,
@@ -86,6 +94,7 @@ private fun AppliedActions(job: Job, party: JobParty, store: JobsStore) {
                 .fillMaxWidth()
                 .testTag("job_cancel"),
         ) { Text(stringResource(R.string.job_cancel)) }
+
         JobParty.Receiver -> Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -108,14 +117,10 @@ private fun AppliedActions(job: Job, party: JobParty, store: JobsStore) {
 }
 
 @Composable
-private fun VerifyActions(
-    job: Job,
-    party: JobParty,
-    onShareCode: () -> Unit,
-    onEnterCode: () -> Unit,
-) {
+private fun VerifyActions(job: Job, party: JobParty, onShareCode: () -> Unit, onEnterCode: () -> Unit) {
     val canShare = job.isSeeker(party) && when (job.status) {
         JobStatus.Accepted, JobStatus.OnTheWay, JobStatus.Started -> true
+
         JobStatus.Applied,
         JobStatus.AwaitingSeekerComplete,
         JobStatus.Completed,
@@ -125,6 +130,7 @@ private fun VerifyActions(
     }
     val canEnter = job.isProvider(party) && when (job.status) {
         JobStatus.Accepted, JobStatus.OnTheWay -> true
+
         JobStatus.Applied,
         JobStatus.Started,
         JobStatus.AwaitingSeekerComplete,

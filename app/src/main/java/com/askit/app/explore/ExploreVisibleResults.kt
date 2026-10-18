@@ -49,6 +49,7 @@ internal fun deriveExploreVisibleResults(
     val submittedResults = submittedResultState as? ExploreResultState.Results
     val hasVisibleSubmittedResults = when (selectedScope) {
         ExploreResultScope.All -> false
+
         ExploreResultScope.People,
         ExploreResultScope.Services,
         -> submittedResults?.people?.isNotEmpty() == true
@@ -82,11 +83,10 @@ internal fun exploreFilterKeys(
 }
 
 /** Per-scope signature of the selected sort; a change resets that scope's scroll position. */
-internal fun exploreSortKeys(
-    selectedSortOptions: Map<ExploreResultScope, ExploreSortOption>,
-): Map<ExploreResultScope, String> = ExploreResultScope.entries.associateWith { scope ->
-    selectedSortOptions[scope]?.name.orEmpty()
-}
+internal fun exploreSortKeys(selectedSortOptions: Map<ExploreResultScope, ExploreSortOption>): Map<ExploreResultScope, String> =
+    ExploreResultScope.entries.associateWith { scope ->
+        selectedSortOptions[scope]?.name.orEmpty()
+    }
 
 internal fun Map<ExploreResultScope, String>.joinedScopeKey(): String =
     entries.joinToString("|") { (scope, value) -> "${scope.name}=$value" }

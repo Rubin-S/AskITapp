@@ -1,17 +1,17 @@
 package com.askit.app.posttask
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
+import com.askit.app.task.TaskGenderPreference
+import com.askit.app.task.TaskLanguage
+import com.askit.app.task.TaskProviderPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.math.BigDecimal
-import com.askit.app.task.TaskProviderPreferences
-import com.askit.app.task.TaskGenderPreference
-import com.askit.app.task.TaskLanguage
 
 enum class PostTaskWorkMode {
     AT_MY_LOCATION,
@@ -135,9 +135,7 @@ data class PostTaskDraft(
     val preferences: TaskProviderPreferences = TaskProviderPreferences(),
 )
 
-class PostTaskViewModel(
-    private val savedStateHandle: SavedStateHandle? = null,
-) : ViewModel() {
+class PostTaskViewModel(private val savedStateHandle: SavedStateHandle? = null) : ViewModel() {
 
     private val _formState = MutableStateFlow(restoreState())
     val formState: StateFlow<PostTaskFormState> = _formState.asStateFlow()
@@ -180,8 +178,12 @@ class PostTaskViewModel(
         setState(state)
     }
 
-    fun clearTask(taskId: String) { if (editingTaskId == taskId) startNewDraft() }
-    fun showSubmissionError(messageRes: Int) { mutableSubmissionError.value = messageRes }
+    fun clearTask(taskId: String) {
+        if (editingTaskId == taskId) startNewDraft()
+    }
+    fun showSubmissionError(messageRes: Int) {
+        mutableSubmissionError.value = messageRes
+    }
 
     fun updateTitle(value: String) = update { copy(title = value) }
 
@@ -211,12 +213,7 @@ class PostTaskViewModel(
 
     fun selectDate(dateMillis: Long?) = update { copy(selectedDateMillis = dateMillis) }
 
-    fun selectLocation(
-        placeId: String?,
-        publicAreaLabel: String,
-        latitude: Double,
-        longitude: Double,
-    ) = update {
+    fun selectLocation(placeId: String?, publicAreaLabel: String, latitude: Double, longitude: Double) = update {
         copy(
             placeId = placeId,
             publicAreaLabel = publicAreaLabel,
@@ -225,8 +222,7 @@ class PostTaskViewModel(
         )
     }
 
-    fun updatePrivateAddressOrLandmark(value: String) =
-        update { copy(privateAddressOrLandmark = value) }
+    fun updatePrivateAddressOrLandmark(value: String) = update { copy(privateAddressOrLandmark = value) }
 
     fun selectBudgetMode(budgetMode: PostTaskBudgetMode) = update { copy(budgetMode = budgetMode) }
 
@@ -252,13 +248,11 @@ class PostTaskViewModel(
 
     fun removePhoto(uri: String) = update { copy(photoUris = photoUris.filterNot { it == uri }) }
 
-    fun updateQuantityOrMeasurements(value: String) =
-        update { copy(quantityOrMeasurements = value) }
+    fun updateQuantityOrMeasurements(value: String) = update { copy(quantityOrMeasurements = value) }
 
     fun updateBrandOrModel(value: String) = update { copy(brandOrModel = value) }
 
-    fun selectMaterialsPolicy(policy: PostTaskMaterialsPolicy) =
-        update { copy(materialsPolicy = policy) }
+    fun selectMaterialsPolicy(policy: PostTaskMaterialsPolicy) = update { copy(materialsPolicy = policy) }
 
     fun updateAccessInstructions(value: String) = update { copy(accessInstructions = value) }
 
@@ -280,9 +274,11 @@ class PostTaskViewModel(
         val errors = validate(attemptedState)
         // Expand every collapsed section that owns an error, so the field Review scrolls to and
         // focuses is actually composed (focusing a collapsed field crashed or hid the error).
-        setState(attemptedState.copy(
-            expandedOptionalSections = attemptedState.expandedOptionalSections + errors.mapNotNull { it.owningSection() },
-        ))
+        setState(
+            attemptedState.copy(
+                expandedOptionalSections = attemptedState.expandedOptionalSections + errors.mapNotNull { it.owningSection() },
+            ),
+        )
         if (errors.isNotEmpty()) return false
 
         setState(attemptedState.copy(screenMode = PostTaskScreenMode.REVIEW))
@@ -374,17 +370,17 @@ class PostTaskViewModel(
             quantityOrMeasurements = handle.get<String>(QUANTITY_KEY).orEmpty(),
             brandOrModel = handle.get<String>(BRAND_KEY).orEmpty(),
             materialsPolicy = handle.get<String>(MATERIALS_KEY)
-            .toEnumOrNull<PostTaskMaterialsPolicy>(),
+                .toEnumOrNull<PostTaskMaterialsPolicy>(),
             accessInstructions = handle.get<String>(ACCESS_KEY).orEmpty(),
             expandedOptionalSections = handle.get<ArrayList<String>>(EXPANDED_KEY)
-            ?.mapNotNull { it.toEnumOrNull<PostTaskOptionalSection>() }
-            ?.toSet()
-            .orEmpty(),
+                ?.mapNotNull { it.toEnumOrNull<PostTaskOptionalSection>() }
+                ?.toSet()
+                .orEmpty(),
             hasAttemptedReview = handle.get<Boolean>(ATTEMPTED_REVIEW_KEY) ?: false,
             reviewAttempt = handle.get<Int>(REVIEW_ATTEMPT_KEY) ?: 0,
             screenMode = handle.get<String>(SCREEN_MODE_KEY)
-            .toEnumOrNull<PostTaskScreenMode>()
-            ?: PostTaskScreenMode.FORM,
+                .toEnumOrNull<PostTaskScreenMode>()
+                ?: PostTaskScreenMode.FORM,
         )
     }
 
@@ -447,11 +443,14 @@ internal fun PostTaskFormState.toDraft(): PostTaskDraft {
     }
     val budget = when (budgetMode) {
         PostTaskBudgetMode.REQUEST_QUOTES -> PostTaskBudget.RequestQuotes
+
         PostTaskBudgetMode.FIXED -> PostTaskBudget.Fixed(fixedBudget.trim())
+
         PostTaskBudgetMode.RANGE -> PostTaskBudget.Range(
             minimum = minimumBudget.trim(),
             maximum = maximumBudget.trim(),
         )
+
         null -> null
     }
     val itemDetails = PostTaskItemDetails(
@@ -509,13 +508,18 @@ private fun validate(state: PostTaskFormState): Set<PostTaskValidationField> = b
     fun validAge(value: String) = value.isEmpty() ||
         (value.matches(Regex("[0-9]+")) && value.toIntOrNull()?.let { it in 18..100 } == true)
     if (!validAge(minimumAge) || !validAge(maximumAge) ||
-        (minimumAge.isNotEmpty() && maximumAge.isNotEmpty() &&
-            (minimumAge.toIntOrNull() ?: 0) > (maximumAge.toIntOrNull() ?: 0))
-    ) add(PostTaskValidationField.AGE_PREFERENCE)
+        (
+            minimumAge.isNotEmpty() && maximumAge.isNotEmpty() &&
+                (minimumAge.toIntOrNull() ?: 0) > (maximumAge.toIntOrNull() ?: 0)
+            )
+    ) {
+        add(PostTaskValidationField.AGE_PREFERENCE)
+    }
     when (state.budgetMode) {
         PostTaskBudgetMode.FIXED -> if (!state.fixedBudget.isPositiveAmount()) {
             add(PostTaskValidationField.FIXED_BUDGET)
         }
+
         PostTaskBudgetMode.RANGE -> {
             val minimum = state.minimumBudget.toPositiveAmount()
             val maximum = state.maximumBudget.toPositiveAmount()
@@ -523,6 +527,7 @@ private fun validate(state: PostTaskFormState): Set<PostTaskValidationField> = b
                 add(PostTaskValidationField.BUDGET_RANGE)
             }
         }
+
         PostTaskBudgetMode.REQUEST_QUOTES, null -> Unit
     }
 }
@@ -536,13 +541,14 @@ private fun String.toPositiveAmount(): BigDecimal? = trim()
 private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? =
     this?.let { value -> enumValues<T>().firstOrNull { it.name == value } }
 
-
 internal val PostTaskDraft.isValid: Boolean
     get() = validate(toFormState()).isEmpty()
 
 private fun PostTaskFormState.contentKey(): String = copy(
-    expandedOptionalSections = emptySet(), hasAttemptedReview = false,
-    reviewAttempt = 0, screenMode = PostTaskScreenMode.FORM,
+    expandedOptionalSections = emptySet(),
+    hasAttemptedReview = false,
+    reviewAttempt = 0,
+    screenMode = PostTaskScreenMode.FORM,
     preferredLanguages = preferredLanguages.sortedBy { it.name }.toSet(),
 ).toString()
 

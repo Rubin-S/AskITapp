@@ -1,7 +1,7 @@
 package com.askit.app.session
 
-import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.auth.SignupDraft
+import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.profile.ProfileGalleryItem
 import com.askit.app.profile.ProfileReview
 import com.askit.app.profile.SavedProfessional
@@ -92,10 +92,7 @@ data class SessionProfile(
         }
 }
 
-class SessionProfileStore(
-    initial: SessionProfile = SessionProfile(),
-    private val persist: (SessionProfile) -> SessionProfile = { it },
-) {
+class SessionProfileStore(initial: SessionProfile = SessionProfile(), private val persist: (SessionProfile) -> SessionProfile = { it }) {
     private val _profile = MutableStateFlow(initial)
     val profile: StateFlow<SessionProfile> = _profile.asStateFlow()
 
@@ -104,28 +101,30 @@ class SessionProfileStore(
     }
 
     fun completeSignup(draft: SignupDraft) {
-        commit(SessionProfile(
-            accountId = _profile.value.accountId,
-            displayName = draft.fullName,
-            username = draft.username,
-            bio = "",
-            about = "",
-            city = if (draft.area.isNotBlank() && !draft.city.contains(draft.area, ignoreCase = true)) {
-                "${draft.area}, ${draft.city}"
-            } else {
-                draft.city
-            },
-            joinedYear = java.time.Year.now().toString(),
-            avatarUrl = draft.avatarUri,
-            lookingFor = emptyList(),
-            languages = emptyList(),
-            profileStrengthPercent = 0,
-            phoneNumber = draft.phoneNumber,
-            activeRole = "Seeker",
-            selectedLanguage = draft.preferredLanguage,
-            pincode = draft.pincode,
-            email = draft.email,
-        ))
+        commit(
+            SessionProfile(
+                accountId = _profile.value.accountId,
+                displayName = draft.fullName,
+                username = draft.username,
+                bio = "",
+                about = "",
+                city = if (draft.area.isNotBlank() && !draft.city.contains(draft.area, ignoreCase = true)) {
+                    "${draft.area}, ${draft.city}"
+                } else {
+                    draft.city
+                },
+                joinedYear = java.time.Year.now().toString(),
+                avatarUrl = draft.avatarUri,
+                lookingFor = emptyList(),
+                languages = emptyList(),
+                profileStrengthPercent = 0,
+                phoneNumber = draft.phoneNumber,
+                activeRole = "Seeker",
+                selectedLanguage = draft.preferredLanguage,
+                pincode = draft.pincode,
+                email = draft.email,
+            ),
+        )
     }
 
     fun applyListing(listing: ServiceListing, draft: ListServiceDraft? = null) {
@@ -145,20 +144,28 @@ class SessionProfileStore(
     fun updateIdentity(state: com.askit.app.profile.EditProfileFormState) {
         require(state.isValid)
         val account = state.accountDraft().normalized()
-        update { it.copy(displayName = account.fullName,
-            username = if (it.username.removePrefix("@") == account.username) it.username else account.username, city = account.city,
-            bio = state.bio.trim(), title = state.title.trim(), avatarUrl = account.avatarUri,
-            email = account.email, pincode = account.pincode, phoneNumber = account.phoneNumber,
-            selectedLanguage = account.preferredLanguage, discloseApproximateLocation = state.discloseApproximateLocation,
-            listingDraft = it.listingDraft?.copy(contactPhone = account.phoneNumber, contactEmail = account.email.orEmpty())) }
+        update {
+            it.copy(
+                displayName = account.fullName,
+                username = if (it.username.removePrefix("@") == account.username) it.username else account.username, city = account.city,
+                bio = state.bio.trim(), title = state.title.trim(), avatarUrl = account.avatarUri,
+                email = account.email, pincode = account.pincode, phoneNumber = account.phoneNumber,
+                selectedLanguage = account.preferredLanguage, discloseApproximateLocation = state.discloseApproximateLocation,
+                listingDraft = it.listingDraft?.copy(contactPhone = account.phoneNumber, contactEmail = account.email.orEmpty()),
+            )
+        }
     }
 
     fun saveHighlight(actorId: String, highlight: com.askit.app.profile.ProfileHighlight) = update { current ->
         require(actorId == current.accountId)
         highlight.validate(actorId)
-        current.copy(highlights = if (current.highlights.any { it.id == highlight.id }) {
-            current.highlights.map { if (it.id == highlight.id) highlight else it }
-        } else current.highlights + highlight)
+        current.copy(
+            highlights = if (current.highlights.any { it.id == highlight.id }) {
+                current.highlights.map { if (it.id == highlight.id) highlight else it }
+            } else {
+                current.highlights + highlight
+            },
+        )
     }
 
     fun deleteHighlight(actorId: String, id: String) = update { current ->
@@ -170,7 +177,9 @@ class SessionProfileStore(
     private fun update(transform: (SessionProfile) -> SessionProfile) = commit(transform(_profile.value))
 
     @Synchronized
-    private fun commit(next: SessionProfile) { _profile.value = persist(next) }
+    private fun commit(next: SessionProfile) {
+        _profile.value = persist(next)
+    }
 
     fun setBanner(actorId: String, uri: String?) = update {
         require(actorId.isNotBlank() && actorId == it.accountId)
@@ -193,8 +202,12 @@ class SessionProfileStore(
 
     fun appendReview(review: ProfileReview) {
         update { current ->
-            require(review.recipientAccountId == current.accountId && review.reviewerAccountId != current.accountId && review.direction != null)
-            if (current.reviews.any { it.id == review.id }) current else {
+            require(
+                review.recipientAccountId == current.accountId && review.reviewerAccountId != current.accountId && review.direction != null,
+            )
+            if (current.reviews.any { it.id == review.id }) {
+                current
+            } else {
                 current.copy(reviews = listOf(review) + current.reviews)
             }
         }

@@ -14,22 +14,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalConfiguration
-import com.askit.app.R as AppR
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.askit.app.home.model.FeedItem
 import com.askit.app.home.model.ServicePreview
 import com.askit.designsystem.services.ServiceResultItem
+import com.askit.app.R as AppR
 
 @Composable
-fun HomeServicesSection(
-    section: FeedItem.ServiceSection,
-    modifier: Modifier = Modifier,
-    onServiceClick: (ServicePreview) -> Unit = {},
-) {
+fun HomeServicesSection(section: FeedItem.ServiceSection, modifier: Modifier = Modifier, onServiceClick: (ServicePreview) -> Unit = {}) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -70,11 +66,7 @@ fun HomeServicesSection(
 }
 
 @Composable
-private fun HomeServiceCard(
-    service: ServicePreview,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun HomeServiceCard(service: ServicePreview, onClick: () -> Unit, modifier: Modifier = Modifier) {
     ServiceResultItem(
         serviceTitle = service.title,
         category = service.category,

@@ -14,11 +14,7 @@ import com.askit.app.variant.VariantContent
  * view models. It is retained across configuration changes (it is a [ViewModel] owned by the
  * activity) and dropped with the activity, which is what happens on sign-out.
  */
-class SessionGraph(
-    config: AppConfig,
-    content: VariantContent,
-    previewStorage: ProfileSnapshotStorage?,
-) : ViewModel() {
+class SessionGraph(config: AppConfig, content: VariantContent, previewStorage: ProfileSnapshotStorage?) : ViewModel() {
     /** Set once demo content has been seeded into this graph (client-preview builds only). */
     var previewSeeded = false
 
