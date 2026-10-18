@@ -56,7 +56,9 @@ class MessagingPrivacyTest {
         assertTrue(store.sendStory(contact, story))
         access = MessageAccess.VerifiedOnly
         assertFalse(store.sendStory(contact, story))
-        assertEquals(3, store.messages(contact.id).size)
+        // Stores start empty now, so only the one allowed share is in the thread.
+        assertEquals(1, store.messages(contact.id).size)
+        assertEquals("story", store.messages(contact.id).single().sharedStory?.storyId)
     }
 
     @Test fun switchingAccountsPreservesRecipientBlocksAndRejectsStaleStoreWrites() {
