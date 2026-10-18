@@ -2,6 +2,7 @@ package com.askit.app.createpost
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.askit.app.forms.toEnumOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -578,6 +579,3 @@ internal fun PostDraft.isValidPostDraft(): Boolean =
 
 private const val MIN_POLL_OPTIONS = CreatePostViewModel.MIN_POLL_OPTIONS
 private const val MAX_POLL_OPTIONS = CreatePostViewModel.MAX_POLL_OPTIONS
-
-private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? =
-    this?.let { value -> enumValues<T>().firstOrNull { it.name == value } }

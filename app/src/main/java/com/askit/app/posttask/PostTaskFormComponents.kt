@@ -27,7 +27,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
-import com.askit.app.task.formatTaskDate
 import com.askit.app.task.labelRes
 
 @Composable
@@ -144,5 +143,3 @@ internal fun PostTaskError(@StringRes messageRes: Int) {
         modifier = Modifier.semantics { error(message) },
     )
 }
-
-internal fun formatDate(millis: Long): String = formatTaskDate(millis)

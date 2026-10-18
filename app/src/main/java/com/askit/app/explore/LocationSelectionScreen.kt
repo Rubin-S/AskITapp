@@ -147,15 +147,6 @@ fun SearchAreaRoute(
     )
 }
 
-@Composable
-fun SearchAreaScreen(confirmedArea: ExploreSearchArea, onBack: () -> Unit, onApply: (ExploreSearchArea) -> Unit) {
-    SearchAreaScreen(
-        confirmedArea = confirmedArea,
-        onBack = onBack,
-        onApply = { searchArea, _ -> onApply(searchArea) },
-    )
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchAreaScreen(

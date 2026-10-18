@@ -2,11 +2,13 @@ package com.askit.app.listservice
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.askit.app.forms.isPositiveAmount
+import com.askit.app.forms.toEnumOrNull
+import com.askit.app.forms.toPositiveAmount
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
-import java.math.BigDecimal
 
 @Serializable
 enum class ListServiceDeliveryMode {
@@ -548,15 +550,6 @@ private fun validate(state: ListServiceFormState): Set<ListServiceValidationFiel
         -> Unit
     }
 }
-
-private fun String.isPositiveAmount(): Boolean = toPositiveAmount() != null
-
-private fun String.toPositiveAmount(): BigDecimal? = trim()
-    .toBigDecimalOrNull()
-    ?.takeIf { it > BigDecimal.ZERO }
-
-private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? =
-    this?.let { value -> enumValues<T>().firstOrNull { it.name == value } }
 
 /** The collapsible optional section a validation field lives in, or null if always visible. */
 internal fun ListServiceValidationField.owningSection(): ListServiceOptionalSection? = when (this) {

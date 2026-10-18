@@ -34,6 +34,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.category.ASKIT_SERVICE_CATEGORIES
+import com.askit.app.task.formatTaskDate
 import com.askit.app.task.labelRes
 import com.askit.designsystem.inputs.AskITTextField
 
@@ -411,7 +412,7 @@ private fun PostTaskWhenSection(
                 .testTag("post_task_date_picker"),
         ) {
             Text(
-                text = state.selectedDateMillis?.let(::formatDate)
+                text = state.selectedDateMillis?.let { formatTaskDate(it) }
                     ?.let { date -> stringResource(R.string.post_task_selected_date, date) }
                     ?: stringResource(R.string.post_task_select_date),
                 modifier = Modifier.fillMaxWidth(),

@@ -20,28 +20,8 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Segmented story progress indicator: completed segments are full, the active segment fills by
- * [activeSegmentFraction] (0f..1f), upcoming segments are empty.
- */
-@Composable
-fun StoryProgressRow(
-    segmentCount: Int,
-    activeSegmentIndex: Int,
-    activeSegmentFraction: Float,
-    modifier: Modifier = Modifier,
-    trackColor: Color = Color.White.copy(alpha = 0.35f),
-    fillColor: Color = Color.White,
-) = StoryProgressRow(
-    segmentCount = segmentCount,
-    activeSegmentIndex = activeSegmentIndex,
-    activeSegmentFraction = { activeSegmentFraction },
-    modifier = modifier,
-    trackColor = trackColor,
-    fillColor = fillColor,
-)
-
-/**
- * Same as the Float overload, but reads [activeSegmentFraction] only while drawing, so a
- * per-frame playback fraction redraws the bar without recomposing it or its callers.
+ * [activeSegmentFraction] (0f..1f), upcoming segments are empty. The fraction is read only while
+ * drawing, so a per-frame playback fraction redraws the bar without recomposing it or its callers.
  */
 @Composable
 fun StoryProgressRow(

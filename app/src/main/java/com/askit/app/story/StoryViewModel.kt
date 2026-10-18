@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.askit.app.forms.toEnumOrNull
 import com.askit.app.home.model.FeedPost
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -455,8 +456,6 @@ class StoryViewModel(
             drawStrokeColorArgb = handle.get<Long>(DRAW_COLOR_KEY) ?: 0xFFFFFFFF,
         )
     }
-
-    private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? = this?.let { runCatching { enumValueOf<T>(it) }.getOrNull() }
 
     companion object {
         private const val SCREEN_MODE_KEY = "story_screen_mode"

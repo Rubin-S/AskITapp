@@ -5,13 +5,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.askit.app.forms.isPositiveAmount
+import com.askit.app.forms.toEnumOrNull
+import com.askit.app.forms.toPositiveAmount
 import com.askit.app.task.TaskGenderPreference
 import com.askit.app.task.TaskLanguage
 import com.askit.app.task.TaskProviderPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.math.BigDecimal
 
 enum class PostTaskWorkMode {
     AT_MY_LOCATION,
@@ -531,15 +533,6 @@ private fun validate(state: PostTaskFormState): Set<PostTaskValidationField> = b
         PostTaskBudgetMode.REQUEST_QUOTES, null -> Unit
     }
 }
-
-private fun String.isPositiveAmount(): Boolean = toPositiveAmount() != null
-
-private fun String.toPositiveAmount(): BigDecimal? = trim()
-    .toBigDecimalOrNull()
-    ?.takeIf { it > BigDecimal.ZERO }
-
-private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? =
-    this?.let { value -> enumValues<T>().firstOrNull { it.name == value } }
 
 internal val PostTaskDraft.isValid: Boolean
     get() = validate(toFormState()).isEmpty()

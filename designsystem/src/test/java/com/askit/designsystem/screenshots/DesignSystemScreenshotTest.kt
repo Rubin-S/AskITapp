@@ -119,7 +119,7 @@ class DesignSystemScreenshotTest {
                 .background(Color.Black)
                 .padding(12.dp),
         ) {
-            StoryProgressRow(segmentCount = 4, activeSegmentIndex = 1, activeSegmentFraction = 0.5f)
+            StoryProgressRow(segmentCount = 4, activeSegmentIndex = 1, activeSegmentFraction = { 0.5f })
         }
     }
 
