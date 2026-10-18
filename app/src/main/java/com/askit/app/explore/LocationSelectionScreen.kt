@@ -400,10 +400,10 @@ fun SearchAreaScreen(
     if (showPreviewLocations) {
         AlertDialog(
             onDismissRequest = { showPreviewLocations = false },
-            title = { Text("Choose a demo location") },
+            title = { Text(stringResource(R.string.location_demo_title)) },
             text = {
                 Column {
-                    Text("Offline sample areas for exploring location-based forms.")
+                    Text(stringResource(R.string.location_demo_message))
                     listOf(
                         Triple("Coimbatore", 11.0168, 76.9558),
                         Triple("Chennai", 13.0827, 80.2707),
@@ -416,7 +416,7 @@ fun SearchAreaScreen(
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showPreviewLocations = false }) { Text("Cancel") } },
+            confirmButton = { TextButton(onClick = { showPreviewLocations = false }) { Text(stringResource(R.string.location_demo_cancel)) } },
         )
     }
 

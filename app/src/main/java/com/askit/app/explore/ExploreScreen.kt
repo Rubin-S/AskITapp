@@ -204,6 +204,8 @@ fun ExploreScreen(
         closeSearch()
     }
 
+    val professionalsQuery = stringResource(R.string.explore_query_professionals)
+    val tasksQuery = stringResource(R.string.explore_tasks)
     val personClick = onPersonClick
     val taskClick = onTaskClick
 
@@ -331,12 +333,12 @@ fun ExploreScreen(
                 onChangeArea = ::openFilters,
                 onRetryBrowseSection = onRetryBrowseSection,
                 onViewMorePeople = {
-                    onQuerySubmitted("Professionals")
+                    onQuerySubmitted(professionalsQuery)
                     selectedScopeOrdinal = ExploreResultScope.People.ordinal
                     closeSearch()
                 },
                 onViewMoreTasks = {
-                    onQuerySubmitted("Tasks")
+                    onQuerySubmitted(tasksQuery)
                     selectedScopeOrdinal = ExploreResultScope.Tasks.ordinal
                     closeSearch()
                 },

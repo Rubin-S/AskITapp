@@ -223,7 +223,7 @@ fun HomeScreen(
 
             is HomeUiState.Error -> {
                 HomeErrorState(
-                    message = state.message ?: "Something went wrong loading your feed.",
+                    message = state.message ?: stringResource(R.string.home_feed_error_fallback),
                     onRetry = { viewModel.refresh() },
                 )
             }

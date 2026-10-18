@@ -1112,4 +1112,12 @@
     <string name="story_download_saved">உங்கள் கேலரியில் சேமிக்கப்பட்டது</string>
     <string name="story_download_failed">கேலரியில் சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.</string>
     <string name="story_download_permission_denied">ஸ்டோரிகளைக் கேலரியில் சேமிக்க சேமிப்பக அணுகலை அனுமதிக்கவும்.</string>
+    <string name="settings_language_english">English (ஆங்கிலம்)</string>
+    <string name="settings_language_tamil">தமிழ்</string>
+    <string name="explore_query_professionals">நிபுணர்கள்</string>
+    <string name="location_demo_title">டெமோ இருப்பிடத்தைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="location_demo_message">இருப்பிடம் சார்ந்த படிவங்களை முயற்சிக்க ஆஃப்லைன் மாதிரிப் பகுதிகள்.</string>
+    <string name="location_demo_cancel">ரத்து செய்</string>
+    <string name="create_post_media_photos">புகைப்படங்கள்</string>
+    <string name="home_feed_error_fallback">உங்கள் ஊட்டத்தை ஏற்றுவதில் ஏதோ தவறு ஏற்பட்டது.</string>
 </resources>

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.stateIn
 private val DEFAULT_SEARCH_AREA = ExploreSearchArea(
     placeId = null,
     displayName = "Kallakurichi",
-    supportingText = "Tamil Nadu",
+    supportingText = "Tamil Nadu", // i18n-ignore: fixture place name
     latitude = 11.7401,
     longitude = 78.9597,
     radiusKm = 10,

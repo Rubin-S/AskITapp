@@ -1115,4 +1115,14 @@
     <string name="story_download_saved">Saved to your gallery</string>
     <string name="story_download_failed">Couldn\'t save to your gallery. Try again.</string>
     <string name="story_download_permission_denied">Allow storage access to save stories to your gallery.</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_tamil">Tamil (தமிழ்)</string>
+    <string name="explore_query_professionals">Professionals</string>
+    <string name="location_demo_title">Choose a demo location</string>
+    <string name="location_demo_message">Offline sample areas for exploring location-based forms.</string>
+    <string name="location_demo_cancel">Cancel</string>
+    <string name="create_post_media_photos">Photos</string>
+    <string name="home_feed_error_fallback">Something went wrong loading your feed.</string>
+    <string name="language_endonym_english" translatable="false">English</string>
+    <string name="language_endonym_tamil" translatable="false">தமிழ்</string>
 </resources>

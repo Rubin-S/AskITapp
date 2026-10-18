@@ -129,7 +129,7 @@ fun CreatePostMediaCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         MediaSegment(
-                            title = "Photos",
+                            title = stringResource(R.string.create_post_media_photos),
                             iconRes = DesignR.drawable.ic_photo,
                             isSelected = !isBeforeAfter,
                             onClick = { onToggleMediaLayout(PostMediaLayout.GALLERY) },
