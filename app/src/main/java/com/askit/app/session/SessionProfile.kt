@@ -44,23 +44,18 @@ data class ProfileAvailability(
 
 @Serializable
 data class SessionProfile(
-    val displayName: String = "Meera Raman",
-    val username: String = "meera.raman",
-    val bio: String = "Homeowner · Hiring local pros for home care.",
-    val about: String = "Homeowner looking after a small independent house — mostly plumbing, electrical, and the occasional carpentry job. I like booking providers who show up on time and explain the work before starting.",
-    val city: String = "Gandhipuram, Coimbatore",
-    val joinedYear: String = "2023",
+    // Neutral defaults: no demo persona. An unloaded/cleared profile is blank, never "someone".
+    val displayName: String = "",
+    val username: String = "",
+    val bio: String = "",
+    val about: String = "",
+    val city: String = "",
+    val joinedYear: String = "",
     val avatarUrl: String? = null,
-    val lookingFor: List<String> = listOf(
-        "Plumbing",
-        "Electrical repair",
-        "Carpentry",
-        "Home painting",
-        "AC service",
-    ),
+    val lookingFor: List<String> = emptyList(),
     val skills: List<String> = emptyList(),
-    val languages: List<Pair<String, String>> = listOf("Tamil" to "Fluent", "English" to "Fluent"),
-    val profileStrengthPercent: Int = 72,
+    val languages: List<Pair<String, String>> = emptyList(),
+    val profileStrengthPercent: Int = 0,
     val hasListedService: Boolean = false,
     val listing: ServiceListing? = null,
     val listingDraft: ListServiceDraft? = null,
@@ -71,8 +66,8 @@ data class SessionProfile(
     val savedProfessionals: List<SavedProfessional> = emptyList(),
     val followingCount: Int = 0,
     val followerCount: Int = 0,
-    val phoneNumber: String = "9876543298",
-    val activeRole: String = "Both",
+    val phoneNumber: String = "",
+    val activeRole: String = "Seeker",
     val pushNotificationsEnabled: Boolean = true,
     val jobAlertsEnabled: Boolean = true,
     val selectedLanguage: String = "English",
@@ -235,19 +230,3 @@ class SessionProfileStore(
         commit(SessionProfile(accountId = _profile.value.accountId))
     }
 }
-
-val DefaultCarpentryListing = ServiceListing(
-    title = "Custom carpentry & woodwork",
-    category = "Carpentry",
-    description = "Quality woodworking from custom furniture and cabinets to repairs. Clear quotes before work starts.",
-    quoteLabel = "Quote on visit",
-    coverage = "Gandhipuram",
-    coverageHint = "Up to 10 km",
-    hours = "9:00 AM – 7:00 PM",
-    hoursHint = "6 days / week",
-    response = "within 1 hour",
-    responseHint = "Travels to site",
-    tags = listOf("Custom furniture", "Cabinets", "Repairs"),
-    experience = "3 yrs exp",
-    live = true,
-)
