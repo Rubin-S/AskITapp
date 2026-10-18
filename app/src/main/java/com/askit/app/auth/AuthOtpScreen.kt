@@ -30,7 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,7 +67,8 @@ fun AuthOtpScreen(
     challengeId: String? = null,
     isResending: Boolean = false,
 ) {
-    var otpCode by remember(phoneNumber, challengeId) { mutableStateOf("") }
+    // Saveable so a rotation or dark-mode switch keeps what the user typed; a new challenge resets it.
+    var otpCode by rememberSaveable(phoneNumber, challengeId) { mutableStateOf("") }
 
     val scrollState = rememberScrollState()
     val isDark = isSystemInDarkTheme()
