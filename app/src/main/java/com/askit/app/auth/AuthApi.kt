@@ -74,7 +74,17 @@ class AuthApi(baseUrl: String, client: OkHttpClient = OkHttpClient()) {
     suspend fun refreshSession(refreshToken: String): RefreshedTokens {
         require(refreshToken.isNotBlank())
         val body = buildJsonObject { put("refreshToken", refreshToken) }.toString()
-        val tokens = decode<RefreshedTokens>(post("v1/auth/sessions/refresh", body, 200))
+        val response = try {
+            backend.request("v1/auth/sessions/refresh", body, 200)
+        } catch (error: BackendResponseException) {
+            // A rejected refresh token (revoked, reused, expired, or a bare 401/403 from a proxy)
+            // can never succeed on retry. Route it to expired-session recovery instead of a
+            // generic Retry that would replay the dead token forever.
+            if (isRefreshTokenRejected(error.status)) throw AuthApiException(AuthError.SessionExpired)
+            val content = error.body ?: throw AuthApiException(AuthError.InvalidResponse)
+            throw responseError(error.status, content)
+        }
+        val tokens = decode<RefreshedTokens>(response)
         if (tokens.accessToken.isBlank() || tokens.accessToken.any { it !in '!'..'~' } ||
             tokens.refreshToken.isBlank() || tokens.expiresInSeconds <= 0
         ) {
@@ -133,6 +143,9 @@ class AuthApi(baseUrl: String, client: OkHttpClient = OkHttpClient()) {
     @Serializable
     private data class ErrorResponse(val code: String, val retryAfterSeconds: Long? = null)
 }
+
+/** Any 401 or 403 from the refresh endpoint means the refresh token is unusable, whatever the body says. */
+internal fun isRefreshTokenRejected(status: Int): Boolean = status == 401 || status == 403
 
 /**
  * Parses and validates a `GET /v1/me` body (docs/current-account-contract.md). Every failure,
