@@ -30,12 +30,20 @@ import javax.crypto.spec.GCMParameterSpec
 @Serializable
 class StoredAuthSession(val refreshToken: String, val userId: String, val profileComplete: Boolean)
 
-class AuthSessionStore(context: Context, backendBaseUrl: String, private val keyProvider: () -> SecretKey = ::sessionKey) {
+/** Where [AuthViewModel] keeps the refresh token. [AuthSessionStore] is the encrypted on-device implementation. */
+interface AuthSessionStorage {
+    suspend fun save(session: StoredAuthSession)
+    suspend fun load(): StoredAuthSession?
+    suspend fun clear()
+}
+
+class AuthSessionStore(context: Context, backendBaseUrl: String, private val keyProvider: () -> SecretKey = ::sessionKey) :
+    AuthSessionStorage {
     private val file = File(context.noBackupFilesDir, "auth-session")
     private val pendingFile = File(context.noBackupFilesDir, "auth-session.pending")
     private val binding = backendBaseUrl.toHttpUrl().toString().toByteArray(Charsets.UTF_8)
 
-    suspend fun save(session: StoredAuthSession): Unit = withContext(Dispatchers.IO) {
+    override suspend fun save(session: StoredAuthSession): Unit = withContext(Dispatchers.IO) {
         require(session.refreshToken.isNotBlank() && session.userId.isNotBlank())
         mutex.withLock {
             val cipher = cipher(Cipher.ENCRYPT_MODE)
@@ -66,7 +74,7 @@ class AuthSessionStore(context: Context, backendBaseUrl: String, private val key
         }
     }
 
-    suspend fun load(): StoredAuthSession? = withContext(Dispatchers.IO) {
+    override suspend fun load(): StoredAuthSession? = withContext(Dispatchers.IO) {
         mutex.withLock {
             val input = try {
                 file.inputStream()
@@ -102,7 +110,7 @@ class AuthSessionStore(context: Context, backendBaseUrl: String, private val key
         }
     }
 
-    suspend fun clear(): Unit = withContext(Dispatchers.IO) {
+    override suspend fun clear(): Unit = withContext(Dispatchers.IO) {
         mutex.withLock {
             Files.deleteIfExists(file.toPath())
             Files.deleteIfExists(pendingFile.toPath())

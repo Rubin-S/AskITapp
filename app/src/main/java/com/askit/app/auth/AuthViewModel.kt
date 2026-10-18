@@ -35,7 +35,7 @@ class AuthViewModel(
     val clientPreview: Boolean = false,
     private val api: AuthApi? = null,
     private val clock: () -> Long = SystemClock::elapsedRealtime,
-    private val sessionStore: AuthSessionStore? = null,
+    private val sessionStore: AuthSessionStorage? = null,
     val profileStore: SessionProfileStore = SessionProfileStore(),
     private val previewProfileLoader: (String) -> com.askit.app.session.SessionProfile? = { null },
 ) : ViewModel() {
@@ -146,7 +146,7 @@ class AuthViewModel(
         )
     }
 
-    private suspend fun refreshSession(stored: StoredAuthSession, api: AuthApi, store: AuthSessionStore) {
+    private suspend fun refreshSession(stored: StoredAuthSession, api: AuthApi, store: AuthSessionStorage) {
         val tokens = api.refreshSession(stored.refreshToken)
         accessExpiresAtMillis = retryDeadline(tokens.expiresInSeconds)
         persistSession(
@@ -161,7 +161,7 @@ class AuthViewModel(
         )
     }
 
-    private suspend fun persistSession(value: AuthSession, store: AuthSessionStore) {
+    private suspend fun persistSession(value: AuthSession, store: AuthSessionStorage) {
         sessionPendingStorage = value
         store.save(StoredAuthSession(value.refreshToken, value.userId, value.profileComplete))
         sessionPendingStorage = null
@@ -227,7 +227,7 @@ class AuthViewModel(
         submitCodeRequest(api, sessionStore, current.phoneNumber, isResend = true)
     }
 
-    private fun submitCodeRequest(api: AuthApi, store: AuthSessionStore, phoneNumber: String, isResend: Boolean) {
+    private fun submitCodeRequest(api: AuthApi, store: AuthSessionStorage, phoneNumber: String, isResend: Boolean) {
         request = viewModelScope.launch {
             var storageReady = isResend
             try {
