@@ -35,6 +35,9 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
+      - name: Hardcoded UI strings
+        run: python3 scripts/check_hardcoded_strings.py
+
       - name: Lint
         run: ./gradlew lintDebug lintRelease
 
