@@ -31,6 +31,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import com.askit.app.R as AppR
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.stateDescription
@@ -107,11 +109,13 @@ private fun HomePersonCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val density = LocalDensity.current
+    val windowWidth = with(density) { LocalWindowInfo.current.containerSize.width.toDp() }
     Card(
         modifier = modifier
             .width(
-                (180f * LocalConfiguration.current.fontScale.coerceAtLeast(1f))
-                    .coerceAtMost((LocalConfiguration.current.screenWidthDp - 32).coerceAtLeast(1).toFloat()).dp,
+                (180.dp * density.fontScale.coerceAtLeast(1f))
+                    .coerceAtMost((windowWidth - 32.dp).coerceAtLeast(1.dp)),
             )
             .clickable(role = Role.Button, onClick = onClick),
         shape = RoundedCornerShape(16.dp),
