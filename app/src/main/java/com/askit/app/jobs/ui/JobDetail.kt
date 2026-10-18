@@ -37,6 +37,7 @@ import com.askit.app.jobs.JobStatus
 import com.askit.app.jobs.JobWorkMode
 import com.askit.app.jobs.JobsStore
 import com.askit.app.jobs.currentStep
+import com.askit.app.jobs.elapsedMillis
 import com.askit.app.jobs.formatElapsed
 import com.askit.app.jobs.jobBannerSupportingRes
 import com.askit.app.jobs.jobBannerTitleRes
@@ -153,10 +154,10 @@ fun JobDetail(
                 steps = stepperItems,
                 stepOfDescription = stringResource(R.string.job_step_of, currentIndex, steps.size),
             )
-            val startedAt = job.startedAtMillis
-            if (startedAt != null) {
+            val elapsed = job.elapsedMillis(now)
+            if (elapsed != null) {
                 Text(
-                    text = stringResource(R.string.job_elapsed, formatElapsed(now - startedAt)),
+                    text = stringResource(R.string.job_elapsed, formatElapsed(elapsed)),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.testTag("job_elapsed"),

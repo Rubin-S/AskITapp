@@ -34,16 +34,10 @@ enum class JobStep {
     Complete,
 }
 
-enum class JobsFilter {
-    Active,
-    History,
-}
-
 data class Job(
     val id: String,
     val title: String,
     val counterpartName: String,
-    val counterpartAvatarUrl: String? = null,
     val kind: JobKind,
     val localParty: JobParty,
     val status: JobStatus,
@@ -78,6 +72,9 @@ fun Job.isSeeker(party: JobParty): Boolean = when (kind) {
 }
 
 fun Job.isProvider(party: JobParty): Boolean = !isSeeker(party)
+
+/** Time since the job started, never negative; null before it starts. */
+fun Job.elapsedMillis(nowMillis: Long): Long? = startedAtMillis?.let { (nowMillis - it).coerceAtLeast(0L) }
 
 fun Job.stepperSteps(): List<JobStep> = if (workMode == JobWorkMode.Remote) {
     listOf(JobStep.Applied, JobStep.Accepted, JobStep.Started, JobStep.Complete)

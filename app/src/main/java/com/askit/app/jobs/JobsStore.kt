@@ -94,7 +94,7 @@ class JobsStore(
         if (accountId.isNullOrBlank()) return ApplyToTaskResult.Rejected(TaskActionFailure.SIGN_IN_REQUIRED)
         val task = repository.getTask(taskId) ?: return ApplyToTaskResult.Rejected(TaskActionFailure.UNAVAILABLE)
         val profile = profileStore.profile.value
-        val policy = task.actionPolicy(accountId, profile.hasListedService && profile.listing != null)
+        val policy = task.actionPolicy(accountId, profile.hasActiveServiceListing)
         if (policy.isOwner) return ApplyToTaskResult.Rejected(TaskActionFailure.NOT_ALLOWED)
         if (!policy.showApply) return ApplyToTaskResult.NeedsListedService
         taskApplication(taskId, accountId)?.let { return ApplyToTaskResult.AlreadyApplied(it.id) }
@@ -139,8 +139,6 @@ class JobsStore(
         if (visibleParty(job) != JobParty.Applicant) return@update job
         job.copy(status = JobStatus.Canceled, inHistory = true)
     }
-
-    fun verifyOtp(jobId: String, code: String): Boolean = verifyStartCode(jobId, code) == StartCodeCheck.Verified
 
     /** Provider enters the seeker's code. Attempts are limited per job; see [JobStartCodeAuthority]. */
     @Synchronized

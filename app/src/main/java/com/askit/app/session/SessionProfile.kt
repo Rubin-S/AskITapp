@@ -88,7 +88,9 @@ data class SessionProfile(
     val highlights: List<com.askit.app.profile.ProfileHighlight> = emptyList(),
     val discloseApproximateLocation: Boolean = false,
 ) {
-    val showsServiceCard: Boolean get() = hasListedService && listing != null
+    /** True when the account has a published service listing, so it can apply to tasks as a provider. */
+    val hasActiveServiceListing: Boolean get() = hasListedService && listing != null
+
     val maskedPhoneNumber: String
         get() = if (phoneNumber.length >= 4) {
             "${phoneNumber.take(2)}••••••${phoneNumber.takeLast(2)}"
@@ -203,19 +205,6 @@ class SessionProfileStore(initial: SessionProfile = SessionProfile(), private va
     fun setAvatar(actorId: String, avatarUrl: String?) = update {
         require(actorId.isNotBlank() && actorId == it.accountId)
         it.copy(avatarUrl = avatarUrl)
-    }
-
-    fun appendReview(review: ProfileReview) {
-        update { current ->
-            require(
-                review.recipientAccountId == current.accountId && review.reviewerAccountId != current.accountId && review.direction != null,
-            )
-            if (current.reviews.any { it.id == review.id }) {
-                current
-            } else {
-                current.copy(reviews = listOf(review) + current.reviews)
-            }
-        }
     }
 
     fun updateActiveRole(role: String) {

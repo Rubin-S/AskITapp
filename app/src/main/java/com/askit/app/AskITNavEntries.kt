@@ -678,13 +678,8 @@ internal fun rememberAskITEntryProvider(
                 } else {
                     null
                 },
-                savedPosts = postAccount.saved.mapNotNull { id ->
-                    postRecords[id]?.takeIf {
-                        !it.archived ||
-                            homeViewModel.posts.isOwner(it, postAccount.accountId)
-                    }
-                },
-                archivedPosts = postRecords.values.filter { it.archived && homeViewModel.posts.isOwner(it, postAccount.accountId) },
+                savedPosts = remember(postRecords, postAccount) { homeViewModel.posts.savedPosts() },
+                archivedPosts = remember(postRecords, postAccount) { homeViewModel.posts.archivedPosts() },
                 onOpenPost = { navigationState.push(AppDestination.PostDetail(it)) },
                 onRestorePost = { id ->
                     val result = homeViewModel.posts.setArchived(id, currentTaskAccountId(), false)
@@ -904,7 +899,7 @@ internal fun rememberAskITEntryProvider(
                 actionsViewModel = taskActionsViewModel,
                 accountId = discussionAccountId,
                 currentAccountId = ::currentTaskAccountId,
-                hasServiceListing = serviceProfile.hasListedService && serviceProfile.listing != null,
+                hasServiceListing = serviceProfile.hasActiveServiceListing,
                 hasApplied = hasApplied,
                 onEdit = { task ->
                     val currentId = currentTaskAccountId()

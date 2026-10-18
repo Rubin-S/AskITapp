@@ -11,16 +11,4 @@ class JobsViewModel(val store: JobsStore, val profileStore: SessionProfileStore)
 
     /** Shows [accountId]'s jobs; called whenever the signed-in account changes. */
     fun activateAccount(accountId: String?) = store.activateAccount(accountId)
-
-    fun filtered(filter: JobsFilter): List<Job> = jobs.value.filter { job ->
-        when (filter) {
-            JobsFilter.Active -> !job.inHistory
-            JobsFilter.History -> job.inHistory
-        }
-    }
-
-    fun elapsedMillis(job: Job, nowMillis: Long): Long? {
-        val started = job.startedAtMillis ?: return null
-        return (nowMillis - started).coerceAtLeast(0L)
-    }
 }

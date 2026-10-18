@@ -5,6 +5,7 @@ import com.askit.app.session.SessionProfileStore
 import com.askit.app.testing.MainDispatcherRule
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -54,13 +55,14 @@ class JobsViewModelFlowTest {
         vm.activateAccount("a")
         val id = vm.store.requestService("Fix tap", "Ravi")
         vm.jobs.test {
-            assertEquals(JobStatus.Applied, awaitItem().single().status)
-            assertEquals(listOf(id), vm.filtered(JobsFilter.Active).map(Job::id))
+            val applied = awaitItem().single()
+            assertEquals(JobStatus.Applied, applied.status)
+            assertFalse(applied.inHistory)
             vm.store.cancel(id)
             val cancelled = awaitItem().single()
             assertEquals(JobStatus.Canceled, cancelled.status)
-            assertTrue(vm.filtered(JobsFilter.Active).isEmpty())
-            assertEquals(listOf(id), vm.filtered(JobsFilter.History).map(Job::id))
+            assertEquals(id, cancelled.id)
+            assertTrue(cancelled.inHistory)
         }
     }
 
@@ -80,8 +82,8 @@ class JobsViewModelFlowTest {
         val vm = viewModel()
         vm.activateAccount("a")
         val job = vm.store.job(vm.store.requestService("Fix tap", "Ravi"))!!
-        assertNull(vm.elapsedMillis(job, 5_000L))
-        assertEquals(0L, vm.elapsedMillis(job.copy(startedAtMillis = 9_000L), 5_000L))
-        assertEquals(1_000L, vm.elapsedMillis(job.copy(startedAtMillis = 9_000L), 10_000L))
+        assertNull(job.elapsedMillis(5_000L))
+        assertEquals(0L, job.copy(startedAtMillis = 9_000L).elapsedMillis(5_000L))
+        assertEquals(1_000L, job.copy(startedAtMillis = 9_000L).elapsedMillis(10_000L))
     }
 }
