@@ -76,23 +76,13 @@ fun PostTaskDraft.toPublicTask(id: String, posterName: String): Task {
         title = title,
         category = customCategory?.takeIf(String::isNotBlank) ?: categoryId,
         categoryId = categoryId,
-        budget = when (val value = budget) {
-            is PostTaskBudget.Fixed -> "₹${value.amount}"
-            is PostTaskBudget.Range -> "₹${value.minimum}–₹${value.maximum}"
-            PostTaskBudget.RequestQuotes, null -> "Request quotes"
-        },
-        location = when (workMode) {
-            PostTaskWorkMode.AT_MY_LOCATION -> location?.publicAreaLabel.orEmpty()
-            PostTaskWorkMode.AT_PROVIDER_LOCATION -> "At provider’s location"
-            PostTaskWorkMode.REMOTE -> "Remote"
-        },
+        // Budget, location, timing and posted labels are rendered from publicDetails at display
+        // time (Task.presentation), so nothing English is baked into the model here.
+        budget = "",
+        location = if (workMode == PostTaskWorkMode.AT_MY_LOCATION) location?.publicAreaLabel.orEmpty() else "",
         posterName = posterName,
-        urgency = when (timingMode) {
-            PostTaskTimingMode.ASAP -> "As soon as possible"
-            PostTaskTimingMode.DATE -> selectedDateMillis?.let(::formatTaskDate).orEmpty()
-            PostTaskTimingMode.FLEXIBLE -> "Flexible"
-        },
-        postedTime = "Just now",
+        urgency = "",
+        postedTime = "",
         description = details,
         photos = photos.toList(),
         publicDetails = TaskPublicDetails(

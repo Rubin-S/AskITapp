@@ -13,25 +13,10 @@ fun ListServiceDraft.categoryLabel(getString: (Int) -> String): String {
     return labelRes?.let(getString) ?: categoryId
 }
 
-fun ListServiceDraft.quoteLabel(): String = when (val value = pricing) {
-    ListServicePricing.ContactForQuote, null -> "Contact for quote"
-    is ListServicePricing.StartingAt -> "Starting at ₹${value.amount}"
-    is ListServicePricing.Fixed -> "₹${value.amount}"
-    is ListServicePricing.Hourly -> "₹${value.amount} per hour"
-    is ListServicePricing.PerVisit -> "₹${value.amount} per visit"
-    is ListServicePricing.Range -> "₹${value.minimum}–₹${value.maximum}"
-}
-
 fun ListServiceDraft.toServiceListing(categoryLabel: String): ServiceListing {
     val coverage = customerCoverage?.publicAreaLabel
         ?: providerLocation?.publicAreaLabel
         ?: ""
-    val coverageHint = customerCoverage?.radiusKm?.let { "Up to $it km" }.orEmpty()
-    val responseHint = buildList {
-        if (ListServiceDeliveryMode.AT_CUSTOMER_LOCATION in deliveryModes) add("Travels to site")
-        if (ListServiceDeliveryMode.AT_PROVIDER_LOCATION in deliveryModes) add("At your location")
-        if (ListServiceDeliveryMode.REMOTE in deliveryModes) add("Remote")
-    }.joinToString(" · ")
     val tags = buildList {
         add(categoryLabel)
         details.materials
@@ -49,13 +34,14 @@ fun ListServiceDraft.toServiceListing(categoryLabel: String): ServiceListing {
         category = categoryLabel,
         categoryId = categoryId,
         description = description,
-        quoteLabel = quoteLabel(),
+        // Quote, radius and delivery-mode labels are typed here and rendered from string
+        // resources at display time (ServiceListing.labels), so they follow the app language.
+        pricing = pricing ?: ListServicePricing.ContactForQuote,
+        coverageRadiusKm = customerCoverage?.radiusKm,
         coverage = coverage,
-        coverageHint = coverageHint,
         hours = details.availability.orEmpty(),
         hoursHint = details.typicalDuration.orEmpty(),
         response = details.advanceNotice.orEmpty(),
-        responseHint = responseHint,
         tags = tags,
         experience = details.experience.orEmpty(),
         materials = details.materials, certificate = details.credentials, deliveryModes = deliveryModes,

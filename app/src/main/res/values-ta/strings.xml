@@ -1130,4 +1130,16 @@
     <string name="story_state_seen">பார்க்கப்பட்டது</string>
     <string name="story_shared_video_badge">வீடியோ</string>
     <string name="story_text_color_red">சிவப்பு</string>
+    <string name="account_role_seeker">தேடுபவர்</string>
+    <string name="account_role_provider">சேவை வழங்குநர்</string>
+    <string name="account_role_both">தேடுபவர் மற்றும் சேவை வழங்குநர்</string>
+    <string name="creator_role_service_professional">சேவை நிபுணர்</string>
+    <string name="creator_role_community_neighbor">சமூகப் படைப்பாளர் &amp; அண்டை வீட்டார்</string>
+    <string name="list_service_quote_contact">விலைக்குத் தொடர்பு கொள்ளவும்</string>
+    <string name="list_service_quote_starting_at">₹%1$s முதல்</string>
+    <string name="list_service_quote_hourly">ஒரு மணிக்கு ₹%1$s</string>
+    <string name="list_service_quote_per_visit">ஒரு வருகைக்கு ₹%1$s</string>
+    <string name="list_service_coverage_up_to_km">%1$d கி.மீ வரை</string>
+    <string name="list_service_mode_travels_to_site">இடத்திற்கே வருவார்</string>
+    <string name="list_service_mode_at_provider">உங்கள் இடத்தில்</string>
 </resources>

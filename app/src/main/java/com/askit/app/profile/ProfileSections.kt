@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.home.model.FeedPost
+import com.askit.app.listservice.labels
 import com.askit.app.session.ServiceListing
 import com.askit.app.task.Task
 import com.askit.app.task.presentation
@@ -87,7 +88,7 @@ private fun ProfileServiceAbout(listing: ServiceListing?, canManage: Boolean, on
                             com.askit.app.listservice.ListServiceDeliveryMode.AT_PROVIDER_LOCATION -> R.string.list_service_at_provider_location
                         },
                     )
-                } + listOf(listing.coverage, listing.coverageHint)
+                } + listOf(listing.coverage, listing.labels(LocalContext.current).coverageHint)
                 ).filter(String::isNotBlank).joinToString(" · "),
             R.string.profile_hours to listing.hours,
             R.string.profile_contact_phone to listing.phoneNumber,
@@ -107,6 +108,7 @@ private fun ProfileServiceAbout(listing: ServiceListing?, canManage: Boolean, on
 @Composable
 fun ServicesPane(listing: ServiceListing?, isOwner: Boolean, onEditListing: () -> Unit, modifier: Modifier = Modifier) {
     if (listing != null) {
+        val labels = listing.labels(LocalContext.current)
         Column(
             modifier = modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -121,16 +123,16 @@ fun ServicesPane(listing: ServiceListing?, isOwner: Boolean, onEditListing: () -
                 description = listing.description,
                 fromLabel = stringResource(R.string.profile_from).uppercase(),
                 quoteKind = stringResource(R.string.profile_visit_quote),
-                quoteValue = listing.quoteLabel,
+                quoteValue = labels.quote,
                 coverageLabel = stringResource(R.string.profile_service_area).uppercase(),
-                coverageValue = listing.coverage.ifBlank { listing.responseHint },
-                coverageHint = listing.coverageHint,
+                coverageValue = listing.coverage.ifBlank { labels.responseHint },
+                coverageHint = labels.coverageHint,
                 hoursLabel = stringResource(R.string.profile_hours).uppercase(),
                 hoursValue = listing.hours,
                 hoursHint = listing.hoursHint,
                 responseLabel = stringResource(R.string.profile_response).uppercase(),
                 responseValue = listing.response,
-                responseHint = listing.responseHint,
+                responseHint = labels.responseHint,
                 tags = listing.tags,
                 editLabel = if (isOwner) stringResource(R.string.profile_edit_service) else "",
                 onEdit = onEditListing,

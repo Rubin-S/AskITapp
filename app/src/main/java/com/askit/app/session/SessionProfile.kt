@@ -16,13 +16,16 @@ data class ServiceListing(
     val category: String,
     val categoryId: String? = null,
     val description: String,
-    val quoteLabel: String,
+    /** Legacy English label; new listings carry [pricing] instead (see ServiceListing.labels). */
+    val quoteLabel: String = "",
     val coverage: String,
-    val coverageHint: String,
+    /** Legacy English label; new listings carry [coverageRadiusKm] instead. */
+    val coverageHint: String = "",
     val hours: String,
     val hoursHint: String,
     val response: String,
-    val responseHint: String,
+    /** Legacy English label; derived from [deliveryModes] when they are present. */
+    val responseHint: String = "",
     val tags: List<String>,
     val experience: String,
     val live: Boolean = true,
@@ -31,6 +34,8 @@ data class ServiceListing(
     val materials: String? = null,
     val certificate: String? = null,
     val deliveryModes: Set<com.askit.app.listservice.ListServiceDeliveryMode> = emptySet(),
+    val pricing: com.askit.app.listservice.ListServicePricing? = null,
+    val coverageRadiusKm: Int? = null,
 )
 
 @Serializable
@@ -67,7 +72,7 @@ data class SessionProfile(
     val followingCount: Int = 0,
     val followerCount: Int = 0,
     val phoneNumber: String = "",
-    val activeRole: String = "Seeker",
+    val activeRole: String = AccountRole.Seeker.storedValue,
     val pushNotificationsEnabled: Boolean = true,
     val jobAlertsEnabled: Boolean = true,
     val selectedLanguage: String = AppLanguage.English.storedValue,
@@ -119,7 +124,7 @@ class SessionProfileStore(initial: SessionProfile = SessionProfile(), private va
                 languages = emptyList(),
                 profileStrengthPercent = 0,
                 phoneNumber = draft.phoneNumber,
-                activeRole = "Seeker",
+                activeRole = AccountRole.Seeker.storedValue,
                 selectedLanguage = draft.preferredLanguage,
                 pincode = draft.pincode,
                 email = draft.email,

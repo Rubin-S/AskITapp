@@ -1135,4 +1135,16 @@
     <string name="story_state_seen">Viewed</string>
     <string name="story_shared_video_badge">Video</string>
     <string name="story_text_color_red">Red</string>
+    <string name="account_role_seeker">Seeker</string>
+    <string name="account_role_provider">Provider</string>
+    <string name="account_role_both">Seeker and provider</string>
+    <string name="creator_role_service_professional">Service Professional</string>
+    <string name="creator_role_community_neighbor">Community Creator &amp; Neighbor</string>
+    <string name="list_service_quote_contact">Contact for quote</string>
+    <string name="list_service_quote_starting_at">Starting at ₹%1$s</string>
+    <string name="list_service_quote_hourly">₹%1$s per hour</string>
+    <string name="list_service_quote_per_visit">₹%1$s per visit</string>
+    <string name="list_service_coverage_up_to_km">Up to %1$d km</string>
+    <string name="list_service_mode_travels_to_site">Travels to site</string>
+    <string name="list_service_mode_at_provider">At your location</string>
 </resources>
