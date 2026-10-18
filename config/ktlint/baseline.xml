@@ -100,10 +100,6 @@
     <file name="app/src/main/java/com/askit/app/profile/ProfilePostsPane.kt">
         <error line="4" column="1" source="standard:no-wildcard-imports" />
     </file>
-    <file name="app/src/main/java/com/askit/app/profile/ProfileSections.kt">
-        <error line="86" column="141" source="standard:max-line-length" />
-        <error line="87" column="141" source="standard:max-line-length" />
-    </file>
     <file name="app/src/test/java/com/askit/app/auth/AccountFormTest.kt">
         <error line="4" column="1" source="standard:no-wildcard-imports" />
     </file>

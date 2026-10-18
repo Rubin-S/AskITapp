@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.home.model.FeedPost
+import com.askit.app.listservice.ListServiceDeliveryMode
 import com.askit.app.listservice.labels
 import com.askit.app.session.ServiceListing
 import com.askit.app.task.Task
@@ -73,6 +74,7 @@ private fun ProfileServiceAbout(listing: ServiceListing?, canManage: Boolean, on
         Text(stringResource(R.string.profile_services_empty), Modifier.padding(24.dp))
         return
     }
+    val coverageHint = listing.labels(LocalContext.current).coverageHint
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(listing.title, style = MaterialTheme.typography.titleLarge)
         Text(listing.description, style = MaterialTheme.typography.bodyLarge)
@@ -83,12 +85,12 @@ private fun ProfileServiceAbout(listing: ServiceListing?, canManage: Boolean, on
                 listing.deliveryModes.map { mode ->
                     stringResource(
                         when (mode) {
-                            com.askit.app.listservice.ListServiceDeliveryMode.REMOTE -> R.string.list_service_remote
-                            com.askit.app.listservice.ListServiceDeliveryMode.AT_CUSTOMER_LOCATION -> R.string.list_service_at_customer_location
-                            com.askit.app.listservice.ListServiceDeliveryMode.AT_PROVIDER_LOCATION -> R.string.list_service_at_provider_location
+                            ListServiceDeliveryMode.REMOTE -> R.string.list_service_remote
+                            ListServiceDeliveryMode.AT_CUSTOMER_LOCATION -> R.string.list_service_at_customer_location
+                            ListServiceDeliveryMode.AT_PROVIDER_LOCATION -> R.string.list_service_at_provider_location
                         },
                     )
-                } + listOf(listing.coverage, listing.labels(LocalContext.current).coverageHint)
+                } + listOf(listing.coverage, coverageHint)
                 ).filter(String::isNotBlank).joinToString(" · "),
             R.string.profile_hours to listing.hours,
             R.string.profile_contact_phone to listing.phoneNumber,
