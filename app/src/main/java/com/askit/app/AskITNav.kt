@@ -15,6 +15,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -126,11 +127,12 @@ fun AskITApp(
     val storySnackbar = remember { SnackbarHostState() }
     val storyFeedback by resolvedStoryViewerViewModel.social.feedback.collectAsStateWithLifecycle()
     val storyContext = LocalContext.current
+    val resources = LocalResources.current
     val undoLabel = stringResource(R.string.story_undo)
     LaunchedEffect(storyFeedback?.id) {
         val feedback = storyFeedback ?: return@LaunchedEffect
         val result = storySnackbar.showSnackbar(
-            storyContext.getString(feedback.messageRes),
+            resources.getString(feedback.messageRes),
             actionLabel = undoLabel.takeIf { feedback.undo != null },
             withDismissAction = true,
             duration = if (feedback.undo != null) SnackbarDuration.Long else SnackbarDuration.Short,
@@ -148,7 +150,7 @@ fun AskITApp(
     LaunchedEffect(postHideFeedback?.id) {
         val feedback = postHideFeedback ?: return@LaunchedEffect
         val result = storySnackbar.showSnackbar(
-            storyContext.getString(R.string.post_hidden_from_home),
+            resources.getString(R.string.post_hidden_from_home),
             actionLabel = undoLabel,
             withDismissAction = true,
             duration = SnackbarDuration.Long,
@@ -160,7 +162,7 @@ fun AskITApp(
             }
             val restored = resolvedHomeViewModel.posts.undoHidden(currentId, feedback)
             if (restored is com.askit.app.home.posts.PostResult.Failure) {
-                storySnackbar.showSnackbar(storyContext.getString(restored.messageRes))
+                storySnackbar.showSnackbar(resources.getString(restored.messageRes))
             }
         }
         resolvedHomeViewModel.posts.consumeHideFeedback(feedback.id)

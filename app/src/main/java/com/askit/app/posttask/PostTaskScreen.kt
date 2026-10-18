@@ -1031,7 +1031,7 @@ private fun PostTaskReview(
 ) {
     val context = LocalContext.current
     val draft = state.toDraft()
-    val task = draft.toPublicTask("review", context.getString(R.string.post_task_you_creator))
+    val task = draft.toPublicTask("review", stringResource(R.string.post_task_you_creator))
     val display = task.presentation(context)
     val categoryLabel = display.category
     val timingLabel = display.timing

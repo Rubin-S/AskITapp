@@ -58,6 +58,7 @@ import com.askit.app.task.TaskPhotoGallery
 import com.askit.app.task.TaskPreferencesSummary
 import com.askit.app.task.TaskProviderPreferences
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import com.askit.app.task.TaskRepository
 import com.askit.app.task.TaskActionPolicy
 import com.askit.app.task.TaskActionsViewModel
@@ -102,14 +103,14 @@ fun TaskDetailScreen(
         val likedBy = likes[task.id].orEmpty()
         val policy = task.actionPolicy(accountId, hasServiceListing, hasApplied)
         val snackbar = remember { SnackbarHostState() }
-        val context = LocalContext.current
+        val resources = LocalResources.current
         val actionDraft = if (actionsViewModel != null) {
             val drafts by actionsViewModel.drafts.collectAsStateWithLifecycle()
             if (actionsViewModel.isActiveAccount(accountId)) drafts[task.id] ?: TaskActionDraft() else TaskActionDraft()
         } else TaskActionDraft()
         LaunchedEffect(actionDraft.feedbackRes) {
             actionDraft.feedbackRes?.let {
-                snackbar.showSnackbar(context.getString(it))
+                snackbar.showSnackbar(resources.getString(it))
                 actionsViewModel?.consumeFeedback(task.id)
             }
         }
