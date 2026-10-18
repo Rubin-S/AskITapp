@@ -275,8 +275,12 @@ class ListServiceViewModel(
             hasAttemptedReview = true,
             reviewAttempt = _formState.value.reviewAttempt + 1,
         )
-        setState(attemptedState)
-        if (validate(attemptedState).isNotEmpty()) return false
+        val errors = validate(attemptedState)
+        // Expand the Pricing section when it owns an error so Review can focus the price field.
+        setState(attemptedState.copy(
+            expandedOptionalSections = attemptedState.expandedOptionalSections + errors.mapNotNull { it.owningSection() },
+        ))
+        if (errors.isNotEmpty()) return false
 
         setState(attemptedState.copy(screenMode = ListServiceScreenMode.REVIEW))
         return true
@@ -557,3 +561,9 @@ private fun String.toPositiveAmount(): BigDecimal? = trim()
 
 private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? =
     this?.let { value -> enumValues<T>().firstOrNull { it.name == value } }
+
+/** The collapsible optional section a validation field lives in, or null if always visible. */
+internal fun ListServiceValidationField.owningSection(): ListServiceOptionalSection? = when (this) {
+    ListServiceValidationField.PRICE, ListServiceValidationField.PRICE_RANGE -> ListServiceOptionalSection.PRICING
+    else -> null
+}

@@ -2,6 +2,7 @@ package com.askit.app.listservice
 
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.withFrameNanos
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -69,6 +70,7 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import com.askit.app.R
+import com.askit.app.posttask.focusAfterFrame
 
 import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
@@ -239,16 +241,19 @@ private fun ListServiceScreen(
 
     LaunchedEffect(state.reviewAttempt) {
         if (state.screenMode == ListServiceScreenMode.FORM && validationErrors.isNotEmpty()) {
+            // review() may have just expanded the section that owns the error; let it lay out
+            // before bringing it into view.
+            withFrameNanos { }
             when (firstInvalidField(validationErrors)) {
                 ListServiceValidationField.PROFESSIONAL_DETAILS -> listState.scrollToItem(0)
                 ListServiceValidationField.CATEGORY -> categoryBringIntoView.bringIntoView()
                 ListServiceValidationField.TITLE -> {
                     titleBringIntoView.bringIntoView()
-                    titleFocusRequester.requestFocus()
+                    focusAfterFrame(titleFocusRequester)
                 }
                 ListServiceValidationField.DESCRIPTION -> {
                     descriptionBringIntoView.bringIntoView()
-                    descriptionFocusRequester.requestFocus()
+                    focusAfterFrame(descriptionFocusRequester)
                 }
                 ListServiceValidationField.DELIVERY_MODE -> deliveryBringIntoView.bringIntoView()
                 ListServiceValidationField.CUSTOMER_LOCATION,
@@ -257,11 +262,11 @@ private fun ListServiceScreen(
                 ListServiceValidationField.PROVIDER_LOCATION -> providerLocationBringIntoView.bringIntoView()
                 ListServiceValidationField.PRICE -> {
                     priceBringIntoView.bringIntoView()
-                    priceFocusRequester.requestFocus()
+                    focusAfterFrame(priceFocusRequester)
                 }
                 ListServiceValidationField.PRICE_RANGE -> {
                     priceRangeBringIntoView.bringIntoView()
-                    minimumPriceFocusRequester.requestFocus()
+                    focusAfterFrame(minimumPriceFocusRequester)
                 }
             }
         }

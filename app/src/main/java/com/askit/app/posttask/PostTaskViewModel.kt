@@ -278,9 +278,11 @@ class PostTaskViewModel(
             reviewAttempt = _formState.value.reviewAttempt + 1,
         )
         val errors = validate(attemptedState)
-        setState(if (PostTaskValidationField.AGE_PREFERENCE in errors) {
-            attemptedState.copy(expandedOptionalSections = attemptedState.expandedOptionalSections + PostTaskOptionalSection.PREFERENCES)
-        } else attemptedState)
+        // Expand every collapsed section that owns an error, so the field Review scrolls to and
+        // focuses is actually composed (focusing a collapsed field crashed or hid the error).
+        setState(attemptedState.copy(
+            expandedOptionalSections = attemptedState.expandedOptionalSections + errors.mapNotNull { it.owningSection() },
+        ))
         if (errors.isNotEmpty()) return false
 
         setState(attemptedState.copy(screenMode = PostTaskScreenMode.REVIEW))
@@ -573,3 +575,10 @@ internal fun PostTaskDraft.toFormState() = PostTaskFormState(
         if (preferences != TaskProviderPreferences()) add(PostTaskOptionalSection.PREFERENCES)
     },
 )
+
+/** The collapsible optional section a validation field lives in, or null if always visible. */
+internal fun PostTaskValidationField.owningSection(): PostTaskOptionalSection? = when (this) {
+    PostTaskValidationField.FIXED_BUDGET, PostTaskValidationField.BUDGET_RANGE -> PostTaskOptionalSection.BUDGET
+    PostTaskValidationField.AGE_PREFERENCE -> PostTaskOptionalSection.PREFERENCES
+    else -> null
+}

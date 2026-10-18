@@ -2,6 +2,7 @@ package com.askit.app.posttask
 
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.withFrameNanos
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -234,15 +235,18 @@ private fun PostTaskScreen(
 
     LaunchedEffect(state.reviewAttempt) {
         if (state.screenMode == PostTaskScreenMode.FORM && validationErrors.isNotEmpty()) {
+            // review() may have just expanded the section that owns the error; let it lay out
+            // before bringing it into view.
+            withFrameNanos { }
             when (firstInvalidField(validationErrors)) {
                 PostTaskValidationField.CATEGORY -> categoryBringIntoView.bringIntoView()
                 PostTaskValidationField.TITLE -> {
                     titleBringIntoView.bringIntoView()
-                    titleFocusRequester.requestFocus()
+                    focusAfterFrame(titleFocusRequester)
                 }
                 PostTaskValidationField.DETAILS -> {
                     detailsBringIntoView.bringIntoView()
-                    detailsFocusRequester.requestFocus()
+                    focusAfterFrame(detailsFocusRequester)
                 }
                 PostTaskValidationField.WORK_MODE -> workModeBringIntoView.bringIntoView()
                 PostTaskValidationField.LOCATION -> locationBringIntoView.bringIntoView()
@@ -251,11 +255,11 @@ private fun PostTaskScreen(
                 PostTaskValidationField.AGE_PREFERENCE -> preferencesBringIntoView.bringIntoView()
                 PostTaskValidationField.FIXED_BUDGET -> {
                     fixedBudgetBringIntoView.bringIntoView()
-                    fixedBudgetFocusRequester.requestFocus()
+                    focusAfterFrame(fixedBudgetFocusRequester)
                 }
                 PostTaskValidationField.BUDGET_RANGE -> {
                     rangeBudgetBringIntoView.bringIntoView()
-                    minimumBudgetFocusRequester.requestFocus()
+                    focusAfterFrame(minimumBudgetFocusRequester)
                 }
             }
         }
