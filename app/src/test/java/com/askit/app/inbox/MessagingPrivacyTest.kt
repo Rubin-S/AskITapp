@@ -62,7 +62,8 @@ class MessagingPrivacyTest {
     }
 
     @Test fun switchingAccountsPreservesRecipientBlocksAndRejectsStaleStoreWrites() {
-        val inbox = InboxViewModel()
+        // Cross-account blocks only exist where accounts are kept side by side (client preview).
+        val inbox = InboxViewModel(retainInactiveAccounts = true)
         inbox.configureAccess { _, _, _ -> MessageAccess.Allowed }
         inbox.activateAccount("recipient")
         inbox.moderate(ChatContact("sender", "Sender"), report = false)
@@ -75,7 +76,10 @@ class MessagingPrivacyTest {
     }
 
     @Test fun contactsAreReadFromTheRecipientRatherThanTheSender() {
-        val inbox = InboxViewModel(seed = { InboxSeed(contacts = listOf(ChatContact("priya", "Priya"))) })
+        val inbox = InboxViewModel(
+            seed = { InboxSeed(contacts = listOf(ChatContact("priya", "Priya"))) },
+            retainInactiveAccounts = true,
+        )
         inbox.configureAccess { sender, recipient, contact -> messagingAccess(sender, recipient, "Contacts only", contact, false) }
         inbox.activateAccount("priya")
         assertNotNull(inbox.startConversation(ChatContact("recipient", "Recipient")))
