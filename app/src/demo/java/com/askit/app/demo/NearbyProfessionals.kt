@@ -1,9 +1,9 @@
-package com.askit.app.home.data
+package com.askit.app.demo
 
 import com.askit.app.home.model.PersonPreview
 
 /** Shared local fixtures for nearby cards and their profile destinations. */
-fun sampleNearbyProfessionals(): List<PersonPreview> = listOf(
+internal fun sampleNearbyProfessionals(): List<PersonPreview> = listOf(
     PersonPreview(
         id = "pro-lucas",
         name = "Lucas Scott",

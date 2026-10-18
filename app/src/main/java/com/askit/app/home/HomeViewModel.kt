@@ -2,7 +2,6 @@ package com.askit.app.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.askit.app.home.data.FakeHomeRepository
 import com.askit.app.home.data.HomeRepository
 import com.askit.app.home.model.FeedItem
 import com.askit.app.home.model.Story
@@ -20,7 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val repository: HomeRepository = FakeHomeRepository(),
+    private val repository: HomeRepository,
 ) : ViewModel() {
     val posts = repository.posts
 

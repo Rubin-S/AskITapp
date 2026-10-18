@@ -1,122 +1,89 @@
-package com.askit.app.home.data
+package com.askit.app.demo
 
+import com.askit.app.home.data.HomeFeedFixtures
 import com.askit.app.home.model.FeedItem
 import com.askit.app.home.model.FeedPost
 import com.askit.app.home.model.PostMedia
 import com.askit.app.home.model.PostPoll
 import com.askit.app.home.model.ServicePreview
-import com.askit.app.home.model.isAvailable
 import com.askit.app.home.model.Story
 import com.askit.app.story.StoryDraft
 import com.askit.app.story.StoryMediaType
-import com.askit.app.task.InMemoryTaskRepository
-import com.askit.app.task.TaskRepository
-import com.askit.app.task.toTaskPreview
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.combine
-import com.askit.app.home.stories.StorySocialStore
-import com.askit.app.home.stories.StoryActionResult
-import com.askit.app.home.stories.StoryActionFailure
 
-class FakeHomeRepository(
-    private val taskRepository: TaskRepository = InMemoryTaskRepository(),
-    initialStoriesList: List<Story> = defaultStories,
-    override val storySocial: StorySocialStore = StorySocialStore(),
-) : HomeRepository {
-
-    companion object {
-        val defaultStories = listOf(
-            Story(
-                id = "story-1",
-                authorName = "faraan_141",
-                authorId = "story-author-1",
-                authorAvatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300",
-                content = StoryDraft(
-                    mediaUri = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
-                    mediaType = StoryMediaType.Photo,
-                    caption = "Finished full home electrical rewiring",
-                ),
-                createdAtMillis = System.currentTimeMillis() - 3600_000,
-                isSeen = false,
+/**
+ * Sample Home content (stories, posts, a services row and a people row) for debug and preview
+ * builds. It is not compiled into release, where Home shows only locally created content.
+ * Timestamps are relative to class initialisation, so fixture stories expire after ~19-23 hours
+ * in a long-lived process. That is expected for fixtures.
+ */
+internal object HomeFixtures {
+    fun stories(): List<Story> = listOf(
+        Story(
+            id = "story-1",
+            authorName = "faraan_141",
+            authorId = "story-author-1",
+            authorAvatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300",
+            content = StoryDraft(
+                mediaUri = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
+                mediaType = StoryMediaType.Photo,
+                caption = "Finished full home electrical rewiring",
             ),
-            Story(
-                id = "story-2",
-                authorName = "nitpuducherry",
-                authorId = "story-author-2",
-                authorAvatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300",
-                content = StoryDraft(
-                    mediaUri = "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
-                    mediaType = StoryMediaType.Photo,
-                    caption = "Installing custom oak kitchen cabinets",
-                ),
-                createdAtMillis = System.currentTimeMillis() - 7200_000,
-                isSeen = false,
+            createdAtMillis = System.currentTimeMillis() - 3600_000,
+            isSeen = false,
+        ),
+        Story(
+            id = "story-2",
+            authorName = "nitpuducherry",
+            authorId = "story-author-2",
+            authorAvatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300",
+            content = StoryDraft(
+                mediaUri = "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
+                mediaType = StoryMediaType.Photo,
+                caption = "Installing custom oak kitchen cabinets",
             ),
-            Story(
-                id = "story-3",
-                authorName = "amy_deliy",
-                authorId = "story-author-3",
-                authorAvatarUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300",
-                content = StoryDraft(
-                    mediaUri = "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800",
-                    mediaType = StoryMediaType.Photo,
-                    caption = "HVAC diagnostic and seasonal tune-up",
-                ),
-                createdAtMillis = System.currentTimeMillis() - 10800_000,
-                isSeen = false,
+            createdAtMillis = System.currentTimeMillis() - 7200_000,
+            isSeen = false,
+        ),
+        Story(
+            id = "story-3",
+            authorName = "amy_deliy",
+            authorId = "story-author-3",
+            authorAvatarUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300",
+            content = StoryDraft(
+                mediaUri = "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800",
+                mediaType = StoryMediaType.Photo,
+                caption = "HVAC diagnostic and seasonal tune-up",
             ),
-            Story(
-                id = "story-4",
-                authorName = "alex_electric",
-                authorId = "story-author-4",
-                authorAvatarUrl = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300",
-                content = StoryDraft(
-                    mediaUri = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
-                    mediaType = StoryMediaType.Photo,
-                    caption = "Commercial panel upgrade",
-                ),
-                createdAtMillis = System.currentTimeMillis() - 14400_000,
-                isSeen = true,
+            createdAtMillis = System.currentTimeMillis() - 10800_000,
+            isSeen = false,
+        ),
+        Story(
+            id = "story-4",
+            authorName = "alex_electric",
+            authorId = "story-author-4",
+            authorAvatarUrl = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300",
+            content = StoryDraft(
+                mediaUri = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
+                mediaType = StoryMediaType.Photo,
+                caption = "Commercial panel upgrade",
             ),
-            Story(
-                id = "story-5",
-                authorName = "chloe_craft",
-                authorId = "story-author-5",
-                authorAvatarUrl = "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300",
-                content = StoryDraft(
-                    mediaUri = "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
-                    mediaType = StoryMediaType.Photo,
-                    caption = "Modern walnut furniture showcase",
-                ),
-                createdAtMillis = System.currentTimeMillis() - 18000_000,
-                isSeen = true,
+            createdAtMillis = System.currentTimeMillis() - 14400_000,
+            isSeen = true,
+        ),
+        Story(
+            id = "story-5",
+            authorName = "chloe_craft",
+            authorId = "story-author-5",
+            authorAvatarUrl = "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300",
+            content = StoryDraft(
+                mediaUri = "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
+                mediaType = StoryMediaType.Photo,
+                caption = "Modern walnut furniture showcase",
             ),
-        )
-    }
-
-    private val storiesFlow = MutableStateFlow(initialStoriesList)
-
-    override fun getStory(storyId: String): Story? = storiesFlow.value.firstOrNull { it.id == storyId && it.isAvailable() }
-    override fun getStories(): Flow<List<Story>> = combine(storiesFlow, storySocial.state) { stories, social ->
-        stories.filter { it.isAvailable() && it.authorId !in social.muted && it.id !in social.hiddenStoryIds }
-            .map { it.copy(isOwn = social.accountId != null && it.authorId == social.accountId) }
-    }
-
-    override fun addStory(story: Story, accountId: String?): StoryActionResult {
-        if (!storySocial.isCurrentAccount(accountId)) return StoryActionResult.Rejected(StoryActionFailure.SIGN_IN)
-        if (story.authorId != accountId) return StoryActionResult.Rejected(StoryActionFailure.NOT_ALLOWED)
-        storiesFlow.value = listOf(story) + storiesFlow.value.filter { it.id != story.id }
-        return StoryActionResult.Success
-    }
-
-    override fun markStorySeen(storyId: String) {
-        storiesFlow.value = storiesFlow.value.map { story ->
-            if (story.id == storyId) story.copy(isSeen = true) else story
-        }
-    }
+            createdAtMillis = System.currentTimeMillis() - 18000_000,
+            isSeen = true,
+        ),
+    )
 
     private val post1 = FeedItem.PostItem(
         post = FeedPost(
@@ -304,29 +271,16 @@ class FakeHomeRepository(
         ),
     )
 
-    override val posts by lazy {
-        com.askit.app.home.posts.PostStore(
-            (listOf(post1, post2, post3) + page2Items + page3Items)
-                .filterIsInstance<FeedItem.PostItem>()
-                .map { it.post.copy(authorId = "post-author-${it.post.id}") },
-        )
-    }
 
-    override fun getFeed(page: Int): Flow<List<FeedItem>> = combine(taskRepository.tasks, posts.posts, posts.account) { currentTasks, _, _ ->
-        val template = when (page) {
-            1 -> buildList {
-                addAll(posts.publishedPosts().map(FeedItem::PostItem))
-                add(post1)
-                val taskPreviews = currentTasks.map { it.toTaskPreview() }
-                if (taskPreviews.isNotEmpty()) add(FeedItem.TaskSection(id = "featured-tasks", tasks = taskPreviews))
-                add(post2)
-                add(post3)
-                add(serviceSection)
-            }
-            2 -> page2Items
-            3 -> page3Items
-            else -> emptyList()
-        }
-        posts.project(template)
+    fun feed(): HomeFeedFixtures {
+        val allPosts = (listOf(post1, post2, post3) + page2Items + page3Items)
+            .filterIsInstance<FeedItem.PostItem>()
+            .map { it.post.copy(authorId = "post-author-${it.post.id}") }
+        return HomeFeedFixtures(
+            posts = allPosts,
+            pageOneLead = listOf(post1),
+            pageOneTrail = listOf(post2, post3, serviceSection),
+            laterPages = listOf(page2Items, page3Items),
+        )
     }
 }
