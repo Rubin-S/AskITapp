@@ -89,6 +89,9 @@ android {
         // the same com.askit.app.variant.AppVariant seam. See docs/build-variants.md.
         getByName("debug").kotlin.directories += "src/demo/java"
         getByName("preview").kotlin.directories += "src/demo/java"
+        // Strings only the fixtures use, so release lint does not see them as unused.
+        getByName("debug").res.directories += "src/demo/res"
+        getByName("preview").res.directories += "src/demo/res"
     }
 
     compileOptions {

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings used only by demo fixtures (src/demo/java): compiled into debug and preview, never release. -->
+<resources>
+    <string name="creator_metric_views">Views &amp; Impressions</string>
+    <string name="creator_metric_likes">Likes</string>
+    <string name="creator_metric_comments">Comments</string>
+    <string name="creator_metric_saves">Saves</string>
+    <string name="creator_metric_shares">Shares</string>
+    <string name="creator_metric_dms">Inquiries &amp; DMs</string>
+    <string name="creator_metric_new_followers">New Followers</string>
+    <string name="creator_metric_link_clicks">Link &amp; Action Clicks</string>
+    <string name="creator_ai_insight_header">ASKIT AI · CREATOR INSIGHT</string>
+    <string name="creator_ai_insight_timing_title">Prime posting window today</string>
+    <string name="creator_ai_insight_timing_body">Best time to post today is %1$s. %2$s is trending %3$s in your area.</string>
+    <string name="creator_ai_cta_create_post">Create Trending Post</string>
+    <string name="profile_preview_controls">Client preview accounts</string>
+    <string name="profile_preview_provider">Sign in as provider</string>
+    <string name="profile_preview_seeker">Sign in as seeker</string>
+    <string name="profile_preview_view_provider">View provider profile</string>
+    <string name="profile_preview_view_seeker">View seeker profile</string>
+</resources>
