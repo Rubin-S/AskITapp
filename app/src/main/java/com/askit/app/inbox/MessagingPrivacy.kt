@@ -1,6 +1,7 @@
 package com.askit.app.inbox
 
 import com.askit.app.R
+import com.askit.app.session.MessagingAudience
 
 /** The server must make the same decision independently before accepting real messages. */
 enum class MessageAccess(val messageRes: Int? = null) {
@@ -19,10 +20,10 @@ fun messagingAccess(
     senderVerified: Boolean,
 ): MessageAccess {
     if (senderId.isBlank() || recipientId.isBlank() || senderId == recipientId) return MessageAccess.Unavailable
-    return when (recipientPreference) {
-        "Everyone" -> MessageAccess.Allowed
-        "Contacts only" -> if (isRecipientContact) MessageAccess.Allowed else MessageAccess.ContactsOnly
-        "Verified users only" -> if (senderVerified) MessageAccess.Allowed else MessageAccess.VerifiedOnly
-        else -> MessageAccess.Unavailable
+    return when (MessagingAudience.fromStoredValue(recipientPreference)) {
+        MessagingAudience.Everyone -> MessageAccess.Allowed
+        MessagingAudience.ContactsOnly -> if (isRecipientContact) MessageAccess.Allowed else MessageAccess.ContactsOnly
+        MessagingAudience.VerifiedOnly -> if (senderVerified) MessageAccess.Allowed else MessageAccess.VerifiedOnly
+        null -> MessageAccess.Unavailable
     }
 }

@@ -81,7 +81,7 @@ fun FormAScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    val initialLanguage = if (LocalConfiguration.current.locales[0].language == "ta") "Tamil" else "English"
+    val initialLanguage = com.askit.app.session.AppLanguage.fromLanguageTag(LocalConfiguration.current.locales[0].language).storedValue
 
     var editablePhone by rememberSaveable(phoneNumber) { mutableStateOf(phoneNumber) }
     var avatarUri by rememberSaveable { mutableStateOf<String?>(null) }

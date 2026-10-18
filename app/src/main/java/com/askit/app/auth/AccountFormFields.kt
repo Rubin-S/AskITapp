@@ -41,11 +41,11 @@ internal fun AccountFormFields(
             true, "${tag}_city", enabled, required = false)
         Text(stringResource(R.string.form_a_app_language) + " *", style = MaterialTheme.typography.labelLarge)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            listOf("English", "Tamil").forEach { language ->
-                FilterChip(selected = draft.preferredLanguage == language, enabled = enabled,
-                    onClick = { onChange(draft.copy(preferredLanguage = language)) },
-                    label = { Text(if (language == "Tamil") "தமிழ்" else "English") },
-                    modifier = Modifier.testTag("${tag}_language_${language.lowercase()}"))
+            com.askit.app.session.AppLanguage.entries.forEach { language ->
+                FilterChip(selected = draft.preferredLanguage == language.storedValue, enabled = enabled,
+                    onClick = { onChange(draft.copy(preferredLanguage = language.storedValue)) },
+                    label = { Text(stringResource(language.endonymRes)) },
+                    modifier = Modifier.testTag("${tag}_language_${language.storedValue.lowercase()}"))
             }
         }
     }

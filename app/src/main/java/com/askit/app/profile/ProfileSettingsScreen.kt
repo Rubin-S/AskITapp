@@ -57,15 +57,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.askit.app.R
 import com.askit.app.session.ProfileAvailability
+import com.askit.app.session.AppLanguage
+import com.askit.app.session.MessagingAudience
 import com.askit.app.session.SessionProfile
 import com.askit.designsystem.people.AskITAvatar
 import com.askit.designsystem.R as DsR
 
-private val messagePrivacyOptions = mapOf(
-    "Everyone" to R.string.settings_message_everyone,
-    "Contacts only" to R.string.settings_message_contacts,
-    "Verified users only" to R.string.settings_message_verified,
-)
+private val messagePrivacyOptions = MessagingAudience.entries.associate { it.storedValue to it.labelRes }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,7 +95,7 @@ fun ProfileSettingsScreen(
     onRestorePost: (String) -> Unit = {},
     previewControls: (@Composable () -> Unit)? = null,
 ) {
-    val selectedLanguage = if (LocalConfiguration.current.locales[0].language == "ta") "Tamil" else "English"
+    val selectedLanguage = AppLanguage.fromLanguageTag(LocalConfiguration.current.locales[0].language).storedValue
     var showMutedStories by rememberSaveable { mutableStateOf(false) }
     var showLanguageSheet by rememberSaveable { mutableStateOf(false) }
     var showMessagePrivacySheet by rememberSaveable { mutableStateOf(false) }
@@ -838,7 +836,6 @@ private fun LanguageSelectionContent(
     selectedLanguage: String,
     onSelectLanguage: (String) -> Unit,
 ) {
-    val languages = listOf("English", "Tamil (தமிழ்)")
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -849,8 +846,8 @@ private fun LanguageSelectionContent(
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(bottom = 16.dp),
         )
-        languages.forEach { lang ->
-            val simpleName = lang.substringBefore(" (")
+        AppLanguage.entries.forEach { language ->
+            val simpleName = language.storedValue
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -867,7 +864,7 @@ private fun LanguageSelectionContent(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = lang,
+                    text = stringResource(language.labelRes),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                 )

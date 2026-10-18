@@ -59,12 +59,12 @@ internal data class AccountProfile(
     val activeRole: String = "Seeker",
     val pushNotificationsEnabled: Boolean = true,
     val jobAlertsEnabled: Boolean = true,
-    val whoCanMessage: String = "Everyone",
+    val whoCanMessage: String = com.askit.app.session.MessagingAudience.Everyone.storedValue,
     val blockedAccountsCount: Int = 0,
     val pincode: String = "",
     val isVerified: Boolean = false,
     val email: String = "",
-    val selectedLanguage: String = "English",
+    val selectedLanguage: String = com.askit.app.session.AppLanguage.English.storedValue,
     val title: String = "",
     val bannerUrl: String? = null,
     val discloseApproximateLocation: Boolean = false,
@@ -80,10 +80,10 @@ internal data class AccountProfile(
         if (displayName.isBlank() || city.isBlank() ||
             (username.isNotEmpty() && !com.askit.app.profile.isUsernameValid(username.removePrefix("@"))) ||
             (email.isNotEmpty() && !validAccountEmail(email)) || (pincode.isNotEmpty() && !validAccountPostcode(pincode)) ||
-            !validAccountPhone(phoneNumber) || selectedLanguage !in setOf("English", "Tamil") || !joinedYear.matches(Regex("[0-9]{4}")) ||
+            !validAccountPhone(phoneNumber) || selectedLanguage !in com.askit.app.session.AppLanguage.storedValues || !joinedYear.matches(Regex("[0-9]{4}")) ||
             profileStrengthPercent !in 0..100 || followingCount < 0 || followerCount < 0 || blockedAccountsCount < 0 ||
             activeRole !in setOf("Seeker", "Provider", "Both") ||
-            whoCanMessage !in setOf("Everyone", "Contacts only", "Verified users only") ||
+            whoCanMessage !in com.askit.app.session.MessagingAudience.storedValues ||
             reviews.any { it.rating !in 0f..5f }
         ) throw AuthApiException(AuthError.InvalidResponse)
         for (ids in listOf(gallery.map { it.id }, reviews.map { it.id }, savedProfessionals.map { it.id })) {

@@ -70,9 +70,9 @@ data class SessionProfile(
     val activeRole: String = "Seeker",
     val pushNotificationsEnabled: Boolean = true,
     val jobAlertsEnabled: Boolean = true,
-    val selectedLanguage: String = "English",
+    val selectedLanguage: String = AppLanguage.English.storedValue,
     val locationServicesEnabled: Boolean = true,
-    val whoCanMessage: String = "Everyone",
+    val whoCanMessage: String = MessagingAudience.Everyone.storedValue,
     val blockedAccountsCount: Int = 0,
     val pincode: String = "",
     val isVerified: Boolean = false,
@@ -221,7 +221,7 @@ class SessionProfileStore(
     }
 
     fun updateWhoCanMessage(option: String) {
-        require(option in setOf("Everyone", "Contacts only", "Verified users only"))
+        require(option in MessagingAudience.storedValues)
         update { it.copy(whoCanMessage = option) }
     }
 

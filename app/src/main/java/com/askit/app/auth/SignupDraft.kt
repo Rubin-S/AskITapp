@@ -22,7 +22,7 @@ data class SignupDraft(
         usernameValid = isUsernameValid(username),
         postcodeValid = validAccountPostcode(pincode),
         phoneValid = validAccountPhone(phoneNumber),
-        languageValid = preferredLanguage in setOf("English", "Tamil"),
+        languageValid = preferredLanguage in com.askit.app.session.AppLanguage.storedValues,
         emailValid = validAccountEmail(email),
     )
 

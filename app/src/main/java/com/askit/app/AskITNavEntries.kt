@@ -292,7 +292,7 @@ internal fun rememberAskITEntryProvider(
                 }
                 if (result == com.askit.app.auth.SignupResult.Saved) {
                     AppCompatDelegate.setApplicationLocales(
-                        LocaleListCompat.forLanguageTags(if (draft.preferredLanguage == "Tamil") "ta" else "en"),
+                        LocaleListCompat.forLanguageTags(com.askit.app.session.AppLanguage.fromStoredValue(draft.preferredLanguage).languageTag),
                     )
                     navigationState.clearToHome()
                 }
@@ -631,7 +631,7 @@ internal fun rememberAskITEntryProvider(
             onUpdateLanguage = { language ->
                 profileViewModel.updateLanguage(language)
                 AppCompatDelegate.setApplicationLocales(
-                    LocaleListCompat.forLanguageTags(if (language == "Tamil") "ta" else "en"),
+                    LocaleListCompat.forLanguageTags(com.askit.app.session.AppLanguage.fromStoredValue(language).languageTag),
                 )
             },
             onUpdateLocationServices = profileViewModel::updateLocationServices,
@@ -660,7 +660,7 @@ internal fun rememberAskITEntryProvider(
             onSave = { state ->
                 profileViewModel.saveIdentity(state).also { saved ->
                     if (saved) {
-                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(if (state.language == "Tamil") "ta" else "en"))
+                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(com.askit.app.session.AppLanguage.fromStoredValue(state.language).languageTag))
                         navigationState.pop()
                     }
                 }

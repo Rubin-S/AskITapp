@@ -11,7 +11,7 @@ data class EditProfileFormState(
     val email: String = "",
     val pincode: String = "",
     val phoneNumber: String = "",
-    val language: String = "English",
+    val language: String = com.askit.app.session.AppLanguage.English.storedValue,
     val discloseApproximateLocation: Boolean = false,
 ) {
     val isValid: Boolean
