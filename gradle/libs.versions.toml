@@ -17,12 +17,16 @@ okhttp = "4.12.0"
 media3 = "1.11.0"
 libphonenumber = "9.0.40"
 exifinterface = "1.4.2"
+coroutines = "1.10.2"
+turbine = "1.2.1"
 ktlint = "1.8.0"
 detekt = "2.0.0-alpha.6"
 composeRules = "0.6.8"
 
 [libraries]
 junit = { module = "junit:junit", version = "4.13.2" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 libphonenumber = { group = "com.googlecode.libphonenumber", name = "libphonenumber", version.ref = "libphonenumber" }
 androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 androidx-media3-ui-compose = { group = "androidx.media3", name = "media3-ui-compose", version.ref = "media3" }
