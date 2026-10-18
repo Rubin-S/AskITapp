@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.core.graphics.withSave
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -148,13 +149,11 @@ internal fun PostPhotoCropScreen(
                                     },
                             ) {
                                 val window = cropWindow(bitmap, ratio, zoom, centerX, centerY)
-                                drawContext.canvas.nativeCanvas.apply {
-                                    save()
+                                drawContext.canvas.nativeCanvas.withSave {
                                     clipRect(0f, 0f, size.width, size.height)
                                     scale(size.width / window.width, size.height / window.height)
                                     translate(-window.left, -window.top)
                                     drawBitmap(bitmap, 0f, 0f, android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG))
-                                    restore()
                                 }
                                 for (i in 1..2) {
                                     drawLine(Color.White.copy(alpha = 0.5f), Offset(size.width * i / 3, 0f), Offset(size.width * i / 3, size.height), 1.dp.toPx())

@@ -9,6 +9,8 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.net.Uri
 import android.os.Build
+import androidx.core.graphics.createBitmap
+import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
 import java.io.File
 import java.util.UUID
@@ -39,7 +41,7 @@ internal data class PostCropSession(
 
 /** Decode a bounded, orientation-correct working image, never a full camera-sized bitmap. */
 internal fun loadCropBitmap(context: Context, source: String): Bitmap {
-    val uri = Uri.parse(source)
+    val uri = source.toUri()
     if (Build.VERSION.SDK_INT >= 28) {
         return ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, uri)) { decoder, info, _ ->
             val scale = min(1f, 3072f / maxOf(info.size.width, info.size.height))
@@ -92,7 +94,7 @@ internal fun cropWindow(bitmap: Bitmap, ratio: PostPhotoRatio, zoom: Float, cent
 /** Export the same crop used by the preview, with exact integer 4:3 or 3:4 dimensions. */
 internal fun savePostCrop(context: Context, bitmap: Bitmap, ratio: PostPhotoRatio, window: CropWindow): PostMediaDraft {
     val units = min(2048f / maxOf(ratio.x, ratio.y), min(window.width / ratio.x, window.height / ratio.y)).toInt().coerceAtLeast(1)
-    val output = Bitmap.createBitmap(units * ratio.x, units * ratio.y, Bitmap.Config.ARGB_8888)
+    val output = createBitmap(units * ratio.x, units * ratio.y)
     val file = File(File(context.filesDir, "post_photos").apply { mkdirs() }, "${UUID.randomUUID()}.jpg")
     try {
         val canvas = Canvas(output)
