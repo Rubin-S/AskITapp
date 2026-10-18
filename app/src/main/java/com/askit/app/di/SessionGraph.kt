@@ -41,5 +41,6 @@ class SessionGraph(
         profileStore,
         initialJobs = content.incomingLeads(),
         allowViewAsOtherParty = config.clientPreview,
+        retainInactiveAccounts = config.clientPreview,
     )
 }

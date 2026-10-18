@@ -1,5 +1,6 @@
 package com.askit.app.jobs
 
+import com.askit.app.session.AccountScope
 import com.askit.app.session.SessionProfileStore
 import com.askit.app.task.TaskRepository
 import com.askit.app.task.TaskActionFailure
@@ -21,18 +22,49 @@ class JobsStore(
     val allowViewAsOtherParty: Boolean = false,
     /** Local stand-in for the server-verified start code (docs/job-start-code-contract.md). */
     private val startCodes: JobStartCodeAuthority = LocalJobStartCodeAuthority(),
+    /**
+     * Keep an inactive account's jobs in memory while another account is active. Only the client
+     * preview does (its personas switch back and forth); production drops them on sign-out.
+     */
+    retainInactiveAccounts: Boolean = false,
 ) {
+    /** Fixture jobs every account starts from (empty in release). */
+    private var seedJobs: List<Job> = initialJobs
+
     private val _jobs = MutableStateFlow(initialJobs)
     val jobs: StateFlow<List<Job>> = _jobs.asStateFlow()
 
     private val _viewAsOtherJobIds = MutableStateFlow<Set<String>>(emptySet())
     val viewAsOtherJobIds: StateFlow<Set<String>> = _viewAsOtherJobIds.asStateFlow()
 
+    /** Ids stay unique across accounts so start-code attempt counts never collide. */
     private var nextId = 100
+
+    private class AccountJobs(var jobs: List<Job>, var viewAsOtherJobIds: Set<String>)
+
+    private val accounts = AccountScope(retainInactiveAccounts) { AccountJobs(seedJobs, emptySet()) }
+
+    /** The account whose jobs [jobs] currently shows; null when signed out. */
+    val activeAccountId: String? get() = accounts.accountId
+
+    /**
+     * Shows [accountId]'s jobs (null = signed out). Another account's jobs are never visible
+     * here; see [AccountScope] for when the outgoing account's jobs are kept.
+     */
+    @Synchronized
+    fun activateAccount(accountId: String?) {
+        val outgoing = accounts.current
+        outgoing.jobs = _jobs.value
+        outgoing.viewAsOtherJobIds = _viewAsOtherJobIds.value
+        if (!accounts.activate(accountId)) return
+        _jobs.value = accounts.current.jobs
+        _viewAsOtherJobIds.value = accounts.current.viewAsOtherJobIds
+    }
 
     /** Adds preview-only demo jobs. Callers live in the debug/preview source set. */
     internal fun addClientPreviewJobs(jobs: List<Job>) {
         check(com.askit.app.BuildConfig.CLIENT_PREVIEW)
+        seedJobs = seedJobs + jobs
         _jobs.update { existing -> existing + jobs }
     }
 

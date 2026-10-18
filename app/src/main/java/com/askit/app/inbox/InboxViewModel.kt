@@ -5,15 +5,21 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.askit.app.session.AccountScope
 import kotlinx.coroutines.flow.asSharedFlow
 
 class InboxViewModel(
     private val seed: () -> InboxSeed = { InboxSeed.Empty },
+    /**
+     * Keep each inactive account's conversations in memory. Only the client preview does, so its
+     * local personas can message each other; production drops them on sign-out or account switch.
+     */
+    retainInactiveAccounts: Boolean = false,
 ) : ViewModel() {
-    var store by mutableStateOf(InboxStore())
+    private val accounts = AccountScope(retainInactiveAccounts) { id -> id?.let(::newStore) ?: InboxStore() }
+    var store by mutableStateOf(accounts.current)
         private set
-    private var accountId: String? = null
-    private val accountStores = mutableMapOf<String, InboxStore>()
+    private val accountId: String? get() = accounts.accountId
 
     private var resolveAccess: (String, String, Boolean) -> MessageAccess = { _, _, _ -> MessageAccess.Unavailable }
     private val _feedback = kotlinx.coroutines.flow.MutableSharedFlow<Int>(extraBufferCapacity = 1)
@@ -24,7 +30,7 @@ class InboxViewModel(
     }
 
     private fun newStore(ownerId: String): InboxStore = InboxStore(seed = seed(), messageAccess = { recipientId ->
-        val recipientStore = accountStores[recipientId]
+        val recipientStore = accounts.peek(recipientId)
         val access = when {
             accountId != ownerId -> MessageAccess.Unavailable
             store.conversation(recipientId)?.blocked == true || recipientStore?.conversation(ownerId)?.blocked == true -> MessageAccess.Blocked
@@ -34,12 +40,10 @@ class InboxViewModel(
         access
     })
 
+    /** Switches to [id]'s conversations (null = signed out); see [AccountScope] for what is kept. */
     fun activateAccount(id: String?) {
-        val next = id?.takeIf(String::isNotBlank)
-        if (next == accountId) return
-        accountId?.let { accountStores[it] = store }
-        accountId = next
-        store = next?.let { accountStores.getOrPut(it) { newStore(it) } } ?: InboxStore()
+        if (!accounts.activate(id)) return
+        store = accounts.current
         refresh()
     }
 

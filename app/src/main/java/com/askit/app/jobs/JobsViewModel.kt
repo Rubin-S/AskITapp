@@ -12,6 +12,9 @@ class JobsViewModel(
     val viewAsOtherJobIds: StateFlow<Set<String>> = store.viewAsOtherJobIds
     val profile = profileStore.profile
 
+    /** Shows [accountId]'s jobs; called whenever the signed-in account changes. */
+    fun activateAccount(accountId: String?) = store.activateAccount(accountId)
+
     fun filtered(filter: JobsFilter): List<Job> = jobs.value.filter { job ->
         when (filter) {
             JobsFilter.Active -> !job.inHistory

@@ -79,7 +79,7 @@ class AppContainer(
         initializer { StoryViewModel(createSavedStateHandle()) }
         initializer { StoryViewerViewModel(graph.home, createSavedStateHandle()) }
         initializer { JobsViewModel(graph.jobs, graph.profileStore) }
-        initializer { InboxViewModel(seed = content::inboxSeed) }
+        initializer { InboxViewModel(seed = content::inboxSeed, retainInactiveAccounts = config.clientPreview) }
         initializer {
             AuthViewModel(
                 clientPreview = config.clientPreview,

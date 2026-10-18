@@ -177,6 +177,7 @@ fun AskITApp(
             resolvedStoryViewerViewModel.activateAccount(discussionAccountId)
             resolvedHomeViewModel.posts.activateAccount(discussionAccountId)
             resolvedCreatePostViewModel.activateAccount(discussionAccountId)
+            jobsViewModel.activateAccount(discussionAccountId)
         }
     }
 
