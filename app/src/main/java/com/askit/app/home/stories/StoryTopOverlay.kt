@@ -40,7 +40,7 @@ import com.askit.designsystem.stories.StoryProgressRow
 fun StoryTopOverlay(
     group: StoryGroup,
     itemIndex: Int,
-    itemProgressFraction: Float,
+    itemProgressFraction: () -> Float,
     timeLabel: String,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,

@@ -16,6 +16,9 @@ import androidx.compose.runtime.setValue
  *
  * Restarts when [restartKey] changes, freezes at the current fraction while [paused], and resumes
  * from exactly where it stopped. Invokes [onFinished] once the fraction reaches 1f.
+ *
+ * Returns a reader rather than the value, so only whoever draws the fraction observes it each
+ * frame (the progress bar), not the composable that starts the timer.
  */
 private const val STORY_ITEM_DURATION_MS = 5_000
 
@@ -24,7 +27,7 @@ fun rememberStoryItemProgress(
     restartKey: String,
     paused: Boolean,
     onFinished: () -> Unit,
-): Float {
+): () -> Float {
     val progress = remember(restartKey) { Animatable(0f) }
     var finished by remember(restartKey) { mutableStateOf(false) }
     val currentOnFinished by rememberUpdatedState(onFinished)
@@ -41,5 +44,5 @@ fun rememberStoryItemProgress(
         finished = true
         currentOnFinished()
     }
-    return progress.value
+    return remember(progress) { { progress.value } }
 }

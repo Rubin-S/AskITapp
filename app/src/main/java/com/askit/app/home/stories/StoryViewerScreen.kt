@@ -142,9 +142,13 @@ internal fun StoryViewerScreen(
     val effectivePaused = actionsOpen || state.paused || showViewPostTooltip || pagerState.isScrollInProgress ||
         !lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
     var videoProgress by remember(restartKey) { mutableFloatStateOf(0f) }
-    val itemProgressFraction =
-        if (state.isLoading || state.groups.isEmpty()) 0f
-        else if (state.currentStory?.content?.mediaType == StoryMediaType.Video) videoProgress
+    // A reader, not a value: the progress bar reads it while drawing, so playback ticks no
+    // longer recompose the whole viewer every frame.
+    val itemProgressFraction: () -> Float =
+        if (state.isLoading || state.groups.isEmpty()) NO_PROGRESS
+        else if (state.currentStory?.content?.mediaType == StoryMediaType.Video) {
+            remember(restartKey) { { videoProgress } }
+        }
         else rememberStoryItemProgress(
             restartKey = restartKey,
             paused = effectivePaused,
@@ -162,7 +166,8 @@ internal fun StoryViewerScreen(
             if (state.isLoading || state.groups.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize())
             } else {
-                SyncPagerWithState(pagerState = pagerState, groupIndex = state.groupIndex, groupKeys = state.groups.map { it.authorId ?: it.stories.first().id }, onSelectGroup = onSelectGroup)
+                val groupKeys = remember(state.groups) { state.groups.map { it.authorId ?: it.stories.first().id } }
+                SyncPagerWithState(pagerState = pagerState, groupIndex = state.groupIndex, groupKeys = groupKeys, onSelectGroup = onSelectGroup)
     
                 HorizontalPager(
                     state = pagerState,
@@ -352,6 +357,8 @@ private fun TopAndBottomScrims() {
             },
     )
 }
+
+private val NO_PROGRESS: () -> Float = { 0f }
 
 private fun relativeTimeLabel(story: Story?): String = story?.let {
     DateUtils.getRelativeTimeSpanString(
