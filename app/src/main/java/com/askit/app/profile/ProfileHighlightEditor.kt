@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -100,7 +101,7 @@ internal fun HighlightEditor(
                                 label = { Text(stringResource(R.string.profile_highlight_name)) }, modifier = Modifier.fillMaxWidth())
                         }
                         val hint = if (choosingCover) stringResource(R.string.profile_highlight_choose_cover_hint)
-                            else stringResource(R.string.profile_highlight_selection_count, members.size)
+                            else pluralStringResource(R.plurals.profile_highlight_selection_count, members.size, members.size)
                         Text(hint,
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))

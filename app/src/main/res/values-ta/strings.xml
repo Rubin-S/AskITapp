@@ -1115,7 +1115,10 @@
     <string name="profile_highlight_edit_cover">அட்டையைத் திருத்து</string>
     <string name="profile_highlight_choose_cover">அட்டையைத் தேர்ந்தெடு</string>
     <string name="profile_highlight_choose_cover_hint">அட்டையாகப் பயன்படுத்த ஒரு ஸ்டோரியைத் தட்டவும்.</string>
-    <string name="profile_highlight_selection_count">%1$d தேர்ந்தெடுக்கப்பட்டது · குறைந்தது ஒரு ஸ்டோரியைத் தேர்ந்தெடுக்கவும்.</string>
+    <plurals name="profile_highlight_selection_count">
+        <item quantity="one">%1$d தேர்ந்தெடுக்கப்பட்டது · குறைந்தது ஒரு ஸ்டோரியைத் தேர்ந்தெடுக்கவும்.</item>
+        <item quantity="other">%1$d தேர்ந்தெடுக்கப்பட்டது · குறைந்தது ஒரு ஸ்டோரியைத் தேர்ந்தெடுக்கவும்.</item>
+    </plurals>
     <string name="profile_highlight_delete_title">“%1$s” ஐ நீக்கவா?</string>
     <string name="profile_highlight_delete_hint">இந்தத் தொகுப்பு உங்கள் சுயவிவரத்திலிருந்து அகற்றப்படும். இதில் உள்ள ஸ்டோரிகள் நீக்கப்படாது.</string>
 </resources>

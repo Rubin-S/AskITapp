@@ -1118,7 +1118,10 @@
     <string name="profile_highlight_edit_cover">Edit cover</string>
     <string name="profile_highlight_choose_cover">Choose cover</string>
     <string name="profile_highlight_choose_cover_hint">Tap a story to use it as the cover.</string>
-    <string name="profile_highlight_selection_count">%1$d selected · Choose at least one story.</string>
+    <plurals name="profile_highlight_selection_count">
+        <item quantity="one">%1$d selected · Choose at least one story.</item>
+        <item quantity="other">%1$d selected · Choose at least one story.</item>
+    </plurals>
     <string name="profile_highlight_delete_title">Delete “%1$s”?</string>
     <string name="profile_highlight_delete_hint">This collection will be removed from your profile. Its stories will not be deleted.</string>
 </resources>
