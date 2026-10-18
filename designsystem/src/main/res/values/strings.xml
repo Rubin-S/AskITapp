@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string name="nav_home">Home</string>
     <string name="nav_explore">Explore</string>
     <string name="nav_create">Create</string>
@@ -44,10 +44,6 @@
     <string name="task_result_photo_unavailable">Photo unavailable</string>
     <string name="service_result_provided_by">Provided by %1$s</string>
     <string name="service_result_view_service">View service: %1$s</string>
-    <plurals name="service_result_portfolio_count">
-        <item quantity="one">%d portfolio photo</item>
-        <item quantity="other">%d portfolio photos</item>
-    </plurals>
     <string name="create_post_title">Create a post</string>
     <string name="create_post_supporting">Share an update, photo, carousel, before/after, or poll</string>
     <string name="create_creator_dashboard_title">Creator dashboard</string>
@@ -64,7 +60,6 @@
     <string name="post_feed_before_after_slider">Before and after comparison. Drag to reveal.</string>
 
     <string name="story_viewer_close">Close story</string>
-    <string name="story_viewer_reply_placeholder">Send message</string>
     <string name="story_viewer_like">Like story</string>
 
     <string name="discard_dialog_title">Discard this draft?</string>
@@ -86,7 +81,6 @@
     <string name="comments_cancel_reply">Cancel reply</string>
     <string name="comments_input_placeholder">What do you think of this?</string>
     <string name="comments_send">Send</string>
-    <string name="comments_view_replies" tools:ignore="PluralsCandidate">View %1$d more replies</string>
     <string name="comments_hide_replies">Hide replies</string>
     <string name="comments_like">Like comment</string>
     <string name="comments_unlike">Unlike comment</string>

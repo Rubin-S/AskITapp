@@ -11,7 +11,6 @@
         <item quantity="other">Search filters, %1$d filters applied</item>
     </plurals>
     <string name="explore_filters_tooltip">Filters</string>
-    <string name="explore_location_summary">%1$s · %2$s</string>
     <plurals name="explore_radius_km">
         <item quantity="one">%1$d km</item>
         <item quantity="other">%1$d km</item>
@@ -596,7 +595,6 @@
     <string name="entry_subtitle">Discover services in your community, or offer your own.</string>
     <string name="entry_get_started">Get started</string>
     <string name="entry_already_have_account">I already have an account</string>
-    <string name="entry_trust_badge">Local pros &amp; community</string>
     <string name="entry_legal_disclaimer">By creating an account, you agree to our <annotation link="terms">Terms of Service</annotation> and acknowledge our <annotation link="privacy">Privacy Policy</annotation>.</string>
 
     <!-- Authentication: Phone Number & OTP -->
@@ -740,7 +738,6 @@
     <string name="provider_pro_boost_perks">3x search visibility · Verified badge · Unlimited connections</string>
     <string name="provider_pro_boost_cta">Upgrade to Premium</string>
     <string name="settings_blocked_empty">No blocked accounts. Accounts you block won\'t be able to message or view your listings.</string>
-    <string name="settings_saved_empty">You haven\'t saved any tasks or professionals yet. Tap the bookmark or heart icon on listings to save them.</string>
     <string name="settings_history_empty">Your completed service history and past task applications will appear here.</string>
     <string name="settings_close">Close</string>
     <string name="auth_logo">AskIT Logo</string>
@@ -840,7 +837,6 @@
 
     <string name="settings_provider_name">Provider</string>
     <string name="form_a_location_failed">Couldn\'t detect your location. Try again or enter your city and postcode below.</string>
-    <string name="post_task_local_area">Local Area</string>
     <string name="form_a_save_failed">Couldn\'t save your profile. Your details are still here; please try again.</string>
     <string name="auth_logging_out">Logging out…</string>
     <string name="auth_logout_storage_failed">Couldn\'t remove your saved sign-in. Please retry to finish logging out.</string>
