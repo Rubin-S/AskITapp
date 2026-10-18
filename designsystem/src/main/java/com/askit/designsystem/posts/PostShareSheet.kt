@@ -1,7 +1,5 @@
 package com.askit.designsystem.posts
 
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -17,25 +15,16 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,20 +36,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.askit.designsystem.R
-import com.askit.designsystem.people.AskITAvatar
-
-data class ShareContact(
-    val id: String,
-    val name: String,
-    val avatarUrl: String? = null,
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostShareSheet(
     onDismiss: () -> Unit,
-    contacts: List<ShareContact> = emptyList(),
-    onSendToContact: (ShareContact) -> Unit,
     onCopyLink: () -> Unit,
     onShareExternal: () -> Unit,
     onWhatsApp: () -> Unit,
@@ -68,13 +48,6 @@ fun PostShareSheet(
     onAddToStory: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-    var searchQuery by remember { mutableStateOf("") }
-    val filteredContacts = remember(searchQuery, contacts) {
-        if (searchQuery.isBlank()) contacts else {
-            val needle = searchQuery.trim().lowercase()
-            contacts.filter { it.name.lowercase().contains(needle) }
-        }
-    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -92,75 +65,6 @@ fun PostShareSheet(
                 .fillMaxWidth()
                 .navigationBarsPadding(),
         ) {
-            // Search field
-            AskITTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.share_search_placeholder),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_explore_outlined),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp),
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .testTag("share_search_field"),
-                singleLine = true,
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            // Grid of DM Contacts
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(280.dp)
-                    .padding(horizontal = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(filteredContacts, key = { it.id }) { contact ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onSendToContact(contact) }
-                            .padding(8.dp),
-                    ) {
-                        AskITAvatar(
-                            avatarUrl = contact.avatarUrl,
-                            avatarSize = 64.dp,
-                            fallbackIconSize = 36.dp,
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            text = contact.name,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                }
-            }
-
-            HorizontalDivider(
-                color = DividerDefaults.color.copy(alpha = 0.5f),
-                modifier = Modifier.padding(vertical = 8.dp),
-            )
-
             // Bottom action row: Add to story, WhatsApp, WhatsApp Status, Share, Copy link
             Row(
                 modifier = Modifier

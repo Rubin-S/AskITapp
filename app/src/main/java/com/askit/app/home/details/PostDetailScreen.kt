@@ -149,18 +149,9 @@ fun PostDetailScreen(
 
     activeSharePost?.let { p ->
         val linkCopiedMsg = stringResource(com.askit.designsystem.R.string.share_link_copied)
-        val sentToTemplate = stringResource(com.askit.designsystem.R.string.share_sent_to)
 
         PostShareSheet(
             onDismiss = { activeSharePost = null },
-            onSendToContact = { contact ->
-                Toast.makeText(
-                    context,
-                    java.lang.String.format(sentToTemplate, contact.name),
-                    Toast.LENGTH_SHORT,
-                ).show()
-                activeSharePost = null
-            },
             onCopyLink = {
                 val link = "https://askit.app/p/${p.id}"
                 clipboardScope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(link, link))) }
