@@ -46,7 +46,6 @@ class StoryViewModel(
 
     override fun onCleared() {
         draftSaves.flush()
-        super.onCleared()
     }
 
     val isDirty: Boolean
