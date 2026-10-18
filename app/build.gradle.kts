@@ -43,6 +43,7 @@ android {
         versionName = "1.0"
         buildConfigField("boolean", "CLIENT_PREVIEW", "false")
         buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // The secrets plugin sets the real key per app variant; this inert default only exists
         // so the unit-test manifest (merged for Robolectric) has a value to substitute.
         manifestPlaceholders["PLACES_API_KEY"] = "DEFAULT_API_KEY"
@@ -181,6 +182,12 @@ dependencies {
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.core)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
