@@ -63,8 +63,6 @@ import com.askit.designsystem.inputs.AskITTextField
 import com.askit.designsystem.people.AskITAvatar
 import com.askit.designsystem.R as DsR
 
-private val messagePrivacyOptions = MessagingAudience.entries.associate { it.storedValue to it.labelRes }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileSettingsScreen(
@@ -383,61 +381,10 @@ fun ProfileSettingsScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Bottom Buttons
-            // Log Out Button
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 1.dp,
-                shadowElevation = 1.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .clickable { showLogoutDialog = true }
-                    .testTag("settings_btn_logout"),
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = stringResource(R.string.settings_logout),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Clear App Data Button
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFFFEBEE),
-                tonalElevation = 0.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .clickable { showClearDataDialog = true }
-                    .testTag("settings_btn_clear_data"),
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = stringResource(R.string.settings_clear_app_data),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                        ),
-                        color = Color(0xFFD32F2F),
-                    )
-                }
-            }
+            SettingsAccountActions(
+                onLogoutClick = { showLogoutDialog = true },
+                onClearDataClick = { showClearDataDialog = true },
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -480,29 +427,11 @@ fun ProfileSettingsScreen(
     }
 
     if (showBlockedAccountsSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showBlockedAccountsSheet = false },
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_blocked_accounts),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.settings_blocked_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-        }
+        SettingsEmptyStateSheet(
+            titleRes = R.string.settings_blocked_accounts,
+            messageRes = R.string.settings_blocked_empty,
+            onDismiss = { showBlockedAccountsSheet = false },
+        )
     }
 
     if (showAvailabilitySheet) {
@@ -541,382 +470,40 @@ fun ProfileSettingsScreen(
     }
 
     if (showHistorySheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showHistorySheet = false },
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_history),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.settings_history_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-        }
+        SettingsEmptyStateSheet(
+            titleRes = R.string.settings_history,
+            messageRes = R.string.settings_history_empty,
+            onDismiss = { showHistorySheet = false },
+        )
     }
 
     if (showTermsDialog) {
-        AskITAlertDialog(
-            onDismissRequest = { showTermsDialog = false },
-            title = { Text(stringResource(R.string.settings_terms_privacy)) },
-            text = {
-                Column {
-                    TextButton(onClick = onOpenTerms, modifier = Modifier.testTag("settings_open_terms")) {
-                        Text(stringResource(R.string.settings_terms_link))
-                    }
-                    TextButton(onClick = onOpenPrivacyPolicy, modifier = Modifier.testTag("settings_open_privacy")) {
-                        Text(stringResource(R.string.settings_privacy_policy))
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showTermsDialog = false }) {
-                    Text(stringResource(R.string.settings_close))
-                }
-            },
+        SettingsTermsDialog(
+            onOpenTerms = onOpenTerms,
+            onOpenPrivacyPolicy = onOpenPrivacyPolicy,
+            onDismiss = { showTermsDialog = false },
         )
     }
 
     if (showLogoutDialog) {
-        AskITAlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            title = { Text(stringResource(R.string.settings_logout_confirm_title)) },
-            text = { Text(stringResource(R.string.settings_logout_confirm_msg)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showLogoutDialog = false
-                    onLogout()
-                }, modifier = Modifier.testTag("settings_confirm_logout")) {
-                    Text(stringResource(R.string.settings_logout), color = Color(0xFFD32F2F))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) {
-                    Text(stringResource(R.string.profile_cancel))
-                }
-            },
+        SettingsConfirmDialog(
+            titleRes = R.string.settings_logout_confirm_title,
+            messageRes = R.string.settings_logout_confirm_msg,
+            confirmRes = R.string.settings_logout,
+            confirmTestTag = "settings_confirm_logout",
+            onConfirm = onLogout,
+            onDismiss = { showLogoutDialog = false },
         )
     }
 
     if (showClearDataDialog) {
-        AskITAlertDialog(
-            onDismissRequest = { showClearDataDialog = false },
-            title = { Text(stringResource(R.string.settings_clear_data_confirm_title)) },
-            text = { Text(stringResource(R.string.settings_clear_data_confirm_msg)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showClearDataDialog = false
-                    onClearAppData()
-                }) {
-                    Text(stringResource(R.string.settings_clear_data_action), color = Color(0xFFD32F2F))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showClearDataDialog = false }) {
-                    Text(stringResource(R.string.profile_cancel))
-                }
-            },
+        SettingsConfirmDialog(
+            titleRes = R.string.settings_clear_data_confirm_title,
+            messageRes = R.string.settings_clear_data_confirm_msg,
+            confirmRes = R.string.settings_clear_data_action,
+            confirmTestTag = null,
+            onConfirm = onClearAppData,
+            onDismiss = { showClearDataDialog = false },
         )
-    }
-}
-
-@Composable
-private fun SettingsProfileHeaderCard(
-    displayName: String,
-    username: String,
-    avatarUrl: String?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .testTag("settings_profile_header_card"),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        ) {
-            AskITAvatar(
-                avatarUrl = avatarUrl,
-                avatarSize = 56.dp,
-                fallbackIconSize = 48.dp,
-            )
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    text = displayName,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (username.isNotBlank()) {
-                    Text(
-                        text = "@${username.removePrefix("@")}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            Icon(
-                painter = painterResource(DsR.drawable.ic_chevron_right),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
-            )
-        }
-    }
-}
-
-@Composable
-private fun SettingsSectionHeader(title: String, modifier: Modifier = Modifier) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelMedium.copy(
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp,
-        ),
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = modifier.padding(start = 12.dp, bottom = 8.dp),
-    )
-}
-
-@Composable
-private fun SettingsCardContainer(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun SettingsNavigationRow(
-    title: String,
-    icon: Painter,
-    iconBgColor: Color,
-    modifier: Modifier = Modifier,
-    iconTint: Color = Color.White,
-    value: String? = null,
-    testTag: String? = null,
-    onClick: () -> Unit = {},
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(iconBgColor, RoundedCornerShape(10.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(20.dp),
-            )
-        }
-        Spacer(modifier = Modifier.width(14.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
-        )
-        if (!value.isNullOrBlank()) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(end = 6.dp),
-            )
-        }
-        Icon(
-            painter = painterResource(DsR.drawable.ic_chevron_right),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(18.dp),
-        )
-    }
-}
-
-@Composable
-private fun SettingsToggleRow(
-    title: String,
-    icon: Painter,
-    iconBgColor: Color,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    iconTint: Color = Color.White,
-    testTag: String? = null,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(iconBgColor, RoundedCornerShape(10.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(20.dp),
-            )
-        }
-        Spacer(modifier = Modifier.width(14.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = Color(0xFF76D700),
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = MaterialTheme.colorScheme.outlineVariant,
-            ),
-        )
-    }
-}
-
-@Composable
-private fun SettingsDivider(modifier: Modifier = Modifier) {
-    HorizontalDivider(
-        modifier = modifier.padding(start = 66.dp),
-        thickness = 0.75.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-    )
-}
-
-@Composable
-private fun LanguageSelectionContent(selectedLanguage: String, onSelectLanguage: (String) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.settings_language),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(bottom = 16.dp),
-        )
-        AppLanguage.entries.forEach { language ->
-            val simpleName = language.storedValue
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelectLanguage(simpleName) }
-                    .padding(vertical = 12.dp),
-            ) {
-                RadioButton(
-                    selected = selectedLanguage.startsWith(simpleName, ignoreCase = true),
-                    onClick = { onSelectLanguage(simpleName) },
-                    colors = RadioButtonDefaults.colors(
-                        selectedColor = MaterialTheme.colorScheme.primary,
-                    ),
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = stringResource(language.labelRes),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-    }
-}
-
-@Composable
-private fun MessagePrivacyContent(currentOption: String, onSelectOption: (String) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.settings_who_can_message),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(bottom = 16.dp),
-        )
-        if (com.askit.app.BuildConfig.CLIENT_PREVIEW) {
-            Text(
-                text = stringResource(R.string.settings_message_privacy_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        messagePrivacyOptions.forEach { (opt, label) ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelectOption(opt) }
-                    .padding(vertical = 12.dp),
-            ) {
-                RadioButton(
-                    selected = currentOption.equals(opt, ignoreCase = true),
-                    onClick = { onSelectOption(opt) },
-                    colors = RadioButtonDefaults.colors(
-                        selectedColor = MaterialTheme.colorScheme.primary,
-                    ),
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = stringResource(label),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
