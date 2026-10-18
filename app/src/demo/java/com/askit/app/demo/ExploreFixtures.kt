@@ -1,8 +1,12 @@
-package com.askit.app.explore
+package com.askit.app.demo
 
-import com.askit.designsystem.tasks.TaskResultStatus
+import com.askit.app.explore.ExploreListedPrice
+import com.askit.app.explore.ExplorePersonResult
+import com.askit.app.explore.ExploreRateUnit
+import com.askit.app.explore.PersonMatchReason
 
-fun sampleExplorePeople(): List<ExplorePersonResult> = listOf(
+/** Sample Explore professionals for debug/preview builds. Not compiled into release. */
+internal fun sampleExplorePeople(): List<ExplorePersonResult> = listOf(
     ExplorePersonResult(
         id = "pro-1",
         name = "Priya Sharma",
@@ -86,60 +90,5 @@ fun sampleExplorePeople(): List<ExplorePersonResult> = listOf(
         statusLabel = "Available today",
         listedPrice = ExploreListedPrice(java.math.BigDecimal("450"), java.math.BigDecimal("450"), ExploreRateUnit.Visit),
         matchReasons = setOf(PersonMatchReason.Identity, PersonMatchReason.Service),
-    ),
-)
-
-fun sampleExploreTasks(): List<ExploreTaskResult> = listOf(
-    ExploreTaskResult(
-        id = "task-1",
-        title = "Fix kitchen sink drainage leak & replace mixer tap",
-        category = "Plumbing",
-        summary = "Water leaking from P-trap beneath the kitchen sink. Need replacement pipe and fitting.",
-        budgetLabel = "₹800",
-        locationLabel = "Gandhipuram (1.5 km)",
-        timingLabel = "Today by 6 PM",
-        posterName = "Meera R.",
-        postedLabel = "20m ago",
-        status = TaskResultStatus.Open,
-        distanceLabel = "1.5 km",
-    ),
-    ExploreTaskResult(
-        id = "task-2",
-        title = "Install 2 ceiling fans & fix bedroom switchboard",
-        category = "Electrical",
-        summary = "Two new Havells fans to be mounted. Wiring is already pulled.",
-        budgetLabel = "₹600",
-        locationLabel = "RS Puram (2.8 km)",
-        timingLabel = "Tomorrow morning",
-        posterName = "Karthik V.",
-        postedLabel = "1h ago",
-        status = TaskResultStatus.Open,
-        distanceLabel = "2.8 km",
-    ),
-    ExploreTaskResult(
-        id = "task-3",
-        title = "Full 2BHK deep cleaning before moving in",
-        category = "Cleaning",
-        summary = "Empty flat needs floor scrubbing, bathroom deep sanitization, and balcony wash.",
-        budgetLabel = "₹2,500",
-        locationLabel = "Saibaba Colony (3.4 km)",
-        timingLabel = "This Weekend",
-        posterName = "Deepak S.",
-        postedLabel = "3h ago",
-        status = TaskResultStatus.Open,
-        distanceLabel = "3.4 km",
-    ),
-    ExploreTaskResult(
-        id = "task-4",
-        title = "Split AC water dripping inside room",
-        category = "AC Repair",
-        summary = "1.5 Ton Voltas indoor unit leaks water when running continuously for over an hour.",
-        budgetLabel = "₹900",
-        locationLabel = "Peelamedu (4.2 km)",
-        timingLabel = "Flexible this week",
-        posterName = "Sneha M.",
-        postedLabel = "5h ago",
-        status = TaskResultStatus.Open,
-        distanceLabel = "4.2 km",
     ),
 )
