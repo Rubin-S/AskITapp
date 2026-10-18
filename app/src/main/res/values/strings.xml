@@ -1129,4 +1129,7 @@
     <string name="form_a_signup_unavailable">Sign-ups aren\'t open yet. AskIT can\'t create new accounts until its server is live, so nothing entered here is saved. Please sign out and try again later.</string>
     <string name="list_service_contact_private">Kept private. Your phone and email are not shown on the listing; customers reach you through AskIT messages.</string>
     <string name="job_verify_locked">Too many wrong codes. Ask the customer to share a new code.</string>
+    <string name="story_download_saved">Saved to your gallery</string>
+    <string name="story_download_failed">Couldn\'t save to your gallery. Try again.</string>
+    <string name="story_download_permission_denied">Allow storage access to save stories to your gallery.</string>
 </resources>
