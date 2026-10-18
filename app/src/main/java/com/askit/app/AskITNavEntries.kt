@@ -63,6 +63,7 @@ import com.askit.app.inbox.MessagesRoute
 import com.askit.app.inbox.NewMessageScreen
 import com.askit.app.jobs.ApplyToTaskResult
 import com.askit.app.jobs.JobsViewModel
+import com.askit.app.jobs.isSeeker
 import com.askit.app.jobs.ui.JobDetail
 import com.askit.app.jobs.ui.JobReview
 import com.askit.app.jobs.ui.JobVerifyEnter
@@ -714,6 +715,10 @@ internal fun rememberAskITEntryProvider(
     }
     entry<AppDestination.JobVerifyShare> { key ->
         val job = jobsViewModel.store.job(key.jobId) ?: return@entry
+        if (!job.isSeeker(jobsViewModel.store.visibleParty(job))) {
+            LaunchedEffect(key.jobId) { navigationState.pop() }
+            return@entry
+        }
         JobVerifyShare(job = job, onBack = { navigationState.pop() })
     }
     entry<AppDestination.JobVerifyEnter> { key ->

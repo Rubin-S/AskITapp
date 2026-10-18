@@ -116,7 +116,14 @@ class MainActivity : AppCompatActivity() {
                 initializer {
                     val previewStorage = if (BuildConfig.CLIENT_PREVIEW) AppVariant.previewProfileStorage(applicationContext) else null
                     val profile = SessionProfileStore(persist = { previewStorage?.save(it) ?: it })
-                    JobsViewModel(JobsStore(profile, initialJobs = AppVariant.incomingLeads()), profile)
+                    JobsViewModel(
+                        JobsStore(
+                            profile,
+                            initialJobs = AppVariant.incomingLeads(),
+                            allowViewAsOtherParty = BuildConfig.CLIENT_PREVIEW,
+                        ),
+                        profile,
+                    )
                 }
             },
         )[JobsViewModel::class.java]

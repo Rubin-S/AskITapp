@@ -142,7 +142,7 @@ fun JobDetail(
             JobDetailHeader(
                 counterpartName = job.counterpartName,
                 locationLabel = location,
-                onViewAsOther = { store.toggleViewAsOtherParty(job.id) },
+                onViewAsOther = if (store.allowViewAsOtherParty) ({ store.toggleViewAsOtherParty(job.id) }) else null,
             )
             JobStatusBanner(
                 title = stringResource(jobBannerTitleRes(job, party)),
@@ -170,7 +170,7 @@ fun JobDetail(
 private fun JobDetailHeader(
     counterpartName: String,
     locationLabel: String,
-    onViewAsOther: () -> Unit,
+    onViewAsOther: (() -> Unit)?,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -200,10 +200,13 @@ private fun JobDetailHeader(
                 )
             }
         }
-        AssistChip(
-            onClick = onViewAsOther,
-            label = { Text(stringResource(R.string.messages_view_as_other)) },
-            modifier = Modifier.testTag("job_view_as_other"),
-        )
+        // Preview-only review tool; null in debug and release builds.
+        if (onViewAsOther != null) {
+            AssistChip(
+                onClick = onViewAsOther,
+                label = { Text(stringResource(R.string.messages_view_as_other)) },
+                modifier = Modifier.testTag("job_view_as_other"),
+            )
+        }
     }
 }

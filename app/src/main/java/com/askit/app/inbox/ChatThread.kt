@@ -153,14 +153,16 @@ fun ChatThread(
                                 onReport()
                             },
                         )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.messages_view_as_other)) },
-                            onClick = {
-                                menuExpanded = false
-                                viewAsOther = !viewAsOther
-                                onViewAsOtherParty()
-                            },
-                        )
+                        if (com.askit.app.BuildConfig.CLIENT_PREVIEW) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.messages_view_as_other)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    viewAsOther = !viewAsOther
+                                    onViewAsOtherParty()
+                                },
+                            )
+                        }
                     }
                 },
             )

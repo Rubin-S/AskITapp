@@ -14,6 +14,11 @@ class JobsStore(
     private val profileStore: SessionProfileStore,
     private val clock: () -> Long = System::currentTimeMillis,
     initialJobs: List<Job> = emptyList(),
+    /**
+     * "View as other party" is a client-preview review tool only. Party is the sole authorisation
+     * input for accept/start/complete, so outside the preview build it must never flip.
+     */
+    val allowViewAsOtherParty: Boolean = false,
 ) {
     private val _jobs = MutableStateFlow(initialJobs)
     val jobs: StateFlow<List<Job>> = _jobs.asStateFlow()
@@ -31,11 +36,12 @@ class JobsStore(
 
     fun job(id: String): Job? = _jobs.value.firstOrNull { it.id == id }
 
-    fun isViewAsOther(jobId: String): Boolean = jobId in _viewAsOtherJobIds.value
+    fun isViewAsOther(jobId: String): Boolean = allowViewAsOtherParty && jobId in _viewAsOtherJobIds.value
 
     fun visibleParty(job: Job): JobParty = job.visibleParty(isViewAsOther(job.id))
 
     fun toggleViewAsOtherParty(jobId: String) {
+        if (!allowViewAsOtherParty) return
         _viewAsOtherJobIds.update { ids ->
             if (jobId in ids) ids - jobId else ids + jobId
         }
