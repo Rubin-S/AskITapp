@@ -19,31 +19,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import com.askit.app.auth.AuthViewModel
 import com.askit.app.createpost.CreatePostViewModel
+import com.askit.app.providerdashboard.ProviderDashboardViewModel
 import com.askit.app.config.AppLinksViewModel
 import com.askit.app.creatordashboard.CreatorDashboardViewModel
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.defaultExploreFilterOptions
 import com.askit.app.home.HomeViewModel
-import com.askit.app.home.data.LocalHomeRepository
 import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.InboxViewModel
-import com.askit.app.jobs.JobsStore
 import com.askit.app.jobs.JobsViewModel
 import com.askit.app.listservice.ListServiceViewModel
 import com.askit.app.task.TaskDiscussionViewModel
 import com.askit.app.task.TaskActionsViewModel
 import com.askit.app.posttask.PostTaskViewModel
-import com.askit.app.profile.LocalProfileRepository
 import com.askit.app.profile.ProfileViewModel
-import com.askit.app.session.SessionProfileStore
 import com.askit.app.story.StoryViewModel
-import com.askit.app.task.InMemoryTaskRepository
-import com.askit.app.variant.AppVariant
 import com.askit.designsystem.theme.AskITTheme
 import com.google.android.libraries.places.api.Places
 
@@ -54,143 +46,36 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         initializePlaces()
-        appLinksViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer { AppLinksViewModel(BuildConfig.BACKEND_BASE_URL.takeIf { it.isNotBlank() }) }
-            },
-        )[AppLinksViewModel::class.java]
-        val repositories = ViewModelProvider(
-            this,
-            viewModelFactory { initializer { Repositories(applicationContext) } },
-        )[Repositories::class.java]
-        val taskRepository = repositories.tasks
-        val taskDiscussionViewModel = ViewModelProvider(
-            this,
-            viewModelFactory { initializer { TaskDiscussionViewModel(taskRepository, createSavedStateHandle()) } },
-        )[TaskDiscussionViewModel::class.java]
-        val taskActionsViewModel = ViewModelProvider(
-            this,
-            viewModelFactory { initializer { TaskActionsViewModel(taskRepository, createSavedStateHandle()) } },
-        )[TaskActionsViewModel::class.java]
-        val homeRepository = repositories.home
-        val homeViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer { HomeViewModel(homeRepository) }
-            },
-        )[HomeViewModel::class.java]
-        val exploreViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer { ExploreViewModel(createSavedStateHandle()) }
-            },
-        )[ExploreViewModel::class.java]
-        val postTaskViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer { PostTaskViewModel(createSavedStateHandle()) }
-            },
-        )[PostTaskViewModel::class.java]
-        val listServiceViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer { ListServiceViewModel(createSavedStateHandle()) }
-            },
-        )[ListServiceViewModel::class.java]
-        val createPostViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer { CreatePostViewModel(createSavedStateHandle()) }
-            },
-        )[CreatePostViewModel::class.java]
-        val storyViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer { StoryViewModel(createSavedStateHandle()) }
-            },
-        )[StoryViewModel::class.java]
-        val jobsViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer {
-                    val previewStorage = if (BuildConfig.CLIENT_PREVIEW) AppVariant.previewProfileStorage(applicationContext) else null
-                    val profile = SessionProfileStore(persist = { previewStorage?.save(it) ?: it })
-                    JobsViewModel(
-                        JobsStore(
-                            profile,
-                            initialJobs = AppVariant.incomingLeads(),
-                            allowViewAsOtherParty = BuildConfig.CLIENT_PREVIEW,
-                        ),
-                        profile,
-                    )
-                }
-            },
-        )[JobsViewModel::class.java]
-        val authViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer {
-                    val backendUrl = BuildConfig.BACKEND_BASE_URL.takeIf { it.isNotBlank() }
-                    com.askit.app.auth.AuthViewModel(
-                        clientPreview = BuildConfig.CLIENT_PREVIEW,
-                        api = backendUrl?.let { com.askit.app.auth.AuthApi(it) },
-                        sessionStore = backendUrl?.let { com.askit.app.auth.AuthSessionStore(applicationContext, it) },
-                        profileStore = jobsViewModel.profileStore,
-                        previewProfileLoader = { id ->
-                            AppVariant.previewProfileStorage(applicationContext)?.load(id) ?: AppVariant.previewProfile(id)
-                        },
-                    )
-                }
-            },
-        )[com.askit.app.auth.AuthViewModel::class.java]
-        if (BuildConfig.CLIENT_PREVIEW && !repositories.previewSeeded) {
-            repositories.previewSeeded = true
-            AppVariant.seedPreviewContent(taskRepository, homeViewModel.posts, jobsViewModel.store)
+        val container = (application as AskITApplication).container
+        val graph = container.sessionGraph(this)
+        val viewModels = ViewModelProvider(this, container.viewModelFactory(graph))
+        appLinksViewModel = viewModels[AppLinksViewModel::class.java]
+        val taskRepository = graph.tasks
+        val taskDiscussionViewModel = viewModels[TaskDiscussionViewModel::class.java]
+        val taskActionsViewModel = viewModels[TaskActionsViewModel::class.java]
+        val homeViewModel = viewModels[HomeViewModel::class.java]
+        val exploreViewModel = viewModels[ExploreViewModel::class.java]
+        val postTaskViewModel = viewModels[PostTaskViewModel::class.java]
+        val listServiceViewModel = viewModels[ListServiceViewModel::class.java]
+        val createPostViewModel = viewModels[CreatePostViewModel::class.java]
+        val storyViewModel = viewModels[StoryViewModel::class.java]
+        val jobsViewModel = viewModels[JobsViewModel::class.java]
+        val authViewModel = viewModels[AuthViewModel::class.java]
+        if (container.config.clientPreview && !graph.previewSeeded) {
+            graph.previewSeeded = true
+            container.content.seedPreviewContent(taskRepository, homeViewModel.posts, jobsViewModel.store)
         }
-        val inboxViewModel = ViewModelProvider(
-            this,
-            viewModelFactory { initializer { InboxViewModel(seed = AppVariant::inboxSeed) } },
-        )[InboxViewModel::class.java]
-        val storyViewerViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer { StoryViewerViewModel(homeRepository, createSavedStateHandle()) }
-            },
-        )[StoryViewerViewModel::class.java]
-        val profileViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer {
-                    ProfileViewModel(LocalProfileRepository(jobsViewModel.profileStore), signupAvailable = BuildConfig.CLIENT_PREVIEW)
-                }
-            },
-        )[ProfileViewModel::class.java]
-        val creatorDashboardViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer {
-                    CreatorDashboardViewModel(jobsViewModel.profileStore, AppVariant::creatorDashboardSample)
-                }
-            },
-        )[CreatorDashboardViewModel::class.java]
-        val providerDashboardViewModel = ViewModelProvider(
-            this,
-            viewModelFactory {
-                initializer {
-                    com.askit.app.providerdashboard.ProviderDashboardViewModel(
-                        jobsViewModel.profileStore,
-                        AppVariant::providerDashboardSample,
-                    )
-                }
-            },
-        )[com.askit.app.providerdashboard.ProviderDashboardViewModel::class.java]
+        val inboxViewModel = viewModels[InboxViewModel::class.java]
+        val storyViewerViewModel = viewModels[StoryViewerViewModel::class.java]
+        val profileViewModel = viewModels[ProfileViewModel::class.java]
+        val creatorDashboardViewModel = viewModels[CreatorDashboardViewModel::class.java]
+        val providerDashboardViewModel = viewModels[ProviderDashboardViewModel::class.java]
         // Release has no search backend yet: no fixture people, and browse sections say so.
         val exploreResultState = com.askit.app.explore.ExploreResultState.Results(
-            people = AppVariant.explorePeople(),
+            people = container.content.explorePeople(),
             tasks = emptyList(),
         )
-        val exploreBrowseState = AppVariant.exploreBrowseState()
+        val exploreBrowseState = container.content.exploreBrowseState()
         val initialRoute = if (BuildConfig.CLIENT_PREVIEW || (BuildConfig.DEBUG &&
             intent.getBooleanExtra("extra_start_at_home", false) &&
             !intent.getBooleanExtra("extra_start_entry", false))
@@ -262,20 +147,5 @@ class MainActivity : AppCompatActivity() {
         runCatching {
             Places.initializeWithNewPlacesApiEnabled(applicationContext, apiKey)
         }
-    }
-
-    private class Repositories(context: android.content.Context) : ViewModel() {
-        var previewSeeded = false
-        val tasks = InMemoryTaskRepository(AppVariant.seededTasks())
-        private val previewStorage = if (BuildConfig.CLIENT_PREVIEW) AppVariant.previewProfileStorage(context) else null
-        val home = LocalHomeRepository(
-            taskRepository = tasks,
-            initialStories = AppVariant.homeStories(),
-            fixtures = AppVariant.homeFeed(),
-            storySocial = com.askit.app.home.stories.StorySocialStore(
-                initialRelationships = runCatching { previewStorage?.loadRelationships().orEmpty() }.getOrDefault(emptyMap()),
-                persistRelationships = { previewStorage?.saveRelationships(it) },
-            ),
-        )
     }
 }

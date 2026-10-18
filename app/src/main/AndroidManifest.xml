@@ -25,6 +25,7 @@
         android:required="false" />
 
     <application
+        android:name=".AskITApplication"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
