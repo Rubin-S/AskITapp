@@ -98,11 +98,7 @@ class AuthApi(baseUrl: String, client: OkHttpClient = OkHttpClient()) {
             val content = error.body ?: throw AuthApiException(AuthError.InvalidResponse)
             throw responseError(error.status, content)
         }
-        val account = decode<AccountResponse>(response)
-        if (account.userId.isBlank() || !account.phoneNumber.matches(Regex("\\+[1-9][0-9]{6,14}"))) {
-            throw AuthApiException(AuthError.InvalidResponse)
-        }
-        return CurrentAccount(account.userId, account.phoneNumber, account.profile?.toSessionProfile(account.phoneNumber, account.userId))
+        return parseCurrentAccount(response, json)
     }
 
     private inline fun <reified T> decode(body: String): T = try {
@@ -136,4 +132,28 @@ class AuthApi(baseUrl: String, client: OkHttpClient = OkHttpClient()) {
 
     @Serializable
     private data class ErrorResponse(val code: String, val retryAfterSeconds: Long? = null)
+}
+
+/**
+ * Parses and validates a `GET /v1/me` body (docs/current-account-contract.md). Every failure,
+ * including unexpected exceptions while mapping the profile, becomes [AuthError.InvalidResponse].
+ */
+internal fun parseCurrentAccount(body: String, json: Json): CurrentAccount {
+    val account = try {
+        json.decodeFromString<AccountResponse>(body)
+    } catch (_: IllegalArgumentException) {
+        // SerializationException (malformed JSON, missing required field) is an IllegalArgumentException.
+        throw AuthApiException(AuthError.InvalidResponse)
+    }
+    if (account.userId.isBlank() || !account.phoneNumber.matches(Regex("\\+[1-9][0-9]{6,14}"))) {
+        throw AuthApiException(AuthError.InvalidResponse)
+    }
+    val profile = try {
+        account.profile?.toSessionProfile(account.phoneNumber, account.userId)
+    } catch (error: AuthApiException) {
+        throw error
+    } catch (_: RuntimeException) {
+        throw AuthApiException(AuthError.InvalidResponse)
+    }
+    return CurrentAccount(account.userId, account.phoneNumber, profile)
 }

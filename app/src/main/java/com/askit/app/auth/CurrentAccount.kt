@@ -24,11 +24,20 @@ internal data class AccountResponse(val userId: String, val phoneNumber: String,
 @Serializable
 internal data class AccountLanguage(val name: String, val proficiency: String)
 
+/**
+ * The `profile` object of `GET /v1/me`, as defined in docs/current-account-contract.md.
+ *
+ * Required by the contract: displayName (nonblank), username (may be empty until assigned),
+ * city (nonblank) and joinedYear (four digits). `email` and `pincode` are NOT part of the
+ * contract: they are accepted when a server sends them but never required, so a returning
+ * account without them still signs in. listingDraft/highlights/title/bannerUrl are local
+ * client fields tolerated for forward compatibility.
+ */
 @Serializable
 internal data class AccountProfile(
     val displayName: String,
     val username: String,
-    val city: String = "",
+    val city: String,
     val joinedYear: String,
     val bio: String = "",
     val about: String = "",
@@ -68,7 +77,9 @@ internal data class AccountProfile(
         if (listingDraft != null && (listing == null || listing.title != listingDraft.title ||
             listing.description != listingDraft.description || listing.phoneNumber != phoneNumber || listing.email != email ||
             listingDraft.contactPhone != phoneNumber || listingDraft.contactEmail != email)) throw AuthApiException(AuthError.InvalidResponse)
-        if (displayName.isBlank() || !com.askit.app.profile.isUsernameValid(username.removePrefix("@")) || !validAccountEmail(email) || !validAccountPostcode(pincode) ||
+        if (displayName.isBlank() || city.isBlank() ||
+            (username.isNotEmpty() && !com.askit.app.profile.isUsernameValid(username.removePrefix("@"))) ||
+            (email.isNotEmpty() && !validAccountEmail(email)) || (pincode.isNotEmpty() && !validAccountPostcode(pincode)) ||
             !validAccountPhone(phoneNumber) || selectedLanguage !in setOf("English", "Tamil") || !joinedYear.matches(Regex("[0-9]{4}")) ||
             profileStrengthPercent !in 0..100 || followingCount < 0 || followerCount < 0 || blockedAccountsCount < 0 ||
             activeRole !in setOf("Seeker", "Provider", "Both") ||
@@ -89,7 +100,7 @@ internal data class AccountProfile(
             displayName = displayName,
             username = username,
             bio = bio,
-            title = title, email = email, selectedLanguage = selectedLanguage,
+            title = title, email = email.ifEmpty { null }, selectedLanguage = selectedLanguage,
             about = about,
             city = city,
             joinedYear = joinedYear,
