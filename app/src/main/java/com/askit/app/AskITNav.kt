@@ -76,8 +76,8 @@ import com.askit.designsystem.navigation.AskITCreateSheet
 fun AskITApp(
     exploreViewModel: ExploreViewModel,
     taskRepository: TaskRepository? = null,
-    taskDiscussionViewModel: TaskDiscussionViewModel? = null,
-    taskActionsViewModel: TaskActionsViewModel? = null,
+    taskDiscussionViewModel: TaskDiscussionViewModel,
+    taskActionsViewModel: TaskActionsViewModel,
     homeViewModel: HomeViewModel? = null,
     postTaskViewModel: PostTaskViewModel? = null,
     listServiceViewModel: ListServiceViewModel? = null,
@@ -88,7 +88,7 @@ fun AskITApp(
     jobsViewModel: JobsViewModel? = null,
     inboxViewModel: InboxViewModel? = null,
     profileViewModel: ProfileViewModel? = null,
-    storyViewerViewModel: StoryViewerViewModel? = null,
+    storyViewerViewModel: StoryViewerViewModel,
     onExit: () -> Unit = {},
     resultState: ExploreResultState = ExploreResultState.Loading,
     browseState: ExploreBrowseState = ExploreBrowseState(),
@@ -116,14 +116,13 @@ fun AskITApp(
     val resolvedAuthViewModel = authViewModel ?: remember { com.askit.app.auth.AuthViewModel() }
     val authState by resolvedAuthViewModel.state.collectAsStateWithLifecycle()
     val resolvedTaskRepository = taskRepository ?: remember { InMemoryTaskRepository() }
-    val resolvedDiscussionViewModel = taskDiscussionViewModel ?: remember(resolvedTaskRepository) { TaskDiscussionViewModel(resolvedTaskRepository) }
-    val resolvedTaskActionsViewModel = taskActionsViewModel ?: remember(resolvedTaskRepository) { TaskActionsViewModel(resolvedTaskRepository) }
+    val resolvedDiscussionViewModel = taskDiscussionViewModel
+    val resolvedTaskActionsViewModel = taskActionsViewModel
     val resolvedPostTaskViewModel = postTaskViewModel ?: remember { PostTaskViewModel() }
     val fallbackHomeRepository = remember(resolvedTaskRepository) { FakeHomeRepository(resolvedTaskRepository) }
     val resolvedHomeViewModel = homeViewModel ?: remember(fallbackHomeRepository) { HomeViewModel(fallbackHomeRepository) }
     val resolvedCreatePostViewModel = createPostViewModel ?: remember { CreatePostViewModel() }
     val resolvedStoryViewerViewModel = storyViewerViewModel
-        ?: remember(fallbackHomeRepository) { StoryViewerViewModel(fallbackHomeRepository) }
     val storySnackbar = remember { SnackbarHostState() }
     val storyFeedback by resolvedStoryViewerViewModel.social.feedback.collectAsStateWithLifecycle()
     val storyContext = LocalContext.current

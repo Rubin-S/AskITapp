@@ -17,7 +17,7 @@ data class TaskDiscussionDraft(
 
 class TaskDiscussionViewModel(
     private val repository: TaskRepository,
-    private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val discussions = repository.discussions
     private var accountId: String? = savedStateHandle["discussion_account"]

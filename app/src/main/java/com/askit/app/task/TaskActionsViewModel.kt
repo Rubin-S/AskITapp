@@ -16,7 +16,7 @@ data class TaskActionDraft(
 
 class TaskActionsViewModel(
     private val repository: TaskRepository,
-    private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private var accountId: String? = savedStateHandle["task_actions_account"]
     private val mutableDrafts = MutableStateFlow(restore())

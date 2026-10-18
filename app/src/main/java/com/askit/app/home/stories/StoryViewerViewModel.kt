@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class StoryViewerViewModel(
     private val repository: HomeRepository,
-    private val savedStateHandle: SavedStateHandle = SavedStateHandle(),
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val social = repository.storySocial
     private var accountId: String? = savedStateHandle["story_account"]
