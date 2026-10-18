@@ -13,12 +13,13 @@ import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.askit.app.explore.ExploreBrowseState
 import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExplorePersonResult
 import com.askit.app.explore.ExploreResultScope
-import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreRoute
 import com.askit.app.explore.ExploreViewModel
+import com.askit.app.explore.FixedExploreContentSource
 import com.askit.app.explore.defaultExploreFilterOptions
 import com.askit.designsystem.theme.AskITTheme
 import org.junit.Assert.assertEquals
@@ -45,15 +46,17 @@ class ExploreSearchFlowTest {
     )
 
     @Test fun searchThenScopeThenFilter() {
-        val viewModel = ExploreViewModel(SavedStateHandle())
         val people = listOf(person("p1", "Priya Sharma", 4.9, 48), person("p2", "Ravi Kumar", 3.9, 5))
+        val viewModel = ExploreViewModel(
+            SavedStateHandle(),
+            FixedExploreContentSource(people = { people }, browseState = { ExploreBrowseState() }),
+        )
         var applied by mutableStateOf<Map<ExploreResultScope, Set<ExploreFilterOption>>>(emptyMap())
         compose.setContent {
             AskITTheme {
                 ExploreRoute(
                     viewModel = viewModel,
                     onSearchFiltersClick = {},
-                    resultState = ExploreResultState.Results(people = people, tasks = emptyList()),
                     availableFilterOptions = defaultExploreFilterOptions(),
                     appliedFilterOptions = applied,
                     onFiltersChanged = { scope, options -> applied = applied + (scope to options) },

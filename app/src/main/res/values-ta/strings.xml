@@ -58,6 +58,7 @@
     <string name="explore_sort_rating_high_to_low">மதிப்பீடு: அதிகம் முதல் குறைவு வரை</string>
     <string name="explore_sort_newest">புதியவை</string>
     <string name="explore_sort_due_soon">விரைவில் முடிக்க வேண்டியவை</string>
+    <string name="explore_sort_price_low_to_high">விலை: குறைவு முதல் அதிகம் வரை</string>
     <string name="explore_filter_group_rating">மதிப்பீடு</string>
     <string name="explore_filter_group_work_location">பணி இடம்</string>
     <string name="explore_filter_group_availability">கிடைக்கும் நேரம்</string>

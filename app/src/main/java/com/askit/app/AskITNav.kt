@@ -39,10 +39,8 @@ import com.askit.app.auth.AuthOperation
 import com.askit.app.config.AppLinks
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.creatordashboard.CreatorDashboardViewModel
-import com.askit.app.explore.ExploreBrowseState
 import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExploreResultScope
-import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.home.HomeViewModel
 import com.askit.app.home.stories.StoryViewerViewModel
@@ -57,7 +55,6 @@ import com.askit.app.story.StoryViewModel
 import com.askit.app.task.TaskActionsViewModel
 import com.askit.app.task.TaskDiscussionViewModel
 import com.askit.app.task.TaskRepository
-import com.askit.app.task.toExploreTaskResult
 import com.askit.designsystem.dialogs.AskITAlertDialog
 import com.askit.designsystem.navigation.AskITBottomBar
 import com.askit.designsystem.navigation.AskITCreateAction
@@ -81,8 +78,6 @@ fun AskITApp(
     profileViewModel: ProfileViewModel,
     storyViewerViewModel: StoryViewerViewModel,
     onExit: () -> Unit = {},
-    resultState: ExploreResultState = ExploreResultState.Loading,
-    browseState: ExploreBrowseState = ExploreBrowseState(),
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
     clock: () -> Long = System::currentTimeMillis,
     initialRoute: AppDestination = AppDestination.Home,
@@ -285,12 +280,6 @@ fun AskITApp(
         }
         return
     }
-    val sharedTasks by resolvedTaskRepository.tasks.collectAsStateWithLifecycle()
-    val sharedResultState = if (resultState is ExploreResultState.Results) {
-        resultState.copy(tasks = sharedTasks.map { it.toExploreTaskResult() })
-    } else {
-        resultState
-    }
     val entryProvider = rememberAskITEntryProvider(
         navigationState = navigationState,
         authViewModel = resolvedAuthViewModel,
@@ -311,8 +300,6 @@ fun AskITApp(
         inboxViewModel = resolvedInboxViewModel,
         profileViewModel = resolvedProfileViewModel,
         storyViewerViewModel = resolvedStoryViewerViewModel,
-        resultState = sharedResultState,
-        browseState = browseState,
         availableFilterOptions = availableFilterOptions,
         appliedFilterOptions = appliedFilterOptions,
         onFiltersChanged = exploreViewModel::onFiltersChanged,

@@ -58,6 +58,7 @@
     <string name="explore_sort_rating_high_to_low">Rating: high to low</string>
     <string name="explore_sort_newest">Newest</string>
     <string name="explore_sort_due_soon">Due soon</string>
+    <string name="explore_sort_price_low_to_high">Price: low to high</string>
     <string name="explore_filter_group_rating">Rating</string>
     <string name="explore_filter_group_work_location">Work location</string>
     <string name="explore_filter_group_availability">Availability</string>

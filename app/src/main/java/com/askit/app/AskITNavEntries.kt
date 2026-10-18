@@ -36,10 +36,8 @@ import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.creatordashboard.CreatorDashboardRoute
 import com.askit.app.creatordashboard.CreatorDashboardViewModel
 import com.askit.app.entry.EntryScreen
-import com.askit.app.explore.ExploreBrowseState
 import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExploreResultScope
-import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreRoute
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.SearchAreaRoute
@@ -114,8 +112,6 @@ internal fun rememberAskITEntryProvider(
     inboxViewModel: InboxViewModel,
     profileViewModel: ProfileViewModel,
     storyViewerViewModel: StoryViewerViewModel,
-    resultState: ExploreResultState,
-    browseState: ExploreBrowseState,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>>,
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>>,
     onFiltersChanged: (ExploreResultScope, Set<ExploreFilterOption>) -> Unit,
@@ -360,23 +356,12 @@ internal fun rememberAskITEntryProvider(
         }
         entry<AppDestination.Explore> {
             val repositoryTasks by taskRepository.tasks.collectAsStateWithLifecycle()
-            val mappedExploreTasks = repositoryTasks.map { it.toExploreTaskResult() }
-            val effectiveResultState = when (resultState) {
-                is ExploreResultState.Results -> resultState.copy(tasks = mappedExploreTasks)
-
-                ExploreResultState.Loading -> ExploreResultState.Results(
-                    people = emptyList(),
-                    tasks = mappedExploreTasks,
-                )
-
-                else -> resultState
-            }
+            val mappedExploreTasks = remember(repositoryTasks) { repositoryTasks.map { it.toExploreTaskResult() } }
             ExploreRoute(
                 viewModel = exploreViewModel,
                 onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) },
                 onSearchAreaClick = { navigationState.push(AppDestination.ExploreLocationDestination) },
-                resultState = effectiveResultState,
-                browseState = browseState,
+                localTasks = mappedExploreTasks,
                 availableFilterOptions = availableFilterOptions,
                 appliedFilterOptions = appliedFilterOptions,
                 onFiltersChanged = onFiltersChanged,

@@ -42,17 +42,15 @@ import com.askit.app.R
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
+/**
+ * Explore wired to [viewModel]: remote results, browse sections, Retry and sort all come from it.
+ * [localTasks] are the tasks known on this device; they are merged into the remote results.
+ */
 @Composable
 fun ExploreRoute(
     viewModel: ExploreViewModel,
     onSearchFiltersClick: () -> Unit,
-    resultState: ExploreResultState = ExploreResultState.Loading,
-    browseState: ExploreBrowseState = ExploreBrowseState(),
-    onRetryResults: (() -> Unit)? = null,
-    onRetryBrowseSection: ((ExploreBrowseSection) -> Unit)? = null,
-    availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
-    selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
-    onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
+    localTasks: List<ExploreTaskResult> = emptyList(),
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
@@ -63,6 +61,10 @@ fun ExploreRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val priceFilters by viewModel.priceFilters.collectAsStateWithLifecycle()
+    val remoteResults by viewModel.resultState.collectAsStateWithLifecycle()
+    val browseState by viewModel.browseState.collectAsStateWithLifecycle()
+    val selectedSortOptions by viewModel.selectedSortOptions.collectAsStateWithLifecycle()
+    val resultState = remember(remoteResults, localTasks) { remoteResults.withLocalTasks(localTasks) }
 
     ExploreScreen(
         priceFilters = priceFilters,
@@ -79,11 +81,11 @@ fun ExploreRoute(
         onSearchAreaClick = onSearchAreaClick,
         resultState = resultState,
         browseState = browseState,
-        onRetryResults = onRetryResults,
-        onRetryBrowseSection = onRetryBrowseSection,
-        availableSortOptions = availableSortOptions,
+        onRetryResults = viewModel::retryResults,
+        onRetryBrowseSection = viewModel::retryBrowseSection,
+        availableSortOptions = viewModel.availableSortOptions,
         selectedSortOptions = selectedSortOptions,
-        onSortChanged = onSortChanged,
+        onSortChanged = viewModel::onSortChanged,
         availableFilterOptions = availableFilterOptions,
         appliedFilterOptions = appliedFilterOptions,
         onFiltersChanged = onFiltersChanged,
@@ -205,9 +207,11 @@ fun ExploreScreen(
     val personClick = onPersonClick
     val taskClick = onTaskClick
 
-    val visible = remember(selectedScope, resultState, availableFilterOptions, appliedFilterOptions, priceFilters) {
+    val selectedSort = effectiveExploreSortOption(selectedScope, selectedSortOptions, availableSortOptions)
+    val visible = remember(selectedScope, resultState, availableFilterOptions, appliedFilterOptions, priceFilters, selectedSort) {
         deriveExploreVisibleResults(
             selectedScope = selectedScope,
+            sortOption = selectedSort,
             resultState = resultState,
             availableFilterOptions = availableFilterOptions,
             appliedFilterOptions = appliedFilterOptions,

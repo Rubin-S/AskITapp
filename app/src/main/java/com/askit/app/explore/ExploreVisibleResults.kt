@@ -9,7 +9,7 @@ internal data class ExploreVisibleResults(
     val priceFilter: ExplorePriceFilter,
     /** Raw results after filters, before scope normalisation (used by the browse sections). */
     val filteredResultState: ExploreResultState,
-    /** Results normalised for the selected scope (used by submitted searches). */
+    /** Results normalised and sorted for the selected scope (used by submitted searches). */
     val submittedResultState: ExploreResultState,
     val hasVisibleSubmittedResults: Boolean,
     /** True when people existed but every one of them was filtered out. */
@@ -30,6 +30,7 @@ internal fun deriveExploreVisibleResults(
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>>,
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>>,
     priceFilters: Map<ExploreResultScope, ExplorePriceFilter>,
+    sortOption: ExploreSortOption = ExploreSortOption.BestMatch,
 ): ExploreVisibleResults {
     val orderedAppliedFilters = normalizeAvailableExploreFilterOptions(
         scope = selectedScope,
@@ -45,7 +46,7 @@ internal fun deriveExploreVisibleResults(
         } else {
             ExploreResultState.EmptyReason.Filters
         },
-    )
+    ).let { sortExploreResults(it, sortOption) }
     val submittedResults = submittedResultState as? ExploreResultState.Results
     val hasVisibleSubmittedResults = when (selectedScope) {
         ExploreResultScope.All -> false

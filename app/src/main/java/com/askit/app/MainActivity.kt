@@ -70,12 +70,6 @@ class MainActivity : AppCompatActivity() {
         val profileViewModel = viewModels[ProfileViewModel::class.java]
         val creatorDashboardViewModel = viewModels[CreatorDashboardViewModel::class.java]
         val providerDashboardViewModel = viewModels[ProviderDashboardViewModel::class.java]
-        // Release has no search backend yet: no fixture people, and browse sections say so.
-        val exploreResultState = com.askit.app.explore.ExploreResultState.Results(
-            people = container.content.explorePeople(),
-            tasks = emptyList(),
-        )
-        val exploreBrowseState = container.content.exploreBrowseState()
         val initialRoute = if (BuildConfig.CLIENT_PREVIEW || (
                 BuildConfig.DEBUG &&
                     intent.getBooleanExtra("extra_start_at_home", false) &&
@@ -114,8 +108,6 @@ class MainActivity : AppCompatActivity() {
                         inboxViewModel = inboxViewModel,
                         storyViewerViewModel = storyViewerViewModel,
                         profileViewModel = profileViewModel,
-                        resultState = exploreResultState,
-                        browseState = exploreBrowseState,
                         onExit = ::finish,
                         onSignedOut = {
                             if (BuildConfig.CLIENT_PREVIEW) {

@@ -40,6 +40,7 @@ enum class ExploreSortOption(@StringRes val labelRes: Int) {
     RatingHighToLow(R.string.explore_sort_rating_high_to_low),
     Newest(R.string.explore_sort_newest),
     DueSoon(R.string.explore_sort_due_soon),
+    PriceLowToHigh(R.string.explore_sort_price_low_to_high),
 }
 
 data class ExploreTaskResult(

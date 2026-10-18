@@ -13,6 +13,7 @@ import com.askit.app.config.AppLinksViewModel
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.creatordashboard.CreatorDashboardViewModel
 import com.askit.app.explore.ExploreViewModel
+import com.askit.app.explore.FixedExploreContentSource
 import com.askit.app.home.HomeViewModel
 import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.InboxViewModel
@@ -72,7 +73,13 @@ class AppContainer(
         initializer { TaskDiscussionViewModel(graph.tasks, createSavedStateHandle()) }
         initializer { TaskActionsViewModel(graph.tasks, createSavedStateHandle()) }
         initializer { HomeViewModel(graph.home) }
-        initializer { ExploreViewModel(createSavedStateHandle()) }
+        initializer {
+            // Release has no search backend yet: no fixture people, and browse sections say so.
+            ExploreViewModel(
+                createSavedStateHandle(),
+                FixedExploreContentSource(people = content::explorePeople, browseState = content::exploreBrowseState),
+            )
+        }
         initializer { PostTaskViewModel(createSavedStateHandle()) }
         initializer { ListServiceViewModel(createSavedStateHandle()) }
         initializer { CreatePostViewModel(createSavedStateHandle()) }

@@ -71,12 +71,10 @@ internal fun LazyListScope.addSubmittedSearchResults(
     }
 
     val options = availableSortOptions[selectedScope].orEmpty()
-    val selectedOption = selectedSortOptions[selectedScope]
+    val selectedOption = effectiveExploreSortOption(selectedScope, selectedSortOptions, availableSortOptions)
     if (
         hasVisibleResults &&
         options.size >= 2 &&
-        selectedOption != null &&
-        selectedOption in options &&
         onSortChanged != null
     ) {
         item(key = "controls:sort:${selectedScope.name}", contentType = "control") {

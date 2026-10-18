@@ -3,12 +3,15 @@ package com.askit.app.explore
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 private val DEFAULT_SEARCH_AREA = ExploreSearchArea(
     placeId = null,
@@ -50,7 +53,10 @@ data class ExploreUiState(
     val recentSearches: List<String> = emptyList(),
 )
 
-class ExploreViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
+class ExploreViewModel(
+    private val savedStateHandle: SavedStateHandle,
+    private val contentSource: ExploreContentSource,
+) : ViewModel() {
 
     private val queryState = savedStateHandle.getStateFlow(QUERY_KEY, "")
     private val recentSearchesState = savedStateHandle.getStateFlow(
@@ -168,6 +174,101 @@ class ExploreViewModel(private val savedStateHandle: SavedStateHandle) : ViewMod
             ),
         )
 
+    private val resultStateFlow = MutableStateFlow<ExploreResultState>(ExploreResultState.Loading)
+
+    /** Remote search results (people and services). Local tasks are merged in by the screen. */
+    val resultState: StateFlow<ExploreResultState> = resultStateFlow.asStateFlow()
+
+    private val browseStateFlow = MutableStateFlow(
+        ExploreBrowseState(
+            services = ExploreBrowseStatus.Loading,
+            professionals = ExploreBrowseStatus.Loading,
+            tasks = ExploreBrowseStatus.Loading,
+        ),
+    )
+    val browseState: StateFlow<ExploreBrowseState> = browseStateFlow.asStateFlow()
+
+    /** The sort options each tab supports; tabs with fewer than two show no sort control. */
+    val availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = exploreAvailableSortOptions()
+
+    private val sortOptionsState = MutableStateFlow(
+        ExploreResultScope.entries.mapNotNull { scope ->
+            savedStateHandle.get<String>(sortKey(scope))
+                ?.let { name -> ExploreSortOption.entries.firstOrNull { it.name == name } }
+                ?.takeIf { it in availableSortOptions[scope].orEmpty() }
+                ?.let { scope to it }
+        }.toMap(),
+    )
+
+    /** The selected sort per tab. Survives rotation and process death; reset by a new query. */
+    val selectedSortOptions: StateFlow<Map<ExploreResultScope, ExploreSortOption>> = sortOptionsState.asStateFlow()
+
+    private var searchJob: Job? = null
+    private val browseJobs = mutableMapOf<ExploreBrowseSection, Job>()
+
+    init {
+        search(showLoading = true)
+        ExploreBrowseSection.entries.forEach(::loadBrowseSection)
+    }
+
+    /**
+     * Runs the search again for the current query and area, keeping filters, price filters and
+     * sort (they apply on the device). A blocking failure shows the loading body while it runs;
+     * results with a partial-failure, offline or stale banner keep their rows and show the
+     * refreshing indicator instead.
+     */
+    fun retryResults() {
+        search(showLoading = resultStateFlow.value !is ExploreResultState.Results)
+    }
+
+    /** Reloads one browse section, showing its skeleton while it runs. */
+    fun retryBrowseSection(section: ExploreBrowseSection) {
+        loadBrowseSection(section)
+    }
+
+    fun onSortChanged(scope: ExploreResultScope, option: ExploreSortOption) {
+        if (option !in availableSortOptions[scope].orEmpty()) return
+        sortOptionsState.update { it + (scope to option) }
+        savedStateHandle[sortKey(scope)] = option.name
+    }
+
+    private fun currentSearchArea() = ExploreSearchArea(
+        placeId = searchAreaPlaceIdState.value,
+        displayName = searchAreaNameState.value,
+        supportingText = searchAreaSupportingTextState.value,
+        latitude = searchAreaLatitudeState.value,
+        longitude = searchAreaLongitudeState.value,
+        radiusKm = searchAreaRadiusState.value,
+        source = ExploreLocationSource.fromName(searchAreaSourceState.value),
+    )
+
+    private fun currentRequest() = ExploreSearchRequest(normalizeExploreQuery(queryState.value), currentSearchArea())
+
+    private fun search(showLoading: Boolean) {
+        val request = currentRequest()
+        searchJob?.cancel()
+        resultStateFlow.update { current ->
+            if (showLoading || current !is ExploreResultState.Results) {
+                ExploreResultState.Loading
+            } else {
+                current.copy(isRefreshing = true)
+            }
+        }
+        searchJob = viewModelScope.launch {
+            resultStateFlow.value = contentSource.search(request)
+        }
+    }
+
+    private fun loadBrowseSection(section: ExploreBrowseSection) {
+        val searchArea = currentSearchArea()
+        browseJobs[section]?.cancel()
+        browseStateFlow.update { it.withStatus(section, ExploreBrowseStatus.Loading) }
+        browseJobs[section] = viewModelScope.launch {
+            val status = contentSource.loadBrowseSection(section, searchArea)
+            browseStateFlow.update { it.withStatus(section, status) }
+        }
+    }
+
     fun onQueryChanged(query: String) {
         savedStateHandle[QUERY_KEY] = query
     }
@@ -178,8 +279,15 @@ class ExploreViewModel(private val savedStateHandle: SavedStateHandle) : ViewMod
 
     fun submitQuery(query: String) {
         val normalizedQuery = normalizeExploreQuery(query)
+        val previousSubmitted = savedStateHandle.get<String>(SUBMITTED_QUERY_KEY)
         savedStateHandle[QUERY_KEY] = normalizedQuery
         if (normalizedQuery.isEmpty()) return
+        if (!normalizedQuery.equals(previousSubmitted, ignoreCase = true)) {
+            // A new query starts from relevance, like the result tab does.
+            savedStateHandle[SUBMITTED_QUERY_KEY] = normalizedQuery
+            clearSortOptions()
+            search(showLoading = true)
+        }
 
         val updatedHistory = buildList {
             add(normalizedQuery)
@@ -209,6 +317,13 @@ class ExploreViewModel(private val savedStateHandle: SavedStateHandle) : ViewMod
         savedStateHandle[SEARCH_AREA_LONGITUDE_KEY] = searchArea.longitude
         savedStateHandle[SEARCH_AREA_RADIUS_KEY] = searchArea.radiusKm
         savedStateHandle[SEARCH_AREA_SOURCE_KEY] = searchArea.source.name
+        search(showLoading = true)
+        ExploreBrowseSection.entries.forEach(::loadBrowseSection)
+    }
+
+    private fun clearSortOptions() {
+        sortOptionsState.value = emptyMap()
+        ExploreResultScope.entries.forEach { savedStateHandle.remove<String>(sortKey(it)) }
     }
 
     fun onFilterScopeSelected(scope: ExploreResultScope) {
@@ -240,6 +355,9 @@ class ExploreViewModel(private val savedStateHandle: SavedStateHandle) : ViewMod
         const val SEARCH_AREA_RADIUS_KEY = "explore_search_area_radius"
         const val SEARCH_AREA_SOURCE_KEY = "explore_search_area_source"
         const val FILTER_SCOPE_KEY = "explore_filter_scope"
+        const val SUBMITTED_QUERY_KEY = "explore_submitted_query"
+
+        fun sortKey(scope: ExploreResultScope): String = "explore_sort_${scope.name.lowercase()}"
 
         fun filterOptionsKey(scope: ExploreResultScope): String = "explore_filter_options_${scope.name.lowercase()}"
     }
