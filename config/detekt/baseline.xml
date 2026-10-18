@@ -1,0 +1,441 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AskITNav.kt:!BuildConfig.CLIENT_PREVIEW || session?.userId != sender || current.accountId != sender || state.signedOut || state.operation in setOf(AuthOperation.SignOut, AuthOperation.RestoreSession, AuthOperation.LoadAccount)</ID>
+    <ID>ComplexCondition:AuthApi.kt:AuthApi$session.accessToken.isBlank() || session.accessToken.any { it !in '!'..'~' } || session.refreshToken.isBlank() || session.userId.isBlank() || session.expiresInSeconds &lt;= 0</ID>
+    <ID>ComplexCondition:AuthApi.kt:AuthApi$tokens.accessToken.isBlank() || tokens.accessToken.any { it !in '!'..'~' } || tokens.refreshToken.isBlank() || tokens.expiresInSeconds &lt;= 0</ID>
+    <ID>ComplexCondition:AuthViewModel.kt:AuthViewModel$current.isSubmitting || current.signedOut || session != null || sessionPendingStorage != null || api == null || sessionStore == null || current.challenge == null</ID>
+    <ID>ComplexCondition:AuthViewModel.kt:AuthViewModel$restorationStarted || state.value.signedOut || request?.isActive == true || session != null || state.value.challenge != null</ID>
+    <ID>ComplexCondition:CreatePostViewModel.kt:CreatePostViewModel$session == null || session.source != source || ratio == null || (session.ratio != null &amp;&amp; ratio != session.ratio)</ID>
+    <ID>ComplexCondition:CurrentAccount.kt:AccountProfile$displayName.isBlank() || city.isBlank() || (username.isNotEmpty() &amp;&amp; !com.askit.app.profile.isUsernameValid(username.removePrefix("@"))) || (email.isNotEmpty() &amp;&amp; !validAccountEmail(email)) || (pincode.isNotEmpty() &amp;&amp; !validAccountPostcode(pincode)) || !validAccountPhone(phoneNumber) || selectedLanguage !in com.askit.app.session.AppLanguage.storedValues || !joinedYear.matches(Regex("[0-9]{4}")) || profileStrengthPercent !in 0..100 || followingCount &lt; 0 || followerCount &lt; 0 || blockedAccountsCount &lt; 0 || activeRole !in setOf("Seeker", "Provider", "Both") || whoCanMessage !in com.askit.app.session.MessagingAudience.storedValues || reviews.any { it.rating !in 0f..5f }</ID>
+    <ID>ComplexCondition:CurrentAccount.kt:AccountProfile$listingDraft != null &amp;&amp; ( listing == null || listing.title != listingDraft.title || listing.description != listingDraft.description )</ID>
+    <ID>ComplexCondition:CurrentAccount.kt:AccountProfile$mediaUrls.any { value -&gt; val url = value.toHttpUrlOrNull() value.length &gt; 2_048 || url == null || !url.isHttps || url.username.isNotEmpty() || url.password.isNotEmpty() }</ID>
+    <ID>ComplexCondition:ExploreFilterPredicates.kt:ExplorePriceFilter$low == null || high == null || low &lt; BigDecimal.ZERO || high &lt; low</ID>
+    <ID>ComplexCondition:ExploreResultSections.kt:hasVisibleResults &amp;&amp; options.size &gt;= 2 &amp;&amp; selectedOption != null &amp;&amp; selectedOption in options &amp;&amp; onSortChanged != null</ID>
+    <ID>ComplexCondition:ListServiceViewModel.kt:ListServiceDeliveryMode.AT_PROVIDER_LOCATION in state.deliveryModes &amp;&amp; ( state.providerAreaLabel.isBlank() || state.providerLatitude == null || state.providerLongitude == null )</ID>
+    <ID>ComplexCondition:ListServiceViewModel.kt:state.availability.isBlank() || state.experience.toIntOrNull() !in 0..60 || !com.askit.app.auth.validAccountPhone(state.contactPhone) || !com.askit.app.auth.validAccountEmail(state.contactEmail)</ID>
+    <ID>ComplexCondition:MainActivity.kt:MainActivity$BuildConfig.CLIENT_PREVIEW || ( BuildConfig.DEBUG &amp;&amp; intent.getBooleanExtra("extra_start_at_home", false) &amp;&amp; !intent.getBooleanExtra("extra_start_entry", false) )</ID>
+    <ID>ComplexCondition:PhoneNumberValidator.kt:PhoneNumberValidator$countryIso != null &amp;&amp; international &amp;&amp; ( number.countryCode != phoneUtil.getCountryCodeForRegion(countryIso) || (inferredRegion != null &amp;&amp; inferredRegion != countryIso &amp;&amp; phoneUtil.isValidNumber(number)) )</ID>
+    <ID>ComplexCondition:PostTaskViewModel.kt:!validAge(minimumAge) || !validAge(maximumAge) || ( minimumAge.isNotEmpty() &amp;&amp; maximumAge.isNotEmpty() &amp;&amp; (minimumAge.toIntOrNull() ?: 0) &gt; (maximumAge.toIntOrNull() ?: 0) )</ID>
+    <ID>ComplexCondition:PostTaskViewModel.kt:state.workMode == PostTaskWorkMode.AT_MY_LOCATION &amp;&amp; (state.publicAreaLabel.isBlank() || state.latitude == null || state.longitude == null)</ID>
+    <ID>ComplexCondition:StoryCanvas.kt:!readOnly &amp;&amp; !drawMode &amp;&amp; editingTextLayerId == null &amp;&amp; mediaType != StoryMediaType.SolidBackground</ID>
+    <ID>ComplexCondition:StoryVideo.kt:!active || player != null || disposed || failed</ID>
+    <ID>ComplexCondition:StoryVideo.kt:ended &amp;&amp; active &amp;&amp; playing &amp;&amp; foreground &amp;&amp; !loop &amp;&amp; !completionDelivered</ID>
+    <ID>ComplexCondition:StoryVideo.kt:isPlaying &amp;&amp; active &amp;&amp; playing &amp;&amp; foreground</ID>
+    <ID>ComposableParamOrder:AskITBottomBar.kt:@Composable private fun RowScope.NavSlot</ID>
+    <ID>ComposableParamOrder:AskITNav.kt:@Composable fun AskITApp</ID>
+    <ID>ComposableParamOrder:CommentsBottomSheet.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ControlledCommentsBottomSheet</ID>
+    <ID>ComposableParamOrder:ExploreBrowseSections.kt:@Composable private fun ServiceCategoryTile</ID>
+    <ID>ComposableParamOrder:ListServiceForm.kt:@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class) @Composable internal fun ListServiceForm</ID>
+    <ID>ComposableParamOrder:ListServiceReview.kt:@OptIn(ExperimentalLayoutApi::class) @Composable internal fun ListServiceReview</ID>
+    <ID>ComposableParamOrder:PostTaskForm.kt:@Composable internal fun PostTaskForm</ID>
+    <ID>ComposableParamOrder:PostTaskReview.kt:@Composable internal fun PostTaskReview</ID>
+    <ID>ComposableParamOrder:ProfileHighlights.kt:@Composable internal fun ProfileHighlights</ID>
+    <ID>ComposableParamOrder:StoryCamera.kt:@Composable fun StoryCamera</ID>
+    <ID>ComposableParamOrder:UniversalProfileScaffold.kt:@Composable fun UniversalProfileScaffold</ID>
+    <ID>CyclomaticComplexMethod:AuthViewModel.kt:AuthViewModel$fun verifyCode</ID>
+    <ID>CyclomaticComplexMethod:CreatePostViewModel.kt:private fun validate: Set&lt;PostValidationField&gt;</ID>
+    <ID>CyclomaticComplexMethod:CurrentAccount.kt:AccountProfile$internal fun toSessionProfile: SessionProfile</ID>
+    <ID>CyclomaticComplexMethod:ExploreFilterPredicates.kt:internal fun filterExploreResults: ExploreResultState</ID>
+    <ID>CyclomaticComplexMethod:ExploreResultState.kt:internal fun normalizeExploreResultState: ExploreResultState</ID>
+    <ID>CyclomaticComplexMethod:ListServiceListing.kt:fun ListServiceDraft.toFormState: ListServiceFormState</ID>
+    <ID>CyclomaticComplexMethod:ListServiceViewModel.kt:private fun validate: Set&lt;ListServiceValidationField&gt;</ID>
+    <ID>CyclomaticComplexMethod:PhoneNumberValidator.kt:PhoneNumberValidator$fun validate: PhoneValidation</ID>
+    <ID>CyclomaticComplexMethod:PostPhotoCrop.kt:internal fun loadCropBitmap: Bitmap</ID>
+    <ID>CyclomaticComplexMethod:PostTaskViewModel.kt:private fun validate: Set&lt;PostTaskValidationField&gt;</ID>
+    <ID>CyclomaticComplexMethod:StoryRoute.kt:private suspend fun copyMediaToGallery: Boolean</ID>
+    <ID>CyclomaticComplexMethod:StoryViewModel.kt:StoryViewModel$private fun restoreState: StoryFormState</ID>
+    <ID>CyclomaticComplexMethod:TaskPresentation.kt:fun Task.presentation: TaskPresentation</ID>
+    <ID>CyclomaticComplexMethod:TaskRepository.kt:InMemoryTaskRepository$@Synchronized override fun addComment: TaskCommentResult</ID>
+    <ID>ForEachOnRange:JobReview.kt:1..5</ID>
+    <ID>LambdaParameterEventTrailing:ExploreBrowseSections.kt:onClick: () -&gt; Unit</ID>
+    <ID>LambdaParameterEventTrailing:ListServiceForm.kt:onPickPhotos: () -&gt; Unit</ID>
+    <ID>LambdaParameterEventTrailing:ListServiceReview.kt:onEdit: () -&gt; Unit</ID>
+    <ID>LambdaParameterEventTrailing:PostTaskForm.kt:onUpdateDetails: (String) -&gt; Unit</ID>
+    <ID>LambdaParameterEventTrailing:PostTaskReview.kt:onEdit: () -&gt; Unit</ID>
+    <ID>LambdaParameterEventTrailing:StoryCamera.kt:onVideoCaptured: (Uri, Long) -&gt; Unit</ID>
+    <ID>LambdaParameterInRestartableEffect:AskITNav.kt:onSignedOut: () -&gt; Unit = onExit</ID>
+    <ID>LambdaParameterInRestartableEffect:JobDetail.kt:clock: () -&gt; Long</ID>
+    <ID>LambdaParameterInRestartableEffect:ProviderDashboardScreen.kt:onClearSnackbar: () -&gt; Unit</ID>
+    <ID>LambdaParameterInRestartableEffect:SharedStoryCard.kt:resolveStory: (String) -&gt; Story?</ID>
+    <ID>LambdaParameterInRestartableEffect:StoryViewerScreen.kt:onDismiss: () -&gt; Unit</ID>
+    <ID>LongMethod:AuthViewModel.kt:AuthViewModel$fun verifyCode</ID>
+    <ID>LongMethod:CreatorDashboardFixtures.kt:CreatorDashboardFixtures$fun sample: CreatorDashboardSample</ID>
+    <ID>LongMethod:CreatorDashboardFixtures.kt:CreatorDashboardFixtures$private fun getCategoryMetrics: CreatorCategoryMetrics</ID>
+    <ID>LongMethod:CurrentAccount.kt:AccountProfile$internal fun toSessionProfile: SessionProfile</ID>
+    <ID>LongMethod:ExploreFixtures.kt:internal fun sampleExplorePeople: List&lt;ExplorePersonResult&gt;</ID>
+    <ID>LongMethod:ExploreResultSections.kt:@OptIn(ExperimentalFoundationApi::class) internal fun LazyListScope.addSubmittedSearchResults</ID>
+    <ID>LongMethod:ExploreResultSections.kt:private fun LazyListScope.addExploreResultBody</ID>
+    <ID>LongMethod:ExploreResultState.kt:internal fun normalizeExploreResultState: ExploreResultState</ID>
+    <ID>LongMethod:HomeFixtures.kt:HomeFixtures$fun stories: List&lt;Story&gt;</ID>
+    <ID>LongMethod:ListServiceListing.kt:fun ListServiceDraft.toFormState: ListServiceFormState</ID>
+    <ID>LongMethod:ListServiceViewModel.kt:private fun ListServiceFormState.toDraft: ListServiceDraft</ID>
+    <ID>LongMethod:MainActivity.kt:MainActivity$override fun onCreate</ID>
+    <ID>LongMethod:PreviewPublicProfiles.kt:internal fun previewPublicProfile: UserProfileData?</ID>
+    <ID>LongMethod:ProviderDashboardFixtures.kt:internal fun sampleProviderDashboard: ProviderDashboardUiState</ID>
+    <ID>LongMethod:ServiceFixtures.kt:internal fun sampleServiceDetail: ServiceDetailData?</ID>
+    <ID>MagicNumber:AccountValidation.kt:254</ID>
+    <ID>MagicNumber:AppLinksViewModel.kt:AppLinksViewModel$254</ID>
+    <ID>MagicNumber:AppLinksViewModel.kt:AppLinksViewModel$2_048</ID>
+    <ID>MagicNumber:AuthApi.kt:401</ID>
+    <ID>MagicNumber:AuthApi.kt:403</ID>
+    <ID>MagicNumber:AuthApi.kt:AuthApi$204</ID>
+    <ID>MagicNumber:AuthApi.kt:AuthApi$6</ID>
+    <ID>MagicNumber:AuthSessionStore.kt:AuthSessionStore$128</ID>
+    <ID>MagicNumber:AuthSessionStore.kt:AuthSessionStore$30</ID>
+    <ID>MagicNumber:AuthSessionStore.kt:AuthSessionStore.Companion$256</ID>
+    <ID>MagicNumber:AuthViewModel.kt:AuthViewModel$300</ID>
+    <ID>MagicNumber:AuthViewModel.kt:AuthViewModel$5_000</ID>
+    <ID>MagicNumber:AuthViewModel.kt:AuthViewModel$6</ID>
+    <ID>MagicNumber:AuthViewModel.kt:AuthViewModel$86_400</ID>
+    <ID>MagicNumber:BeforeAfterSlider.kt:0.65f</ID>
+    <ID>MagicNumber:BeforeAfterSlider.kt:1.85f</ID>
+    <ID>MagicNumber:CurrentAccount.kt:AccountProfile$100</ID>
+    <ID>MagicNumber:CurrentAccount.kt:AccountProfile$2_048</ID>
+    <ID>MagicNumber:CurrentAccount.kt:AccountProfile$5f</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFF050A08</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFF111512</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFF29343B</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFF417800</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFF42632D</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFF465960</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFF535C57</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFF616A65</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFF969A9F</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFFA5C889</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFFB4B8BF</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFFB9C9C0</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFFCAD4CD</ID>
+    <ID>MagicNumber:EntryScreen.kt:0xFFFAFAFA</ID>
+    <ID>MagicNumber:ExploreSearchMatching.kt:3</ID>
+    <ID>MagicNumber:FeedPost.kt:PostMedia.BeforeAfter$3f</ID>
+    <ID>MagicNumber:FeedPost.kt:PostMedia.BeforeAfter$4f</ID>
+    <ID>MagicNumber:FeedPost.kt:PostMedia.Carousel$3f</ID>
+    <ID>MagicNumber:FeedPost.kt:PostMedia.Carousel$4f</ID>
+    <ID>MagicNumber:FeedPost.kt:PostMedia.SinglePhoto$3f</ID>
+    <ID>MagicNumber:FeedPost.kt:PostMedia.SinglePhoto$4f</ID>
+    <ID>MagicNumber:JobStartCode.kt:LocalJobStartCodeAuthority$10_000</ID>
+    <ID>MagicNumber:ListServiceViewModel.kt:60</ID>
+    <ID>MagicNumber:LocationHelper.kt:LocationHelper$15_000</ID>
+    <ID>MagicNumber:PhoneNumberValidator.kt:PhoneNumberValidator$10</ID>
+    <ID>MagicNumber:PostFeedItem.kt:PostFeedMedia$3f</ID>
+    <ID>MagicNumber:PostFeedItem.kt:PostFeedMedia$4f</ID>
+    <ID>MagicNumber:PostPhotoCrop.kt:28</ID>
+    <ID>MagicNumber:PostPhotoCrop.kt:3072</ID>
+    <ID>MagicNumber:PostPhotoCrop.kt:92</ID>
+    <ID>MagicNumber:PostPhotoCrop.kt:PostPhotoRatio.LANDSCAPE$3</ID>
+    <ID>MagicNumber:PostPhotoCrop.kt:PostPhotoRatio.LANDSCAPE$4</ID>
+    <ID>MagicNumber:PostPhotoCrop.kt:PostPhotoRatio.PORTRAIT$3</ID>
+    <ID>MagicNumber:PostPhotoCrop.kt:PostPhotoRatio.PORTRAIT$4</ID>
+    <ID>MagicNumber:PostTaskViewModel.kt:100</ID>
+    <ID>MagicNumber:PostTaskViewModel.kt:18</ID>
+    <ID>MagicNumber:ProfileHighlight.kt:ProfileHighlight$60</ID>
+    <ID>MagicNumber:ProfileRatings.kt:5f</ID>
+    <ID>MagicNumber:SessionProfile.kt:SessionProfileStore$90</ID>
+    <ID>MagicNumber:SignupDraft.kt:128</ID>
+    <ID>MagicNumber:Story.kt:1000L</ID>
+    <ID>MagicNumber:Story.kt:24</ID>
+    <ID>MagicNumber:Story.kt:60</ID>
+    <ID>MagicNumber:StoryViewModel.kt:StoryViewModel$0.5f</ID>
+    <ID>MagicNumber:StoryViewModel.kt:StoryViewModel$3f</ID>
+    <ID>MagicNumber:TaskDiscussionSheet.kt:10_080</ID>
+    <ID>MagicNumber:TaskDiscussionSheet.kt:1_440</ID>
+    <ID>MagicNumber:TaskDiscussionSheet.kt:60</ID>
+    <ID>MagicNumber:WelcomeArtwork.kt:WelcomeService.Cleaning$150.0</ID>
+    <ID>MagicNumber:WelcomeArtwork.kt:WelcomeService.Electrical$90.0</ID>
+    <ID>MagicNumber:WelcomeArtwork.kt:WelcomeService.Gardening$90.0</ID>
+    <ID>MagicNumber:WelcomeArtwork.kt:WelcomeService.Home$30.0</ID>
+    <ID>MagicNumber:WelcomeArtwork.kt:WelcomeService.Painting$30.0</ID>
+    <ID>MagicNumber:WelcomeArtwork.kt:WelcomeService.Repairs$210.0</ID>
+    <ID>MatchingDeclarationName:AskITBottomBar.kt:AskITDestination</ID>
+    <ID>MatchingDeclarationName:AskITCreateSheet.kt:AskITCreateAction</ID>
+    <ID>MatchingDeclarationName:AskITSectionTabs.kt:SectionTab</ID>
+    <ID>MatchingDeclarationName:AskITTextField.kt:AskITInputDefaults</ID>
+    <ID>MatchingDeclarationName:AskITVerticalToolColumn.kt:AskITVerticalToolItem</ID>
+    <ID>MatchingDeclarationName:CommentsBottomSheet.kt:CommentItem</ID>
+    <ID>MatchingDeclarationName:CreatePostMediaCard.kt:BeforeAfterSlot</ID>
+    <ID>MatchingDeclarationName:JobStatusBanner.kt:JobBannerTone</ID>
+    <ID>MatchingDeclarationName:MessagesRoute.kt:MessagesPane</ID>
+    <ID>MatchingDeclarationName:MessagingPrivacy.kt:MessageAccess</ID>
+    <ID>MatchingDeclarationName:MetricTrio.kt:MetricSpec</ID>
+    <ID>MatchingDeclarationName:PhotoGrid.kt:PhotoGridItem</ID>
+    <ID>MatchingDeclarationName:ProfileActions.kt:ProfileActionId</ID>
+    <ID>MatchingDeclarationName:ProfileMetricsBar.kt:ProfileMetricItem</ID>
+    <ID>MatchingDeclarationName:ProfileTopBar.kt:ProfileMenuItem</ID>
+    <ID>MatchingDeclarationName:ServiceDetailScreen.kt:ServiceDetailData</ID>
+    <ID>MatchingDeclarationName:StoryCamera.kt:StoryCameraController</ID>
+    <ID>MatchingDeclarationName:TaskResultItem.kt:TaskResultStatus</ID>
+    <ID>ModifierMissing:AskITDiscardDialog.kt:@Composable fun AskITDiscardDialog</ID>
+    <ID>ModifierMissing:AskITNav.kt:@Composable fun AskITApp</ID>
+    <ID>ModifierMissing:CreatePostScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun CreatePostRoute</ID>
+    <ID>ModifierMissing:DiscardChangesDialog.kt:@Composable fun DiscardChangesDialog</ID>
+    <ID>ModifierMissing:ExploreScreen.kt:@Composable @OptIn(ExperimentalMaterial3Api::class) fun ExploreScreen</ID>
+    <ID>ModifierMissing:ListServiceScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ListServiceRoute</ID>
+    <ID>ModifierMissing:LocationSelectionScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun SearchAreaScreen</ID>
+    <ID>ModifierMissing:PostTaskScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun PostTaskRoute</ID>
+    <ID>ModifierMissing:PostTaskScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun TaskEditUnavailableScreen</ID>
+    <ID>ModifierMissing:ProfilePostsPane.kt:@Composable fun ProfilePostsPane</ID>
+    <ID>ModifierMissing:ProfileSections.kt:@Composable fun ProfileSections</ID>
+    <ID>ModifierMissing:ProfileTopBar.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileTopBar</ID>
+    <ID>ModifierMissing:SharedStoryCard.kt:@Composable fun SharedStoryCard</ID>
+    <ID>ModifierMissing:TaskActionDialogs.kt:@Composable fun TaskActionDialogs</ID>
+    <ID>ModifierMissing:TaskComponents.kt:@Composable fun TaskPhotoGallery</ID>
+    <ID>ModifierMissing:TaskComponents.kt:@Composable fun TaskPreferencesSummary</ID>
+    <ID>MultipleEmitters:CreatePostMediaCard.kt:@Composable private fun BeforeAfterContent</ID>
+    <ID>MultipleEmitters:JobDetailActions.kt:@Composable private fun VerifyActions</ID>
+    <ID>MultipleEmitters:ListServiceEditors.kt:@OptIn(ExperimentalLayoutApi::class) @Composable internal fun ListServicePricingEditor</ID>
+    <ID>MultipleEmitters:ListServiceForm.kt:@Composable internal fun ServiceProfessionalFields</ID>
+    <ID>MultipleEmitters:PostTaskForm.kt:@Composable private fun PostTaskTitleAndDetailsFields</ID>
+    <ID>MultipleEmitters:PostTaskForm.kt:@Composable private fun PostTaskWhenSection</ID>
+    <ID>MultipleEmitters:PostTaskForm.kt:@Composable private fun PostTaskWhereSection</ID>
+    <ID>MultipleEmitters:PostTaskForm.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable private fun PostTaskWhatSection</ID>
+    <ID>MultipleEmitters:PostTaskOptionalSections.kt:@Composable internal fun PostTaskBudgetSection</ID>
+    <ID>MultipleEmitters:PostTaskOptionalSections.kt:@Composable internal fun PostTaskItemDetailsSection</ID>
+    <ID>MultipleEmitters:PostTaskOptionalSections.kt:@Composable internal fun PostTaskPhotosSection</ID>
+    <ID>ParameterNaming:AskITNav.kt:onCreatePostCompleted: (PostDraft) -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:AskITNav.kt:onFiltersChanged: ((ExploreResultScope, Set&lt;ExploreFilterOption&gt;) -&gt; Unit)? = null</ID>
+    <ID>ParameterNaming:AskITNav.kt:onListServiceCompleted: (ListServiceDraft) -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:AskITNav.kt:onPostTaskCompleted: (PostTaskDraft) -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:AskITNav.kt:onSortChanged: ((ExploreResultScope, ExploreSortOption) -&gt; Unit)? = null</ID>
+    <ID>ParameterNaming:AskITNav.kt:onStoryCompleted: (StoryDraft) -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:AskITNavEntries.kt:onApplyBlocked: () -&gt; Unit</ID>
+    <ID>ParameterNaming:AskITNavEntries.kt:onCreatePostCompleted: (PostDraft) -&gt; Unit</ID>
+    <ID>ParameterNaming:AskITNavEntries.kt:onFiltersChanged: ((ExploreResultScope, Set&lt;ExploreFilterOption&gt;) -&gt; Unit)?</ID>
+    <ID>ParameterNaming:AskITNavEntries.kt:onListServiceCompleted: (ListServiceDraft) -&gt; Unit</ID>
+    <ID>ParameterNaming:AskITNavEntries.kt:onPostTaskCompleted: (PostTaskDraft) -&gt; Unit</ID>
+    <ID>ParameterNaming:AskITNavEntries.kt:onSortChanged: ((ExploreResultScope, ExploreSortOption) -&gt; Unit)?</ID>
+    <ID>ParameterNaming:ChatComposer.kt:onPhotoPicked: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ChatThread.kt:onMuteChanged: (Boolean) -&gt; Unit</ID>
+    <ID>ParameterNaming:CommentsBottomSheet.kt:onCommentAdded: ((parentId: String?, text: String) -&gt; Unit)? = null</ID>
+    <ID>ParameterNaming:EntryScreen.kt:onGetStarted: () -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreBrowseSections.kt:onCategorySelected: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreBrowseSections.kt:onRecentSearchRemoved: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreBrowseSections.kt:onRecentSearchSelected: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreBrowseSections.kt:onRecentSearchesCleared: () -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreHeader.kt:onCategorySelected: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreHeader.kt:onQueryCleared: () -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreHeader.kt:onQuerySubmitted: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreHeader.kt:onRecentSearchRemoved: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreHeader.kt:onRecentSearchSelected: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreHeader.kt:onRecentSearchesCleared: () -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreResultStates.kt:onFilterRemoved: (ExploreFilterOption) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreResultStates.kt:onOptionSelected: (ExploreSortOption) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreScreen.kt:onFilterScopeChanged: (ExploreResultScope) -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:ExploreScreen.kt:onFiltersChanged: ((ExploreResultScope, Set&lt;ExploreFilterOption&gt;) -&gt; Unit)? = null</ID>
+    <ID>ParameterNaming:ExploreScreen.kt:onPriceFilterCleared: (ExploreResultScope) -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:ExploreScreen.kt:onQueryChanged: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreScreen.kt:onQueryCleared: () -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreScreen.kt:onQuerySubmitted: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreScreen.kt:onRecentSearchRemoved: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreScreen.kt:onRecentSearchesCleared: () -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreScreen.kt:onSortChanged: ((ExploreResultScope, ExploreSortOption) -&gt; Unit)? = null</ID>
+    <ID>ParameterNaming:ExploreSearchSuggestions.kt:onCategorySelected: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreSearchSuggestions.kt:onQueryRemoved: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreSearchSuggestions.kt:onQuerySelected: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:ExploreSearchSuggestions.kt:onSuggestionSelected: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:JobReview.kt:onFinished: () -&gt; Unit</ID>
+    <ID>ParameterNaming:JobReview.kt:onReviewSubmitted: (rating: Int, comment: String) -&gt; Boolean = { _, _ -&gt; false }</ID>
+    <ID>ParameterNaming:JobVerifyEnter.kt:onVerified: () -&gt; Unit</ID>
+    <ID>ParameterNaming:LocationSelectionScreen.kt:onFiltersChanged: ((ExploreResultScope, Set&lt;ExploreFilterOption&gt;) -&gt; Unit)? = null</ID>
+    <ID>ParameterNaming:LocationSelectionScreen.kt:onOptionToggled: (ExploreFilterOption) -&gt; Unit</ID>
+    <ID>ParameterNaming:LocationSelectionScreen.kt:onPriceFilterApplied: (ExplorePriceFilter) -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:PostPhotoCropScreen.kt:onCropped: (PostMediaDraft) -&gt; Unit</ID>
+    <ID>ParameterNaming:StoryCamera.kt:onPhotoCaptured: (Uri) -&gt; Unit</ID>
+    <ID>ParameterNaming:StoryCamera.kt:onVideoCaptured: (Uri, Long) -&gt; Unit</ID>
+    <ID>ParameterNaming:StoryCanvas.kt:onDrawFinished: () -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:StoryCanvas.kt:onLayerSelected: (String?) -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:StoryCanvas.kt:onLayerTransformChanged: (String, Float, Float, Float, Float) -&gt; Unit = { _, _, _, _, _ -&gt; }</ID>
+    <ID>ParameterNaming:StoryCanvas.kt:onSelected: () -&gt; Unit</ID>
+    <ID>ParameterNaming:StoryCanvas.kt:onTextChanged: (String) -&gt; Unit</ID>
+    <ID>ParameterNaming:StoryCanvas.kt:onTextChanged: (String, String) -&gt; Unit = { _, _ -&gt; }</ID>
+    <ID>ParameterNaming:StoryCanvas.kt:onTransformChanged: (Float, Float, Float) -&gt; Unit = { _, _, _ -&gt; }</ID>
+    <ID>ParameterNaming:StoryCanvas.kt:onTransformChanged: (String, Float, Float, Float, Float) -&gt; Unit</ID>
+    <ID>ParameterNaming:StoryCanvas.kt:onVideoFinished: () -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:StoryItemTimer.kt:onFinished: () -&gt; Unit</ID>
+    <ID>ParameterNaming:StoryVideo.kt:onFinished: () -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:StoryViewerGestures.kt:onHoldChanged: (Boolean) -&gt; Unit</ID>
+    <ID>ParameterNaming:StoryViewerScreen.kt:onPauseChanged: (Boolean) -&gt; Unit</ID>
+    <ID>ParameterNaming:StoryViewerScreen.kt:onStorySeen: ((String) -&gt; Unit)? = null</ID>
+    <ID>ParameterNaming:StoryViewerScreen.kt:onVideoFinished: () -&gt; Unit</ID>
+    <ID>ParameterNaming:TaskDetailScreen.kt:onDeleted: (String) -&gt; Unit = {}</ID>
+    <ID>ParameterNaming:UniversalProfileScaffold.kt:onSectionSelected: (String) -&gt; Unit</ID>
+    <ID>ReturnCount:AppLinksViewModel.kt:AppLinksViewModel$fun refresh: Job?</ID>
+    <ID>ReturnCount:AppLinksViewModel.kt:internal fun AppLinks.profileUrl: String?</ID>
+    <ID>ReturnCount:AskITNavEntries.kt:fun saveTask</ID>
+    <ID>ReturnCount:AskITNavigationState.kt:AskITNavigationState$fun goBack: Boolean</ID>
+    <ID>ReturnCount:AuthViewModel.kt:AuthViewModel$fun requestCode</ID>
+    <ID>ReturnCount:AuthViewModel.kt:AuthViewModel$fun resendCode</ID>
+    <ID>ReturnCount:AuthViewModel.kt:AuthViewModel$fun verifyCode</ID>
+    <ID>ReturnCount:CreatePostViewModel.kt:CreatePostViewModel$fun pollOptionError: PollOptionError?</ID>
+    <ID>ReturnCount:CreatePostViewModel.kt:CreatePostViewModel$internal fun beginPhotoCrop</ID>
+    <ID>ReturnCount:CreatePostViewModel.kt:CreatePostViewModel$private fun restoreCropSession: PostCropSession?</ID>
+    <ID>ReturnCount:ExploreFilterPredicates.kt:ExplorePriceFilter$fun matchesRange: Boolean</ID>
+    <ID>ReturnCount:ExploreResultState.kt:internal fun normalizeExploreResultState: ExploreResultState</ID>
+    <ID>ReturnCount:InboxModels.kt:InboxStore$fun sendStory: Boolean</ID>
+    <ID>ReturnCount:InboxModels.kt:InboxStore$private fun appendMessage: Boolean</ID>
+    <ID>ReturnCount:JobStartCode.kt:LocalJobStartCodeAuthority$@Synchronized override fun verify: StartCodeCheck</ID>
+    <ID>ReturnCount:JobsStore.kt:JobsStore$@Synchronized fun applyToTask: ApplyToTaskResult</ID>
+    <ID>ReturnCount:JobsStore.kt:JobsStore$@Synchronized fun verifyStartCode: StartCodeCheck</ID>
+    <ID>ReturnCount:JobsStore.kt:JobsStore$fun markComplete: Boolean</ID>
+    <ID>ReturnCount:LocalHomeRepository.kt:LocalHomeRepository$override fun addStory: StoryActionResult</ID>
+    <ID>ReturnCount:LocationSelectionScreen.kt:private fun Address?.toLocalityLabel: LocalityLabel?</ID>
+    <ID>ReturnCount:PhoneNumberValidator.kt:PhoneNumberValidator$fun validate: PhoneValidation</ID>
+    <ID>ReturnCount:PhoneNumberValidator.kt:PhoneNumberValidator$private fun normalize: String?</ID>
+    <ID>ReturnCount:PostPhotoCrop.kt:internal fun loadCropBitmap: Bitmap</ID>
+    <ID>ReturnCount:PostStore.kt:PostStore$fun hideFromHome: PostResult</ID>
+    <ID>ReturnCount:PostStore.kt:PostStore$fun publish: PostResult</ID>
+    <ID>ReturnCount:PostStore.kt:PostStore$fun report: PostResult</ID>
+    <ID>ReturnCount:PostStore.kt:PostStore$fun setPinned: PostResult</ID>
+    <ID>ReturnCount:PostStore.kt:PostStore$fun toggleLiked: PostResult</ID>
+    <ID>ReturnCount:PostStore.kt:PostStore$fun toggleSaved: PostResult</ID>
+    <ID>ReturnCount:PostStore.kt:PostStore$fun undoHidden: PostResult</ID>
+    <ID>ReturnCount:PostStore.kt:PostStore$fun update: PostResult</ID>
+    <ID>ReturnCount:PreviewProfileStorage.kt:PreviewProfileStorage$private fun retain: String?</ID>
+    <ID>ReturnCount:ProfileViewModel.kt:ProfileViewModel$fun saveIdentity: Boolean</ID>
+    <ID>ReturnCount:ProfileViewModel.kt:ProfileViewModel$suspend fun completeSignup: SignupResult</ID>
+    <ID>ReturnCount:SignupDraft.kt:internal fun isSignupPhotoReadable: Boolean</ID>
+    <ID>ReturnCount:StorySocialStore.kt:StorySocialStore$fun report: StoryActionResult</ID>
+    <ID>ReturnCount:StoryViewModel.kt:StoryViewModel$fun buildValidatedDraft: StoryDraft?</ID>
+    <ID>ReturnCount:StoryViewerViewModel.kt:StoryViewerViewModel$fun advanceToNext: Boolean</ID>
+    <ID>ReturnCount:TaskActionsViewModel.kt:TaskActionsViewModel$fun delete: Boolean</ID>
+    <ID>ReturnCount:TaskActionsViewModel.kt:TaskActionsViewModel$fun report</ID>
+    <ID>ReturnCount:TaskDiscussionSheet.kt:@Composable fun TaskDiscussionSheet</ID>
+    <ID>ReturnCount:TaskDiscussionViewModel.kt:TaskDiscussionViewModel$fun submit</ID>
+    <ID>ReturnCount:TaskRepository.kt:InMemoryTaskRepository$@Synchronized override fun addComment: TaskCommentResult</ID>
+    <ID>ReturnCount:TaskRepository.kt:InMemoryTaskRepository$@Synchronized override fun createTask: TaskMutationResult</ID>
+    <ID>ReturnCount:TaskRepository.kt:InMemoryTaskRepository$@Synchronized override fun deleteTask: TaskMutationResult</ID>
+    <ID>ReturnCount:TaskRepository.kt:InMemoryTaskRepository$@Synchronized override fun reportTask: TaskMutationResult</ID>
+    <ID>ReturnCount:TaskRepository.kt:InMemoryTaskRepository$@Synchronized override fun toggleLike: TaskMutationResult</ID>
+    <ID>ReturnCount:TaskRepository.kt:InMemoryTaskRepository$@Synchronized override fun updateTask: TaskMutationResult</ID>
+    <ID>SwallowedException:AuthApi.kt:AuthApi$error: BackendResponseException</ID>
+    <ID>SwallowedException:HomeScreen.kt:e: Exception</ID>
+    <ID>SwallowedException:PostDetailScreen.kt:e: Exception</ID>
+    <ID>SwallowedException:PostPhotoCropScreen.kt:e: Exception</ID>
+    <ID>ThrowsCount:AuthApi.kt:AuthApi$suspend fun currentAccount: CurrentAccount</ID>
+    <ID>ThrowsCount:AuthApi.kt:AuthApi$suspend fun refreshSession: RefreshedTokens</ID>
+    <ID>ThrowsCount:AuthApi.kt:internal fun parseCurrentAccount: CurrentAccount</ID>
+    <ID>ThrowsCount:BackendClient.kt:BackendClient.&lt;no name provided&gt;$override fun onResponse</ID>
+    <ID>ThrowsCount:CurrentAccount.kt:AccountProfile$internal fun toSessionProfile: SessionProfile</ID>
+    <ID>ThrowsCount:StoryCaptureScreen.kt:@Composable fun StoryCaptureScreen</ID>
+    <ID>TooGenericExceptionCaught:HomeScreen.kt:e: Exception</ID>
+    <ID>TooGenericExceptionCaught:LocationHelper.kt:LocationHelper$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:PostDetailScreen.kt:e: Exception</ID>
+    <ID>TooGenericExceptionCaught:PostPhotoCrop.kt:e: Exception</ID>
+    <ID>TooGenericExceptionCaught:PostPhotoCropScreen.kt:e: Exception</ID>
+    <ID>TooManyFunctions:AppVariant.kt:AppVariant : VariantContent</ID>
+    <ID>TooManyFunctions:CreatePostViewModel.kt:CreatePostViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:InboxModels.kt:InboxStore</ID>
+    <ID>TooManyFunctions:InboxViewModel.kt:InboxViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:JobsStore.kt:JobsStore</ID>
+    <ID>TooManyFunctions:ListServiceViewModel.kt:ListServiceViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:PostStore.kt:PostStore</ID>
+    <ID>TooManyFunctions:PostTaskViewModel.kt:PostTaskViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:ProfileRepository.kt:LocalProfileRepository : ProfileRepository</ID>
+    <ID>TooManyFunctions:ProfileRepository.kt:ProfileRepository</ID>
+    <ID>TooManyFunctions:ProfileViewModel.kt:ProfileViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:SessionProfile.kt:SessionProfileStore</ID>
+    <ID>TooManyFunctions:StorySocialStore.kt:StorySocialStore</ID>
+    <ID>TooManyFunctions:StoryViewModel.kt:StoryViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:StoryViewerViewModel.kt:StoryViewerViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:TaskActionsViewModel.kt:TaskActionsViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:VariantContent.kt:VariantContent</ID>
+    <ID>UnusedParameter:AskITNav.kt:onStoryCompleted: (StoryDraft) -&gt; Unit = {}</ID>
+    <ID>UnusedParameter:ExploreScreen.kt:people: List&lt;ExplorePersonResult&gt; = emptyList()</ID>
+    <ID>UnusedParameter:ExploreScreen.kt:tasks: List&lt;ExploreTaskResult&gt; = emptyList()</ID>
+    <ID>UnusedParameter:OtpBoxes.kt:boxSize: Int = if (digitCount &gt; 4) 44 else 56</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:CreatePostRoute( viewModel = createPostViewModel, onBack = { createPostViewModel.startNewDraft() navigationState.pop() }, onCompleteDraft = { draft -&gt; when ( val result = homeViewModel.posts.publish( draft, currentTaskAccountId(), jobsViewModel.profileStore.profile.value, ) ) { is com.askit.app.home.posts.PostResult.Failure -&gt; android.widget.Toast.makeText( context, result.messageRes, android.widget.Toast.LENGTH_LONG, ).show() is com.askit.app.home.posts.PostResult.Success -&gt; { createPostViewModel.retainPublishedCrops() createPostViewModel.startNewDraft() onCreatePostCompleted(draft) navigationState.clearToHome() } } }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:CreatePostRoute( viewModel = createPostViewModel, onBack = { createPostViewModel.startNewDraft() navigationState.pop() }, onCompleteDraft = { updated -&gt; when (val result = homeViewModel.posts.update(key.postId, updated, currentTaskAccountId())) { is com.askit.app.home.posts.PostResult.Failure -&gt; android.widget.Toast.makeText( context, result.messageRes, android.widget.Toast.LENGTH_LONG, ).show() is com.askit.app.home.posts.PostResult.Success -&gt; { createPostViewModel.retainPublishedCrops() createPostViewModel.startNewDraft() navigationState.pop() } } }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:CreatorDashboardRoute( viewModel = creatorDashboardViewModel, onBack = { navigationState.pop() }, onCreatePost = { _ -&gt; createPostViewModel.startNewDraft() navigationState.push(AppDestination.CreatePost) }, onOpenChat = { conversationId -&gt; inboxViewModel.openThread(conversationId) navigationState.push(AppDestination.ChatThread(conversationId)) }, onOpenPostDetail = { postId -&gt; navigationState.push(AppDestination.PostDetail(postId)) }, onOpenProfile = { userId -&gt; navigationState.push(AppDestination.UserProfile(userId)) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:ExploreRoute( viewModel = exploreViewModel, onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) }, onSearchAreaClick = { navigationState.push(AppDestination.ExploreLocationDestination) }, resultState = effectiveResultState, browseState = browseState, onRetryResults = onRetryResults, onRetryBrowseSection = onRetryBrowseSection, availableSortOptions = availableSortOptions, selectedSortOptions = selectedSortOptions, onSortChanged = onSortChanged, availableFilterOptions = availableFilterOptions, appliedFilterOptions = appliedFilterOptions, onFiltersChanged = onFiltersChanged, onFilterScopeChanged = exploreViewModel::onFilterScopeSelected, onPersonClick = onPersonClick ?: { personId -&gt; navigationState.push(AppDestination.UserProfile(userId = personId)) }, onTaskClick = onTaskClick ?: { taskId -&gt; navigationState.push(AppDestination.TaskDetail(taskId = taskId)) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:HomeScreen( followingIds = social.following, followingAccountId = social.accountId, onTogglePersonFollow = { person -&gt; val store = storyViewerViewModel.social val result = store.setFollowing( currentTaskAccountId(), person.id, person.id !in store.state.value.following, ) if (result is com.askit.app.home.stories.StoryActionResult.Rejected) { store.notify( if (result.reason == com.askit.app.home.stories.StoryActionFailure.SIGN_IN) { R.string.nearby_follow_sign_in } else { R.string.nearby_follow_unavailable }, ) } }, viewModel = homeViewModel, currentAccountId = ::currentTaskAccountId, onEditPost = { navigationState.push(AppDestination.EditPost(it)) }, onAddStoryClick = { post -&gt; if (post != null) { storyViewModel.startReshareDraft(post) } else { storyViewModel.startNewDraft() } navigationState.push(AppDestination.Story) }, onStoryClick = { story -&gt; navigationState.push(AppDestination.StoryViewer(startStoryId = story.id)) }, onTaskClick = { task -&gt; navigationState.push(AppDestination.TaskDetail(taskId = task.id)) }, onServiceClick = { service -&gt; navigationState.push(AppDestination.ServiceDetail(serviceId = service.id)) }, onPersonClick = { person -&gt; navigationState.push(AppDestination.UserProfile(userId = person.id)) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:ListServiceRoute( viewModel = listServiceViewModel, profile = profile, onBack = { navigationState.pop() }, onCompleteDraft = { draft -&gt; if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) { android.widget.Toast.makeText(context, R.string.profile_save_unavailable, android.widget.Toast.LENGTH_LONG).show() return@ListServiceRoute } jobsViewModel.profileStore.applyListing( listing = draft.toServiceListing(draft.categoryLabel(context::getString)), draft = draft, ) onListServiceCompleted(draft) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:PostTaskRoute( viewModel = postTaskViewModel, onBack = { postTaskViewModel.startNewDraft() navigationState.pop() }, onCompleteDraft = { draft -&gt; saveTask(draft) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:PostTaskRoute( viewModel = postTaskViewModel, onBack = { postTaskViewModel.startNewDraft() navigationState.pop() }, onCompleteDraft = { updated -&gt; saveTask(updated, key.taskId) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:ProviderDashboardRoute( viewModel = providerDashboardViewModel, onBack = { navigationState.pop() }, onOpenJob = { jobId -&gt; navigationState.push(AppDestination.JobDetail(jobId)) }, onOpenChat = { conversationId -&gt; inboxViewModel.openThread(conversationId) navigationState.push(AppDestination.ChatThread(conversationId)) }, onEditProfile = { navigationState.push(AppDestination.EditProfile) }, onUploadWork = { createPostViewModel.startNewDraft() navigationState.push(AppDestination.CreatePost) }, onManageAlerts = { navigationState.navigate(AppDestination.Inbox) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:SearchAreaRoute( viewModel = exploreViewModel, onBack = { navigationState.pop() }, availableFilterOptions = availableFilterOptions, appliedFilterOptions = appliedFilterOptions, onFiltersChanged = onFiltersChanged, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:SearchAreaRoute( viewModel = exploreViewModel, onBack = { navigationState.pop() }, showFilterControls = false, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:StoryRoute( viewModel = storyViewModel, onBack = { navigationState.pop() }, onPublishDraft = { draft -&gt; homeViewModel.addStoryFromDraft(draft, jobsViewModel.profileStore.profile.value, currentTaskAccountId()) }, onOpenCreateSheet = onShowCreateSheet, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:StoryViewerRoute( viewModel = storyViewerViewModel, shareStoryId = sharingId, onShareStory = { id -&gt; when { !storyViewerViewModel.social.isCurrentAccount(currentTaskAccountId()) -&gt; storyViewerViewModel.social.notify(R.string.story_action_sign_in) storyViewerViewModel.availableStory(id) == null -&gt; storyViewerViewModel.social.notify(R.string.story_shared_unavailable) else -&gt; sharingId = id } }, startStoryId = key.startStoryId, onDismiss = { storyViewerViewModel.closeViewer() navigationState.pop() }, currentAccountId = ::currentTaskAccountId, onViewPost = { postId -&gt; navigationState.push(AppDestination.PostDetail(postId = postId)) }, onAddStory = { storyViewModel.startNewDraft() navigationState.push(AppDestination.Story) }, onStorySeen = { storyId -&gt; homeViewModel.markStorySeen(storyId) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:TaskDetailScreen( taskId = key.taskId, taskRepository = taskRepository, discussionViewModel = taskDiscussionViewModel, discussionAuthor = discussionAuthor, currentDiscussionAuthor = { currentTaskAccountId()?.let { id -&gt; val currentProfile = profileViewModel.profile.value TaskCommentAuthor(id, currentProfile.displayName, currentProfile.avatarUrl) } }, actionsViewModel = taskActionsViewModel, accountId = discussionAccountId, currentAccountId = ::currentTaskAccountId, hasServiceListing = serviceProfile.hasListedService &amp;&amp; serviceProfile.listing != null, hasApplied = hasApplied, onEdit = { task -&gt; val currentId = currentTaskAccountId() val draft = taskRepository.editableDraft(task.id, currentId) if (draft == null || !postTaskViewModel.isActiveAccount(currentId)) { taskActionsViewModel.feedback( task.id, if (currentId == null ) { R.string.task_action_sign_in } else { R.string.task_edit_unavailable }, ) } else { postTaskViewModel.beginEdit(task.id, draft) navigationState.push(AppDestination.EditTask(task.id)) } }, onDeleted = { taskId -&gt; postTaskViewModel.clearTask(taskId) taskDiscussionViewModel.clearTask(taskId) navigationState.pop() }, onBack = { navigationState.pop() }, onMessage = { task -&gt; task.posterId?.takeIf { it.isNotBlank() }?.let { posterId -&gt; val conversationId = inboxViewModel.startConversation( ChatContact(posterId, task.posterName, task.posterAvatarUrl), ) ?: return@let inboxViewModel.openThread(conversationId) navigationState.push(AppDestination.ChatThread(conversationId)) } }, onApply = { appliedTask -&gt; when ( val result = jobsViewModel.store.applyToTask(taskRepository, appliedTask.id, currentTaskAccountId()) ) { ApplyToTaskResult.NeedsListedService -&gt; onApplyBlocked() is ApplyToTaskResult.Rejected -&gt; taskActionsViewModel.feedback(appliedTask.id, result.reason.messageRes) is ApplyToTaskResult.AlreadyApplied -&gt; taskActionsViewModel.feedback(appliedTask.id, R.string.task_applied) is ApplyToTaskResult.Created -&gt; navigationState.navigateAndPush( AppDestination.Inbox, AppDestination.JobDetail(result.jobId), ) } }, )</ID>
+    <ID>ViewModelForwarding:CreatePostScreen.kt:CreatePostEditor( viewModel = viewModel, state = state, validationErrors = validationErrors, bodyBringIntoView = bodyBringIntoView, pollQuestionBringIntoView = pollQuestionBringIntoView, pollOptionsBringIntoView = pollOptionsBringIntoView, bodyFocusRequester = bodyFocusRequester, pollQuestionFocusRequester = pollQuestionFocusRequester, onOpenLocationPicker = onOpenLocationPicker, onPickGallery = { galleryPicker.launch( PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly), ) }, onPickSlot = { slot -&gt; beforeAfterSlot = slot replacementIndex = if (slot == BeforeAfterSlot.REPLACE) state.selectedCarouselIndex else null slotPicker.launch( PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly), ) }, onOpenClosingDatePicker = { showClosingDatePicker = true }, )</ID>
+    <ID>ViewModelForwarding:CreatePostScreen.kt:CreatePostPollSection( viewModel = viewModel, content = state.poll, validationErrors = validationErrors, questionBringIntoViewRequester = pollQuestionBringIntoView, optionsBringIntoViewRequester = pollOptionsBringIntoView, questionFocusRequester = pollQuestionFocusRequester, onOpenClosingDatePicker = onOpenClosingDatePicker, )</ID>
+    <ID>ViewModelForwarding:CreatePostScreen.kt:CreatePostScreen( viewModel = viewModel, state = state, validationErrors = viewModel.validationErrors(), onBack = ::requestBack, onOpenLocationPicker = { showLocationPicker = true }, onCompleteDraft = onCompleteDraft, )</ID>
+    <ID>ViewModelForwarding:ListServiceForm.kt:ListServiceMoreDetailsEditor(state = state, viewModel = viewModel)</ID>
+    <ID>ViewModelForwarding:ListServiceForm.kt:ListServicePricingEditor( state = state, validationErrors = validationErrors, viewModel = viewModel, priceBringIntoView = priceBringIntoView, priceRangeBringIntoView = priceRangeBringIntoView, priceFocusRequester = priceFocusRequester, minimumPriceFocusRequester = minimumPriceFocusRequester, )</ID>
+    <ID>ViewModelForwarding:ListServiceForm.kt:ServiceProfessionalFields(state, viewModel, ListServiceValidationField.PROFESSIONAL_DETAILS in validationErrors)</ID>
+    <ID>ViewModelForwarding:ListServiceScreen.kt:ListServiceForm( viewModel = viewModel, state = state, validationErrors = validationErrors, categoryBringIntoView = categoryBringIntoView, titleBringIntoView = titleBringIntoView, descriptionBringIntoView = descriptionBringIntoView, deliveryBringIntoView = deliveryBringIntoView, customerLocationBringIntoView = customerLocationBringIntoView, providerLocationBringIntoView = providerLocationBringIntoView, priceBringIntoView = priceBringIntoView, priceRangeBringIntoView = priceRangeBringIntoView, titleFocusRequester = titleFocusRequester, descriptionFocusRequester = descriptionFocusRequester, priceFocusRequester = priceFocusRequester, minimumPriceFocusRequester = minimumPriceFocusRequester, onOpenCustomerLocationPicker = onOpenCustomerLocationPicker, onOpenProviderLocationPicker = onOpenProviderLocationPicker, onPickPhotos = { photoPickerLauncher.launch( PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly), ) }, )</ID>
+    <ID>ViewModelForwarding:ListServiceScreen.kt:ListServiceScreen( viewModel = viewModel, state = state, validationErrors = viewModel.validationErrors(), onBack = ::requestBack, onOpenCustomerLocationPicker = { showCustomerLocationPicker = true }, onOpenProviderLocationPicker = { showProviderLocationPicker = true }, onCompleteDraft = onCompleteDraft, )</ID>
+    <ID>ViewModelForwarding:PostTaskForm.kt:PostTaskBudgetSection(viewModel, state, validationErrors, targets)</ID>
+    <ID>ViewModelForwarding:PostTaskForm.kt:PostTaskItemDetailsSection(viewModel, state)</ID>
+    <ID>ViewModelForwarding:PostTaskForm.kt:PostTaskPreferencesSection(viewModel, state, validationErrors, targets)</ID>
+    <ID>ViewModelForwarding:PostTaskOptionalSections.kt:PostTaskPreferences( viewModel = viewModel, state = state, ageError = PostTaskValidationField.AGE_PREFERENCE in validationErrors, modifier = Modifier.bringIntoViewRequester(targets.preferences), )</ID>
+    <ID>ViewModelForwarding:PostTaskScreen.kt:PostTaskForm( viewModel = viewModel, state = state, validationErrors = validationErrors, targets = targets, onOpenLocationPicker = onOpenLocationPicker, onOpenDatePicker = { showDatePicker = true }, onPickPhotos = { photoPickerLauncher.launch( PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly), ) }, onRemovePhoto = viewModel::removePhoto, onUpdateTitle = viewModel::updateTitle, onUpdateDetails = viewModel::updateDetails, )</ID>
+    <ID>ViewModelForwarding:PostTaskScreen.kt:PostTaskScreen( viewModel = viewModel, state = state, validationErrors = viewModel.validationErrors(), onBack = ::requestBack, onOpenLocationPicker = { showLocationPicker = true }, onCompleteDraft = onCompleteDraft, submissionError = submissionError, )</ID>
+    <ID>ViewModelForwarding:StoryEditorScreen.kt:StoryDrawPad( viewModel = viewModel, selectedColorArgb = state.drawStrokeColorArgb, onDone = { viewModel.setActiveTool(null) }, modifier = Modifier.align(Alignment.BottomCenter), )</ID>
+    <ID>ViewModelForwarding:StoryEditorScreen.kt:StoryEditorBottomChrome( viewModel = viewModel, state = state, onNext = onNext, modifier = Modifier.align(Alignment.BottomCenter), )</ID>
+    <ID>ViewModelForwarding:StoryEditorScreen.kt:StoryTextEditor( viewModel = viewModel, layer = layer, onDone = viewModel::finishTextEditing, modifier = Modifier.fillMaxSize(), )</ID>
+    <ID>ViewModelForwarding:StoryRoute.kt:StoryCaptureScreen( viewModel = viewModel, flashEnabled = state.flashEnabled, useFrontCamera = state.useFrontCamera, galleryThumbUri = state.galleryThumbUri, useFakePreview = useFakeCapturePreview, onClose = ::requestBack, onOpenCreateSheet = onOpenCreateSheet, onOpenCreateText = viewModel::openCreateText, onMediaReady = viewModel::onGalleryMediaSelected, )</ID>
+    <ID>ViewModelForwarding:StoryRoute.kt:StoryCreateCanvas( viewModel = viewModel, backgroundArgb = viewModel.solidBackgroundArgb(), textDraft = state.createTextDraft, onBack = viewModel::backToCapture, onConfirm = viewModel::confirmCreateText, )</ID>
+    <ID>ViewModelForwarding:StoryRoute.kt:StoryEditorScreen( viewModel = viewModel, state = state, onBack = viewModel::backToCapture, onNext = viewModel::openShareSheet, onDownload = { val draft = viewModel.buildValidatedDraft() if (draft?.mediaUri != null) { val pending = draft.mediaUri.toUri() to draft.mediaType val granted = !storyDownloadNeedsLegacyPermission(Build.VERSION.SDK_INT) || ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED if (granted) { download(pending) } else { pendingDownload = pending storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) } } }, )</ID>
+    <ID>ViewModelForwarding:StoryRoute.kt:StoryShareSheet( viewModel = viewModel, state = state, solidBackgroundArgb = viewModel.solidBackgroundArgb(), onDismiss = viewModel::closeShareSheet, onShare = { val draft = viewModel.buildValidatedDraft() if (draft != null &amp;&amp; onPublishDraft?.invoke(draft) != false) { onCompleteDraft(draft) viewModel.startNewDraft() onBack() } else if (draft != null) { android.widget.Toast.makeText( context, com.askit.app.R.string.story_action_sign_in, android.widget.Toast.LENGTH_SHORT, ).show() } }, )</ID>
+    <ID>ViewModelForwarding:StoryRoute.kt:StoryStickerTray( viewModel = viewModel, onDismiss = viewModel::closeStickerTray, )</ID>
+    <ID>ViewModelForwarding:StoryViewerScreen.kt:StoryActionSheet(viewModel, state, social, currentAccountId)</ID>
+    <ID>WildcardImport:AccountFormFields.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:AccountFormFields.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:AccountFormTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:AccountProfileContractTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:AskITSectionTabs.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:AskITSectionTabs.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:AskITSectionTabs.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ClientPreview.kt:import com.askit.app.jobs.*</ID>
+    <ID>WildcardImport:ClientPreview.kt:import com.askit.app.listservice.*</ID>
+    <ID>WildcardImport:ClientPreview.kt:import com.askit.app.posttask.*</ID>
+    <ID>WildcardImport:ClientPreview.kt:import com.askit.app.task.*</ID>
+    <ID>WildcardImport:EditProfileScreen.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:EditProfileScreen.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:EditProfileScreen.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:HighlightPlayback.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:HighlightPlayback.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:HighlightPlayback.kt:import com.askit.app.home.stories.*</ID>
+    <ID>WildcardImport:MessagingPrivacyTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:PostPhotoCropScreen.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:PostPhotoCropScreen.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:PostPhotoCropScreen.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ProfileActionRow.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ProfileActionsTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ProfileBanner.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ProfileBanner.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:ProfileBanner.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ProfileHighlightEditor.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ProfileHighlightEditor.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:ProfileHighlightEditor.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ProfileHighlights.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ProfileHighlights.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:ProfileHighlights.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ProfileHighlightsTest.kt:import com.askit.app.story.*</ID>
+    <ID>WildcardImport:ProfileHighlightsTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ProfileIdentityTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ProfileMetricSheets.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ProfileMetricSheets.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:ProfileMetricSheets.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ProfileMetricsTest.kt:import com.askit.app.jobs.*</ID>
+    <ID>WildcardImport:ProfileMetricsTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ProfileOverflow.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:ProfileOverflow.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ProfilePostsPane.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ProfilePrivacyTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ProfileReturnNavigationTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ProfileSectionsTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ProfileTopBar.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:ProfileTopBar.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:ServiceFormTest.kt:import org.junit.Assert.*</ID>
+    <ID>WildcardImport:SharedStoryCard.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:SharedStoryCard.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:SharedStoryCard.kt:import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:StoryBottomBar.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:StorySendSheet.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:StorySendSheet.kt:import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:StorySendSheet.kt:import androidx.compose.runtime.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

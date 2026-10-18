@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="app/src/demo/java/com/askit/app/demo/HomeFixtures.kt">
+        <error line="94" column="141" source="standard:max-line-length" />
+        <error line="111" column="141" source="standard:max-line-length" />
+        <error line="131" column="141" source="standard:max-line-length" />
+        <error line="182" column="141" source="standard:max-line-length" />
+        <error line="208" column="141" source="standard:max-line-length" />
+        <error line="224" column="141" source="standard:max-line-length" />
+        <error line="246" column="141" source="standard:max-line-length" />
+        <error line="262" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/demo/java/com/askit/app/demo/ServiceFixtures.kt">
+        <error line="19" column="141" source="standard:max-line-length" />
+        <error line="40" column="141" source="standard:max-line-length" />
+        <error line="61" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/demo/java/com/askit/app/demo/TaskFixtures.kt">
+        <error line="19" column="141" source="standard:max-line-length" />
+        <error line="39" column="141" source="standard:max-line-length" />
+        <error line="58" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/demo/java/com/askit/app/preview/ClientPreview.kt">
+        <error line="12" column="1" source="standard:no-wildcard-imports" />
+        <error line="13" column="1" source="standard:no-wildcard-imports" />
+        <error line="14" column="1" source="standard:no-wildcard-imports" />
+        <error line="16" column="1" source="standard:no-wildcard-imports" />
+        <error line="56" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/demo/java/com/askit/app/preview/PreviewPublicProfiles.kt">
+        <error line="37" column="141" source="standard:max-line-length" />
+        <error line="71" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/auth/AccountFormFields.kt">
+        <error line="3" column="1" source="standard:no-wildcard-imports" />
+        <error line="8" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/auth/FormAScreen.kt">
+        <error line="376" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/createpost/PostPhotoCropScreen.kt">
+        <error line="8" column="1" source="standard:no-wildcard-imports" />
+        <error line="11" column="1" source="standard:no-wildcard-imports" />
+        <error line="12" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/home/stories/SharedStoryCard.kt">
+        <error line="4" column="1" source="standard:no-wildcard-imports" />
+        <error line="6" column="1" source="standard:no-wildcard-imports" />
+        <error line="7" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/home/stories/StoryBottomBar.kt">
+        <error line="3" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/home/stories/StorySendSheet.kt">
+        <error line="3" column="1" source="standard:no-wildcard-imports" />
+        <error line="6" column="1" source="standard:no-wildcard-imports" />
+        <error line="7" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/inbox/MessagingPrivacy.kt">
+        <error line="1" column="1" source="standard:filename" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/profile/EditProfileFormState.kt">
+        <error line="32" column="11" source="standard:property-naming" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/profile/EditProfileScreen.kt">
+        <error line="5" column="1" source="standard:no-wildcard-imports" />
+        <error line="9" column="1" source="standard:no-wildcard-imports" />
+        <error line="10" column="1" source="standard:no-wildcard-imports" />
+        <error line="42" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/profile/HighlightPlayback.kt">
+        <error line="4" column="1" source="standard:no-wildcard-imports" />
+        <error line="5" column="1" source="standard:no-wildcard-imports" />
+        <error line="11" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/profile/ProfileBanner.kt">
+        <error line="3" column="1" source="standard:no-wildcard-imports" />
+        <error line="4" column="1" source="standard:no-wildcard-imports" />
+        <error line="5" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/profile/ProfileHighlightEditor.kt">
+        <error line="5" column="1" source="standard:no-wildcard-imports" />
+        <error line="14" column="1" source="standard:no-wildcard-imports" />
+        <error line="15" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/profile/ProfileHighlights.kt">
+        <error line="7" column="1" source="standard:no-wildcard-imports" />
+        <error line="13" column="1" source="standard:no-wildcard-imports" />
+        <error line="14" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/profile/ProfileMetricSheets.kt">
+        <error line="4" column="1" source="standard:no-wildcard-imports" />
+        <error line="9" column="1" source="standard:no-wildcard-imports" />
+        <error line="10" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/profile/ProfileOverflow.kt">
+        <error line="9" column="1" source="standard:no-wildcard-imports" />
+        <error line="10" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/profile/ProfilePostsPane.kt">
+        <error line="4" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/main/java/com/askit/app/profile/ProfileSections.kt">
+        <error line="86" column="141" source="standard:max-line-length" />
+        <error line="87" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/auth/AccountFormTest.kt">
+        <error line="4" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/auth/AccountProfileContractTest.kt">
+        <error line="9" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/inbox/MessagingPrivacyTest.kt">
+        <error line="3" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/listservice/ServiceFormTest.kt">
+        <error line="3" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/profile/ProfileActionsTest.kt">
+        <error line="5" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/profile/ProfileHighlightsTest.kt">
+        <error line="7" column="1" source="standard:no-wildcard-imports" />
+        <error line="10" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/profile/ProfileIdentityTest.kt">
+        <error line="6" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/profile/ProfileMetricsTest.kt">
+        <error line="4" column="1" source="standard:no-wildcard-imports" />
+        <error line="5" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/profile/ProfilePrivacyTest.kt">
+        <error line="4" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/profile/ProfileReturnNavigationTest.kt">
+        <error line="8" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="app/src/test/java/com/askit/app/profile/ProfileSectionsTest.kt">
+        <error line="6" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="designsystem/src/main/java/com/askit/designsystem/navigation/AskITSectionTabs.kt">
+        <error line="6" column="1" source="standard:no-wildcard-imports" />
+        <error line="11" column="1" source="standard:no-wildcard-imports" />
+        <error line="12" column="1" source="standard:no-wildcard-imports" />
+        <error line="100" column="141" source="standard:max-line-length" />
+    </file>
+    <file name="designsystem/src/main/java/com/askit/designsystem/profile/ProfileActionRow.kt">
+        <error line="3" column="1" source="standard:no-wildcard-imports" />
+    </file>
+    <file name="designsystem/src/main/java/com/askit/designsystem/profile/ProfileTopBar.kt">
+        <error line="4" column="1" source="standard:no-wildcard-imports" />
+        <error line="5" column="1" source="standard:no-wildcard-imports" />
+    </file>
+</baseline>

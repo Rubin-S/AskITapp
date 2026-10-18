@@ -1,0 +1,139 @@
+# detekt configuration for AskIT. Builds on detekt's default config (--build-upon-default-config),
+# so only deviations are listed here. Existing findings are recorded in config/detekt/baseline.xml;
+# new code must pass without additions to the baseline.
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  # Composables legitimately take many parameters (state + callbacks + modifier).
+  LongParameterList:
+    allowedFunctionParameters: 12
+    allowedConstructorParameters: 10
+    ignoreDefaultParameters: true
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+  CyclomaticComplexMethod:
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    ignorePrivate: true
+    allowedFunctionsPerFile: 25
+
+naming:
+  FunctionNaming:
+    # Composables are PascalCase by convention.
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][_A-Za-z0-9]*'
+
+style:
+  # Line length is owned by ktlint (max_line_length = 140 in .editorconfig).
+  MaxLineLength:
+    active: false
+  MagicNumber:
+    # Compose UI is full of dp/sp/alpha literals; magic numbers are reviewed by humans there.
+    ignoreAnnotated: ['Composable', 'Preview']
+    excludes: ['**/test/**', '**/testDebug/**', '**/testRelease/**', '**/androidTest/**', '**/demo/**']
+  UnusedPrivateFunction:
+    ignoreAnnotated: ['Preview']
+  WildcardImport:
+    active: true
+
+# Jetpack Compose rules (io.nlopez.compose.rules:detekt).
+Compose:
+  ComposableAnnotationNaming:
+    active: true
+  ComposableNaming:
+    active: true
+  ComposableNestingDepth:
+    active: false
+  ComposableParamOrder:
+    active: true
+  CompositionLocalAllowlist:
+    active: true
+  CompositionLocalNaming:
+    active: true
+  ConditionHoist:
+    active: true
+  ContentEmitterReturningValues:
+    active: true
+  ContentSlotReused:
+    active: true
+  ContentTrailingLambda:
+    active: true
+  DefaultsVisibility:
+    active: true
+  InvalidReadOnlyComposable:
+    active: true
+  LambdaParameterEventTrailing:
+    active: true
+  LambdaParameterInRestartableEffect:
+    active: true
+  Material2:
+    active: false
+  MissingNonRestartableComposable:
+    active: true
+    # -- Ignore direct and custom @Preview composables (default: true)
+    # ignoresPreviews: true
+  MissingReadOnlyComposable:
+    active: true
+  ModifierClickableOrder:
+    active: true
+  ModifierComposed:
+    active: true
+  ModifierMissing:
+    active: true
+  ModifierNaming:
+    active: true
+  ModifierNotUsedAtRoot:
+    active: true
+  ModifierReused:
+    active: true
+  ModifierShouldBeForwardedToEveryBranch:
+    active: true
+  ModifierWithoutDefault:
+    active: true
+  MultipleEmitters:
+    active: true
+  MutableParams:
+    active: true
+  MutableStateAutoboxing:
+    active: true
+  MutableStateParam:
+    active: true
+  ParameterNaming:
+    active: true
+  PreviewAnnotationNaming:
+    active: true
+  PreviewNaming:
+    active: false
+  PreviewPublic:
+    active: true
+  RememberContentMissing:
+    active: true
+  RememberMissing:
+    active: true
+  StaleRememberUpdatedStateInRemember:
+    active: true
+  StateParam:
+    active: true
+  UnnecessaryComposable:
+    active: true
+  UnnecessaryLaunchedEffect:
+    active: true
+    # -- Calls whose dispatch or extension receiver has one of these fully qualified types keep LaunchedEffect.
+    # allowedCallReceiverTypes:
+    #   - androidx.compose.ui.focus.FocusRequester
+    # -- Calls whose fully qualified name is listed here keep LaunchedEffect.
+    # allowedCallNames:
+    #   - androidx.compose.ui.focus.FocusRequester.requestFocus
+  UnstableCollections:
+    active: false
+  VarsWithoutStateBacking:
+    active: true
+  ViewModelForwarding:
+    active: true
+  ViewModelInjection:
+    active: true
