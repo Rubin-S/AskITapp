@@ -48,10 +48,10 @@ import com.askit.designsystem.posts.PostShareSheet
 fun PostDetailScreen(
     postId: String,
     store: PostStore,
-    currentAccountId: () -> String? = { null },
-    onEditPost: (String) -> Unit = {},
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    currentAccountId: () -> String? = { null },
+    onEditPost: (String) -> Unit = {},
 ) {
     val postRecords by store.posts.collectAsStateWithLifecycle()
     val account by store.account.collectAsStateWithLifecycle()
