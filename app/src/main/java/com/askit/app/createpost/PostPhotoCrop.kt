@@ -7,9 +7,9 @@ import android.graphics.Canvas
 import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.graphics.Paint
-import android.media.ExifInterface
 import android.net.Uri
 import android.os.Build
+import androidx.exifinterface.media.ExifInterface
 import java.io.File
 import java.util.UUID
 import kotlin.math.abs
