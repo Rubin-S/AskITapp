@@ -113,7 +113,7 @@ to media requests. The server remains responsible for media access control.
   challenge it no longer has.
 
 The selected app language remains a device preference when replacing the profile.
-Local listing drafts are not server profile fields. Current tests use intercepted HTTP,
-including storage failures, unauthorized retries, identity mismatch, and cancellation.
+Local listing drafts are not server profile fields. Intercepted-HTTP tests for storage failures,
+unauthorized retries, identity mismatch, and cancellation were removed from the repository in October 2026 (commit "consolidate app flows") and should be restored.
 This does not implement server-backed signup/editing, uploads, or shared refresh for
 other application APIs; see the [remaining frontend work](frontend-handoff.md).

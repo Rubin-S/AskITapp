@@ -1,5 +1,8 @@
 # AskIT — Client Checkpoint
 
+> **Historical record.** These notes describe the 11 September 2026 checkpoint APK. Test counts
+> refer to the suite that existed then; most of it was removed in October 2026.
+
 11 September 2026 · Android app · Current UI checkpoint
 
 This APK lets you explore the current AskIT design, screens, and workflows. It opens

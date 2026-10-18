@@ -37,8 +37,8 @@ existing OkHttp version with an explicit dependency. Its shared `network/Backend
 transport also serves public app configuration, requires HTTPS, disables redirects
 and automatic connection retries, cancels calls with their coroutine, bounds responses
 to 64 KiB. `AuthApi` rejects incomplete authentication payloads. Typed errors keep raw response
-messages out of the UI. Transport tests use intercepted HTTP requests, not a running
-backend. Signup writes, media upload, and the remaining application adapters are still required.
+messages out of the UI. The transport has not been exercised against a running backend,
+and its intercepted-HTTP tests were removed from the repository in October 2026 (commit "consolidate app flows"). Signup writes, media upload, and the remaining application adapters are still required.
 
 Configure the public HTTPS origin (or path prefix) with the Gradle property
 `askitBackendBaseUrl` or environment variable `ASKIT_BACKEND_BASE_URL`. The Gradle property
@@ -83,12 +83,13 @@ not report successful logout. After success, `MainActivity` starts a fresh entry
 finishes the old activity, disposing its navigation, saved drafts, and account view models.
 This does not clear all app files or implement the separate settings “Clear app data” action.
 Cancelled sign-in operations cannot publish a previously queued network failure into newer
-UI state. This case has a regression test; cancellation and exceptional resumption can race
+UI state. Its regression test was removed from the repository in October 2026 (commit "consolidate app flows") and should be restored; cancellation and exceptional resumption can race
 as described in the [Kotlin coroutine contract](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/suspend-cancellable-coroutine.html).
 
-Storage tests run on Robolectric API 26 and 34 with injected JVM AES keys. They verify
+Storage was originally covered by Robolectric tests on API 26 and 34 with injected JVM AES keys
+(also removed from the repository in October 2026 (commit "consolidate app flows")). They verified
 round trips, replacement, fresh encryption, tampering, backend binding, missing keys,
-size/format checks, and filesystem failures. Physical-device tests also passed on a
+size/format checks, and filesystem failures. In September 2026, physical-device tests also passed on a
 Samsung Galaxy A35 / Android 16 using the real Android Keystore provider: encrypted
 round-trip/reopen/rotation/deletion, tamper rejection, and backend binding. These tests
 use isolated files and do not replace the user's saved credentials. They do not establish

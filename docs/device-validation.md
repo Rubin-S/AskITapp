@@ -1,5 +1,10 @@
 # Physical-device validation
 
+> **Historical record (September 2026).** The device observations below are accurate for the
+> builds tested at the time. The unit and instrumented test suites, test counts, log files and
+> Gradle commands referenced here were removed from the repository in October 2026, so the
+> commands no longer run as written. Re-validate before relying on any result.
+
 ## 2026-09-11 checkpoint
 
 Samsung Galaxy A35 (SM-A356E), Android 16, USB-connected. A fresh debug APK was installed

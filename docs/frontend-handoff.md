@@ -20,7 +20,8 @@ Normal launches validate stored credentials before showing account screens. Miss
 credentials lead to entry; complete accounts load their [server profile](current-account-contract.md)
 before Home, while incomplete accounts open signup. Failed restoration keeps account
 screens hidden with recovery actions. The `extra_start_at_home` preview shortcut is
-debug-only and is ignored by release builds. Launch tests exercise both build variants.
+debug-only and is ignored by release builds. The launch tests that exercised both build variants
+were removed from the repository in October 2026 (commit "consolidate app flows").
 
 ## Frontend work still required before handoff
 
@@ -32,7 +33,7 @@ debug-only and is ignored by release builds. Launch tests exercise both build va
 | Story media | Export the edited composition: Download still copies original media and needs safe storage/error handling. Editor, share preview, and viewer now use Media3 video playback with the selected trim range, loading/retry states, and lifecycle cleanup; gallery videos supply their duration to the trimmer. Local publication retains the complete draft and authored viewport. Photo loading/error timing, validation before publication, durable draft storage, actionable stickers/audience routing, and physical media/lifecycle validation still need completion. |
 | Account isolation | Verify complete account switching with all real data adapters. The separate “Clear app data” action currently resets only the profile/locale, not all application data. |
 | Product audit | Finish auditing hard-coded text, demo-only interactions, and success feedback against real operation outcomes. |
-| Device validation | Initial Galaxy A35 checks passed for launch/recreation, English/Tamil, real Keystore, and camera opening/switching/release. Camera permission/error recovery now has automated regression coverage, but the updated camera still needs physical denial/capture/recording checks. Location, uploads, accessibility, and broader device/lifecycle coverage also remain; see the [device record](device-validation.md). |
+| Device validation | Initial Galaxy A35 checks passed for launch/recreation, English/Tamil, real Keystore, and camera opening/switching/release. Camera permission/error recovery had automated regression coverage until the test suite was removed from the repository in October 2026 (commit "consolidate app flows"); the updated camera still needs physical denial/capture/recording checks. Location, uploads, accessibility, and broader device/lifecycle coverage also remain; see the [device record](device-validation.md). |
 
 These are frontend responsibilities, not backend implementation blockers to hand over unresolved.
 See also the [task privacy requirements](task-privacy-handoff.md) for restricted address/access data.

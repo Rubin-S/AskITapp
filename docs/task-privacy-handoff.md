@@ -36,4 +36,5 @@ Before handoff, verify public-response exclusion, owner access, pre-acceptance d
 assigned-provider access after acceptance, unrelated-user denial, reassignment revocation,
 logout/account-switch cache clearing, and that no credentials or restricted location/access
 details enter telemetry. The backend contract and frontend integration must cover these
-cases together; the current local regression test covers only public task projection.
+cases together. There is currently no automated test for task privacy; the earlier public-projection
+test was removed from the repository in October 2026 (commit "consolidate app flows").

@@ -2,6 +2,10 @@
 
 Date: 5 October 2026 (Asia/Kolkata).
 
+> **Point-in-time audit.** Findings reflect commit 50774f0 on 5 October 2026. Test counts, the CI
+> test step and the lint result quoted below no longer match the repository: most tests were
+> removed in October 2026. The NO-GO decision still stands.
+
 **Decision: NO-GO for production launch.** The frontend has substantial UI and authentication work, but essential account and application operations are still local demonstrations. Passing compilation or lint cannot establish a working production service.
 
 ## Scope and evidence

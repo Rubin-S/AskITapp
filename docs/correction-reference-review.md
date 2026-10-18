@@ -2,7 +2,7 @@
 
 Reviewed: 2026-10-07 (Asia/Kolkata)
 
-Source: [Askit App Correction Priority 26 09 2026](<Askit App Correction_Priority_26_09_2026(1).docx>).
+Source: the founder's "Askit App Correction Priority 26 09 2026" document (DOCX, not stored in this repository).
 
 The founder asked for this document to be consulted as reference, explicitly leaving decisions open. Its imperative wording is not an instruction to implement every item. Confirmed conversation decisions remain requirements; document-only suggestions need assessment and review. The source DOCX was read without editing it.
 
