@@ -14,7 +14,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.askit.app.R
-import com.askit.app.auth.isSignupPhotoReadable
 import com.askit.designsystem.profile.ProfileCover
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

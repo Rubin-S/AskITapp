@@ -36,7 +36,7 @@
         <error line="8" column="1" source="standard:no-wildcard-imports" />
     </file>
     <file name="app/src/main/java/com/askit/app/auth/FormAScreen.kt">
-        <error line="376" column="141" source="standard:max-line-length" />
+        <error line="366" column="141" source="standard:max-line-length" />
     </file>
     <file name="app/src/main/java/com/askit/app/createpost/PostPhotoCropScreen.kt">
         <error line="8" column="1" source="standard:no-wildcard-imports" />
@@ -66,7 +66,7 @@
         <error line="5" column="1" source="standard:no-wildcard-imports" />
         <error line="9" column="1" source="standard:no-wildcard-imports" />
         <error line="10" column="1" source="standard:no-wildcard-imports" />
-        <error line="42" column="141" source="standard:max-line-length" />
+        <error line="38" column="141" source="standard:max-line-length" />
     </file>
     <file name="app/src/main/java/com/askit/app/profile/HighlightPlayback.kt">
         <error line="4" column="1" source="standard:no-wildcard-imports" />

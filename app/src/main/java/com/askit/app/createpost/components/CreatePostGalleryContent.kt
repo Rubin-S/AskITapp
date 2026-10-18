@@ -1,7 +1,5 @@
 package com.askit.app.createpost.components
 
-import androidx.annotation.StringRes
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,9 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -36,8 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -45,22 +39,15 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.error
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.askit.app.R
 import com.askit.app.createpost.CreatePostViewModel
-import com.askit.app.createpost.PostDisclosure
 import com.askit.app.createpost.PostMediaDraft
-import com.askit.app.createpost.PostMediaLayout
-import com.askit.app.createpost.PostValidationField
 import com.askit.app.createpost.photoRatio
 import com.askit.designsystem.inputs.AskITTextField
-import com.askit.designsystem.posts.BeforeAfterSlider
-import com.askit.designsystem.posts.PostFeedMedia
-import com.askit.designsystem.theme.StoryScrimColor
 import com.askit.designsystem.R as DesignR
 
 @Composable
