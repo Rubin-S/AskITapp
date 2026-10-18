@@ -43,7 +43,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
@@ -101,7 +100,7 @@ internal fun SettingsAccountActions(onLogoutClick: () -> Unit, onClearDataClick:
         // Clear App Data Button
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFFFEBEE),
+            color = MaterialTheme.colorScheme.errorContainer,
             tonalElevation = 0.dp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -119,7 +118,7 @@ internal fun SettingsAccountActions(onLogoutClick: () -> Unit, onClearDataClick:
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                     ),
-                    color = Color(0xFFD32F2F),
+                    color = MaterialTheme.colorScheme.onErrorContainer,
                 )
             }
         }
@@ -198,7 +197,7 @@ internal fun SettingsConfirmDialog(
                 },
                 modifier = if (confirmTestTag != null) Modifier.testTag(confirmTestTag) else Modifier,
             ) {
-                Text(stringResource(confirmRes), color = Color(0xFFD32F2F))
+                Text(stringResource(confirmRes), color = MaterialTheme.colorScheme.error)
             }
         },
         dismissButton = {
