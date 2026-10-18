@@ -21,7 +21,7 @@ fun Task?.actionPolicy(accountId: String?, hasServiceListing: Boolean = false, a
         canLike = this != null && signedIn,
         canReport = this != null && signedIn && !owner,
         showApply = showApply,
-        canApply = showApply && this?.status.equals("Open", ignoreCase = true) && !applied,
+        canApply = showApply && this.status.equals("Open", ignoreCase = true) && !applied,
     )
 }
 

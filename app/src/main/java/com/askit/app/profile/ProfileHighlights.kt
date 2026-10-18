@@ -143,7 +143,7 @@ internal fun HighlightCover(story: Story?, modifier: Modifier = Modifier) {
                 // Covers are artwork; labels outside them still follow accessibility text size.
                 val density = LocalDensity.current
                 CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale = 1f)) {
-                    Text(text?.text?.takeIf { it.isNotBlank() } ?: content?.caption.orEmpty(),
+                    Text(text?.text?.takeIf { it.isNotBlank() } ?: content.caption.orEmpty(),
                         color = text?.colorArgb?.let { Color(it) } ?: foreground,
                         fontSize = 11.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, maxLines = 3,
                         overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(6.dp)
