@@ -1,5 +1,6 @@
 package com.askit.app
 
+import com.askit.app.variant.AppVariant
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -184,7 +185,7 @@ internal fun rememberAskITEntryProvider(
     fun peopleFor(id: String): com.askit.app.profile.ProfilePeopleState {
         if (!BuildConfig.CLIENT_PREVIEW) return com.askit.app.profile.ProfilePeopleState(viewerId = currentTaskAccountId())
         fun person(accountId: String): com.askit.app.profile.ProfilePerson {
-            val account = runCatching { com.askit.app.preview.PreviewProfileStorage(context).load(accountId) }.getOrNull()
+            val account = runCatching { AppVariant.previewProfileStorage(context)?.load(accountId) }.getOrNull()
             val sample = com.askit.app.home.details.getUserProfileById(accountId)
             return com.askit.app.profile.ProfilePerson(accountId, account?.displayName ?: sample?.name ?: accountId, account?.avatarUrl ?: sample?.avatarUrl)
         }
@@ -568,7 +569,7 @@ internal fun rememberAskITEntryProvider(
         val postRecords by homeViewModel.posts.posts.collectAsStateWithLifecycle()
         val postAccount by homeViewModel.posts.account.collectAsStateWithLifecycle()
         ProfileSettingsScreen(
-            previewControls = if (BuildConfig.CLIENT_PREVIEW) ({ com.askit.app.preview.PreviewProfileControls(
+            previewControls = if (BuildConfig.CLIENT_PREVIEW) ({ AppVariant.PreviewProfileControls(
                 onAccount = { authViewModel.selectPreviewAccount(it); navigationState.navigate(AppDestination.Profile) },
                 onView = { navigationState.push(AppDestination.UserProfile(it)) },
             ) }) else null,
@@ -724,11 +725,11 @@ internal fun rememberAskITEntryProvider(
                     else -> return@review false
                 }
                 val recipient = (if (actor == job.seekerAccountId) job.providerAccountId else job.seekerAccountId) ?: return@review false
-                val storage = com.askit.app.preview.PreviewProfileStorage(context)
+                val storage = AppVariant.previewProfileStorage(context) ?: return@review false
                 runCatching {
-                    val target = storage.load(recipient) ?: if (recipient in setOf("preview-owner", "preview-visitor", "preview-seeker")) {
-                        com.askit.app.preview.previewProfile(recipient)
-                    } else return@review false
+                    val target = storage.load(recipient)
+                        ?: (if (recipient in setOf("preview-owner", "preview-visitor", "preview-seeker")) AppVariant.previewProfile(recipient) else null)
+                        ?: return@review false
                     val review = ProfileReview("review-${job.id}-$actor", profileViewModel.profile.value.displayName,
                         job.title, rating.toFloat(), comment, clock(), jobId = job.id,
                         reviewerAccountId = actor, recipientAccountId = recipient, direction = direction)
@@ -838,8 +839,8 @@ internal fun rememberAskITEntryProvider(
         val publicProfile = remember(key.userId, currentProfile) {
             if (com.askit.app.BuildConfig.CLIENT_PREVIEW) {
                 runCatching {
-                    val account = com.askit.app.preview.PreviewProfileStorage(context).load(key.userId)
-                        ?: if (key.userId in setOf("preview-owner", "preview-visitor", "preview-seeker")) com.askit.app.preview.previewProfile(key.userId) else null
+                    val account = AppVariant.previewProfileStorage(context)?.load(key.userId)
+                        ?: if (key.userId in setOf("preview-owner", "preview-visitor", "preview-seeker")) AppVariant.previewProfile(key.userId) else null
                     account?.toPublicProfile() ?: com.askit.app.home.details.getUserProfileById(key.userId)
                 }.getOrNull()
             } else null

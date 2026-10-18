@@ -29,7 +29,7 @@ import com.askit.app.creatordashboard.CreatorDashboardViewModel
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.defaultExploreFilterOptions
 import com.askit.app.home.HomeViewModel
-import com.askit.app.home.data.FakeHomeRepository
+import com.askit.app.home.data.LocalHomeRepository
 import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.InboxViewModel
 import com.askit.app.jobs.JobsStore
@@ -43,6 +43,7 @@ import com.askit.app.profile.ProfileViewModel
 import com.askit.app.session.SessionProfileStore
 import com.askit.app.story.StoryViewModel
 import com.askit.app.task.InMemoryTaskRepository
+import com.askit.app.variant.AppVariant
 import com.askit.designsystem.theme.AskITTheme
 import com.google.android.libraries.places.api.Places
 
@@ -113,9 +114,9 @@ class MainActivity : AppCompatActivity() {
             this,
             viewModelFactory {
                 initializer {
-                    val previewStorage = if (BuildConfig.CLIENT_PREVIEW) com.askit.app.preview.PreviewProfileStorage(applicationContext) else null
+                    val previewStorage = if (BuildConfig.CLIENT_PREVIEW) AppVariant.previewProfileStorage(applicationContext) else null
                     val profile = SessionProfileStore(persist = { previewStorage?.save(it) ?: it })
-                    JobsViewModel(JobsStore(profile), profile)
+                    JobsViewModel(JobsStore(profile, initialJobs = AppVariant.incomingLeads()), profile)
                 }
             },
         )[JobsViewModel::class.java]
@@ -129,16 +130,21 @@ class MainActivity : AppCompatActivity() {
                         api = backendUrl?.let { com.askit.app.auth.AuthApi(it) },
                         sessionStore = backendUrl?.let { com.askit.app.auth.AuthSessionStore(applicationContext, it) },
                         profileStore = jobsViewModel.profileStore,
-                        previewProfileLoader = { id -> com.askit.app.preview.PreviewProfileStorage(applicationContext).load(id) },
+                        previewProfileLoader = { id ->
+                            AppVariant.previewProfileStorage(applicationContext)?.load(id) ?: AppVariant.previewProfile(id)
+                        },
                     )
                 }
             },
         )[com.askit.app.auth.AuthViewModel::class.java]
         if (BuildConfig.CLIENT_PREVIEW && !repositories.previewSeeded) {
             repositories.previewSeeded = true
-            com.askit.app.preview.seedPreviewContent(taskRepository, homeViewModel.posts, jobsViewModel.store)
+            AppVariant.seedPreviewContent(taskRepository, homeViewModel.posts, jobsViewModel.store)
         }
-        val inboxViewModel = ViewModelProvider(this)[InboxViewModel::class.java]
+        val inboxViewModel = ViewModelProvider(
+            this,
+            viewModelFactory { initializer { InboxViewModel(seed = AppVariant::inboxSeed) } },
+        )[InboxViewModel::class.java]
         val storyViewerViewModel = ViewModelProvider(
             this,
             viewModelFactory {
@@ -157,7 +163,7 @@ class MainActivity : AppCompatActivity() {
             this,
             viewModelFactory {
                 initializer {
-                    CreatorDashboardViewModel(jobsViewModel.profileStore)
+                    CreatorDashboardViewModel(jobsViewModel.profileStore, AppVariant::creatorDashboardSample)
                 }
             },
         )[CreatorDashboardViewModel::class.java]
@@ -165,20 +171,19 @@ class MainActivity : AppCompatActivity() {
             this,
             viewModelFactory {
                 initializer {
-                    com.askit.app.providerdashboard.ProviderDashboardViewModel(jobsViewModel.profileStore)
+                    com.askit.app.providerdashboard.ProviderDashboardViewModel(
+                        jobsViewModel.profileStore,
+                        AppVariant::providerDashboardSample,
+                    )
                 }
             },
         )[com.askit.app.providerdashboard.ProviderDashboardViewModel::class.java]
-        val samplePeople = com.askit.app.explore.sampleExplorePeople()
+        // Release has no search backend yet: no fixture people, and browse sections say so.
         val exploreResultState = com.askit.app.explore.ExploreResultState.Results(
-            people = samplePeople,
+            people = AppVariant.explorePeople(),
             tasks = emptyList(),
         )
-        val exploreBrowseState = com.askit.app.explore.ExploreBrowseState(
-            services = com.askit.app.explore.ExploreBrowseStatus.Available,
-            professionals = com.askit.app.explore.ExploreBrowseStatus.Available,
-            tasks = com.askit.app.explore.ExploreBrowseStatus.Available,
-        )
+        val exploreBrowseState = AppVariant.exploreBrowseState()
         val initialRoute = if (BuildConfig.CLIENT_PREVIEW || (BuildConfig.DEBUG &&
             intent.getBooleanExtra("extra_start_at_home", false) &&
             !intent.getBooleanExtra("extra_start_entry", false))
@@ -254,11 +259,16 @@ class MainActivity : AppCompatActivity() {
 
     private class Repositories(context: android.content.Context) : ViewModel() {
         var previewSeeded = false
-        val tasks = InMemoryTaskRepository()
-        private val previewStorage = if (BuildConfig.CLIENT_PREVIEW) com.askit.app.preview.PreviewProfileStorage(context) else null
-        val home = FakeHomeRepository(tasks, storySocial = com.askit.app.home.stories.StorySocialStore(
-            initialRelationships = runCatching { previewStorage?.loadRelationships().orEmpty() }.getOrDefault(emptyMap()),
-            persistRelationships = { previewStorage?.saveRelationships(it) },
-        ))
+        val tasks = InMemoryTaskRepository(AppVariant.seededTasks())
+        private val previewStorage = if (BuildConfig.CLIENT_PREVIEW) AppVariant.previewProfileStorage(context) else null
+        val home = LocalHomeRepository(
+            taskRepository = tasks,
+            initialStories = AppVariant.homeStories(),
+            fixtures = AppVariant.homeFeed(),
+            storySocial = com.askit.app.home.stories.StorySocialStore(
+                initialRelationships = runCatching { previewStorage?.loadRelationships().orEmpty() }.getOrDefault(emptyMap()),
+                persistRelationships = { previewStorage?.saveRelationships(it) },
+            ),
+        )
     }
 }

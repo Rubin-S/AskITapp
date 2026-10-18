@@ -51,12 +51,9 @@ import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.home.HomeViewModel
-import com.askit.app.home.data.FakeHomeRepository
 import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.InboxViewModel
-import com.askit.app.jobs.JobsStore
 import com.askit.app.jobs.JobsViewModel
-import com.askit.app.profile.LocalProfileRepository
 import com.askit.app.profile.ProfileViewModel
 import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.listservice.ListServiceViewModel
@@ -64,7 +61,6 @@ import com.askit.app.navigation.AppDestination
 import com.askit.app.navigation.rememberAskITNavigationState
 import com.askit.app.posttask.PostTaskDraft
 import com.askit.app.posttask.PostTaskViewModel
-import com.askit.app.task.InMemoryTaskRepository
 import com.askit.app.task.toExploreTaskResult
 import com.askit.app.task.TaskRepository
 import com.askit.app.story.StoryDraft
@@ -76,19 +72,19 @@ import com.askit.designsystem.navigation.AskITCreateSheet
 @Composable
 fun AskITApp(
     exploreViewModel: ExploreViewModel,
-    taskRepository: TaskRepository? = null,
+    taskRepository: TaskRepository,
     taskDiscussionViewModel: TaskDiscussionViewModel,
     taskActionsViewModel: TaskActionsViewModel,
-    homeViewModel: HomeViewModel? = null,
-    postTaskViewModel: PostTaskViewModel? = null,
-    listServiceViewModel: ListServiceViewModel? = null,
-    createPostViewModel: CreatePostViewModel? = null,
-    creatorDashboardViewModel: CreatorDashboardViewModel? = null,
-    providerDashboardViewModel: com.askit.app.providerdashboard.ProviderDashboardViewModel? = null,
-    storyViewModel: StoryViewModel? = null,
-    jobsViewModel: JobsViewModel? = null,
-    inboxViewModel: InboxViewModel? = null,
-    profileViewModel: ProfileViewModel? = null,
+    homeViewModel: HomeViewModel,
+    postTaskViewModel: PostTaskViewModel,
+    listServiceViewModel: ListServiceViewModel,
+    createPostViewModel: CreatePostViewModel,
+    creatorDashboardViewModel: CreatorDashboardViewModel,
+    providerDashboardViewModel: com.askit.app.providerdashboard.ProviderDashboardViewModel,
+    storyViewModel: StoryViewModel,
+    jobsViewModel: JobsViewModel,
+    inboxViewModel: InboxViewModel,
+    profileViewModel: ProfileViewModel,
     storyViewerViewModel: StoryViewerViewModel,
     onExit: () -> Unit = {},
     resultState: ExploreResultState = ExploreResultState.Loading,
@@ -110,19 +106,19 @@ fun AskITApp(
     treatUnresolvedSearchAsEmpty: Boolean = false,
     clock: () -> Long = System::currentTimeMillis,
     initialRoute: AppDestination = AppDestination.Home,
-    authViewModel: com.askit.app.auth.AuthViewModel? = null,
+    authViewModel: com.askit.app.auth.AuthViewModel,
     onSignedOut: () -> Unit = onExit,
     appLinks: AppLinks = AppLinks(),
 ) {
-    val resolvedAuthViewModel = authViewModel ?: remember { com.askit.app.auth.AuthViewModel() }
+    // Every view model and repository is built in MainActivity; there are no fake fallbacks here.
+    val resolvedAuthViewModel = authViewModel
     val authState by resolvedAuthViewModel.state.collectAsStateWithLifecycle()
-    val resolvedTaskRepository = taskRepository ?: remember { InMemoryTaskRepository() }
+    val resolvedTaskRepository = taskRepository
     val resolvedDiscussionViewModel = taskDiscussionViewModel
     val resolvedTaskActionsViewModel = taskActionsViewModel
-    val resolvedPostTaskViewModel = postTaskViewModel ?: remember { PostTaskViewModel() }
-    val fallbackHomeRepository = remember(resolvedTaskRepository) { FakeHomeRepository(resolvedTaskRepository) }
-    val resolvedHomeViewModel = homeViewModel ?: remember(fallbackHomeRepository) { HomeViewModel(fallbackHomeRepository) }
-    val resolvedCreatePostViewModel = createPostViewModel ?: remember { CreatePostViewModel() }
+    val resolvedPostTaskViewModel = postTaskViewModel
+    val resolvedHomeViewModel = homeViewModel
+    val resolvedCreatePostViewModel = createPostViewModel
     val resolvedStoryViewerViewModel = storyViewerViewModel
     val storySnackbar = remember { SnackbarHostState() }
     val storyFeedback by resolvedStoryViewerViewModel.social.feedback.collectAsStateWithLifecycle()
@@ -218,22 +214,13 @@ fun AskITApp(
         appliedFilterOptions
     }
     val controlledFiltersChanged = onFiltersChanged ?: exploreViewModel::onFiltersChanged
-    val resolvedListServiceViewModel = listServiceViewModel ?: remember { ListServiceViewModel() }
-    val resolvedStoryViewModel = storyViewModel ?: remember { StoryViewModel() }
-    val resolvedJobsViewModel = jobsViewModel ?: remember {
-        val profile = resolvedAuthViewModel.profileStore
-        JobsViewModel(JobsStore(profile), profile)
-    }
+    val resolvedListServiceViewModel = listServiceViewModel
+    val resolvedStoryViewModel = storyViewModel
+    val resolvedJobsViewModel = jobsViewModel
     val resolvedCreatorDashboardViewModel = creatorDashboardViewModel
-        ?: remember(resolvedJobsViewModel) {
-            CreatorDashboardViewModel(resolvedJobsViewModel.profileStore)
-        }
     val resolvedProviderDashboardViewModel = providerDashboardViewModel
-        ?: remember(resolvedJobsViewModel) {
-            com.askit.app.providerdashboard.ProviderDashboardViewModel(resolvedJobsViewModel.profileStore)
-        }
-    val resolvedInboxViewModel = inboxViewModel ?: remember { InboxViewModel() }
-    val messagingProfiles = remember(storyContext) { com.askit.app.preview.PreviewProfileStorage(storyContext) }
+    val resolvedInboxViewModel = inboxViewModel
+    val messagingProfiles = remember(storyContext) { com.askit.app.variant.AppVariant.previewProfileStorage(storyContext) }
     LaunchedEffect(resolvedInboxViewModel) {
         resolvedInboxViewModel.feedback.collect { message ->
             android.widget.Toast.makeText(storyContext, message, android.widget.Toast.LENGTH_LONG).show()
@@ -248,11 +235,11 @@ fun AskITApp(
                 state.signedOut || state.operation in setOf(AuthOperation.SignOut, AuthOperation.RestoreSession, AuthOperation.LoadAccount)) {
                 com.askit.app.inbox.MessageAccess.Unavailable
             } else runCatching {
-                val target = messagingProfiles.load(recipient)
-                    ?: if (recipient in setOf("preview-owner", "preview-visitor", "preview-seeker")) com.askit.app.preview.previewProfile(recipient) else null
+                val target = messagingProfiles?.load(recipient)
+                    ?: if (recipient in setOf("preview-owner", "preview-visitor", "preview-seeker")) com.askit.app.variant.AppVariant.previewProfile(recipient) else null
                 val preference = target?.whoCanMessage ?: "Everyone".takeIf {
                     com.askit.app.home.details.getUserProfileById(recipient) != null ||
-                        com.askit.app.inbox.seededContacts().any { it.id == recipient }
+                        com.askit.app.variant.AppVariant.inboxSeed().contacts.any { it.id == recipient }
                 }
                 com.askit.app.inbox.messagingAccess(sender, recipient, preference, isContact, current.isVerified)
             }.getOrDefault(com.askit.app.inbox.MessageAccess.Unavailable)
@@ -261,9 +248,7 @@ fun AskITApp(
             resolvedInboxViewModel.activateAccount(discussionAccountId)
         }
     }
-    val resolvedProfileViewModel = profileViewModel ?: remember(resolvedJobsViewModel) {
-        ProfileViewModel(LocalProfileRepository(resolvedJobsViewModel.profileStore))
-    }
+    val resolvedProfileViewModel = profileViewModel
 
     val navigationState = rememberAskITNavigationState(initialRoute = initialRoute)
     var showCreateSheet by rememberSaveable { mutableStateOf(false) }
