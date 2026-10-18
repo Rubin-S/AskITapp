@@ -1,3 +1,4 @@
+import com.android.build.api.variant.HostTestBuilder
 import java.net.URI
 
 plugins {
@@ -82,6 +83,14 @@ android {
         }
     }
 
+    sourceSets {
+        // Demo fixtures (sample feed, profiles, dashboards, seeded chats/jobs/tasks) compile only into
+        // debug and preview. Release gets src/release/java, which supplies empty implementations of
+        // the same com.askit.app.variant.AppVariant seam. See docs/build-variants.md.
+        getByName("debug").kotlin.directories += "src/demo/java"
+        getByName("preview").kotlin.directories += "src/demo/java"
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -98,6 +107,15 @@ android {
         abortOnError = true
         checkDependencies = true
         disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "OldTargetApi")
+    }
+}
+
+androidComponents {
+    beforeVariants(selector().withBuildType("release")) { variant ->
+        // AGP only creates host (unit) tests for debug by default. Enable them for release so
+        // testReleaseUnitTest runs src/testRelease/ReleaseVariantTest, which fails if any demo
+        // fixture is reachable from the release variant.
+        variant.hostTests[HostTestBuilder.UNIT_TEST_TYPE]?.enable = true
     }
 }
 
