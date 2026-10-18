@@ -7,4 +7,5 @@
     <color name="askit_places_outline">#FFBDBDBD</color>
     <color name="askit_places_secondary_container">#FFEEEEEE</color>
     <color name="askit_places_on_secondary_container">#FF000000</color>
+    <color name="ic_launcher_background">#FF7CE605</color>
 </resources>
