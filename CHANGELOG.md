@@ -49,8 +49,17 @@ A five-phase cleanup after a full code review, done on stacked local branches
   a release unit test guards it.
 - Dashboards, profile defaults and comment/share sheets no longer show fabricated or sample data
   in release.
-- Fixes across auth, profile, tasks, jobs, inbox and stories found in the review.
+- Auth: returning accounts match the `/v1/me` contract, rejected refresh tokens end the session,
+  OTP requests and typed codes survive rotation.
+- Privacy: restricted story audiences enforced; account phone/email kept off public listings;
+  "View as other party" limited to preview builds; start codes from `SecureRandom` with a lockout.
+- Clear app data signs out; fake share contacts and "Sent to" toast removed; story download no
+  longer crashes on Android 8–9; release unit tests run in CI.
 
 ### Phase 1 – Repository hygiene
 - History rewritten to remove committed evidence files, stale screenshots and local paths.
-- Build, Gradle and CI hygiene; dependency and resource clean-ups.
+- Executable `gradlew`, fuller `.gitignore`, `.editorconfig`; Gradle build cache, parallel
+  execution and configuration cache; CI caches Gradle, runs unit tests and uploads reports.
+- All Android lint findings fixed (SavedStateHandle construction, ExifInterface, core-ktx,
+  resource reads in composables, unused resources, plurals, deprecated clipboard API).
+- AI-session scratch files and stale test reports removed; docs corrected.
