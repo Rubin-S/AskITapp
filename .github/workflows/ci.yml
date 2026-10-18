@@ -38,6 +38,12 @@ jobs:
       - name: Hardcoded UI strings
         run: python3 scripts/check_hardcoded_strings.py
 
+      - name: ktlint
+        run: ./gradlew ktlintCheck
+
+      - name: detekt
+        run: ./gradlew detekt
+
       - name: Lint
         run: ./gradlew lintDebug lintRelease
 
