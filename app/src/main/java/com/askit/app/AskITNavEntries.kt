@@ -1,5 +1,6 @@
 package com.askit.app
 
+import androidx.activity.compose.LocalActivity
 import com.askit.app.variant.AppVariant
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -220,9 +221,14 @@ internal fun rememberAskITEntryProvider(
     }
     entry<AppDestination.AuthPhone> {
         val authState by authViewModel.state.collectAsStateWithLifecycle()
+        val activity = LocalActivity.current
         DisposableEffect(authViewModel) {
             onDispose {
-                authViewModel.cancelPendingRequest(AuthOperation.RequestCode)
+                // Rotation, dark-mode and locale changes dispose this composition too. The request
+                // lives in viewModelScope and must survive them; only leaving the screen cancels it.
+                if (com.askit.app.auth.shouldCancelAuthRequestOnDispose(activity?.isChangingConfigurations == true)) {
+                    authViewModel.cancelPendingRequest(AuthOperation.RequestCode)
+                }
             }
         }
         com.askit.app.auth.AuthPhoneScreen(
@@ -245,9 +251,13 @@ internal fun rememberAskITEntryProvider(
                 if (value > 0) kotlinx.coroutines.delay(1000)
             } while (value > 0)
         }
+        val activity = LocalActivity.current
         DisposableEffect(authViewModel) {
             onDispose {
-                authViewModel.cancelPendingRequest(AuthOperation.ResendCode, AuthOperation.VerifyCode, AuthOperation.SaveSession)
+                // See AuthPhone: a consumed OTP or a sent SMS must not be lost to a rotation.
+                if (com.askit.app.auth.shouldCancelAuthRequestOnDispose(activity?.isChangingConfigurations == true)) {
+                    authViewModel.cancelPendingRequest(AuthOperation.ResendCode, AuthOperation.VerifyCode, AuthOperation.SaveSession)
+                }
             }
         }
         com.askit.app.auth.AuthOtpScreen(

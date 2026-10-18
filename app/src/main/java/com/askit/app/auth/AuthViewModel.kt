@@ -353,3 +353,11 @@ class AuthViewModel(
         return now + TimeUnit.SECONDS.toMillis(seconds).coerceAtMost(Long.MAX_VALUE - now)
     }
 }
+
+/**
+ * Whether disposing an auth screen's composition should cancel its in-flight request.
+ * A configuration change (rotation, uiMode, the app's own locale switch) recreates the activity
+ * but keeps this view model, so the request must keep running; cancelling it there could lose an
+ * SMS the server already sent or an OTP it already consumed. Real navigation away still cancels.
+ */
+internal fun shouldCancelAuthRequestOnDispose(isChangingConfigurations: Boolean): Boolean = !isChangingConfigurations
