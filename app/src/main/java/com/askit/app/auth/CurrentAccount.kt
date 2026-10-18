@@ -52,7 +52,7 @@ internal data class AccountProfile(
     val savedProfessionals: List<SavedProfessional> = emptyList(),
     val followingCount: Int = 0,
     val followerCount: Int = 0,
-    val activeRole: String = "Seeker",
+    val activeRole: String = com.askit.app.session.AccountRole.Seeker.storedValue,
     val pushNotificationsEnabled: Boolean = true,
     val jobAlertsEnabled: Boolean = true,
     val whoCanMessage: String = com.askit.app.session.MessagingAudience.Everyone.storedValue,
@@ -89,7 +89,7 @@ internal data class AccountProfile(
             !validAccountPhone(phoneNumber) || selectedLanguage !in com.askit.app.session.AppLanguage.storedValues ||
             !joinedYear.matches(Regex("[0-9]{4}")) ||
             profileStrengthPercent !in 0..100 || followingCount < 0 || followerCount < 0 || blockedAccountsCount < 0 ||
-            activeRole !in setOf("Seeker", "Provider", "Both") ||
+            activeRole !in com.askit.app.session.AccountRole.storedValues ||
             whoCanMessage !in com.askit.app.session.MessagingAudience.storedValues ||
             reviews.any { it.rating !in 0f..5f }
         ) {

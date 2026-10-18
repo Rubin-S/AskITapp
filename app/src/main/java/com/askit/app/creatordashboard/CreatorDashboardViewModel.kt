@@ -2,6 +2,7 @@ package com.askit.app.creatordashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.askit.app.R
 import com.askit.app.session.SessionProfileStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,9 +25,12 @@ class CreatorDashboardViewModel(
         aiInsightDismissed,
     ) { profile, timeRange, isAiDismissed ->
         val isService = profile.hasListedService
-        val role = when {
-            isService -> profile.listing?.title ?: profile.skills.firstOrNull() ?: "Service Professional"
-            else -> "Community Creator & Neighbor"
+        // A user-entered title or skill when there is one; otherwise a localized role label.
+        val userRole = profile.listing?.title ?: profile.skills.firstOrNull()
+        val role = userRole.takeIf { isService }.orEmpty()
+        val roleFallbackRes = when (isService) {
+            true -> R.string.creator_role_service_professional
+            false -> R.string.creator_role_community_neighbor
         }
 
         val sample = sampleMetrics(timeRange, isService)
@@ -36,6 +40,7 @@ class CreatorDashboardViewModel(
             avatarUrl = profile.avatarUrl,
             isServiceProvider = isService,
             professionOrRole = role,
+            roleFallbackRes = roleFallbackRes,
             selectedTimeRange = timeRange,
             isLoading = false,
         )

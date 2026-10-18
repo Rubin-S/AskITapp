@@ -43,3 +43,20 @@ enum class MessagingAudience(val storedValue: String, @StringRes val labelRes: I
         fun fromStoredValue(value: String?): MessagingAudience? = entries.firstOrNull { it.storedValue == value }
     }
 }
+
+/**
+ * The account's active role. [storedValue] is the persisted and wire value (unchanged English
+ * keys); [labelRes] is what the UI shows.
+ */
+enum class AccountRole(val storedValue: String, @StringRes val labelRes: Int) {
+    Seeker("Seeker", R.string.account_role_seeker),
+    Provider("Provider", R.string.account_role_provider),
+    Both("Both", R.string.account_role_both),
+    ;
+
+    companion object {
+        val storedValues: Set<String> = entries.mapTo(linkedSetOf(), AccountRole::storedValue)
+
+        fun fromStoredValue(value: String?): AccountRole? = entries.firstOrNull { it.storedValue == value }
+    }
+}

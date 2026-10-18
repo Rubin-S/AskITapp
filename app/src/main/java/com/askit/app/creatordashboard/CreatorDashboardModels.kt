@@ -91,7 +91,9 @@ data class CreatorDashboardUiState(
     val username: String = "",
     val avatarUrl: String? = null,
     val isServiceProvider: Boolean = false,
+    /** User-entered listing title or skill; blank means show [roleFallbackRes]. */
     val professionOrRole: String = "",
+    @StringRes val roleFallbackRes: Int = com.askit.app.R.string.creator_role_community_neighbor,
     val selectedTimeRange: CreatorTimeRange = CreatorTimeRange.ThisWeek,
     val heroKpi: HeroKpiSummary = HeroKpiSummary(
         reachValue = "0",

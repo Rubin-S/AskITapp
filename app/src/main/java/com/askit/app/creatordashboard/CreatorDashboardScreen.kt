@@ -147,7 +147,7 @@ fun CreatorDashboardScreen(
                     username = uiState.username,
                     avatarUrl = uiState.avatarUrl,
                     isServiceProvider = uiState.isServiceProvider,
-                    professionOrRole = uiState.professionOrRole,
+                    professionOrRole = uiState.professionOrRole.ifBlank { stringResource(uiState.roleFallbackRes) },
                 )
             }
 
