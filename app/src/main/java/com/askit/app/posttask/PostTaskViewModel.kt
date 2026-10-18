@@ -582,3 +582,21 @@ internal fun PostTaskValidationField.owningSection(): PostTaskOptionalSection? =
     PostTaskValidationField.AGE_PREFERENCE -> PostTaskOptionalSection.PREFERENCES
     else -> null
 }
+
+/** The order Review walks the form in when it picks the field to scroll to and focus. */
+internal val POST_TASK_REVIEW_ORDER: List<PostTaskValidationField> = listOf(
+    PostTaskValidationField.CATEGORY,
+    PostTaskValidationField.TITLE,
+    PostTaskValidationField.DETAILS,
+    PostTaskValidationField.WORK_MODE,
+    PostTaskValidationField.LOCATION,
+    PostTaskValidationField.TIMING,
+    PostTaskValidationField.DATE,
+    PostTaskValidationField.FIXED_BUDGET,
+    PostTaskValidationField.BUDGET_RANGE,
+    PostTaskValidationField.AGE_PREFERENCE,
+)
+
+/** The first field, in form order, that Review should bring into view; null when nothing is wrong. */
+internal fun firstInvalidPostTaskField(errors: Set<PostTaskValidationField>): PostTaskValidationField? =
+    POST_TASK_REVIEW_ORDER.firstOrNull { it in errors }
