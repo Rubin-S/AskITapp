@@ -7,8 +7,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.asSharedFlow
 
-class InboxViewModel : ViewModel() {
-    var store by mutableStateOf(InboxStore(seed = false))
+class InboxViewModel(
+    private val seed: () -> InboxSeed = { InboxSeed.Empty },
+) : ViewModel() {
+    var store by mutableStateOf(InboxStore())
         private set
     private var accountId: String? = null
     private val accountStores = mutableMapOf<String, InboxStore>()
@@ -21,12 +23,12 @@ class InboxViewModel : ViewModel() {
         resolveAccess = resolver
     }
 
-    private fun newStore(ownerId: String): InboxStore = InboxStore(messageAccess = { recipientId ->
+    private fun newStore(ownerId: String): InboxStore = InboxStore(seed = seed(), messageAccess = { recipientId ->
         val recipientStore = accountStores[recipientId]
         val access = when {
             accountId != ownerId -> MessageAccess.Unavailable
             store.conversation(recipientId)?.blocked == true || recipientStore?.conversation(ownerId)?.blocked == true -> MessageAccess.Blocked
-            else -> resolveAccess(ownerId, recipientId, (recipientStore?.contacts ?: seededContacts()).any { it.id == ownerId })
+            else -> resolveAccess(ownerId, recipientId, (recipientStore?.contacts ?: seed().contacts).any { it.id == ownerId })
         }
         access.messageRes?.let { _feedback.tryEmit(it) }
         access
@@ -37,7 +39,7 @@ class InboxViewModel : ViewModel() {
         if (next == accountId) return
         accountId?.let { accountStores[it] = store }
         accountId = next
-        store = next?.let { accountStores.getOrPut(it) { newStore(it) } } ?: InboxStore(seed = false)
+        store = next?.let { accountStores.getOrPut(it) { newStore(it) } } ?: InboxStore()
         refresh()
     }
 

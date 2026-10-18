@@ -18,7 +18,7 @@ class MessagingPrivacyTest {
 
     @Test fun restrictionsPreventCreationAndRecheckExistingTextPhotoAndStorySends() {
         var access = MessageAccess.ContactsOnly
-        val store = InboxStore(seed = false, messageAccess = { access })
+        val store = InboxStore(messageAccess = { access })
         val contact = ChatContact("recipient", "Recipient")
         assertNull(store.startConversation(contact))
         assertTrue(store.conversations().isEmpty())
@@ -37,7 +37,7 @@ class MessagingPrivacyTest {
     }
 
     @Test fun unconfiguredMessagingFailsClosedButModerationDoesNotRequireMessagePermission() {
-        val store = InboxStore(seed = false)
+        val store = InboxStore()
         val contact = ChatContact("recipient", "Recipient")
         assertNull(store.startConversation(contact))
         store.moderate(contact, report = true)
@@ -47,7 +47,7 @@ class MessagingPrivacyTest {
     }
     @Test fun sharedStoriesUseTheSameLivePolicy() {
         var access = MessageAccess.ContactsOnly
-        val store = InboxStore(messageAccess = { access })
+        val store = InboxStore(InboxSeed(contacts = listOf(ChatContact("priya", "Priya"))), messageAccess = { access })
         val contact = store.contacts.first()
         val story = com.askit.app.home.model.Story("story", "Author",
             content = com.askit.app.story.StoryDraft(), createdAtMillis = System.currentTimeMillis())
@@ -73,7 +73,7 @@ class MessagingPrivacyTest {
     }
 
     @Test fun contactsAreReadFromTheRecipientRatherThanTheSender() {
-        val inbox = InboxViewModel()
+        val inbox = InboxViewModel(seed = { InboxSeed(contacts = listOf(ChatContact("priya", "Priya"))) })
         inbox.configureAccess { sender, recipient, contact -> messagingAccess(sender, recipient, "Contacts only", contact, false) }
         inbox.activateAccount("priya")
         assertNotNull(inbox.startConversation(ChatContact("recipient", "Recipient")))

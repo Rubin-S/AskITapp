@@ -13,11 +13,9 @@ import kotlinx.coroutines.flow.update
 class JobsStore(
     private val profileStore: SessionProfileStore,
     private val clock: () -> Long = System::currentTimeMillis,
-    seedIncomingLeads: Boolean = true,
+    initialJobs: List<Job> = emptyList(),
 ) {
-    private val _jobs = MutableStateFlow(
-        if (seedIncomingLeads) seededJobs() else emptyList(),
-    )
+    private val _jobs = MutableStateFlow(initialJobs)
     val jobs: StateFlow<List<Job>> = _jobs.asStateFlow()
 
     private val _viewAsOtherJobIds = MutableStateFlow<Set<String>>(emptySet())
@@ -25,16 +23,10 @@ class JobsStore(
 
     private var nextId = 100
 
-    internal fun addClientPreviewJobs() {
+    /** Adds preview-only demo jobs. Callers live in the debug/preview source set. */
+    internal fun addClientPreviewJobs(jobs: List<Job>) {
         check(com.askit.app.BuildConfig.CLIENT_PREVIEW)
-        _jobs.update { existing -> existing + listOf(
-            Job("preview-verify", "Demo: start an electrical repair", "Priya", kind = JobKind.ServiceRequest,
-                localParty = JobParty.Receiver, status = JobStatus.OnTheWay, workMode = JobWorkMode.OnSite,
-                locationLabel = "Coimbatore", otp = "1234", providerAccountId = "preview-owner", seekerAccountId = "preview-visitor"),
-            Job("preview-review", "Demo: completed lighting installation", "Karthik", kind = JobKind.ServiceRequest,
-                localParty = JobParty.Applicant, status = JobStatus.AwaitingSeekerComplete, workMode = JobWorkMode.OnSite,
-                locationLabel = "Coimbatore", otp = "1234", providerAccountId = "preview-visitor", seekerAccountId = "preview-owner"),
-        ) }
+        _jobs.update { existing -> existing + jobs }
     }
 
     fun job(id: String): Job? = _jobs.value.firstOrNull { it.id == id }
@@ -190,38 +182,3 @@ class JobsStore(
         }
     }
 }
-
-internal fun seededJobs(): List<Job> = listOf(
-    Job(
-        id = "lead-incoming-task",
-        title = "Repair kitchen tap",
-        counterpartName = "Priya",
-        kind = JobKind.TaskApplication,
-        localParty = JobParty.Receiver,
-        status = JobStatus.Applied,
-        workMode = JobWorkMode.OnSite,
-        locationLabel = "Coimbatore",
-        otp = "4821",
-    ),
-    Job(
-        id = "lead-incoming-service",
-        title = "House cleaning",
-        counterpartName = "Karthik",
-        kind = JobKind.ServiceRequest,
-        localParty = JobParty.Receiver,
-        status = JobStatus.Applied,
-        workMode = JobWorkMode.OnSite,
-        locationLabel = "Chennai",
-        otp = "7390",
-    ),
-    Job(
-        id = "lead-remote-applied",
-        title = "Laptop setup help",
-        counterpartName = "Meena",
-        kind = JobKind.ServiceRequest,
-        localParty = JobParty.Applicant,
-        status = JobStatus.Applied,
-        workMode = JobWorkMode.Remote,
-        otp = "1560",
-    ),
-)

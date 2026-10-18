@@ -33,8 +33,19 @@ data class Conversation(
     val previewIsStory: Boolean = false,
 )
 
+/** Initial contacts and threads for an [InboxStore]. Release builds only ever use [Empty]. */
+data class InboxSeed(
+    val contacts: List<ChatContact> = emptyList(),
+    val conversations: List<Conversation> = emptyList(),
+    val messages: List<ChatMessage> = emptyList(),
+) {
+    companion object {
+        val Empty = InboxSeed()
+    }
+}
+
 class InboxStore(
-    seed: Boolean = true,
+    seed: InboxSeed = InboxSeed.Empty,
     private val clock: () -> Long = System::currentTimeMillis,
     private val messageAccess: (String) -> MessageAccess = { MessageAccess.Unavailable },
 ) {
@@ -42,16 +53,14 @@ class InboxStore(
     private val messages = mutableMapOf<String, MutableList<ChatMessage>>()
     private var nextMessageId = 1
 
-    val contacts: List<ChatContact> = if (seed) seededContacts() else emptyList()
+    val contacts: List<ChatContact> = seed.contacts
 
     init {
-        if (seed) {
-            seededConversations().forEach { conversation ->
-                conversations[conversation.id] = conversation
-            }
-            seededMessages().forEach { message ->
-                messages.getOrPut(message.conversationId) { mutableListOf() }.add(message)
-            }
+        seed.conversations.forEach { conversation ->
+            conversations[conversation.id] = conversation
+        }
+        seed.messages.forEach { message ->
+            messages.getOrPut(message.conversationId) { mutableListOf() }.add(message)
         }
     }
 
@@ -156,51 +165,3 @@ class InboxStore(
         return true
     }
 }
-
-internal fun seededContacts(): List<ChatContact> = listOf(
-    ChatContact(id = "priya", name = "Priya"),
-    ChatContact(id = "karthik", name = "Karthik"),
-    ChatContact(id = "meena", name = "Meena"),
-    ChatContact(id = "arun", name = "Arun Kumar"),
-)
-
-internal fun seededConversations(): List<Conversation> = listOf(
-    Conversation(
-        id = "priya",
-        contact = ChatContact(id = "priya", name = "Priya"),
-        preview = "I can come tomorrow morning.",
-        unreadCount = 0,
-        updatedAtMillis = 2_000L,
-    ),
-    Conversation(
-        id = "karthik",
-        contact = ChatContact(id = "karthik", name = "Karthik"),
-        preview = "Thanks for the details.",
-        unreadCount = 0,
-        updatedAtMillis = 1_000L,
-    ),
-)
-
-internal fun seededMessages(): List<ChatMessage> = listOf(
-    ChatMessage(
-        id = "m1",
-        conversationId = "priya",
-        body = "Hi, is the tap still leaking?",
-        fromLocalUser = false,
-        sentAtMillis = 1_000L,
-    ),
-    ChatMessage(
-        id = "m2",
-        conversationId = "priya",
-        body = "I can come tomorrow morning.",
-        fromLocalUser = false,
-        sentAtMillis = 2_000L,
-    ),
-    ChatMessage(
-        id = "m3",
-        conversationId = "karthik",
-        body = "Thanks for the details.",
-        fromLocalUser = false,
-        sentAtMillis = 1_000L,
-    ),
-)
