@@ -1121,4 +1121,6 @@
     </plurals>
     <string name="profile_highlight_delete_title">“%1$s” ஐ நீக்கவா?</string>
     <string name="profile_highlight_delete_hint">இந்தத் தொகுப்பு உங்கள் சுயவிவரத்திலிருந்து அகற்றப்படும். இதில் உள்ள ஸ்டோரிகள் நீக்கப்படாது.</string>
+    <string name="dashboard_data_unavailable_title">டாஷ்போர்டு தரவு இன்னும் கிடைக்கவில்லை</string>
+    <string name="dashboard_data_unavailable_body">AskIT சேவையகத்துடன் இணைந்ததும் உங்கள் வேலைகள், கோரிக்கைகள், மதிப்பீடுகள் மற்றும் அணுகல் இங்கே தோன்றும்.</string>
 </resources>

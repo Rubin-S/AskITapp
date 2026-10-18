@@ -92,27 +92,32 @@ data class ProviderDashboardUiState(
     val tradeTitle: String = "",
     val isVerified: Boolean = false,
     val availability: ProviderAvailabilityStatus = ProviderAvailabilityStatus.Online,
+    /**
+     * False until a backend supplies real operating data. The screen then shows an honest
+     * "not available yet" state instead of KPIs, trust score, requests and alerts.
+     */
+    val metricsAvailable: Boolean = false,
     val kpis: ProviderOperatingKpis = ProviderOperatingKpis(
-        todayJobsCount = 6,
-        todayJobsDelta = 2,
-        pendingLiveCount = 3,
-        responseRatePercent = 92,
-        avgResponseMinutes = 1.8,
+        todayJobsCount = 0,
+        todayJobsDelta = 0,
+        pendingLiveCount = 0,
+        responseRatePercent = 0,
+        avgResponseMinutes = 0.0,
     ),
     val incomingRequests: List<IncomingRequestItem> = emptyList(),
     val activeJobs: List<ProviderActiveJobItem> = emptyList(),
     val trustScore: ProviderTrustScore = ProviderTrustScore(
-        score = 88,
-        percentileRank = 8,
-        weeklyDelta = 4,
+        score = 0,
+        percentileRank = 0,
+        weeklyDelta = 0,
     ),
     val tierProgress: ProviderTierProgress = ProviderTierProgress(
-        strengthPercent = 85,
-        currentTier = "Tier 2",
-        nextTier = "Tier 3 Verified",
-        hint = "Complete portfolio to unlock Tier 3 Verified",
+        strengthPercent = 0,
+        currentTier = "",
+        nextTier = "",
+        hint = "",
     ),
     val alerts: List<ProviderAlertItem> = emptyList(),
-    val showProUpgrade: Boolean = true,
+    val showProUpgrade: Boolean = false,
     val acceptedJobMessage: String? = null,
 )

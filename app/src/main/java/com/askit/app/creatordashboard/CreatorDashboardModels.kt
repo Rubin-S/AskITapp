@@ -122,4 +122,15 @@ data class CreatorDashboardUiState(
     ),
     val recentActivities: List<CreatorActivityItem> = emptyList(),
     val isLoading: Boolean = false,
+    /** False until a backend supplies real reach/engagement data; the screen then shows an honest empty state. */
+    val metricsAvailable: Boolean = false,
+)
+
+/** Metrics for one time range. Only debug/preview builds provide a sample; release has none yet. */
+data class CreatorDashboardSample(
+    val heroKpi: HeroKpiSummary,
+    val categoryMetrics: CreatorCategoryMetrics,
+    val aiInsight: CreatorAiInsight?,
+    val milestone: FollowerMilestone,
+    val recentActivities: List<CreatorActivityItem>,
 )

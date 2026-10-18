@@ -1124,4 +1124,6 @@
     </plurals>
     <string name="profile_highlight_delete_title">Delete “%1$s”?</string>
     <string name="profile_highlight_delete_hint">This collection will be removed from your profile. Its stories will not be deleted.</string>
+    <string name="dashboard_data_unavailable_title">Dashboard data isn\'t available yet</string>
+    <string name="dashboard_data_unavailable_body">Your jobs, requests, ratings and reach will appear here once AskIT is connected to its server.</string>
 </resources>

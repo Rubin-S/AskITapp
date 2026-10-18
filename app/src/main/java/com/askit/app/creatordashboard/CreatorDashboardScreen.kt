@@ -57,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.designsystem.navigation.AskITSectionTabs
 import com.askit.designsystem.navigation.SectionTab
 import com.askit.app.R
+import com.askit.app.dashboard.DashboardDataUnavailable
 import com.askit.app.creatordashboard.components.CreatorAiInsightCard
 import com.askit.app.creatordashboard.components.CreatorMetricCard
 import com.askit.app.creatordashboard.components.CreatorTrendGraph
@@ -148,6 +149,11 @@ fun CreatorDashboardScreen(
                     isServiceProvider = uiState.isServiceProvider,
                     professionOrRole = uiState.professionOrRole,
                 )
+            }
+
+            if (!uiState.metricsAvailable && !uiState.isLoading) {
+                item(key = "metrics_unavailable") { DashboardDataUnavailable() }
+                return@LazyColumn
             }
 
             // 2. Time Range Selector

@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.R
+import com.askit.app.dashboard.DashboardDataUnavailable
 import com.askit.app.providerdashboard.components.ActiveJobCard
 import com.askit.app.providerdashboard.components.IncomingDispatchCard
 import com.askit.app.providerdashboard.components.ProviderAlertsCard
@@ -157,6 +158,11 @@ fun ProviderDashboardScreen(
                     availability = uiState.availability,
                     onToggleAvailability = onToggleAvailability,
                 )
+            }
+
+            if (!uiState.metricsAvailable) {
+                item(key = "metrics_unavailable") { DashboardDataUnavailable() }
+                return@LazyColumn
             }
 
             // 2. Incoming Dispatch Requests
