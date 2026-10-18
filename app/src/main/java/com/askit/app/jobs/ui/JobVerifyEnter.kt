@@ -43,6 +43,7 @@ fun JobVerifyEnter(
 ) {
     var code by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf(false) }
+    var lockedOut by rememberSaveable { mutableStateOf(false) }
     var scanUnavailable by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -81,7 +82,7 @@ fun JobVerifyEnter(
             )
             if (error) {
                 Text(
-                    text = stringResource(R.string.job_verify_error),
+                    text = stringResource(if (lockedOut) R.string.job_verify_locked else R.string.job_verify_error),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.testTag("job_otp_error"),
@@ -97,13 +98,13 @@ fun JobVerifyEnter(
             }
             Button(
                 onClick = {
-                    if (store.verifyOtp(jobId, code)) {
-                        onVerified()
-                    } else {
-                        error = true
+                    when (store.verifyStartCode(jobId, code)) {
+                        com.askit.app.jobs.StartCodeCheck.Verified -> onVerified()
+                        com.askit.app.jobs.StartCodeCheck.LockedOut -> { lockedOut = true; error = true }
+                        is com.askit.app.jobs.StartCodeCheck.Rejected -> error = true
                     }
                 },
-                enabled = code.length == 4,
+                enabled = code.length == 4 && !lockedOut,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 48.dp)

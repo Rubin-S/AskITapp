@@ -19,6 +19,8 @@ class JobsStore(
      * input for accept/start/complete, so outside the preview build it must never flip.
      */
     val allowViewAsOtherParty: Boolean = false,
+    /** Local stand-in for the server-verified start code (docs/job-start-code-contract.md). */
+    private val startCodes: JobStartCodeAuthority = LocalJobStartCodeAuthority(),
 ) {
     private val _jobs = MutableStateFlow(initialJobs)
     val jobs: StateFlow<List<Job>> = _jobs.asStateFlow()
@@ -107,14 +109,18 @@ class JobsStore(
         job.copy(status = JobStatus.Canceled, inHistory = true)
     }
 
-    fun verifyOtp(jobId: String, code: String): Boolean {
-        val job = job(jobId) ?: return false
-        if (!canEnterOtp(job)) return false
-        if (code != job.otp) return false
-        update(jobId) {
-            it.copy(status = JobStatus.Started, startedAtMillis = clock())
+    fun verifyOtp(jobId: String, code: String): Boolean = verifyStartCode(jobId, code) == StartCodeCheck.Verified
+
+    /** Provider enters the seeker's code. Attempts are limited per job; see [JobStartCodeAuthority]. */
+    @Synchronized
+    fun verifyStartCode(jobId: String, code: String): StartCodeCheck {
+        val job = job(jobId) ?: return StartCodeCheck.Rejected(0)
+        if (!canEnterOtp(job)) return StartCodeCheck.Rejected(0)
+        val result = startCodes.verify(jobId, job.otp, code)
+        if (result == StartCodeCheck.Verified) {
+            update(jobId) { it.copy(status = JobStatus.Started, startedAtMillis = clock()) }
         }
-        return true
+        return result
     }
 
     fun requestComplete(jobId: String) = update(jobId) { job ->
@@ -164,7 +170,7 @@ class JobsStore(
         seekerAccountId: String? = null,
     ): String {
         val id = "job-${nextId++}"
-        val otp = ((1000..9999).random()).toString()
+        val otp = startCodes.issue()
         _jobs.update { current ->
             current + Job(
                 id = id,
