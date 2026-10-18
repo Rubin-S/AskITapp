@@ -39,7 +39,7 @@ jobs:
         run: ./gradlew lintDebug lintRelease
 
       - name: Unit tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew testDebugUnitTest testReleaseUnitTest
 
       - name: Assemble debug
         run: ./gradlew assembleDebug
