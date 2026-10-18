@@ -126,7 +126,6 @@ class MainActivity : AppCompatActivity() {
                             }
                         },
                         availableFilterOptions = defaultExploreFilterOptions(),
-                        treatUnresolvedSearchAsEmpty = false,
                         initialRoute = initialRoute,
                     )
                 }

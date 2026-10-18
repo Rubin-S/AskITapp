@@ -38,27 +38,21 @@ import com.askit.app.auth.AuthDestination
 import com.askit.app.auth.AuthOperation
 import com.askit.app.config.AppLinks
 import com.askit.app.createpost.CreatePostViewModel
-import com.askit.app.createpost.PostDraft
 import com.askit.app.creatordashboard.CreatorDashboardViewModel
-import com.askit.app.explore.ExploreBrowseSection
 import com.askit.app.explore.ExploreBrowseState
 import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreResultState
-import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.home.HomeViewModel
 import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.InboxViewModel
 import com.askit.app.jobs.JobsViewModel
-import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.listservice.ListServiceViewModel
 import com.askit.app.navigation.AppDestination
 import com.askit.app.navigation.rememberAskITNavigationState
-import com.askit.app.posttask.PostTaskDraft
 import com.askit.app.posttask.PostTaskViewModel
 import com.askit.app.profile.ProfileViewModel
-import com.askit.app.story.StoryDraft
 import com.askit.app.story.StoryViewModel
 import com.askit.app.task.TaskActionsViewModel
 import com.askit.app.task.TaskDiscussionViewModel
@@ -89,21 +83,7 @@ fun AskITApp(
     onExit: () -> Unit = {},
     resultState: ExploreResultState = ExploreResultState.Loading,
     browseState: ExploreBrowseState = ExploreBrowseState(),
-    onRetryResults: (() -> Unit)? = null,
-    onRetryBrowseSection: ((ExploreBrowseSection) -> Unit)? = null,
-    availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = emptyMap(),
-    selectedSortOptions: Map<ExploreResultScope, ExploreSortOption> = emptyMap(),
-    onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
-    onPersonClick: ((String) -> Unit)? = null,
-    onTaskClick: ((String) -> Unit)? = null,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
-    appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
-    onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
-    onPostTaskCompleted: (PostTaskDraft) -> Unit = {},
-    onListServiceCompleted: (ListServiceDraft) -> Unit = {},
-    onCreatePostCompleted: (PostDraft) -> Unit = {},
-    onStoryCompleted: (StoryDraft) -> Unit = {},
-    treatUnresolvedSearchAsEmpty: Boolean = false,
     clock: () -> Long = System::currentTimeMillis,
     initialRoute: AppDestination = AppDestination.Home,
     authViewModel: com.askit.app.auth.AuthViewModel,
@@ -206,15 +186,7 @@ fun AskITApp(
         }
         return
     }
-    val viewModelAppliedFilterOptions by exploreViewModel.appliedFilterOptions.collectAsStateWithLifecycle()
-    val controlledAppliedFilterOptions = if (
-        appliedFilterOptions.isEmpty() && onFiltersChanged == null
-    ) {
-        viewModelAppliedFilterOptions
-    } else {
-        appliedFilterOptions
-    }
-    val controlledFiltersChanged = onFiltersChanged ?: exploreViewModel::onFiltersChanged
+    val appliedFilterOptions by exploreViewModel.appliedFilterOptions.collectAsStateWithLifecycle()
     val resolvedListServiceViewModel = listServiceViewModel
     val resolvedStoryViewModel = storyViewModel
     val resolvedJobsViewModel = jobsViewModel
@@ -341,20 +313,9 @@ fun AskITApp(
         storyViewerViewModel = resolvedStoryViewerViewModel,
         resultState = sharedResultState,
         browseState = browseState,
-        onRetryResults = onRetryResults,
-        onRetryBrowseSection = onRetryBrowseSection,
-        availableSortOptions = availableSortOptions,
-        selectedSortOptions = selectedSortOptions,
-        onSortChanged = onSortChanged,
-        onPersonClick = onPersonClick,
-        onTaskClick = onTaskClick,
         availableFilterOptions = availableFilterOptions,
-        appliedFilterOptions = controlledAppliedFilterOptions,
-        onFiltersChanged = controlledFiltersChanged,
-        treatUnresolvedSearchAsEmpty = treatUnresolvedSearchAsEmpty,
-        onPostTaskCompleted = onPostTaskCompleted,
-        onListServiceCompleted = onListServiceCompleted,
-        onCreatePostCompleted = onCreatePostCompleted,
+        appliedFilterOptions = appliedFilterOptions,
+        onFiltersChanged = exploreViewModel::onFiltersChanged,
         onShowCreateSheet = { showCreateSheet = true },
         onApplyBlocked = { showApplyGate = true },
         clock = clock,

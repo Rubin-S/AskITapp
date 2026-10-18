@@ -33,17 +33,14 @@ import com.askit.app.config.AppLinks
 import com.askit.app.config.profileUrl
 import com.askit.app.createpost.CreatePostRoute
 import com.askit.app.createpost.CreatePostViewModel
-import com.askit.app.createpost.PostDraft
 import com.askit.app.creatordashboard.CreatorDashboardRoute
 import com.askit.app.creatordashboard.CreatorDashboardViewModel
 import com.askit.app.entry.EntryScreen
-import com.askit.app.explore.ExploreBrowseSection
 import com.askit.app.explore.ExploreBrowseState
 import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExploreResultScope
 import com.askit.app.explore.ExploreResultState
 import com.askit.app.explore.ExploreRoute
-import com.askit.app.explore.ExploreSortOption
 import com.askit.app.explore.ExploreViewModel
 import com.askit.app.explore.SearchAreaRoute
 import com.askit.app.home.HomeScreen
@@ -67,7 +64,6 @@ import com.askit.app.jobs.ui.JobDetail
 import com.askit.app.jobs.ui.JobReview
 import com.askit.app.jobs.ui.JobVerifyEnter
 import com.askit.app.jobs.ui.JobVerifyShare
-import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.listservice.ListServiceRoute
 import com.askit.app.listservice.ListServiceViewModel
 import com.askit.app.listservice.categoryLabel
@@ -86,7 +82,6 @@ import com.askit.app.profile.ProfileViewModel
 import com.askit.app.profile.toPublicProfile
 import com.askit.app.story.StoryRoute
 import com.askit.app.story.StoryViewModel
-import com.askit.app.task.Task
 import com.askit.app.task.TaskActionsViewModel
 import com.askit.app.task.TaskCommentAuthor
 import com.askit.app.task.TaskDiscussionViewModel
@@ -119,20 +114,9 @@ internal fun rememberAskITEntryProvider(
     storyViewerViewModel: StoryViewerViewModel,
     resultState: ExploreResultState,
     browseState: ExploreBrowseState,
-    onRetryResults: (() -> Unit)?,
-    onRetryBrowseSection: ((ExploreBrowseSection) -> Unit)?,
-    availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>>,
-    selectedSortOptions: Map<ExploreResultScope, ExploreSortOption>,
-    onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)?,
-    onPersonClick: ((String) -> Unit)?,
-    onTaskClick: ((String) -> Unit)?,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>>,
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>>,
-    onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)?,
-    treatUnresolvedSearchAsEmpty: Boolean,
-    onPostTaskCompleted: (PostTaskDraft) -> Unit,
-    onListServiceCompleted: (ListServiceDraft) -> Unit,
-    onCreatePostCompleted: (PostDraft) -> Unit,
+    onFiltersChanged: (ExploreResultScope, Set<ExploreFilterOption>) -> Unit,
     onShowCreateSheet: () -> Unit,
     onApplyBlocked: () -> Unit,
     clock: () -> Long,
@@ -180,7 +164,6 @@ internal fun rememberAskITEntryProvider(
             is TaskMutationResult.Rejected -> postTaskViewModel.showSubmissionError(result.reason.messageRes)
 
             is TaskMutationResult.Success -> {
-                if (editTaskId == null) onPostTaskCompleted(draft)
                 postTaskViewModel.startNewDraft()
                 navigationState.pop()
             }
@@ -374,20 +357,15 @@ internal fun rememberAskITEntryProvider(
             )
         }
         entry<AppDestination.Explore> {
-            val exploreQuery by exploreViewModel.uiState.collectAsStateWithLifecycle()
             val repositoryTasks by taskRepository.tasks.collectAsStateWithLifecycle()
             val mappedExploreTasks = repositoryTasks.map { it.toExploreTaskResult() }
             val effectiveResultState = when (resultState) {
                 is ExploreResultState.Results -> resultState.copy(tasks = mappedExploreTasks)
 
-                ExploreResultState.Loading -> if (treatUnresolvedSearchAsEmpty && exploreQuery.query.isNotBlank()) {
-                    ExploreResultState.Empty(ExploreResultState.EmptyReason.Query)
-                } else {
-                    ExploreResultState.Results(
-                        people = emptyList(),
-                        tasks = mappedExploreTasks,
-                    )
-                }
+                ExploreResultState.Loading -> ExploreResultState.Results(
+                    people = emptyList(),
+                    tasks = mappedExploreTasks,
+                )
 
                 else -> resultState
             }
@@ -397,19 +375,14 @@ internal fun rememberAskITEntryProvider(
                 onSearchAreaClick = { navigationState.push(AppDestination.ExploreLocationDestination) },
                 resultState = effectiveResultState,
                 browseState = browseState,
-                onRetryResults = onRetryResults,
-                onRetryBrowseSection = onRetryBrowseSection,
-                availableSortOptions = availableSortOptions,
-                selectedSortOptions = selectedSortOptions,
-                onSortChanged = onSortChanged,
                 availableFilterOptions = availableFilterOptions,
                 appliedFilterOptions = appliedFilterOptions,
                 onFiltersChanged = onFiltersChanged,
                 onFilterScopeChanged = exploreViewModel::onFilterScopeSelected,
-                onPersonClick = onPersonClick ?: { personId ->
+                onPersonClick = { personId ->
                     navigationState.push(AppDestination.UserProfile(userId = personId))
                 },
-                onTaskClick = onTaskClick ?: { taskId ->
+                onTaskClick = { taskId ->
                     navigationState.push(AppDestination.TaskDetail(taskId = taskId))
                 },
             )
@@ -478,7 +451,6 @@ internal fun rememberAskITEntryProvider(
                         listing = draft.toServiceListing(draft.categoryLabel(context::getString)),
                         draft = draft,
                     )
-                    onListServiceCompleted(draft)
                 },
             )
         }
@@ -506,7 +478,6 @@ internal fun rememberAskITEntryProvider(
                         is com.askit.app.home.posts.PostResult.Success -> {
                             createPostViewModel.retainPublishedCrops()
                             createPostViewModel.startNewDraft()
-                            onCreatePostCompleted(draft)
                             navigationState.clearToHome()
                         }
                     }
