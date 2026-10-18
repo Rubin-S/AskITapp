@@ -51,6 +51,21 @@ class AuthViewModelFlowTest {
         profileStore = SessionProfileStore(),
     )
 
+    /**
+     * Revocation is fire-and-forget on an IO thread, so the signed-out state can be emitted before
+     * the server has seen the request. Poll (real time) instead of asserting immediately.
+     */
+    private fun awaitRequest(path: String): Pair<String, String> {
+        val deadline = System.currentTimeMillis() + REQUEST_WAIT_MS
+        while (System.currentTimeMillis() < deadline) {
+            synchronized(requests) { requests.filter { it.first == path } }.let { matches ->
+                if (matches.isNotEmpty()) return matches.single()
+            }
+            Thread.sleep(POLL_MS)
+        }
+        throw AssertionError("no $path request within $REQUEST_WAIT_MS ms")
+    }
+
     private fun respond(path: String, status: Int, body: String) {
         responses[path] = status to body
     }
@@ -187,7 +202,7 @@ class AuthViewModelFlowTest {
         assertNull(vm.session)
         assertNull(storage.stored)
         assertEquals(2, storage.clears) // once before requesting the code, once on sign-out
-        val revoke = synchronized(requests) { requests.single { it.first == REVOKE } }
+        val revoke = awaitRequest(REVOKE)
         assertTrue(revoke.second.contains("refresh-1"))
         // Signed out is terminal for this view model: a stray request does nothing.
         vm.requestCode(phone)
@@ -204,7 +219,7 @@ class AuthViewModelFlowTest {
             cancelAndIgnoreRemainingEvents()
         }
         assertNull(storage.stored)
-        assertTrue(synchronized(requests) { requests.single { it.first == REVOKE } }.second.contains("refresh-stored"))
+        assertTrue(awaitRequest(REVOKE).second.contains("refresh-stored"))
     }
 
     @Test fun clientPreviewAcceptsOnlyTheDemoCode() = runTest {
@@ -257,5 +272,7 @@ class AuthViewModelFlowTest {
         const val CHALLENGES = "v1/auth/otp/challenges"
         const val VERIFICATIONS = "v1/auth/otp/verifications"
         const val REVOKE = "v1/auth/sessions/revoke"
+        const val REQUEST_WAIT_MS = 5_000L
+        const val POLL_MS = 10L
     }
 }
