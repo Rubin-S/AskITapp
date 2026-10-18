@@ -2,10 +2,16 @@ package com.askit.app.posttask
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.math.BigDecimal
+import com.askit.app.task.TaskProviderPreferences
+import com.askit.app.task.TaskGenderPreference
+import com.askit.app.task.TaskLanguage
 
 enum class PostTaskWorkMode {
     AT_MY_LOCATION,
@@ -36,6 +42,7 @@ enum class PostTaskOptionalSection {
     PHOTOS,
     ITEM_DETAILS,
     ACCESS_INSTRUCTIONS,
+    PREFERENCES,
 }
 
 enum class PostTaskScreenMode {
@@ -53,6 +60,7 @@ enum class PostTaskValidationField {
     DATE,
     FIXED_BUDGET,
     BUDGET_RANGE,
+    AGE_PREFERENCE,
 }
 
 const val POST_TASK_OTHER_CATEGORY_ID = "other"
@@ -75,6 +83,10 @@ data class PostTaskFormState(
     val minimumBudget: String = "",
     val maximumBudget: String = "",
     val photoUris: List<String> = emptyList(),
+    val minimumAge: String = "",
+    val maximumAge: String = "",
+    val genderPreference: TaskGenderPreference = TaskGenderPreference.ANY,
+    val preferredLanguages: Set<TaskLanguage> = emptySet(),
     val quantityOrMeasurements: String = "",
     val brandOrModel: String = "",
     val materialsPolicy: PostTaskMaterialsPolicy? = null,
@@ -120,6 +132,7 @@ data class PostTaskDraft(
     val photos: List<String>,
     val itemDetails: PostTaskItemDetails?,
     val accessInstructions: String?,
+    val preferences: TaskProviderPreferences = TaskProviderPreferences(),
 )
 
 class PostTaskViewModel(
@@ -129,9 +142,46 @@ class PostTaskViewModel(
     private val _formState = MutableStateFlow(restoreState())
     val formState: StateFlow<PostTaskFormState> = _formState.asStateFlow()
 
+    private var accountId: String? = savedStateHandle?.get("post_task_account")
+    var editingTaskId: String? by mutableStateOf(savedStateHandle?.get<String>("post_task_editing_id"))
+        private set
+    private var baseline: String? = savedStateHandle?.get("post_task_edit_baseline")
+    private val mutableSubmissionError = MutableStateFlow<Int?>(null)
+    val submissionError = mutableSubmissionError.asStateFlow()
+
+    fun activateAccount(userId: String?) {
+        val next = userId?.takeIf(String::isNotBlank)
+        if (accountId == next) return
+        accountId = next
+        savedStateHandle?.set("post_task_account", next)
+        startNewDraft()
+    }
+
+    fun isActiveAccount(userId: String?) = accountId == userId?.takeIf(String::isNotBlank)
+
     fun startNewDraft() {
+        editingTaskId = null
+        baseline = null
+        savedStateHandle?.set<String?>("post_task_editing_id", null)
+        savedStateHandle?.set<String?>("post_task_edit_baseline", null)
+        mutableSubmissionError.value = null
         setState(PostTaskFormState())
     }
+
+    fun beginEdit(taskId: String, draft: PostTaskDraft) {
+        // Re-entering after recreation must not overwrite unsaved edits.
+        if (editingTaskId == taskId) return
+        editingTaskId = taskId
+        val state = draft.toFormState()
+        baseline = state.contentKey()
+        savedStateHandle?.set("post_task_editing_id", taskId)
+        savedStateHandle?.set("post_task_edit_baseline", baseline)
+        mutableSubmissionError.value = null
+        setState(state)
+    }
+
+    fun clearTask(taskId: String) { if (editingTaskId == taskId) startNewDraft() }
+    fun showSubmissionError(messageRes: Int) { mutableSubmissionError.value = messageRes }
 
     fun updateTitle(value: String) = update { copy(title = value) }
 
@@ -186,6 +236,18 @@ class PostTaskViewModel(
 
     fun updateMaximumBudget(value: String) = update { copy(maximumBudget = value) }
 
+    fun updateMinimumAge(value: String) = update { copy(minimumAge = value) }
+
+    fun updateMaximumAge(value: String) = update { copy(maximumAge = value) }
+
+    fun selectGender(value: TaskGenderPreference) = update { copy(genderPreference = value) }
+
+    fun toggleLanguage(value: TaskLanguage) = update {
+        copy(preferredLanguages = if (value in preferredLanguages) preferredLanguages - value else preferredLanguages + value)
+    }
+
+    fun clearLanguages() = update { copy(preferredLanguages = emptySet()) }
+
     fun setPhotoUris(uris: List<String>) = update { copy(photoUris = uris.distinct()) }
 
     fun removePhoto(uri: String) = update { copy(photoUris = photoUris.filterNot { it == uri }) }
@@ -215,8 +277,11 @@ class PostTaskViewModel(
             hasAttemptedReview = true,
             reviewAttempt = _formState.value.reviewAttempt + 1,
         )
-        setState(attemptedState)
-        if (validate(attemptedState).isNotEmpty()) return false
+        val errors = validate(attemptedState)
+        setState(if (PostTaskValidationField.AGE_PREFERENCE in errors) {
+            attemptedState.copy(expandedOptionalSections = attemptedState.expandedOptionalSections + PostTaskOptionalSection.PREFERENCES)
+        } else attemptedState)
+        if (errors.isNotEmpty()) return false
 
         setState(attemptedState.copy(screenMode = PostTaskScreenMode.REVIEW))
         return true
@@ -234,9 +299,10 @@ class PostTaskViewModel(
     }
 
     val isDirty: Boolean
-        get() = _formState.value.hasMeaningfulChanges
+        get() = baseline?.let { it != _formState.value.contentKey() } ?: _formState.value.hasMeaningfulChanges
 
     private fun update(transform: PostTaskFormState.() -> PostTaskFormState) {
+        mutableSubmissionError.value = null
         setState(_formState.value.transform())
     }
 
@@ -264,6 +330,10 @@ class PostTaskViewModel(
         handle[MINIMUM_BUDGET_KEY] = state.minimumBudget
         handle[MAXIMUM_BUDGET_KEY] = state.maximumBudget
         handle[PHOTOS_KEY] = ArrayList(state.photoUris)
+        handle[MINIMUM_AGE_KEY] = state.minimumAge
+        handle[MAXIMUM_AGE_KEY] = state.maximumAge
+        handle[GENDER_KEY] = state.genderPreference.name
+        handle[LANGUAGES_KEY] = ArrayList(state.preferredLanguages.map { it.name })
         handle[QUANTITY_KEY] = state.quantityOrMeasurements
         handle[BRAND_KEY] = state.brandOrModel
         handle[MATERIALS_KEY] = state.materialsPolicy?.name
@@ -294,6 +364,11 @@ class PostTaskViewModel(
             minimumBudget = handle.get<String>(MINIMUM_BUDGET_KEY).orEmpty(),
             maximumBudget = handle.get<String>(MAXIMUM_BUDGET_KEY).orEmpty(),
             photoUris = handle.get<ArrayList<String>>(PHOTOS_KEY)?.toList().orEmpty(),
+            minimumAge = handle.get<String>(MINIMUM_AGE_KEY).orEmpty(),
+            maximumAge = handle.get<String>(MAXIMUM_AGE_KEY).orEmpty(),
+            genderPreference = handle.get<String>(GENDER_KEY).toEnumOrNull<TaskGenderPreference>() ?: TaskGenderPreference.ANY,
+            preferredLanguages = handle.get<ArrayList<String>>(LANGUAGES_KEY)
+                ?.mapNotNull { it.toEnumOrNull<TaskLanguage>() }?.toSet().orEmpty(),
             quantityOrMeasurements = handle.get<String>(QUANTITY_KEY).orEmpty(),
             brandOrModel = handle.get<String>(BRAND_KEY).orEmpty(),
             materialsPolicy = handle.get<String>(MATERIALS_KEY)
@@ -328,6 +403,10 @@ class PostTaskViewModel(
         const val FIXED_BUDGET_KEY = "post_task_fixed_budget"
         const val MINIMUM_BUDGET_KEY = "post_task_minimum_budget"
         const val MAXIMUM_BUDGET_KEY = "post_task_maximum_budget"
+        const val MINIMUM_AGE_KEY = "post_task_minimum_age"
+        const val MAXIMUM_AGE_KEY = "post_task_maximum_age"
+        const val GENDER_KEY = "post_task_gender_preference"
+        const val LANGUAGES_KEY = "post_task_preferred_languages"
         const val PHOTOS_KEY = "post_task_photos"
         const val QUANTITY_KEY = "post_task_quantity"
         const val BRAND_KEY = "post_task_brand"
@@ -346,10 +425,11 @@ private val PostTaskFormState.hasMeaningfulChanges: Boolean
         latitude != null || longitude != null || privateAddressOrLandmark.isNotBlank() ||
         timingMode != null || selectedDateMillis != null || budgetMode != null ||
         fixedBudget.isNotBlank() || minimumBudget.isNotBlank() || maximumBudget.isNotBlank() ||
-        photoUris.isNotEmpty() || quantityOrMeasurements.isNotBlank() || brandOrModel.isNotBlank() ||
+        minimumAge.isNotBlank() || maximumAge.isNotBlank() || genderPreference != TaskGenderPreference.ANY ||
+        preferredLanguages.isNotEmpty() || photoUris.isNotEmpty() || quantityOrMeasurements.isNotBlank() || brandOrModel.isNotBlank() ||
         materialsPolicy != null || accessInstructions.isNotBlank()
 
-private fun PostTaskFormState.toDraft(): PostTaskDraft {
+internal fun PostTaskFormState.toDraft(): PostTaskDraft {
     val selectedWorkMode = requireNotNull(workMode)
     val selectedTiming = requireNotNull(timingMode)
     val location = if (selectedWorkMode == PostTaskWorkMode.AT_MY_LOCATION) {
@@ -390,6 +470,12 @@ private fun PostTaskFormState.toDraft(): PostTaskDraft {
         selectedDateMillis = selectedDateMillis.takeIf { selectedTiming == PostTaskTimingMode.DATE },
         budget = budget,
         photos = photoUris.toList(),
+        preferences = TaskProviderPreferences(
+            minimumAge = minimumAge.trim().toIntOrNull(),
+            maximumAge = maximumAge.trim().toIntOrNull(),
+            gender = genderPreference,
+            languages = preferredLanguages.toSet(),
+        ),
         itemDetails = itemDetails,
         accessInstructions = accessInstructions.trim()
             .takeIf { selectedWorkMode == PostTaskWorkMode.AT_MY_LOCATION && it.isNotBlank() },
@@ -416,6 +502,14 @@ private fun validate(state: PostTaskFormState): Set<PostTaskValidationField> = b
     if (state.timingMode == PostTaskTimingMode.DATE && state.selectedDateMillis == null) {
         add(PostTaskValidationField.DATE)
     }
+    val minimumAge = state.minimumAge.trim()
+    val maximumAge = state.maximumAge.trim()
+    fun validAge(value: String) = value.isEmpty() ||
+        (value.matches(Regex("[0-9]+")) && value.toIntOrNull()?.let { it in 18..100 } == true)
+    if (!validAge(minimumAge) || !validAge(maximumAge) ||
+        (minimumAge.isNotEmpty() && maximumAge.isNotEmpty() &&
+            (minimumAge.toIntOrNull() ?: 0) > (maximumAge.toIntOrNull() ?: 0))
+    ) add(PostTaskValidationField.AGE_PREFERENCE)
     when (state.budgetMode) {
         PostTaskBudgetMode.FIXED -> if (!state.fixedBudget.isPositiveAmount()) {
             add(PostTaskValidationField.FIXED_BUDGET)
@@ -439,3 +533,43 @@ private fun String.toPositiveAmount(): BigDecimal? = trim()
 
 private inline fun <reified T : Enum<T>> String?.toEnumOrNull(): T? =
     this?.let { value -> enumValues<T>().firstOrNull { it.name == value } }
+
+
+internal val PostTaskDraft.isValid: Boolean
+    get() = validate(toFormState()).isEmpty()
+
+private fun PostTaskFormState.contentKey(): String = copy(
+    expandedOptionalSections = emptySet(), hasAttemptedReview = false,
+    reviewAttempt = 0, screenMode = PostTaskScreenMode.FORM,
+    preferredLanguages = preferredLanguages.sortedBy { it.name }.toSet(),
+).toString()
+
+internal fun PostTaskDraft.toFormState() = PostTaskFormState(
+    categoryId = categoryId, customCategory = customCategory.orEmpty(), title = title, details = details,
+    workMode = workMode, publicAreaLabel = location?.publicAreaLabel.orEmpty(), placeId = location?.placeId,
+    latitude = location?.latitude, longitude = location?.longitude,
+    privateAddressOrLandmark = location?.privateAddressOrLandmark.orEmpty(),
+    timingMode = timingMode, selectedDateMillis = selectedDateMillis,
+    budgetMode = when (budget) {
+        is PostTaskBudget.Fixed -> PostTaskBudgetMode.FIXED
+        is PostTaskBudget.Range -> PostTaskBudgetMode.RANGE
+        PostTaskBudget.RequestQuotes -> PostTaskBudgetMode.REQUEST_QUOTES
+        null -> null
+    },
+    fixedBudget = (budget as? PostTaskBudget.Fixed)?.amount.orEmpty(),
+    minimumBudget = (budget as? PostTaskBudget.Range)?.minimum.orEmpty(),
+    maximumBudget = (budget as? PostTaskBudget.Range)?.maximum.orEmpty(),
+    photoUris = photos.toList(), minimumAge = preferences.minimumAge?.toString().orEmpty(),
+    maximumAge = preferences.maximumAge?.toString().orEmpty(), genderPreference = preferences.gender,
+    preferredLanguages = preferences.languages.toSet(),
+    quantityOrMeasurements = itemDetails?.quantityOrMeasurements.orEmpty(),
+    brandOrModel = itemDetails?.brandOrModel.orEmpty(), materialsPolicy = itemDetails?.materialsPolicy,
+    accessInstructions = accessInstructions.orEmpty(),
+    expandedOptionalSections = buildSet {
+        if (budget != null) add(PostTaskOptionalSection.BUDGET)
+        if (photos.isNotEmpty()) add(PostTaskOptionalSection.PHOTOS)
+        if (itemDetails != null) add(PostTaskOptionalSection.ITEM_DETAILS)
+        if (!accessInstructions.isNullOrBlank()) add(PostTaskOptionalSection.ACCESS_INSTRUCTIONS)
+        if (preferences != TaskProviderPreferences()) add(PostTaskOptionalSection.PREFERENCES)
+    },
+)

@@ -19,20 +19,20 @@ import com.askit.app.jobs.Job
 import com.askit.app.jobs.JobParty
 import com.askit.app.jobs.JobStatus
 import com.askit.app.jobs.JobWorkMode
-import com.askit.app.jobs.jobStatusLabelRes
+import com.askit.app.jobs.jobCardBadgeRes
+import com.askit.app.jobs.jobCardBadgeTone
 import com.askit.app.jobs.visibleParty
 import com.askit.designsystem.R as DsR
 import com.askit.designsystem.empty.AskITEmptyState
 import com.askit.designsystem.jobs.JobCardActions
-import com.askit.designsystem.jobs.JobCardBadgeTone
 import com.askit.designsystem.jobs.JobLeadCard
 
 @Composable
 fun JobsHub(
     jobs: List<Job>,
     onOpenJob: (String) -> Unit,
-    viewAsOtherJobIds: Set<String> = emptySet(),
     modifier: Modifier = Modifier,
+    viewAsOtherJobIds: Set<String> = emptySet(),
     onAccept: (String) -> Unit = {},
     onDecline: (String) -> Unit = {},
     onCancel: (String) -> Unit = {},
@@ -132,39 +132,6 @@ private fun JobCardItem(
     )
 }
 
-private fun jobCardBadgeRes(job: Job, party: JobParty): Int = when (job.status) {
-    JobStatus.Applied -> if (party == JobParty.Receiver) {
-        R.string.job_badge_new_request
-    } else {
-        R.string.job_status_applied
-    }
-    JobStatus.Accepted,
-    JobStatus.OnTheWay,
-    JobStatus.Started,
-    JobStatus.AwaitingSeekerComplete,
-    -> R.string.job_badge_in_progress
-    JobStatus.Completed,
-    JobStatus.Canceled,
-    JobStatus.Rejected,
-    -> jobStatusLabelRes(job, party)
-}
-
-private fun jobCardBadgeTone(status: JobStatus, party: JobParty): JobCardBadgeTone = when (status) {
-    JobStatus.Applied -> if (party == JobParty.Receiver) {
-        JobCardBadgeTone.New
-    } else {
-        JobCardBadgeTone.Neutral
-    }
-    JobStatus.Accepted,
-    JobStatus.OnTheWay,
-    JobStatus.Started,
-    JobStatus.AwaitingSeekerComplete,
-    -> JobCardBadgeTone.Live
-    JobStatus.Completed,
-    JobStatus.Canceled,
-    JobStatus.Rejected,
-    -> JobCardBadgeTone.Neutral
-}
 
 private fun jobCardActions(
     job: Job,

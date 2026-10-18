@@ -26,7 +26,7 @@ fun ListServiceDraft.toServiceListing(categoryLabel: String): ServiceListing {
     val coverage = customerCoverage?.publicAreaLabel
         ?: providerLocation?.publicAreaLabel
         ?: ""
-    val coverageHint = customerCoverage?.let { "Up to ${it.radiusKm} km" }.orEmpty()
+    val coverageHint = customerCoverage?.radiusKm?.let { "Up to $it km" }.orEmpty()
     val responseHint = buildList {
         if (ListServiceDeliveryMode.AT_CUSTOMER_LOCATION in deliveryModes) add("Travels to site")
         if (ListServiceDeliveryMode.AT_PROVIDER_LOCATION in deliveryModes) add("At your location")
@@ -42,6 +42,7 @@ fun ListServiceDraft.toServiceListing(categoryLabel: String): ServiceListing {
     }.distinct()
     return ServiceListing(
         title = title,
+        phoneNumber = contactPhone, email = contactEmail,
         category = categoryLabel,
         categoryId = categoryId,
         description = description,
@@ -54,6 +55,7 @@ fun ListServiceDraft.toServiceListing(categoryLabel: String): ServiceListing {
         responseHint = responseHint,
         tags = tags,
         experience = details.experience.orEmpty(),
+        materials = details.materials, certificate = details.credentials, deliveryModes = deliveryModes,
         live = true,
     )
 }
@@ -91,6 +93,7 @@ fun ListServiceDraft.toFormState(): ListServiceFormState {
     }
     return ListServiceFormState(
         categoryId = categoryId,
+        contactPhone = contactPhone, contactEmail = contactEmail,
         customCategory = customCategory.orEmpty(),
         title = title,
         description = description,

@@ -8,4 +8,5 @@ data class TaskPreview(
     val locationLabel: String,
     val posterName: String,
     val urgencyLabel: String? = null,
+    val sourceTask: com.askit.app.task.Task? = null,
 )

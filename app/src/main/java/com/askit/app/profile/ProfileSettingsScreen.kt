@@ -1,8 +1,9 @@
 package com.askit.app.profile
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,7 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import com.askit.designsystem.dialogs.AskITAlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,7 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
+import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -37,15 +38,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
@@ -62,6 +61,12 @@ import com.askit.app.session.SessionProfile
 import com.askit.designsystem.people.AskITAvatar
 import com.askit.designsystem.R as DsR
 
+private val messagePrivacyOptions = mapOf(
+    "Everyone" to R.string.settings_message_everyone,
+    "Contacts only" to R.string.settings_message_contacts,
+    "Verified users only" to R.string.settings_message_verified,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileSettingsScreen(
@@ -72,8 +77,7 @@ fun ProfileSettingsScreen(
     onNavigateToListService: () -> Unit = {},
     onNavigateToCreatePost: () -> Unit = {},
     onNavigateToJobRequests: () -> Unit = {},
-    onNavigateToSupportChat: () -> Unit = {},
-    onUpdatePhoneNumber: (String) -> Unit = {},
+    onContactSupport: () -> Unit = {},
     onUpdatePushNotifications: (Boolean) -> Unit = {},
     onUpdateJobAlerts: (Boolean) -> Unit = {},
     onUpdateLanguage: (String) -> Unit = {},
@@ -82,15 +86,26 @@ fun ProfileSettingsScreen(
     onSaveAvailability: (ProfileAvailability) -> Unit = {},
     onLogout: () -> Unit = {},
     onClearAppData: () -> Unit = {},
+    onOpenHelpCenter: () -> Unit = {},
+    onOpenTerms: () -> Unit = {},
+    onOpenPrivacyPolicy: () -> Unit = {},
+    mutedStoryAuthors: List<com.askit.app.home.stories.StoryAuthor> = emptyList(),
+    onUnmuteStoryAuthor: (String) -> Unit = {},
+    savedPosts: List<com.askit.app.home.model.FeedPost> = emptyList(),
+    archivedPosts: List<com.askit.app.home.model.FeedPost> = emptyList(),
+    onOpenPost: (String) -> Unit = {},
+    onRestorePost: (String) -> Unit = {},
+    previewControls: (@Composable () -> Unit)? = null,
 ) {
-    var showPhoneDialog by rememberSaveable { mutableStateOf(false) }
+    val selectedLanguage = if (LocalConfiguration.current.locales[0].language == "ta") "Tamil" else "English"
+    var showMutedStories by rememberSaveable { mutableStateOf(false) }
     var showLanguageSheet by rememberSaveable { mutableStateOf(false) }
     var showMessagePrivacySheet by rememberSaveable { mutableStateOf(false) }
     var showBlockedAccountsSheet by rememberSaveable { mutableStateOf(false) }
     var showAvailabilitySheet by rememberSaveable { mutableStateOf(false) }
     var showSavedSheet by rememberSaveable { mutableStateOf(false) }
+    var showArchivedPosts by rememberSaveable { mutableStateOf(false) }
     var showHistorySheet by rememberSaveable { mutableStateOf(false) }
-    var showHelpCenterDialog by rememberSaveable { mutableStateOf(false) }
     var showTermsDialog by rememberSaveable { mutableStateOf(false) }
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
     var showClearDataDialog by rememberSaveable { mutableStateOf(false) }
@@ -164,9 +179,10 @@ fun ProfileSettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
+            previewControls?.invoke()
             // Profile Summary Header Card
             SettingsProfileHeaderCard(
-                displayName = profile.displayName.ifBlank { "Provider" },
+                displayName = profile.displayName.ifBlank { stringResource(R.string.settings_provider_name) },
                 username = profile.username,
                 avatarUrl = profile.avatarUrl,
                 onClick = onNavigateToEditProfile,
@@ -192,7 +208,7 @@ fun ProfileSettingsScreen(
                     iconBgColor = Color(0xFF1E88E5),
                     value = profile.maskedPhoneNumber,
                     testTag = "settings_row_phone_number",
-                    onClick = { showPhoneDialog = true },
+                    onClick = onNavigateToEditProfile,
                 )
             }
 
@@ -223,7 +239,7 @@ fun ProfileSettingsScreen(
                     title = stringResource(R.string.settings_language),
                     icon = painterResource(DsR.drawable.ic_sparkle),
                     iconBgColor = Color(0xFF7C4DFF),
-                    value = profile.selectedLanguage,
+                    value = selectedLanguage,
                     testTag = "settings_row_language",
                     onClick = { showLanguageSheet = true },
                 )
@@ -247,9 +263,18 @@ fun ProfileSettingsScreen(
                     title = stringResource(R.string.settings_who_can_message),
                     icon = painterResource(DsR.drawable.ic_lock),
                     iconBgColor = Color(0xFF546E7A),
-                    value = profile.whoCanMessage,
+                    value = messagePrivacyOptions.entries
+                        .find { it.key.equals(profile.whoCanMessage, ignoreCase = true) }
+                        ?.let { stringResource(it.value) } ?: profile.whoCanMessage,
                     testTag = "settings_row_privacy_message",
                     onClick = { showMessagePrivacySheet = true },
+                )
+                SettingsDivider()
+                SettingsNavigationRow(
+                    title = stringResource(R.string.story_muted_settings),
+                    icon = painterResource(DsR.drawable.ic_shield),
+                    iconBgColor = Color(0xFF546E7A), value = mutedStoryAuthors.size.toString(),
+                    testTag = "settings_muted_stories", onClick = { showMutedStories = true },
                 )
                 SettingsDivider()
                 SettingsNavigationRow(
@@ -271,7 +296,7 @@ fun ProfileSettingsScreen(
                     title = stringResource(R.string.settings_service_listing),
                     icon = painterResource(DsR.drawable.ic_work),
                     iconBgColor = Color(0xFF7CB342),
-                    value = if (profile.hasListedService) stringResource(R.string.settings_status_live) else "Manage",
+                    value = stringResource(if (profile.hasListedService) R.string.settings_status_live else R.string.settings_status_manage),
                     testTag = "settings_row_service_listing",
                     onClick = onNavigateToListService,
                 )
@@ -308,6 +333,14 @@ fun ProfileSettingsScreen(
                 )
                 SettingsDivider()
                 SettingsNavigationRow(
+                    title = stringResource(R.string.post_archived_title),
+                    icon = painterResource(DsR.drawable.ic_work),
+                    iconBgColor = Color(0xFF546E7A),
+                    testTag = "settings_archived_posts",
+                    onClick = { showArchivedPosts = true },
+                )
+                SettingsDivider()
+                SettingsNavigationRow(
                     title = stringResource(R.string.settings_history),
                     icon = painterResource(DsR.drawable.ic_history),
                     iconBgColor = Color(0xFF546E7A),
@@ -334,7 +367,7 @@ fun ProfileSettingsScreen(
                     icon = painterResource(DsR.drawable.ic_sparkle),
                     iconBgColor = Color(0xFF7C4DFF),
                     testTag = "settings_row_help",
-                    onClick = { showHelpCenterDialog = true },
+                    onClick = onOpenHelpCenter,
                 )
                 SettingsDivider()
                 SettingsNavigationRow(
@@ -342,7 +375,7 @@ fun ProfileSettingsScreen(
                     icon = painterResource(DsR.drawable.ic_chat),
                     iconBgColor = Color(0xFF1E88E5),
                     testTag = "settings_row_contact_support",
-                    onClick = onNavigateToSupportChat,
+                    onClick = onContactSupport,
                 )
                 SettingsDivider()
                 SettingsNavigationRow(
@@ -417,48 +450,24 @@ fun ProfileSettingsScreen(
     }
 
     // Dialogs and Bottom Sheets
-    if (showPhoneDialog) {
-        var phoneInput by remember { mutableStateOf(profile.phoneNumber) }
-        AlertDialog(
-            onDismissRequest = { showPhoneDialog = false },
-            title = { Text(stringResource(R.string.settings_phone_number)) },
-            text = {
-                OutlinedTextField(
-                    value = phoneInput,
-                    onValueChange = { phoneInput = it },
-                    label = { Text("Phone Number") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    onUpdatePhoneNumber(phoneInput)
-                    showPhoneDialog = false
-                }) {
-                    Text(stringResource(R.string.profile_save))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showPhoneDialog = false }) {
-                    Text(stringResource(R.string.profile_cancel))
-                }
-            },
-        )
-    }
+
 
     if (showLanguageSheet) {
         ModalBottomSheet(
             onDismissRequest = { showLanguageSheet = false },
         ) {
             LanguageSelectionContent(
-                selectedLanguage = profile.selectedLanguage,
+                selectedLanguage = selectedLanguage,
                 onSelectLanguage = { lang ->
                     onUpdateLanguage(lang)
                     showLanguageSheet = false
                 },
             )
         }
+    }
+
+    if (showMutedStories) {
+        com.askit.app.home.stories.MutedStoriesSheet(mutedStoryAuthors, onDismiss = { showMutedStories = false }, onUnmute = onUnmuteStoryAuthor)
     }
 
     if (showMessagePrivacySheet) {
@@ -491,7 +500,7 @@ fun ProfileSettingsScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "No blocked accounts. Accounts you block won't be able to message or view your listings.",
+                    text = stringResource(R.string.settings_blocked_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -513,29 +522,12 @@ fun ProfileSettingsScreen(
     }
 
     if (showSavedSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showSavedSheet = false },
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_saved),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "You haven't saved any tasks or professionals yet. Tap the bookmark or heart icon on listings to save them.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-        }
+        com.askit.app.home.posts.PostCollectionSheet(savedPosts, archived = false,
+            onDismiss = { showSavedSheet = false }, onOpen = { id -> showSavedSheet = false; onOpenPost(id) })
+    }
+    if (showArchivedPosts) {
+        com.askit.app.home.posts.PostCollectionSheet(archivedPosts, archived = true,
+            onDismiss = { showArchivedPosts = false }, onOpen = { id -> showArchivedPosts = false; onOpenPost(id) }, onRestore = onRestorePost)
     }
 
     if (showHistorySheet) {
@@ -554,7 +546,7 @@ fun ProfileSettingsScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Your completed service history and past task applications will appear here.",
+                    text = stringResource(R.string.settings_history_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -564,38 +556,30 @@ fun ProfileSettingsScreen(
         }
     }
 
-    if (showHelpCenterDialog) {
-        AlertDialog(
-            onDismissRequest = { showHelpCenterDialog = false },
-            title = { Text(stringResource(R.string.settings_help_center)) },
-            text = {
-                Text("Need help with AskIT? Explore guides on posting tasks, listing services, receiving verified payouts, and contacting local specialists.")
-            },
-            confirmButton = {
-                TextButton(onClick = { showHelpCenterDialog = false }) {
-                    Text("OK")
-                }
-            },
-        )
-    }
-
     if (showTermsDialog) {
-        AlertDialog(
+        AskITAlertDialog(
             onDismissRequest = { showTermsDialog = false },
             title = { Text(stringResource(R.string.settings_terms_privacy)) },
             text = {
-                Text("AskIT connects verified local service providers and task seekers. All community interactions adhere to our community safety standards, data encryption, and transparent fee policies.")
+                Column {
+                    TextButton(onClick = onOpenTerms, modifier = Modifier.testTag("settings_open_terms")) {
+                        Text(stringResource(R.string.settings_terms_link))
+                    }
+                    TextButton(onClick = onOpenPrivacyPolicy, modifier = Modifier.testTag("settings_open_privacy")) {
+                        Text(stringResource(R.string.settings_privacy_policy))
+                    }
+                }
             },
             confirmButton = {
                 TextButton(onClick = { showTermsDialog = false }) {
-                    Text("Close")
+                    Text(stringResource(R.string.settings_close))
                 }
             },
         )
     }
 
     if (showLogoutDialog) {
-        AlertDialog(
+        AskITAlertDialog(
             onDismissRequest = { showLogoutDialog = false },
             title = { Text(stringResource(R.string.settings_logout_confirm_title)) },
             text = { Text(stringResource(R.string.settings_logout_confirm_msg)) },
@@ -603,7 +587,7 @@ fun ProfileSettingsScreen(
                 TextButton(onClick = {
                     showLogoutDialog = false
                     onLogout()
-                }) {
+                }, modifier = Modifier.testTag("settings_confirm_logout")) {
                     Text(stringResource(R.string.settings_logout), color = Color(0xFFD32F2F))
                 }
             },
@@ -616,7 +600,7 @@ fun ProfileSettingsScreen(
     }
 
     if (showClearDataDialog) {
-        AlertDialog(
+        AskITAlertDialog(
             onDismissRequest = { showClearDataDialog = false },
             title = { Text(stringResource(R.string.settings_clear_data_confirm_title)) },
             text = { Text(stringResource(R.string.settings_clear_data_confirm_msg)) },
@@ -676,13 +660,15 @@ private fun SettingsProfileHeaderCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    text = "@${username.removePrefix("@")}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (username.isNotBlank()) {
+                    Text(
+                        text = "@${username.removePrefix("@")}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
             Icon(
                 painter = painterResource(DsR.drawable.ic_chevron_right),
@@ -852,7 +838,7 @@ private fun LanguageSelectionContent(
     selectedLanguage: String,
     onSelectLanguage: (String) -> Unit,
 ) {
-    val languages = listOf("English", "Tamil (தமிழ்)", "Hindi (हिन्दी)", "Telugu (తెలుగు)", "Kannada (ಕನ್ನಡ)")
+    val languages = listOf("English", "Tamil (தமிழ்)")
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -896,7 +882,6 @@ private fun MessagePrivacyContent(
     currentOption: String,
     onSelectOption: (String) -> Unit,
 ) {
-    val options = listOf("Everyone", "Contacts only", "Verified users only")
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -907,7 +892,12 @@ private fun MessagePrivacyContent(
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(bottom = 16.dp),
         )
-        options.forEach { opt ->
+        if (com.askit.app.BuildConfig.CLIENT_PREVIEW) Text(
+            text = stringResource(R.string.settings_message_privacy_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        messagePrivacyOptions.forEach { (opt, label) ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -924,7 +914,7 @@ private fun MessagePrivacyContent(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = opt,
+                    text = stringResource(label),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                 )

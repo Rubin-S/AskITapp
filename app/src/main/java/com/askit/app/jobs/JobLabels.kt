@@ -3,6 +3,7 @@ package com.askit.app.jobs
 import androidx.annotation.StringRes
 import com.askit.app.R
 import com.askit.designsystem.jobs.JobBannerTone
+import com.askit.designsystem.jobs.JobCardBadgeTone
 import com.askit.designsystem.jobs.JobStepState
 
 @StringRes
@@ -114,6 +115,40 @@ fun jobStepState(
         stepIndex == currentIndex -> JobStepState.Current
         else -> JobStepState.Upcoming
     }
+}
+
+internal fun jobCardBadgeRes(job: Job, party: JobParty): Int = when (job.status) {
+    JobStatus.Applied -> if (party == JobParty.Receiver) {
+        R.string.job_badge_new_request
+    } else {
+        R.string.job_status_applied
+    }
+    JobStatus.Accepted,
+    JobStatus.OnTheWay,
+    JobStatus.Started,
+    JobStatus.AwaitingSeekerComplete,
+    -> R.string.job_badge_in_progress
+    JobStatus.Completed,
+    JobStatus.Canceled,
+    JobStatus.Rejected,
+    -> jobStatusLabelRes(job, party)
+}
+
+internal fun jobCardBadgeTone(status: JobStatus, party: JobParty): JobCardBadgeTone = when (status) {
+    JobStatus.Applied -> if (party == JobParty.Receiver) {
+        JobCardBadgeTone.New
+    } else {
+        JobCardBadgeTone.Neutral
+    }
+    JobStatus.Accepted,
+    JobStatus.OnTheWay,
+    JobStatus.Started,
+    JobStatus.AwaitingSeekerComplete,
+    -> JobCardBadgeTone.Live
+    JobStatus.Completed,
+    JobStatus.Canceled,
+    JobStatus.Rejected,
+    -> JobCardBadgeTone.Neutral
 }
 
 fun formatElapsed(millis: Long): String {

@@ -26,11 +26,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -77,6 +79,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.R
+import com.askit.app.BuildConfig
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
@@ -110,9 +113,11 @@ fun SearchAreaRoute(
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
     onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
+    showFilterControls: Boolean = true,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val filterScope by viewModel.filterScope.collectAsStateWithLifecycle()
+    val priceFilters by viewModel.priceFilters.collectAsStateWithLifecycle()
     val initialAvailableOptions = normalizeAvailableExploreFilterOptions(
         scope = filterScope,
         options = availableFilterOptions[filterScope].orEmpty(),
@@ -124,13 +129,17 @@ fun SearchAreaRoute(
     )
     SearchAreaScreen(
         confirmedArea = uiState.searchArea,
+        showFilterControls = showFilterControls,
+        titleRes = if (showFilterControls) R.string.explore_filters_title else R.string.explore_choose_area_title,
         filterScope = filterScope,
+        initialPriceFilter = priceFilters[filterScope] ?: ExplorePriceFilter(),
+        onPriceFilterApplied = { viewModel.onPriceFilterChanged(filterScope, it) },
         availableFilterOptions = availableFilterOptions,
         appliedFilterOptions = appliedFilterOptions,
         onBack = onBack,
         onApply = { searchArea, optionalFilterOptions ->
             viewModel.onSearchAreaApplied(searchArea)
-            if (optionalFilterOptions != initialAppliedOptions) {
+            if (showFilterControls && optionalFilterOptions != initialAppliedOptions) {
                 onFiltersChanged?.invoke(filterScope, optionalFilterOptions)
             }
             onBack()
@@ -159,6 +168,8 @@ fun SearchAreaScreen(
     filterScope: ExploreResultScope = ExploreResultScope.All,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
+    initialPriceFilter: ExplorePriceFilter = ExplorePriceFilter(),
+    onPriceFilterApplied: (ExplorePriceFilter) -> Unit = {},
     @StringRes titleRes: Int = R.string.explore_filters_title,
     showFilterControls: Boolean = true,
     onApply: (ExploreSearchArea, Set<ExploreFilterOption>) -> Unit,
@@ -201,6 +212,14 @@ fun SearchAreaScreen(
     val draftOptionalOptions = availableOptions
         .filter { it.name in draftOptionalOptionNames }
         .toSet()
+    var priceMinimum by rememberSaveable(filterScope) { mutableStateOf(initialPriceFilter.minimum) }
+    var priceMaximum by rememberSaveable(filterScope) { mutableStateOf(initialPriceFilter.maximum) }
+    var priceUnitName by rememberSaveable(filterScope) { mutableStateOf(initialPriceFilter.unit?.name) }
+    val priceDraft = ExplorePriceFilter(
+        priceMinimum, priceMaximum,
+        ExploreRateUnit.entries.firstOrNull { it.name == priceUnitName },
+    )
+
     var isResolvingLocation by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -332,7 +351,13 @@ fun SearchAreaScreen(
         )
     }
 
+    var showPreviewLocations by rememberSaveable { mutableStateOf(false) }
+
     fun openPlaceSearch() {
+        if (BuildConfig.CLIENT_PREVIEW) {
+            showPreviewLocations = true
+            return
+        }
         if (!Places.isInitialized()) {
             errorMessage = resources.getString(R.string.explore_location_search_unavailable)
             return
@@ -372,12 +397,36 @@ fun SearchAreaScreen(
         onDispose { locationRequest?.cancel() }
     }
 
+    if (showPreviewLocations) {
+        AlertDialog(
+            onDismissRequest = { showPreviewLocations = false },
+            title = { Text("Choose a demo location") },
+            text = {
+                Column {
+                    Text("Offline sample areas for exploring location-based forms.")
+                    listOf(
+                        Triple("Coimbatore", 11.0168, 76.9558),
+                        Triple("Chennai", 13.0827, 80.2707),
+                        Triple("Madurai", 9.9252, 78.1198),
+                    ).forEach { (city, lat, lng) ->
+                        TextButton(onClick = {
+                            applyDraft(ExploreSearchArea(null, city, "Tamil Nadu, India", lat, lng, radiusKm, ExploreLocationSource.SAVED))
+                            showPreviewLocations = false
+                        }) { Text(city) }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showPreviewLocations = false }) { Text("Cancel") } },
+        )
+    }
+
     val draft = currentDraft()
     val filterGroups = ExploreFilterGroup.entries.mapNotNull { group ->
         val options = availableOptions.filter { it.groupFor(filterScope) == group }
         options.takeIf { it.isNotEmpty() }?.let { group to it }
     }
     Scaffold(
+        modifier = Modifier.imePadding(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
@@ -410,8 +459,13 @@ fun SearchAreaScreen(
                     ) {
                         if (showFilterControls) {
                             TextButton(
-                                onClick = { draftOptionalOptionNames = emptyList() },
-                                enabled = draftOptionalOptions.isNotEmpty(),
+                                onClick = {
+                                    draftOptionalOptionNames = emptyList()
+                                    priceMinimum = ""
+                                    priceMaximum = ""
+                                    priceUnitName = null
+                                },
+                                enabled = draftOptionalOptions.isNotEmpty() || priceDraft.isActive,
                                 modifier = Modifier
                                     .weight(1f)
                                     .heightIn(min = 48.dp)
@@ -426,8 +480,11 @@ fun SearchAreaScreen(
                             Spacer(Modifier.size(8.dp))
                         }
                         Button(
-                            onClick = { onApply(draft, draftOptionalOptions) },
-                            enabled = draft.isUsable && !isResolvingLocation,
+                            onClick = {
+                                if (showFilterControls) onPriceFilterApplied(priceDraft)
+                                onApply(draft, draftOptionalOptions)
+                            },
+                            enabled = draft.isUsable && !isResolvingLocation && (!showFilterControls || priceDraft.isValid),
                             modifier = if (showFilterControls) {
                                 Modifier.heightIn(min = 48.dp)
                             } else {
@@ -446,12 +503,13 @@ fun SearchAreaScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(padding)
                 .testTag("explore_filters_content"),
             contentPadding = PaddingValues(
                 start = 16.dp,
-                top = padding.calculateTopPadding() + 16.dp,
+                top = 16.dp,
                 end = 16.dp,
-                bottom = padding.calculateBottomPadding() + 24.dp,
+                bottom = 24.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
@@ -466,6 +524,41 @@ fun SearchAreaScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.semantics { heading() },
                     )
+                }
+            }
+            if (showFilterControls) {
+                item(key = "explore_filter_scope_hint") {
+                    Text(
+                        stringResource(R.string.explore_filter_scope_hint, stringResource(filterScope.labelRes)),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+            filterGroups.forEach { (group, options) ->
+                item(key = "explore_filter_group_${group.name}") {
+                    ExploreFilterGroupSection(
+                        group = group,
+                        options = options,
+                        selectedOptions = draftOptionalOptions,
+                        onOptionToggled = { option ->
+                            draftOptionalOptionNames = if (option.name in draftOptionalOptionNames) {
+                                draftOptionalOptionNames.filterNot { it == option.name }
+                            } else {
+                                draftOptionalOptionNames.filterNot { name ->
+                                    availableOptions.firstOrNull { it.name == name }?.groupFor(filterScope) == option.groupFor(filterScope)
+                                } + option.name
+                            }
+                        },
+                    )
+                }
+            }
+            if (showFilterControls) {
+                item(key = "explore_price_filter") {
+                    ExplorePriceFilterSection(filterScope, priceDraft) {
+                        priceMinimum = it.minimum
+                        priceMaximum = it.maximum
+                        priceUnitName = it.unit?.name
+                    }
                 }
             }
             item {
@@ -609,22 +702,7 @@ fun SearchAreaScreen(
                     }
                 }
             }
-            filterGroups.forEach { (group, options) ->
-                item(key = "explore_filter_group_${group.name}") {
-                    ExploreFilterGroupSection(
-                        group = group,
-                        options = options,
-                        selectedOptions = draftOptionalOptions,
-                        onOptionToggled = { option ->
-                            draftOptionalOptionNames = if (option.name in draftOptionalOptionNames) {
-                                draftOptionalOptionNames.filterNot { it == option.name }
-                            } else {
-                                draftOptionalOptionNames + option.name
-                            }
-                        },
-                    )
-                }
-            }
+
         }
     }
 }

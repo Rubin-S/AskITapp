@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  build-and-lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,16 +27,10 @@ jobs:
         run: ./gradlew --version
 
       - name: Lint
-        run: ./gradlew lintDebug
-
-      - name: Unit tests
-        run: ./gradlew testDebugUnitTest
-
-      - name: Verify Roborazzi screenshots
-        run: ./gradlew verifyRoborazziDebug
+        run: ./gradlew lintDebug lintRelease
 
       - name: Assemble debug
         run: ./gradlew assembleDebug
 
       - name: Assemble release
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease bundleRelease

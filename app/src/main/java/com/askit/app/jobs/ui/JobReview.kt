@@ -1,5 +1,7 @@
 package com.askit.app.jobs.ui
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,15 +18,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -40,9 +40,10 @@ fun JobReview(
     jobId: String,
     store: JobsStore,
     onFinished: () -> Unit,
-    onReviewSubmitted: (rating: Int, comment: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
+    onReviewSubmitted: (rating: Int, comment: String) -> Boolean = { _, _ -> false },
 ) {
+    var failed by rememberSaveable { mutableStateOf(false) }
     var wouldAgain by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var rating by rememberSaveable { mutableIntStateOf(0) }
     var comment by rememberSaveable { mutableStateOf("") }
@@ -108,19 +109,19 @@ fun JobReview(
                     }
                 }
             }
-            OutlinedTextField(
+            AskITTextField(
                 value = comment,
                 onValueChange = { comment = it },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.job_review_comment)) },
                 minLines = 3,
-                shape = MaterialTheme.shapes.small,
             )
             Button(
                 onClick = {
-                    store.complete(jobId)
-                    onReviewSubmitted(rating, comment)
-                    onFinished()
+                    if (onReviewSubmitted(rating, comment)) {
+                        store.complete(jobId)
+                        onFinished()
+                    } else failed = true
                 },
                 enabled = rating > 0,
                 modifier = Modifier
@@ -128,6 +129,7 @@ fun JobReview(
                     .heightIn(min = 48.dp)
                     .testTag("job_review_submit"),
             ) { Text(stringResource(R.string.job_review_submit)) }
+            if (failed) Text(stringResource(R.string.profile_save_unavailable), color = MaterialTheme.colorScheme.error)
             OutlinedButton(
                 onClick = {
                     store.completeWithReviewDeferred(jobId)

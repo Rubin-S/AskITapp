@@ -1,5 +1,6 @@
 package com.askit.app.explore
 
+import com.askit.designsystem.inputs.AskITInputDefaults
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,18 +57,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipAnchorPosition
@@ -90,7 +89,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -118,8 +116,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.category.ASKIT_SERVICE_CATEGORIES
+import com.askit.designsystem.navigation.AskITSectionTabs
+import com.askit.designsystem.navigation.SectionTab
 import com.askit.app.R
-import com.askit.designsystem.people.PersonResultMetadata
+import com.askit.app.task.presentation
 import com.askit.designsystem.people.PersonResultItem
 import com.askit.designsystem.services.ServiceResultItem
 import com.askit.designsystem.tasks.TaskResultItem
@@ -144,6 +144,7 @@ data class ExplorePersonResult(
     val priceLabel: String?,
     val statusLabel: String?,
     val matchReasons: Set<PersonMatchReason> = emptySet(),
+    val listedPrice: ExploreListedPrice? = null,
 )
 
 enum class PersonMatchReason {
@@ -180,6 +181,7 @@ data class ExploreTaskResult(
     val photoModels: List<Any> = emptyList(),
     val distanceLabel: String? = null,
     val scopeHighlights: List<String> = emptyList(),
+    val sourceTask: com.askit.app.task.Task? = null,
 )
 
 internal data class ExplorePersonRenderRow(
@@ -328,16 +330,18 @@ fun ExploreRoute(
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
-    onApplyToTask: ((ExploreTaskResult) -> Unit)? = null,
-    onRequestService: ((ExplorePersonResult) -> Unit)? = null,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
     onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
     onFilterScopeChanged: (ExploreResultScope) -> Unit = {},
+    onSearchAreaClick: () -> Unit = onSearchFiltersClick,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val priceFilters by viewModel.priceFilters.collectAsStateWithLifecycle()
 
     ExploreScreen(
+        priceFilters = priceFilters,
+        onPriceFilterCleared = { viewModel.onPriceFilterChanged(it, ExplorePriceFilter()) },
         query = uiState.query,
         searchArea = uiState.searchArea,
         recentSearches = uiState.recentSearches,
@@ -347,6 +351,7 @@ fun ExploreRoute(
         onRecentSearchRemoved = viewModel::removeRecentSearch,
         onRecentSearchesCleared = viewModel::clearRecentSearches,
         onSearchFiltersClick = onSearchFiltersClick,
+        onSearchAreaClick = onSearchAreaClick,
         people = (resultState as? ExploreResultState.Results)?.people.orEmpty(),
         tasks = (resultState as? ExploreResultState.Results)?.tasks.orEmpty(),
         resultState = resultState,
@@ -362,8 +367,6 @@ fun ExploreRoute(
         onFilterScopeChanged = onFilterScopeChanged,
         onPersonClick = onPersonClick,
         onTaskClick = onTaskClick,
-        onApplyToTask = onApplyToTask,
-        onRequestService = onRequestService,
     )
 }
 
@@ -390,12 +393,13 @@ fun ExploreScreen(
     onSortChanged: ((ExploreResultScope, ExploreSortOption) -> Unit)? = null,
     onPersonClick: ((String) -> Unit)? = null,
     onTaskClick: ((String) -> Unit)? = null,
-    onApplyToTask: ((ExploreTaskResult) -> Unit)? = null,
-    onRequestService: ((ExplorePersonResult) -> Unit)? = null,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>> = emptyMap(),
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>> = emptyMap(),
+    priceFilters: Map<ExploreResultScope, ExplorePriceFilter> = emptyMap(),
+    onPriceFilterCleared: (ExploreResultScope) -> Unit = {},
     onFiltersChanged: ((ExploreResultScope, Set<ExploreFilterOption>) -> Unit)? = null,
     onFilterScopeChanged: (ExploreResultScope) -> Unit = {},
+    onSearchAreaClick: () -> Unit = onSearchFiltersClick,
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -429,7 +433,7 @@ fun ExploreScreen(
             scope = scope,
             availableOptions = availableFilterOptions[scope].orEmpty(),
             appliedOptions = appliedFilterOptions[scope].orEmpty(),
-        ).map(ExploreFilterOption::name).sorted().joinToString(",")
+        ).map(ExploreFilterOption::name).sorted().joinToString(",") + priceFilters[scope].toString()
     }
     val currentSortKeys = ExploreResultScope.entries.associateWith { scope ->
         selectedSortOptions[scope]?.name.orEmpty()
@@ -469,7 +473,12 @@ fun ExploreScreen(
     fun closeSearch() {
         keyboardController?.hide()
         focusManager.clearFocus(force = true)
-        coroutineScope.launch { searchBarState.animateToCollapsed() }
+        coroutineScope.launch {
+            searchBarState.animateToCollapsed()
+            // Collapsing can transfer focus back to the compact field; dismiss after that transfer.
+            focusManager.clearFocus(force = true)
+            keyboardController?.hide()
+        }
     }
 
     fun openFilters() {
@@ -485,21 +494,16 @@ fun ExploreScreen(
     val personClick = onPersonClick
     val taskClick = onTaskClick
 
-    CompositionLocalProvider(
-        LocalExploreLeadActions provides ExploreLeadActions(
-            onApplyToTask = onApplyToTask,
-            onRequestService = onRequestService,
-        ),
-    ) {
-
     val orderedAppliedFilters = normalizeAvailableExploreFilterOptions(
         scope = selectedScope,
         options = availableFilterOptions[selectedScope].orEmpty(),
     ).filter { it in appliedFilterOptions[selectedScope].orEmpty() }
+    val priceFilter = priceFilters[selectedScope] ?: ExplorePriceFilter()
+    val filteredResultState = filterExploreResults(resultState, orderedAppliedFilters.toSet(), priceFilter)
     val normalizedSubmittedResultState = normalizeExploreResultState(
-        state = resultState,
+        state = filteredResultState,
         scope = selectedScope,
-        emptyReason = if (orderedAppliedFilters.isEmpty()) {
+        emptyReason = if (orderedAppliedFilters.isEmpty() && !priceFilter.isActive) {
             ExploreResultState.EmptyReason.Query
         } else {
             ExploreResultState.EmptyReason.Filters
@@ -535,7 +539,12 @@ fun ExploreScreen(
                 onQueryCleared = onQueryCleared,
                 onQuerySubmitted = onQuerySubmitted,
                 onSearchFiltersClick = ::openFilters,
+                onSearchAreaClick = {
+                    closeSearch()
+                    onSearchAreaClick()
+                },
                 selectedScope = selectedScope,
+                priceFilterActive = priceFilter.isActive,
                 availableFilterOptions = availableFilterOptions,
                 appliedFilterOptions = appliedFilterOptions,
                 onCloseSearch = ::closeSearch,
@@ -554,6 +563,35 @@ fun ExploreScreen(
             )
         }
 
+        if (!isSearchActive && normalizedQuery.isEmpty() && orderedAppliedFilters.isNotEmpty()) {
+            item(key = "browse:applied-filters") {
+                AppliedFilterChips(
+                    options = orderedAppliedFilters,
+                    onFilterRemoved = { removed ->
+                        onFiltersChanged?.invoke(selectedScope, orderedAppliedFilters.filterNot { it == removed }.toSet())
+                    },
+                )
+            }
+        }
+        if (!isSearchActive && priceFilter.isActive) {
+            item(key = "controls:price-filter") {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextButton(onClick = ::openFilters, modifier = Modifier.weight(1f)) {
+                        val low = priceFilter.minimum.ifBlank { "0" }
+                        val high = priceFilter.maximum.ifBlank { stringResource(R.string.explore_price_no_maximum) }
+                        val unit = if (selectedScope == ExploreResultScope.Tasks) stringResource(R.string.explore_price_fixed) else priceFilter.unit?.let { stringResource(it.labelRes) }
+                            ?: stringResource(R.string.explore_price_any_unit)
+                        Text(stringResource(R.string.explore_price_summary, low, high, unit))
+                    }
+                    TextButton(onClick = { onPriceFilterCleared(selectedScope) }) {
+                        Text(stringResource(R.string.explore_price_clear))
+                    }
+                }
+            }
+        }
         if (!isSearchActive && normalizedQuery.isNotEmpty()) {
             addSubmittedSearchResults(
                 selectedScope = selectedScope,
@@ -583,8 +621,12 @@ fun ExploreScreen(
                 )
             }
             addBrowseResultSections(
-                people = people,
-                tasks = tasks,
+                peopleFiltered = (resultState as? ExploreResultState.Results)?.people?.isNotEmpty() == true &&
+                    (filteredResultState as? ExploreResultState.Results)?.people?.isEmpty() == true,
+                tasksFiltered = (resultState as? ExploreResultState.Results)?.tasks?.isNotEmpty() == true &&
+                    (filteredResultState as? ExploreResultState.Results)?.tasks?.isEmpty() == true,
+                people = (filteredResultState as? ExploreResultState.Results)?.people.orEmpty(),
+                tasks = (filteredResultState as? ExploreResultState.Results)?.tasks.orEmpty(),
                 browseState = browseState,
                 onPersonClick = personClick,
                 onTaskClick = taskClick,
@@ -603,7 +645,6 @@ fun ExploreScreen(
             )
         }
     }
-    }
 }
 
 @Composable
@@ -617,7 +658,9 @@ private fun ExploreHeader(
     onQueryCleared: () -> Unit,
     onQuerySubmitted: (String) -> Unit,
     onSearchFiltersClick: () -> Unit,
+    onSearchAreaClick: () -> Unit,
     selectedScope: ExploreResultScope,
+    priceFilterActive: Boolean,
     availableFilterOptions: Map<ExploreResultScope, List<ExploreFilterOption>>,
     appliedFilterOptions: Map<ExploreResultScope, Set<ExploreFilterOption>>,
     onCloseSearch: () -> Unit,
@@ -632,7 +675,7 @@ private fun ExploreHeader(
         scope = selectedScope,
         availableOptions = availableFilterOptions[selectedScope].orEmpty(),
         appliedOptions = appliedFilterOptions[selectedScope].orEmpty(),
-    ).size
+    ).size + if (priceFilterActive) 1 else 0
     val filterContentDescription = if (appliedFilterCount == 0) {
         stringResource(R.string.explore_search_filters_content_description)
     } else {
@@ -647,8 +690,8 @@ private fun ExploreHeader(
     val inputQuery = textFieldState.text.toString()
     val isSearchActive = searchBarState.currentValue == SearchBarValue.Expanded
     val inputFieldColors = SearchBarDefaults.inputFieldColors(
-        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        focusedContainerColor = AskITInputDefaults.containerColor,
+        unfocusedContainerColor = AskITInputDefaults.containerColor,
         focusedTextColor = MaterialTheme.colorScheme.onSurface,
         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
         focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -663,126 +706,181 @@ private fun ExploreHeader(
         dividerColor = MaterialTheme.colorScheme.outlineVariant,
         inputFieldColors = inputFieldColors,
     )
+    val headerScope = rememberCoroutineScope()
     fun inputField(isExpandedField: Boolean): @Composable () -> Unit = {
         val isVisible = isExpandedField == isSearchActive
-        SearchBarDefaults.InputField(
-            textFieldState,
-            searchBarState,
-            onSearch = {
-                onQuerySubmitted(it)
-                onCloseSearch()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(
-                    if (isVisible) {
-                        Modifier.testTag("explore_search_field")
-                    } else {
-                        Modifier.clearAndSetSemantics {}
-                    },
-                )
-                .border(
-                    width = if (isExpandedField) 2.dp else 1.dp,
-                    color = if (isExpandedField) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    shape = MaterialTheme.shapes.medium,
-                ),
-            shape = MaterialTheme.shapes.medium,
-            colors = inputFieldColors,
-            placeholder = {
-                Text(
-                    text = stringResource(R.string.explore_search_placeholder),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            },
-            leadingIcon = {
-                if (isExpandedField) {
-                    IconButton(onClick = onCloseSearch) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = stringResource(R.string.explore_back),
-                            modifier = Modifier.size(24.dp),
-                        )
-                    }
-                } else {
+        val leadingContent: @Composable () -> Unit = {
+            if (isExpandedField) {
+                IconButton(onClick = onCloseSearch) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_search),
-                        contentDescription = null,
+                        painter = painterResource(R.drawable.ic_arrow_back),
+                        contentDescription = stringResource(R.string.explore_back),
                         modifier = Modifier.size(24.dp),
                     )
                 }
-            },
-            trailingIcon = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+            } else {
+                val radius = pluralStringResource(R.plurals.explore_radius_km, searchArea.radiusKm, searchArea.radiusKm)
+                val areaDescription = stringResource(
+                    R.string.explore_change_area_description, searchArea.displayName, radius,
+                )
+                TextButton(
+                    onClick = onSearchAreaClick,
+                    modifier = Modifier.heightIn(min = 48.dp).widthIn(max = 120.dp)
+                        .testTag("explore_location_action")
+                        .semantics { contentDescription = areaDescription },
+                    contentPadding = PaddingValues(horizontal = 8.dp),
                 ) {
-                    if (inputQuery.isNotEmpty()) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location_on),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        searchArea.displayName,
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                }
+            }
+        }
+        val trailingContent: @Composable () -> Unit = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (inputQuery.isNotEmpty()) {
+                    IconButton(
+                        onClick = {
+                            textFieldState.setTextAndPlaceCursorAtEnd("")
+                            onQueryCleared()
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_clear),
+                            contentDescription = stringResource(R.string.explore_clear_search),
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+                BadgedBox(
+                    badge = {
+                        if (appliedFilterCount > 0) {
+                            Badge(
+                                modifier = Modifier.clearAndSetSemantics {},
+                            ) {
+                                Text(
+                                    text = appliedFilterCount.toString(),
+                                    modifier = Modifier.clearAndSetSemantics {},
+                                )
+                            }
+                        }
+                    },
+                ) {
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                            positioning = TooltipAnchorPosition.Above,
+                        ),
+                        tooltip = {
+                            PlainTooltip {
+                                Text(stringResource(R.string.explore_filters_tooltip))
+                            }
+                        },
+                        state = rememberTooltipState(),
+                    ) {
                         IconButton(
-                            onClick = {
-                                textFieldState.setTextAndPlaceCursorAtEnd("")
-                                onQueryCleared()
-                            },
+                            onClick = onSearchFiltersClick,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .then(
+                                    if (isVisible) {
+                                        Modifier.testTag("explore_search_filter_action")
+                                    } else {
+                                        Modifier.clearAndSetSemantics {}
+                                    },
+                                ),
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_clear),
-                                contentDescription = stringResource(R.string.explore_clear_search),
+                                painter = painterResource(R.drawable.ic_filter_list),
+                                contentDescription = filterContentDescription,
                                 modifier = Modifier.size(24.dp),
                             )
                         }
                     }
-                    BadgedBox(
-                        badge = {
-                            if (appliedFilterCount > 0) {
-                                Badge(
-                                    modifier = Modifier.clearAndSetSemantics {},
-                                ) {
-                                    Text(
-                                        text = appliedFilterCount.toString(),
-                                        modifier = Modifier.clearAndSetSemantics {},
-                                    )
-                                }
-                            }
-                        },
-                    ) {
-                        TooltipBox(
-                            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                                positioning = TooltipAnchorPosition.Above,
-                            ),
-                            tooltip = {
-                                PlainTooltip {
-                                    Text(stringResource(R.string.explore_filters_tooltip))
-                                }
-                            },
-                            state = rememberTooltipState(),
-                        ) {
-                            IconButton(
-                                onClick = onSearchFiltersClick,
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .then(
-                                        if (isVisible) {
-                                            Modifier.testTag("explore_search_filter_action")
-                                        } else {
-                                            Modifier.clearAndSetSemantics {}
-                                        },
-                                    ),
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_filter_list),
-                                    contentDescription = filterContentDescription,
-                                    modifier = Modifier.size(24.dp),
-                                )
-                            }
-                        }
-                    }
                 }
-            },
-            inputTransformation = inputTransformation,
-        )
+            }
+        }
+        if (isExpandedField) {
+            SearchBarDefaults.InputField(
+                textFieldState,
+                searchBarState,
+                onSearch = {
+                    onQuerySubmitted(it)
+                    onCloseSearch()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (isVisible) {
+                            Modifier.testTag("explore_search_field")
+                        } else {
+                            Modifier.clearAndSetSemantics {}
+                        },
+                    )
+                    .border(
+                        width = if (isExpandedField) 2.dp else 1.dp,
+                        color = if (isExpandedField) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.outline
+                        },
+                        shape = AskITInputDefaults.Shape,
+                    ),
+                shape = AskITInputDefaults.Shape,
+                colors = inputFieldColors,
+                placeholder = {
+                    Text(
+                        text = stringResource(if (isExpandedField) R.string.explore_search_placeholder else R.string.explore_search_short_placeholder),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                leadingIcon = leadingContent,
+                trailingIcon = trailingContent,
+                inputTransformation = inputTransformation,
+            )
+        } else {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = AskITInputDefaults.Shape,
+                color = AskITInputDefaults.containerColor,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    leadingContent()
+                    Box(
+                        modifier = Modifier.weight(1f).heightIn(min = 56.dp)
+                            .clickable(role = Role.Button) {
+                                headerScope.launch { searchBarState.animateToExpanded() }
+                            }
+                            .testTag("explore_search_field")
+                            .padding(horizontal = 8.dp, vertical = 12.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        Text(
+                            inputQuery.ifEmpty { stringResource(R.string.explore_search_short_placeholder) },
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (inputQuery.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant
+                                else MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    trailingContent()
+                }
+            }
+        }
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -790,12 +888,11 @@ private fun ExploreHeader(
             state = searchBarState,
             inputField = inputField(false),
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
+            shape = AskITInputDefaults.Shape,
             colors = searchBarColors,
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
         )
-        SearchAreaSummary(searchArea, onSearchFiltersClick)
     }
 
     ExpandedFullScreenSearchBar(
@@ -1251,27 +1348,13 @@ private fun LazyListScope.addSubmittedSearchResults(
                 .testTag("explore_submitted_results"),
             color = MaterialTheme.colorScheme.background,
         ) {
-            PrimaryScrollableTabRow(
-                selectedTabIndex = selectedScope.ordinal,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("explore_result_tabs"),
-                edgePadding = 0.dp,
-                minTabWidth = 0.dp,
-            ) {
-                ExploreResultScope.entries.forEach { scope ->
-                    Tab(
-                        selected = selectedScope == scope,
-                        onClick = { onScopeSelected(scope) },
-                        text = {
-                            Text(
-                                text = stringResource(scope.labelRes),
-                                maxLines = 1,
-                            )
-                        },
-                    )
-                }
-            }
+            AskITSectionTabs(
+                tabs = ExploreResultScope.entries.map { SectionTab(it.name, stringResource(it.labelRes)) },
+                selectedId = selectedScope.name,
+                onSelect = { id -> onScopeSelected(ExploreResultScope.entries.first { it.name == id }) },
+                modifier = Modifier.testTag("explore_result_tabs"),
+                tabTagPrefix = "explore_scope_",
+            )
         }
     }
 
@@ -1328,6 +1411,8 @@ private fun LazyListScope.addSubmittedSearchResults(
 }
 
 private fun LazyListScope.addBrowseResultSections(
+    peopleFiltered: Boolean = false,
+    tasksFiltered: Boolean = false,
     people: List<ExplorePersonResult>,
     tasks: List<ExploreTaskResult>,
     browseState: ExploreBrowseState,
@@ -1340,6 +1425,7 @@ private fun LazyListScope.addBrowseResultSections(
 ) {
     addPersonResultSection(
         sectionKey = "browse:people",
+        filteredEmpty = peopleFiltered,
         heading = R.string.explore_nearby_professionals,
         sectionTag = "explore_nearby_professionals",
         people = people,
@@ -1353,6 +1439,7 @@ private fun LazyListScope.addBrowseResultSections(
     )
     addTaskResultSection(
         sectionKey = "browse:tasks",
+        filteredEmpty = tasksFiltered,
         heading = R.string.explore_open_tasks_nearby,
         sectionTag = "explore_open_tasks_nearby",
         tasks = tasks,
@@ -1484,6 +1571,7 @@ private fun LazyListScope.addPersonResultSection(
     sectionTag: String,
     people: List<ExplorePersonResult>,
     onClick: ((String) -> Unit)?,
+    filteredEmpty: Boolean = false,
     browseStatus: ExploreBrowseStatus? = null,
     onBrowseChangeArea: (() -> Unit)? = null,
     onBrowseRetry: (() -> Unit)? = null,
@@ -1506,7 +1594,9 @@ private fun LazyListScope.addPersonResultSection(
             key = "$sectionKey:state:${browseStatus?.name}",
             contentType = "browse-state",
         ) {
-            BrowseSectionStateCard(
+            if (filteredEmpty) {
+                ExploreEmptyResultBody(ExploreResultState.EmptyReason.Filters, onBrowseChangeArea ?: {})
+            } else BrowseSectionStateCard(
                 section = ExploreBrowseSection.Professionals,
                 status = browseStatus ?: ExploreBrowseStatus.Empty,
                 onChangeArea = onBrowseChangeArea,
@@ -1530,6 +1620,7 @@ private fun LazyListScope.addTaskResultSection(
     sectionTag: String,
     tasks: List<ExploreTaskResult>,
     onClick: ((String) -> Unit)?,
+    filteredEmpty: Boolean = false,
     browseStatus: ExploreBrowseStatus? = null,
     onBrowseChangeArea: (() -> Unit)? = null,
     onBrowseRetry: (() -> Unit)? = null,
@@ -1552,7 +1643,9 @@ private fun LazyListScope.addTaskResultSection(
             key = "$sectionKey:state:${browseStatus?.name}",
             contentType = "browse-state",
         ) {
-            BrowseSectionStateCard(
+            if (filteredEmpty) {
+                ExploreEmptyResultBody(ExploreResultState.EmptyReason.Filters, onBrowseChangeArea ?: {})
+            } else BrowseSectionStateCard(
                 section = ExploreBrowseSection.Tasks,
                 status = browseStatus ?: ExploreBrowseStatus.Empty,
                 onChangeArea = onBrowseChangeArea,
@@ -1672,19 +1765,20 @@ private fun LazyListScope.addTaskResultRows(
                     .then(if (index == 0 && addTopPadding) Modifier.padding(top = 24.dp) else Modifier)
                     .then(if (index == 0 && firstRowTag != null) Modifier.testTag(firstRowTag) else Modifier),
             ) {
+                val display = task.sourceTask?.presentation(LocalContext.current)
                 TaskResultItem(
                     title = task.title,
-                    category = task.category,
+                    category = display?.category ?: task.category,
                     summary = task.summary,
-                    budgetLabel = task.budgetLabel,
-                    locationLabel = task.locationLabel,
-                    timingLabel = task.timingLabel,
+                    budgetLabel = display?.budget ?: task.budgetLabel,
+                    locationLabel = display?.location ?: task.locationLabel,
+                    timingLabel = display?.timing ?: task.timingLabel,
                     posterName = task.posterName,
-                    postedLabel = task.postedLabel,
+                    postedLabel = display?.posted ?: task.postedLabel,
                     status = task.status,
                     photoModels = task.photoModels,
                     distanceLabel = task.distanceLabel,
-                    scopeHighlights = task.scopeHighlights,
+                    scopeHighlights = display?.requirements ?: task.scopeHighlights,
                     onClick = onClick
                         ?.takeIf {
                             task.status != TaskResultStatus.Unavailable && row.stableId.isNotEmpty()
@@ -1728,7 +1822,7 @@ private fun ExploreResultSectionHeading(
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
-                    text = "View all",
+                    text = stringResource(R.string.profile_view_all),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -2549,49 +2643,5 @@ private fun SuggestedCategories(onCategorySelected: (String) -> Unit) {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun SearchAreaSummary(
-    searchArea: ExploreSearchArea,
-    onSearchFiltersClick: () -> Unit,
-) {
-    val radius = pluralStringResource(
-        R.plurals.explore_radius_km,
-        searchArea.radiusKm,
-        searchArea.radiusKm,
-    )
-    val contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                role = Role.Button,
-                onClickLabel = stringResource(R.string.explore_filters_tooltip),
-                onClick = onSearchFiltersClick,
-            )
-            .testTag("explore_location_summary")
-            .padding(top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_location_on),
-            contentDescription = null,
-            tint = contentColor,
-            modifier = Modifier.size(20.dp),
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = stringResource(
-                R.string.explore_location_summary,
-                searchArea.displayName,
-                radius,
-            ),
-            color = contentColor,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f),
-        )
     }
 }

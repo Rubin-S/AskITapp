@@ -1,5 +1,7 @@
 package com.askit.designsystem.posts
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -13,8 +15,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -24,9 +24,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.BottomSheetDefaults
@@ -38,15 +40,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -61,6 +62,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import com.askit.designsystem.R
 import com.askit.designsystem.people.AskITAvatar
 
@@ -164,17 +166,16 @@ fun CommentsBottomSheet(
     initialComments: List<CommentItem> = defaultSampleComments,
     currentUserAvatarUrl: String? = null,
     onCommentAdded: ((parentId: String?, text: String) -> Unit)? = null,
+    canComment: Boolean = true,
+    disabledMessage: String? = null,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val comments = remember { mutableStateListOf(*initialComments.toTypedArray()) }
     var inputText by remember { mutableStateOf("") }
     var replyingTo by remember { mutableStateOf<Pair<String, String>?>(null) } // parentCommentId to authorName
 
-    val emojis = listOf("❤️", "👏", "🔥", "😂", "😢", "😍", "😮", "🤣")
-
     fun submitComment() {
         val trimmed = inputText.trim()
-        if (trimmed.isBlank()) return
+        if (!canComment || trimmed.isBlank()) return
 
         val currentReplyingTo = replyingTo
         if (currentReplyingTo != null) {
@@ -218,13 +219,92 @@ fun CommentsBottomSheet(
         replyingTo = null
     }
 
+    var expandedThreadIds by remember { mutableStateOf(emptySet<String>()) }
+    ControlledCommentsBottomSheet(
+        onDismiss = onDismiss,
+        comments = comments.toList(),
+        currentUserAvatarUrl = currentUserAvatarUrl,
+        inputText = inputText,
+        onInputChange = { inputText = it },
+        onSend = ::submitComment,
+        canComment = canComment,
+        disabledMessage = disabledMessage,
+        replyingToName = replyingTo?.second,
+        onCancelReply = {
+            val targetName = replyingTo?.second
+            replyingTo = null
+            if (targetName != null && inputText.startsWith("@$targetName ")) inputText = ""
+        },
+        onReply = { parentId, targetId ->
+            val parent = comments.first { it.id == parentId }
+            val target = if (targetId == parentId) parent else parent.replies.first { it.id == targetId }
+            replyingTo = parentId to target.authorName
+            inputText = "@${target.authorName} "
+        },
+        expandedThreadIds = expandedThreadIds,
+        onToggleThread = { id -> expandedThreadIds = if (id in expandedThreadIds) expandedThreadIds - id else expandedThreadIds + id },
+        showEmojiBar = true,
+        onLikeComment = { id ->
+            val index = comments.indexOfFirst { it.id == id }
+            if (index >= 0) {
+                val current = comments[index]
+                comments[index] = current.copy(isLiked = !current.isLiked,
+                    likesCount = (current.likesCount + if (current.isLiked) -1 else 1).coerceAtLeast(0))
+            }
+        },
+        onLikeReply = { id ->
+            val index = comments.indexOfFirst { parent -> parent.replies.any { it.id == id } }
+            if (index >= 0) comments[index] = comments[index].copy(replies = comments[index].replies.map {
+                if (it.id == id) it.copy(isLiked = !it.isLiked,
+                    likesCount = (it.likesCount + if (it.isLiked) -1 else 1).coerceAtLeast(0)) else it
+            })
+        },
+    )
+}
+
+/** Presentation only. The caller owns comments, composer and reply state. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ControlledCommentsBottomSheet(
+    onDismiss: () -> Unit,
+    comments: List<CommentItem>,
+    currentUserAvatarUrl: String? = null,
+    inputText: String,
+    onInputChange: (String) -> Unit,
+    onSend: () -> Unit,
+    replyingToName: String? = null,
+    onCancelReply: () -> Unit,
+    onReply: ((parentId: String, targetId: String) -> Unit)? = null,
+    expandedThreadIds: Set<String>,
+    onToggleThread: (String) -> Unit,
+    title: String = stringResource(R.string.comments_title),
+    subtitle: String? = null,
+    inputPlaceholder: String = stringResource(R.string.comments_input_placeholder),
+    emptyMessage: String? = null,
+    errorMessage: String? = null,
+    canComment: Boolean = true,
+    disabledMessage: String? = null,
+    showEmojiBar: Boolean = false,
+    onLikeComment: ((String) -> Unit)? = null,
+    onLikeReply: ((String) -> Unit)? = null,
+    revealedCommentId: String? = null,
+    skipPartiallyExpanded: Boolean = false,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
+    val listState = rememberLazyListState()
+    val emojis = listOf("❤️", "👏", "🔥", "😂", "😢", "😍", "😮", "🤣")
+    LaunchedEffect(revealedCommentId) {
+        if (revealedCommentId != null) {
+            val index = comments.indexOfFirst { it.id == revealedCommentId || it.replies.any { reply -> reply.id == revealedCommentId } }
+            if (index >= 0) listState.scrollToItem(index + 1)
+        }
+    }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
         modifier = Modifier
             .fillMaxWidth()
             .testTag("comments_bottom_sheet"),
@@ -237,7 +317,7 @@ fun CommentsBottomSheet(
         ) {
             // Header
             Text(
-                text = stringResource(R.string.comments_title),
+                text = title,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
@@ -247,10 +327,15 @@ fun CommentsBottomSheet(
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
 
+            subtitle?.let {
+                Text(it, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             HorizontalDivider(color = DividerDefaults.color.copy(alpha = 0.5f))
 
             // Comments List
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .weight(1f, fill = false)
                     .fillMaxWidth()
@@ -259,36 +344,20 @@ fun CommentsBottomSheet(
             ) {
                 item { Spacer(Modifier.height(8.dp)) }
 
+                if (comments.isEmpty() && emptyMessage != null) {
+                    item {
+                        Text(emptyMessage, modifier = Modifier.padding(vertical = 20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
                 items(comments, key = { it.id }) { comment ->
                     CommentRow(
                         comment = comment,
-                        onLikeClick = {
-                            val idx = comments.indexOfFirst { it.id == comment.id }
-                            if (idx != -1) {
-                                val current = comments[idx]
-                                val newLiked = !current.isLiked
-                                val newCount = if (newLiked) current.likesCount + 1 else maxOf(0, current.likesCount - 1)
-                                comments[idx] = current.copy(isLiked = newLiked, likesCount = newCount)
-                            }
-                        },
-                        onReplyClick = { targetAuthor ->
-                            replyingTo = comment.id to targetAuthor
-                            inputText = "@$targetAuthor "
-                        },
-                        onLikeReplyClick = { replyId ->
-                            val parentIdx = comments.indexOfFirst { it.id == comment.id }
-                            if (parentIdx != -1) {
-                                val parent = comments[parentIdx]
-                                val updatedReplies = parent.replies.map { r ->
-                                    if (r.id == replyId) {
-                                        val newLiked = !r.isLiked
-                                        val newCount = if (newLiked) r.likesCount + 1 else maxOf(0, r.likesCount - 1)
-                                        r.copy(isLiked = newLiked, likesCount = newCount)
-                                    } else r
-                                }
-                                comments[parentIdx] = parent.copy(replies = updatedReplies)
-                            }
-                        },
+                        expandedReplies = comment.id in expandedThreadIds,
+                        onToggleReplies = { onToggleThread(comment.id) },
+                        onLikeClick = onLikeComment?.let { { it(comment.id) } },
+                        onReplyClick = onReply?.takeIf { canComment }?.let { callback -> { target -> callback(comment.id, target.id) } },
+                        onLikeReplyClick = onLikeReply,
+                        revealedCommentId = revealedCommentId,
                     )
                 }
 
@@ -299,11 +368,11 @@ fun CommentsBottomSheet(
 
             // Replying Banner (if active)
             AnimatedVisibility(
-                visible = replyingTo != null,
+                visible = replyingToName != null,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically(),
             ) {
-                replyingTo?.let { (_, targetUser) ->
+                replyingToName?.let { targetUser ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -314,16 +383,12 @@ fun CommentsBottomSheet(
                     ) {
                         Text(
                             text = stringResource(R.string.comments_replying_to, targetUser),
+                            modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         IconButton(
-                            onClick = {
-                                replyingTo = null
-                                if (inputText.startsWith("@$targetUser ")) {
-                                    inputText = ""
-                                }
-                            },
+                            onClick = onCancelReply,
                             modifier = Modifier.size(24.dp),
                         ) {
                             Icon(
@@ -337,84 +402,87 @@ fun CommentsBottomSheet(
                 }
             }
 
-            // Quick emoji reaction bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                emojis.forEach { emoji ->
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .clickable {
-                                inputText += emoji
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(text = emoji, fontSize = 22.sp)
+            errorMessage?.let {
+                Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+            }
+            if (!canComment && disabledMessage != null) {
+                Text(disabledMessage, modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (showEmojiBar && canComment) {
+                // Quick emoji reaction bar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    emojis.forEach { emoji ->
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    onInputChange(inputText + emoji)
+                                },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(text = emoji, fontSize = 22.sp)
+                        }
                     }
                 }
+
             }
-
-            // Comment Input Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                AskITAvatar(
-                    avatarUrl = currentUserAvatarUrl,
-                    avatarSize = 36.dp,
-                    fallbackIconSize = 22.dp,
-                )
-
-                TextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    placeholder = {
-                        Text(
-                            text = stringResource(R.string.comments_input_placeholder),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
+            if (canComment) {
+                // Comment Input Row
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .testTag("comments_input_field"),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { submitComment() }),
-                    trailingIcon = {
-                        if (inputText.isNotBlank()) {
-                            IconButton(
-                                onClick = { submitComment() },
-                                modifier = Modifier.testTag("comments_send_button"),
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_send_circle),
-                                    contentDescription = stringResource(R.string.comments_send),
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(32.dp),
-                                )
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    AskITAvatar(
+                        avatarUrl = currentUserAvatarUrl,
+                        avatarSize = 36.dp,
+                        fallbackIconSize = 22.dp,
+                    )
+
+                    AskITTextField(
+                        value = inputText,
+                        onValueChange = onInputChange,
+                        placeholder = {
+                            Text(
+                                text = inputPlaceholder,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("comments_input_field"),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                        keyboardActions = KeyboardActions(onSend = { onSend() }),
+                        trailingIcon = {
+                            if (inputText.isNotBlank()) {
+                                IconButton(
+                                    onClick = { onSend() },
+                                    modifier = Modifier.testTag("comments_send_button"),
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_send_circle),
+                                        contentDescription = stringResource(R.string.comments_send),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(32.dp),
+                                    )
+                                }
                             }
-                        }
-                    },
-                    singleLine = false,
-                    maxLines = 4,
-                )
+                        },
+                        singleLine = false,
+                        maxLines = 4,
+                    )
+                }
             }
         }
     }
@@ -423,11 +491,13 @@ fun CommentsBottomSheet(
 @Composable
 private fun CommentRow(
     comment: CommentItem,
-    onLikeClick: () -> Unit,
-    onReplyClick: (authorName: String) -> Unit,
-    onLikeReplyClick: (replyId: String) -> Unit,
+    expandedReplies: Boolean,
+    onToggleReplies: () -> Unit,
+    onLikeClick: (() -> Unit)?,
+    onReplyClick: ((CommentItem) -> Unit)?,
+    onLikeReplyClick: ((replyId: String) -> Unit)?,
+    revealedCommentId: String?,
 ) {
-    var expandedReplies by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -448,6 +518,7 @@ private fun CommentRow(
                 ) {
                     Text(
                         text = comment.authorName,
+                        modifier = Modifier.weight(1f, fill = false),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -468,23 +539,25 @@ private fun CommentRow(
 
                 Spacer(Modifier.height(4.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.comments_reply),
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .clickable { onReplyClick(comment.authorName) }
-                            .padding(vertical = 4.dp),
-                    )
+                if (onReplyClick != null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.comments_reply),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .clickable { onReplyClick(comment) }
+                                .padding(vertical = 4.dp),
+                        )
+                    }
                 }
             }
 
             // Comment Like
-            Column(
+            if (onLikeClick != null) Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .clickable(onClick = onLikeClick)
@@ -518,7 +591,7 @@ private fun CommentRow(
             Row(
                 modifier = Modifier
                     .padding(start = 48.dp)
-                    .clickable { expandedReplies = !expandedReplies }
+                    .clickable(onClick = onToggleReplies)
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -533,7 +606,7 @@ private fun CommentRow(
                     text = if (expandedReplies) {
                         stringResource(R.string.comments_hide_replies)
                     } else {
-                        stringResource(R.string.comments_view_replies, comment.replies.size)
+                        pluralStringResource(R.plurals.comments_reply_count, comment.replies.size, comment.replies.size)
                     },
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -554,8 +627,9 @@ private fun CommentRow(
                     comment.replies.forEach { reply ->
                         ReplyRow(
                             reply = reply,
-                            onLikeClick = { onLikeReplyClick(reply.id) },
-                            onReplyClick = { onReplyClick(reply.authorName) },
+                            onLikeClick = onLikeReplyClick?.let { { it(reply.id) } },
+                            onReplyClick = onReplyClick?.let { { it(reply) } },
+                            revealed = revealedCommentId == reply.id,
                         )
                     }
                 }
@@ -567,11 +641,19 @@ private fun CommentRow(
 @Composable
 private fun ReplyRow(
     reply: CommentItem,
-    onLikeClick: () -> Unit,
-    onReplyClick: () -> Unit,
+    onLikeClick: (() -> Unit)?,
+    onReplyClick: (() -> Unit)?,
+    revealed: Boolean,
 ) {
+    val requester = remember { BringIntoViewRequester() }
+    LaunchedEffect(revealed) {
+        if (revealed) {
+            delay(350) // Wait for the reply expansion to finish before revealing the new row.
+            requester.bringIntoView()
+        }
+    }
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().bringIntoViewRequester(requester),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.Top,
     ) {
@@ -588,6 +670,7 @@ private fun ReplyRow(
             ) {
                 Text(
                     text = reply.authorName,
+                    modifier = Modifier.weight(1f, fill = false),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -617,7 +700,7 @@ private fun ReplyRow(
 
             Spacer(Modifier.height(4.dp))
 
-            Text(
+            if (onReplyClick != null) Text(
                 text = stringResource(R.string.comments_reply),
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -628,7 +711,7 @@ private fun ReplyRow(
         }
 
         // Reply Like
-        Column(
+        if (onLikeClick != null) Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .clickable(onClick = onLikeClick)

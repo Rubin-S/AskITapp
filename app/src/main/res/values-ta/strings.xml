@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="profile_joined_year">%1$s இல் சேர்ந்தார்</string>
+    <string name="provider_request_location_distance">%1$s · %2$s கி.மீ</string>
+    <string name="messages_photo">புகைப்படம்</string>
     <string name="explore_search_placeholder">மக்கள், சேவைகள் அல்லது பணிகளைத் தேடுங்கள்</string>
     <string name="explore_clear_search">தேடலை அழி</string>
     <string name="explore_search_filters_content_description">தேடல் வடிகட்டிகள்</string>
@@ -117,7 +120,6 @@
     <string name="post_task_details">விவரங்கள்</string>
     <string name="post_task_details_helper">தேவையான வேலையையும், நல்ல முடிவு எப்படி இருக்க வேண்டும் என்பதையும் விவரிக்கவும்.</string>
     <string name="post_task_where">பணி எங்கு நடைபெறும்?</string>
-    <string name="post_task_work_mode">பணி முறை</string>
     <string name="post_task_at_my_location">என் இருப்பிடத்தில்</string>
     <string name="post_task_at_provider_location">சேவை வழங்குபவரின் இருப்பிடத்தில்</string>
     <string name="post_task_remote">தொலைநிலை</string>
@@ -129,14 +131,11 @@
     <string name="post_task_location_privacy">சேவை வழங்குபவர்கள் உங்கள் பொதுப் பகுதியைப் பார்க்கலாம். சரியான இருப்பிடமும் அணுகல் விவரங்களும் தனிப்பட்டவை.</string>
     <string name="post_task_address_optional">முகவரி அல்லது அடையாளக் குறிப்பு (விருப்பம்)</string>
     <string name="post_task_when">இது எப்போது தேவை?</string>
-    <string name="post_task_timing">நேரம்</string>
     <string name="post_task_asap">முடிந்தவரை விரைவில்</string>
     <string name="post_task_on_date">ஒரு தேதியில்</string>
     <string name="post_task_flexible">நெகிழ்வானது</string>
-    <string name="post_task_date">தேதி</string>
     <string name="post_task_select_date">தேதியைத் தேர்ந்தெடு</string>
     <string name="post_task_selected_date">தேதி: %1$s</string>
-    <string name="post_task_budget">பட்ஜெட்</string>
     <string name="post_task_add_budget">பட்ஜெட்டைச் சேர்</string>
     <string name="post_task_request_quotes">மேற்கோள்களைக் கோரு</string>
     <string name="post_task_fixed_amount">நிலையான தொகை</string>
@@ -144,17 +143,13 @@
     <string name="post_task_amount">தொகை</string>
     <string name="post_task_minimum_amount">குறைந்தபட்ச தொகை</string>
     <string name="post_task_maximum_amount">அதிகபட்ச தொகை</string>
-    <string name="post_task_fixed_amount_value">நிலையான தொகை: %1$s</string>
-    <string name="post_task_budget_range_value">%1$s முதல் %2$s வரை</string>
     <string name="post_task_add_photos">புகைப்படங்களைச் சேர்</string>
     <string name="post_task_add_more_photos">மேலும் புகைப்படங்களைச் சேர்</string>
     <string name="post_task_choose_photos">புகைப்படங்களைத் தேர்ந்தெடு</string>
-    <string name="post_task_photos">புகைப்படங்கள்</string>
     <string name="post_task_photos_helper">புகைப்படங்கள் பணியைப் புரிந்துகொள்ள சேவை வழங்குபவர்களுக்கு உதவும்.</string>
     <string name="post_task_photo_description">பணி புகைப்படம் %1$d</string>
     <string name="post_task_remove_photo">பணி புகைப்படம் %1$d-ஐ அகற்று</string>
     <string name="post_task_add_item_details">பொருள் விவரங்களைச் சேர்</string>
-    <string name="post_task_item_details">பொருள் விவரங்கள்</string>
     <string name="post_task_quantity_measurements">அளவு அல்லது அளவீடுகள் (விருப்பம்)</string>
     <string name="post_task_brand_model">பிராண்ட் அல்லது மாடல் (விருப்பம்)</string>
     <string name="post_task_materials">பொருட்கள் (விருப்பம்)</string>
@@ -169,16 +164,8 @@
     <string name="post_task_review_task">பணியைச் சரிபார்க்கவும்</string>
     <string name="post_task_review_title">உங்கள் பணியைச் சரிபார்க்கவும்</string>
     <string name="post_task_review_helper">இந்த வரைவை முடிப்பதற்கு முன் விவரங்களைச் சரிபார்க்கவும்.</string>
-    <string name="post_task_provider_preview">சேவை வழங்குபவர் முன்னோட்டம்</string>
-    <string name="post_task_provider_preview_helper">சேவை வழங்குபவர்கள் உங்கள் பணியை இப்படிப் பார்ப்பார்கள்.</string>
-    <string name="post_task_provider_preview_privacy">உங்கள் சரியான இருப்பிடமும் அணுகல் விவரங்களும் தனிப்பட்டவை.</string>
-    <string name="post_task_provider_preview_live_data">உங்கள் பணி நேரலையில் வந்த பிறகு தூரமும் பதிவிட்ட நேரமும் தோன்றும்.</string>
     <string name="post_task_budget_fixed_value">₹%1$s</string>
     <string name="post_task_budget_range_display">₹%1$s–₹%2$s</string>
-    <string name="post_task_public_area">பொதுப் பகுதி</string>
-    <string name="post_task_public_information">பொதுத் தகவல்</string>
-    <string name="post_task_private_location">தனிப்பட்ட இருப்பிடம்</string>
-    <string name="post_task_private_information">இந்தத் தனிப்பட்ட விவரங்களை நீங்களும் பணியை ஏற்றுக்கொள்ளும் சேவை வழங்குபவரும் மட்டுமே பார்க்க வேண்டும்.</string>
     <string name="post_task_edit">திருத்து</string>
     <string name="post_task_complete_draft">வரைவை நிறைவு செய்</string>
     <string name="post_task_discard_title">இந்த வரைவை நிராகரிக்கவா?</string>
@@ -298,18 +285,12 @@
     <string name="create_post_identity_helper">உங்கள் தற்போதைய கணக்கில் இருந்து பதிவிடுகிறீர்கள்</string>
     <string name="create_post_whats_on_your_mind">உங்கள் மனதில் என்ன இருக்கிறது?</string>
     <string name="create_post_error_content">ஒரு புகைப்படம், உரை அல்லது வாக்கெடுப்பைச் சேர்க்கவும்.</string>
-    <string name="create_post_photos_empty_title">புகைப்படங்களைச் சேர்</string>
     <string name="create_post_add_poll">வாக்கெடுப்பைச் சேர்</string>
     <string name="create_post_remove_poll">வாக்கெடுப்பை அகற்று</string>
     <string name="create_post_before_after">முன் / பின்</string>
-    <string name="create_post_add_photo">புகைப்படம் சேர்</string>
     <string name="create_post_photo_content_description">பதிவு புகைப்படம்</string>
     <string name="create_post_replace">மாற்று</string>
     <string name="create_post_remove">அகற்று</string>
-    <string name="create_post_add_image_description">புகைப்பட விளக்கத்தைச் சேர்</string>
-    <string name="create_post_hide_image_description">புகைப்பட விளக்கத்தை மறை</string>
-    <string name="create_post_image_description_optional">புகைப்பட விளக்கம் (விருப்பம்)</string>
-    <string name="create_post_image_description_helper">பார்க்க முடியாதவர்களுக்கு முக்கியமான காட்சி விவரங்களை எழுதவும்.</string>
     <string name="create_post_add_photos">புகைப்படங்களைச் சேர்</string>
     <plurals name="create_post_carousel_count">
         <item quantity="one">10 புகைப்படங்களில் %d</item>
@@ -319,10 +300,6 @@
     <string name="create_post_image_description_number" tools:ignore="PluralsCandidate">புகைப்படம் %1$d விளக்கம்</string>
     <string name="create_post_move_earlier">முன்னால் நகர்த்து</string>
     <string name="create_post_move_later">பின்னால் நகர்த்து</string>
-    <string name="create_post_before">முன்</string>
-    <string name="create_post_after">பின்</string>
-    <string name="create_post_before_content_description">முன் புகைப்படம்</string>
-    <string name="create_post_after_content_description">பின் புகைப்படம்</string>
     <string name="create_post_error_before">முன் புகைப்படத்தைச் சேர்க்கவும்.</string>
     <string name="create_post_error_after">பின் புகைப்படத்தைச் சேர்க்கவும்.</string>
     <string name="create_post_question">கேள்வி</string>
@@ -366,14 +343,9 @@
     <string name="messages_attach">புகைப்படம் இணை</string>
     <string name="messages_send">அனுப்பு</string>
     <string name="messages_online">இப்போது செயலில்</string>
-    <string name="jobs_filter_active">செயலில்</string>
     <string name="jobs_filter_history">வரலாறு</string>
     <string name="jobs_empty_title">இன்னும் பணிகள் இல்லை</string>
     <string name="jobs_empty_supporting">நீங்கள் ஒரு பணிக்கு விண்ணப்பித்தால் அல்லது சேவையைக் கோரினால், அது இங்கே தோன்றும்.</string>
-    <string name="jobs_empty_history_title">கடந்த பணிகள் இல்லை</string>
-    <string name="jobs_empty_history_supporting">முடிந்த, ரத்துசெய்யப்பட்ட, நிராகரிக்கப்பட்ட பணிகள் இங்கே தோன்றும்.</string>
-    <string name="job_apply">விண்ணப்பி</string>
-    <string name="job_request">கோரிடு</string>
     <string name="job_apply_gate_title">விண்ணப்பிக்க ஒரு சேவையைப் பட்டியலிடுங்கள்</string>
     <string name="job_apply_gate_message">பணிகளுக்கு விண்ணப்பிக்க ஒரு சேவையைப் பட்டியலிடுங்கள்.</string>
     <string name="job_apply_gate_action">சேவையைப் பட்டியலிடு</string>
@@ -440,99 +412,53 @@
     <string name="job_review_submit">மதிப்புரையைச் சமர்ப்பி</string>
     <string name="job_review_later">பின்னர்</string>
 
-    <string name="profile_more">மேலும் விருப்பங்கள்</string>
-    <string name="profile_copy_username">பயனர்பெயரை நகலெடு</string>
-    <string name="profile_share_body">%1$s (@%2$s)\n%3$s</string>
-    <string name="profile_username_copied">பயனர்பெயர் நகலெடுக்கப்பட்டது</string>
+
     <string name="profile_load_error">சுயவிவரத்தை ஏற்ற முடியவில்லை.</string>
     <string name="profile_action_error">மாற்றத்தைச் சேமிக்க முடியவில்லை.</string>
-    <string name="profile_gallery_empty_title">புகைப்படங்கள் இல்லை</string>
-    <string name="profile_gallery_empty_supporting">உங்கள் பதிவுகள் மற்றும் முடிந்த பணிகளின் புகைப்படங்கள் இங்கே தோன்றும்.</string>
-    <string name="profile_licenses_empty">உரிமங்கள் இன்னும் சேர்க்கப்படவில்லை.</string>
-    <string name="profile_license_hint">உரிமம் அல்லது சான்றிதழ்</string>
+
     <string name="profile_availability_range_error">முடிவுத் தேதி தொடக்கத் தேதிக்குப் பின் இருக்க வேண்டும்.</string>
     <string name="profile_pick_date">தேர்வு</string>
-    <string name="profile_activity_empty">இப்போது செயலில் எதுவும் இல்லை.</string>
+
     <string name="profile_metric_reviews">மதிப்புரைகள்</string>
     <string name="profile_metric_positive">4★+</string>
-    <string name="profile_theme">தீம்</string>
     <string name="profile_edit">சுயவிவரத்தைத் திருத்து</string>
     <string name="profile_share">சுயவிவரத்தைப் பகிர்</string>
-    <string name="profile_availability">கிடைக்கும் நேரம்</string>
-    <string name="profile_camera">புகைப்படத்தைப் புதுப்பி</string>
-    <string name="profile_contact">தொடர்பு தகவல்</string>
-    <string name="profile_badge_seeker">தேடுபவர்</string>
-    <string name="profile_badge_provider">வழங்குபவர்</string>
-    <string name="profile_joined">%1$s-இல் இணைந்தார்</string>
-    <string name="profile_stat_activity">செயல்பாடு</string>
-    <string name="profile_stat_requests">கோரிக்கைகள்</string>
-    <string name="profile_stat_completed">முடிந்தவை</string>
-    <string name="profile_stat_following">பின்தொடர்பவை</string>
-    <string name="profile_stat_followers">பின்தொடர்பவர்கள்</string>
-    <string name="profile_strength_title">சுயவிவர வலிமை · %1$s</string>
-    <string name="profile_strength_good">நல்லது</string>
-    <string name="profile_strength_excellent">சிறப்பு</string>
-    <string name="profile_strength_hint">சிறந்த பொருத்தங்களுக்கு விருப்பச் சேவைகளைச் சேருங்கள்.</string>
-    <string name="profile_strength_listed_hint">பட்டியல் நேரலையில் — Explore தரத்திற்கு தொகுப்பைப் புதுப்பித்து வையுங்கள்.</string>
-    <string name="profile_tab_gallery">தொகுப்பு</string>
-    <string name="profile_tab_about">பற்றி</string>
-    <string name="profile_tab_activity">செயல்பாடு</string>
-    <string name="profile_tab_reviews">மதிப்புரைகள்</string>
-    <string name="profile_gallery_caption">உங்கள் கோரிக்கைகள் மற்றும் முடிந்த பணிகளின் புகைப்படங்கள்.</string>
-    <string name="profile_upload_work">+ பணிப் பதிவைப் பதிவேற்று</string>
+
+
     <string name="profile_about">பற்றி</string>
-    <string name="profile_edit_section">திருத்து</string>
-    <string name="profile_looking_for">தேடுவது</string>
-    <string name="profile_looking_for_hint">சரியான நிபுணர்களைப் பொருத்த உதவும் சேவைத் தேவைகள்.</string>
-    <string name="profile_add_chip">+ சேர்</string>
-    <string name="profile_reliability">நம்பகத்தன்மை</string>
-    <string name="profile_metric_response">பதில்</string>
-    <string name="profile_metric_jobs_done">முடிந்த பணிகள்</string>
-    <string name="profile_metric_avg_reply">சராசரி பதில்</string>
-    <string name="profile_skills">திறன்கள்</string>
-    <string name="profile_experience">அனுபவம்</string>
-    <string name="profile_languages">மொழிகள்</string>
-    <string name="profile_licenses">உரிமங்கள்</string>
-    <string name="profile_licenses_add">சேர்</string>
-    <string name="profile_active_requests">செயலில் உள்ள கோரிக்கைகள்</string>
-    <string name="profile_active_requests_hint">நீங்கள் இப்போது நியமிக்கும் பணிகள்</string>
+
+
+
+
     <string name="profile_view_all">அனைத்தையும் பார்</string>
-    <string name="profile_saved_professionals">சேமித்த நிபுணர்கள்</string>
-    <string name="profile_see_all">அனைத்தையும் பார்</string>
-    <string name="profile_active_jobs">செயலில் உள்ள பணிகள்</string>
-    <string name="profile_dashboard">டாஷ்போர்டு</string>
+
     <string name="profile_reviews">மதிப்புரைகள்</string>
     <string name="profile_reviews_summary">★ %1$s · %2$d</string>
     <string name="profile_metric_rating">மதிப்பீடு</string>
-    <string name="profile_metric_recommend">பரிந்துரை</string>
-    <string name="profile_metric_reply">பதில்</string>
-    <string name="profile_review_verified">%1$s · சரிபார்க்கப்பட்டது</string>
     <string name="profile_reviews_empty_title">மதிப்புரைகள் இல்லை</string>
     <string name="profile_reviews_empty_supporting">முடிந்த பணிகளின் மதிப்புரைகள் இங்கே தோன்றும்.</string>
-    <string name="profile_your_service">உங்கள் சேவை</string>
-    <string name="profile_live">நேரலை</string>
-    <string name="profile_not_available">கிடைக்கவில்லை</string>
+
+
     <string name="profile_from">இருந்து</string>
     <string name="profile_visit_quote">வருகை / மேற்கோள்</string>
-    <string name="profile_coverage">வரம்பு</string>
+
     <string name="profile_hours">நேரம்</string>
     <string name="profile_response">பதில்</string>
-    <string name="profile_edit_listing">பட்டியலைத் திருத்து</string>
-    <string name="profile_insights">நுண்ணறிவு</string>
+
     <string name="profile_edit_title">சுயவிவரத்தைத் திருத்து</string>
-    <string name="profile_edit_helper">ASKIT-இல் மற்றவர்களுக்கு நீங்கள் இப்படித் தோன்றுவீர்கள்.</string>
+
     <string name="profile_save">சேமி</string>
-    <string name="profile_photo">சுயவிவரப் புகைப்படம்</string>
+
     <string name="profile_photo_tap">புதுப்பிக்கத் தட்டவும்</string>
-    <string name="profile_basic_info">அடிப்படை தகவல்</string>
-    <string name="profile_display_name">காட்சிப் பெயர்</string>
+
+
     <string name="profile_username">பயனர்பெயர்</string>
-    <string name="profile_username_helper">எழுத்துகள், எண்கள், அடிக்கோடுகள் மட்டும்</string>
-    <string name="profile_username_error">எழுத்துகள், எண்கள், அடிக்கோடுகள் மட்டும் பயன்படுத்தவும்</string>
-    <string name="profile_display_name_error">காட்சிப் பெயரை உள்ளிடவும்</string>
+
+
+
     <string name="profile_city">நகரம்</string>
     <string name="profile_bio">சுயவிவரம்</string>
-    <string name="profile_bio_count">%1$d/200</string>
+
     <string name="profile_photo_camera">கேமரா</string>
     <string name="profile_photo_library">புகைப்பட நூலகம்</string>
     <string name="profile_photo_remove">புகைப்படத்தை அகற்று</string>
@@ -551,9 +477,7 @@
     <string name="profile_availability_mute">அறிவிப்புகளை அமைதிப்படுத்து</string>
     <string name="profile_availability_auto">%1$s அன்று உங்கள் சுயவிவரம் தானாக நேரலைக்குத் திரும்பும்.</string>
     <string name="profile_cancel">ரத்து செய்</string>
-    <string name="profile_looking_for_title">தேடுவது</string>
-    <string name="profile_chip_input">சேவையைச் சேர்</string>
-    <string name="profile_percent">%1$d%%</string>
+
 
     <string name="story_close">கதையை மூடு</string>
     <string name="story_back">பின்செல்</string>
@@ -561,12 +485,28 @@
     <string name="story_create_text">உரை கதையை உருவாக்கு</string>
     <string name="story_more_create">பணி, சேவை அல்லது பதிவை உருவாக்கு</string>
     <string name="story_shutter">புகைப்படம் எடுக்கவும், வீடியோவுக்கு அழுத்திப் பிடிக்கவும்</string>
+    <string name="story_record_video">வீடியோ பதிவு செய்</string>
+    <string name="story_stop_recording">பதிவை நிறுத்து</string>
+    <string name="story_camera_permission">புகைப்படங்களும் வீடியோக்களும் எடுக்க கேமரா அணுகலை அனுமதிக்கவும். கேலரியிலிருந்து தேர்வு செய்யலாம் அல்லது உரைக் கதையை உருவாக்கலாம்.</string>
+    <string name="story_allow_camera">கேமராவை அனுமதி</string>
+    <string name="story_open_settings">அமைப்புகளைத் திற</string>
+    <string name="story_settings_unavailable">அமைப்புகளைத் திறக்க முடியவில்லை. உங்கள் தொலைபேசியின் ஆப் அமைப்புகளில் கேமரா அணுகலை மாற்றலாம்.</string>
+    <string name="story_camera_unavailable">கேமராவைத் திறக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும், கேமராவை மாற்றவும் அல்லது கேலரியிலிருந்து தேர்வு செய்யவும்.</string>
+    <string name="story_photo_failed">புகைப்படத்தைச் சேமிக்க முடியவில்லை. கேமரா அணுகலையும் காலி சேமிப்பிடத்தையும் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="story_media_unavailable">இந்தப் புகைப்படம் அல்லது வீடியோவைத் திறக்க முடியவில்லை. கேலரியிலிருந்து வேறொன்றைத் தேர்வு செய்யவும்.</string>
+    <string name="story_video_failed">வீடியோவைச் சேமிக்க முடியவில்லை. கேமரா, மைக்ரோஃபோன் அணுகலையும் காலி சேமிப்பிடத்தையும் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="story_flash_failed">ஃபிளாஷை மாற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="story_microphone_title">உங்கள் வீடியோவிற்கான ஒலி</string>
+    <string name="story_microphone_explanation">வீடியோவில் ஒலியைச் சேர்க்க மைக்ரோஃபோன் அணுகலை அனுமதிக்கவும் அல்லது ஒலி இல்லாமல் தொடரவும். புகைப்படங்களுக்கு மைக்ரோஃபோன் அணுகல் தேவையில்லை.</string>
+    <string name="story_allow_microphone">மைக்ரோஃபோனை அனுமதி</string>
+    <string name="story_without_sound">ஒலி இல்லாமல்</string>
+    <string name="story_video_without_sound">வீடியோக்கள் ஒலி இல்லாமல் பதிவு செய்யப்படும்.</string>
+    <string name="story_hold_again">வீடியோ பதிவு செய்ய பிடிப்பு பொத்தானை மீண்டும் அழுத்திப் பிடிக்கவும்.</string>
     <string name="story_gallery">கேலரி</string>
     <string name="story_flip_camera">கேமராவைத் திருப்பு</string>
     <string name="story_create_text_hint">தட்டச்சு செய்ய தட்டவும்</string>
     <string name="story_background_cycle">பின்னணியை மாற்று</string>
     <string name="story_create_confirm">கதையில் உரையைச் சேர்</string>
-    <string name="story_more">கூடுதல் விருப்பங்கள்</string>
     <string name="story_tool_text">உரை</string>
     <string name="story_tool_stickers">ஸ்டிக்கர்கள்</string>
     <string name="story_tool_background">பின்னணி</string>
@@ -575,15 +515,11 @@
     <string name="story_tool_more">கூடுதல்</string>
     <string name="story_keep_draft">வரைவை வைத்திரு</string>
     <string name="story_trim_title">வீடியோவை ஒழுங்குபடுத்து</string>
-    <string name="story_caption_hint">தலைப்பு சேர்க்கவும்…</string>
     <string name="story_your_story">உங்கள் கதை</string>
     <string name="story_add_new_title">உங்கள் கதையில் சேர்க்கவும்</string>
     <string name="story_activity">செயல்பாடு</string>
     <string name="story_close_circle">நெருக்கமான வட்டம்</string>
     <string name="story_next">அடுத்து</string>
-    <string name="story_discard_editor_title">கதையை நிராகரிக்கவா?</string>
-    <string name="story_discard_editor_message">உங்கள் கதை திருத்தங்கள் இழக்கப்படும்.</string>
-    <string name="story_text_tool_title">உரை</string>
     <string name="story_text_done">முடிந்தது</string>
     <string name="story_text_placeholder">ஏதேனும் தட்டச்சு செய்க</string>
     <string name="story_text_size">உரை அளவு</string>
@@ -614,15 +550,13 @@
     <string name="story_link_label">பெயர்</string>
     <string name="story_share_title">பகிர்</string>
     <string name="story_share_destination">%1$s க்குப் பகிர்கிறது</string>
-    <string name="story_audience_everyone">உங்கள் கதை</string>
-    <string name="story_audience_close_circle">நெருக்கமான வட்டம்</string>
     <string name="story_audience_message">செய்தி</string>
-    <string name="entry_headline">அருகிலுள்ள உதவியைக் கண்டறியவும்,\nஅல்லது உங்கள் திறன்களை வழங்கவும்</string>
-    <string name="entry_subtitle">உள்ளூர் நிபுணர்களை முன்பதிவு செய்யுங்கள். உங்கள் சேவை வணிகத்தை வளர்த்துக் கொள்ளுங்கள்.</string>
+    <string name="entry_headline">தேவையைக் கண்டறியுங்கள்.\nசேவையை வழங்குங்கள்.</string>
+    <string name="entry_subtitle">உங்கள் சமூகத்தில் சேவைகளைக் கண்டறியுங்கள் அல்லது உங்கள் சேவைகளை வழங்குங்கள்.</string>
     <string name="entry_get_started">தொடங்குங்கள்</string>
     <string name="entry_already_have_account">எனக்கு ஏற்கனவே ஒரு கணக்கு உள்ளது</string>
-    <string name="entry_trust_badge">சரிபார்க்கப்பட்ட உள்ளூர் நிபுணர்கள் மற்றும் சமூகம்</string>
-    <string name="entry_legal_disclaimer">தொடர்வதன் மூலம், எங்கள் விதிமுறைகள் மற்றும் தனியுரிமைக் கொள்கையை ஏற்கிறீர்கள்</string>
+    <string name="entry_trust_badge">உள்ளூர் நிபுணர்கள் மற்றும் சமூகம்</string>
+    <string name="entry_legal_disclaimer">கணக்கை உருவாக்குவதன் மூலம், எங்கள் <annotation link="terms">சேவை விதிமுறைகளை</annotation> ஏற்று, <annotation link="privacy">தனியுரிமைக் கொள்கையை</annotation> அறிந்துகொண்டதாக ஒப்புக்கொள்கிறீர்கள்.</string>
 
     <!-- Authentication: Phone Number & OTP (Tamil) -->
     <string name="auth_phone_title">உங்கள் மொபைல் எண்ணுடன்\nதொடரவும்</string>
@@ -630,7 +564,7 @@
     <string name="auth_phone_label">மொபைல் எண்</string>
     <string name="auth_phone_placeholder">98989 89898</string>
     <string name="auth_phone_get_otp">OTP பெறுக</string>
-    <string name="auth_phone_disclaimer">தொடர்வதன் மூலம் எங்கள் விதிமுறைகள் மற்றும் தனியுரிமைக் கொள்கையை ஏற்கிறீர்கள்.</string>
+    <string name="auth_phone_disclaimer">தொடர்வதன் மூலம் எங்கள் <annotation link="terms">விதிமுறைகள்</annotation> மற்றும் <annotation link="privacy">தனியுரிமைக் கொள்கையை</annotation> ஏற்கிறீர்கள்.</string>
     <string name="auth_country_picker_title">நாட்டைத் தேர்ந்தெடுக்கவும்</string>
     <string name="auth_country_search_placeholder">நாடு அல்லது நாட்டின் குறியீட்டைத் தேடுங்கள்…</string>
     <string name="auth_otp_title">மொபைல் எண்ணைச் சரிபார்க்கவும்</string>
@@ -639,34 +573,36 @@
     <string name="auth_otp_resend_countdown">%1$d வினாடிகளில் குறியீட்டை மீண்டும் அனுப்பலாம்</string>
     <string name="auth_otp_resend_action">குறியீட்டை மீண்டும் அனுப்பு</string>
     <string name="auth_otp_verify_btn">சரிபார்த்து தொடரவும்</string>
-    <string name="auth_otp_invalid">சரியான 6 இலக்கக் குறியீட்டை உள்ளிடவும்</string>
+    <string name="auth_otp_verifying">சரிபார்க்கப்படுகிறது…</string>
+    <string name="auth_phone_requesting">குறியீடு கோரப்படுகிறது…</string>
+    <string name="auth_invalid_phone">நாட்டுக் குறியீட்டுடன் சரியான தொலைபேசி எண்ணை உள்ளிடவும்.</string>
+    <string name="auth_phone_invalid_india">சரியான 10 இலக்க இந்திய மொபைல் எண்ணை உள்ளிடவும்.</string>
+    <string name="auth_phone_invalid_mobile">தேர்ந்தெடுத்த நாட்டிற்கான சரியான மொபைல் எண்ணை உள்ளிடவும்.</string>
+    <string name="auth_phone_country_mismatch">இந்த எண்ணிற்குப் பொருத்தமான நாட்டைத் தேர்ந்தெடுக்கவும்.</string>
+    <string name="auth_not_configured">இந்தப் பதிப்பில் உள்நுழைவு இன்னும் கிடைக்கவில்லை.</string>
+    <string name="auth_rate_limited">அதிகமான கோரிக்கைகள். மீண்டும் முயற்சிக்கும் முன் காத்திருக்கவும்.</string>
+    <string name="auth_request_failed">குறியீட்டைக் கோர முடியவில்லை. மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="auth_invalid_code">குறியீடு தவறானது. மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="auth_expired_code">இந்தக் குறியீடு காலாவதியாகிவிட்டது. புதிய குறியீட்டைக் கோரவும்.</string>
+    <string name="auth_new_code_required">உள்நுழைவைத் தொடர புதிய குறியீட்டைக் கோரவும்.</string>
+    <string name="auth_verification_failed">குறியீட்டைச் சரிபார்க்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="auth_session_storage_failed">பாதுகாப்பான உள்நுழைவுச் சேமிப்பகம் கிடைக்கவில்லை. மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="auth_restoring_session">உங்கள் உள்நுழைவு மீட்டெடுக்கப்படுகிறது…</string>
+    <string name="auth_loading_account">உங்கள் கணக்கு ஏற்றப்படுகிறது…</string>
+    <string name="auth_account_load_failed">உங்கள் கணக்கை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும் அல்லது மீண்டும் உள்நுழையவும்.</string>
+    <string name="auth_session_expired">உங்கள் உள்நுழைவு காலாவதியாகிவிட்டது. மீண்டும் உள்நுழையவும்.</string>
+    <string name="auth_sign_in_again">மீண்டும் உள்நுழைக</string>
 
     <!-- Form A: User Profile Setup & GPS Geocoding (Tamil) -->
-    <string name="form_a_top_title">உங்களைப் பற்றி</string>
     <string name="form_a_headline">உங்களைப் பற்றிச் சொல்லுங்கள்</string>
     <string name="form_a_subtitle">உங்களுக்கு அருகிலுள்ள சிறந்த சேவை வழங்குநர்களை இணைக்க இது உதவுகிறது.</string>
-    <string name="form_a_full_name_label">முழு பெயர் *</string>
-    <string name="form_a_full_name_placeholder">உங்கள் முழு பெயர்</string>
-    <string name="form_a_location_label">இருப்பிடம்</string>
+
     <string name="form_a_location_use_current">எனது தற்போதைய இருப்பிடத்தைப் பயன்படுத்துக</string>
     <string name="form_a_location_locating">GPS இருப்பிடத்தைக் கண்டறிகிறது…</string>
     <string name="form_a_location_located">இருப்பிடம் கண்டறியப்பட்டது</string>
-    <string name="form_a_location_permission_denied">இருப்பிட அனுமதி மறுக்கப்பட்டது. நேரடியாக உள்ளிடவும்.</string>
-    <string name="form_a_city_label">நகரம் *</string>
-    <string name="form_a_city_placeholder">எ.கா. கோயம்புத்தூர்</string>
-    <string name="form_a_pincode_label">அஞ்சல் குறியீடு (Pincode)</string>
-    <string name="form_a_pincode_placeholder">641001</string>
-    <string name="form_a_interests_label">பொதுவாக உங்களுக்கு என்ன வகையான உதவி தேவை?</string>
-    <string name="form_a_category_home_repairs">வீட்டுப் பழுதுகள்</string>
-    <string name="form_a_category_plumbing">குழாய் வேலை (Plumbing)</string>
-    <string name="form_a_category_cleaning">சுத்தம் செய்தல்</string>
-    <string name="form_a_category_electrical">மின்சார வேலை</string>
-    <string name="form_a_category_tutoring">கல்விக் கற்பித்தல்</string>
-    <string name="form_a_category_design">வடிவமைப்பு</string>
-    <string name="form_a_category_it_support">IT ஆதரவு</string>
-    <string name="form_a_category_other">மற்றவை</string>
-    <string name="form_a_custom_category_placeholder">மற்ற சேவையை குறிப்பிடவும்…</string>
-    <string name="form_a_submit_btn">எனது டாஷ்போர்டைத் திறக்கவும்</string>
+
+
+    <string name="form_a_submit_btn">தொடரவும்</string>
 
     <string name="story_view_post">பதிவைக் காண்க</string>
     <string name="post_detail_title">பதிவு</string>
@@ -699,18 +635,16 @@
     <string name="creator_ai_insight_timing_body">இன்று பதிவிட சிறந்த நேரம் %1$s. உங்கள் பகுதியில் %2$s தொடர்பான உள்ளடக்கம் %3$s அதிகமாக பிரபலமாகி வருகிறது.</string>
     <string name="creator_ai_cta_create_post">பிரபலமான பதிவை உருவாக்கவும்</string>
     <string name="creator_milestone_title">பார்வையாளர்கள் வளர்ச்சி</string>
-    <string name="creator_milestone_target">அடுத்த மைல்கல்: %1$d பின்தொடர்பவர்கள்</string>
-    <string name="creator_milestone_remaining">இன்னும் %1$d பின்தொடர்பவர்கள் தேவை</string>
+    <plurals name="creator_milestone_target">
+        <item quantity="one">அடுத்த மைல்கல்: %1$d பின்தொடர்பவர்</item>
+        <item quantity="other">அடுத்த மைல்கல்: %1$d பின்தொடர்பவர்கள்</item>
+    </plurals>
+    <plurals name="creator_milestone_remaining">
+        <item quantity="one">இன்னும் %1$d பின்தொடர்பவர் தேவை</item>
+        <item quantity="other">இன்னும் %1$d பின்தொடர்பவர்கள் தேவை</item>
+    </plurals>
     <string name="creator_milestone_growth_pace">இந்த வாரம் %1$s · மாதத்திற்கு %2$s</string>
     <string name="creator_recent_activity_title">சமீபத்திய செயல்பாடு</string>
-    <string name="creator_activity_new_follower">%1$s உங்களைப் பின்தொடரத் தொடங்கினார்</string>
-    <string name="creator_activity_follower_context">%1$s பதிவிலிருந்து · %2$s</string>
-    <string name="creator_activity_dm_title">%1$s இடமிருந்து புதிய செய்தி</string>
-    <string name="creator_activity_dm_snippet">“%1$s” · %2$s</string>
-    <string name="creator_activity_like_title">%1$s மற்றும் பிறர் உங்கள் பதிவை விரும்பினர்</string>
-    <string name="creator_activity_like_context">பதிவு: “%1$s” · %2$s</string>
-    <string name="creator_activity_comment_title">%1$s உங்கள் பதிவில் கருத்திட்டார்</string>
-    <string name="creator_activity_view_analytics">முழு புள்ளிவிவரங்களைக் காண்க</string>
 
     <!-- Provider Dashboard -->
     <string name="provider_dashboard_title">வழங்குநர் டாஷ்போர்டு</string>
@@ -720,9 +654,11 @@
     <string name="provider_status_offline_hint">வாடிக்கையாளர்களிடமிருந்து புதிய கோரிக்கைகளைப் பெற ஆன்லைனுக்கு மாறவும்.</string>
     <string name="provider_status_online_hint">%1$s கி.மீ சுற்றளவில் உள்ள வாடிக்கையாளர்களுக்கு உங்கள் சேவை தெரியும்.</string>
     <string name="provider_section_incoming">உள்வரும் கோரிக்கைகள்</string>
-    <string name="provider_incoming_count">%1$d நேரலை</string>
+    <plurals name="provider_incoming_count">
+        <item quantity="one">%1$d நேரலை</item>
+        <item quantity="other">%1$d நேரலை</item>
+    </plurals>
     <string name="provider_request_respond_time">%1$s-க்குள் பதிலளிக்கவும்</string>
-    <string name="provider_request_distance">%1$s கி.மீ தொலைவு</string>
     <string name="provider_action_accept">ஏற்றுக்கொள்</string>
     <string name="provider_action_decline">நிராகரி</string>
     <string name="provider_section_active_jobs">நடப்பு பணிகள்</string>
@@ -731,7 +667,6 @@
     <string name="provider_job_otp_pending">OTP சரிபார்ப்பு நிலுவையில்</string>
     <string name="provider_job_progress">%1$d%% முடிந்தது</string>
     <string name="provider_action_chat">செய்தி</string>
-    <string name="provider_action_call">அழை</string>
     <string name="provider_action_details">விவரங்கள்</string>
     <string name="provider_section_kpis">செயல்திறன் &amp; செயல்பாடுகள்</string>
     <string name="provider_kpi_todays_jobs">இன்றைய பணிகள்</string>
@@ -744,18 +679,447 @@
     <string name="provider_kpi_avg_response_value">%1$.1f நிமி</string>
     <string name="provider_section_trust">நம்பிக்கை &amp; சுயவிவர வலிமை</string>
     <string name="provider_trust_score_title">நம்பிக்கை மதிப்பெண்</string>
-    <string name="provider_trust_percentile">%1$s · இந்த வாரம் ↑%2$d</string>
+    <string name="provider_trust_percentile">பகுதியில் முதல் %1$s%% · இந்த வாரம் ↑%2$s</string>
+    <string name="settings_message_everyone">அனைவரும்</string>
+    <string name="settings_message_contacts">தொடர்பில் உள்ளவர்கள் மட்டும்</string>
+    <string name="settings_message_verified">சரிபார்க்கப்பட்ட பயனர்கள் மட்டும்</string>
+    <string name="dashboard_dismiss">நிராகரி</string>
     <string name="provider_profile_strength_title">சுயவிவர வலிமை %1$d%%</string>
-    <string name="provider_profile_tier">%1$s</string>
     <string name="provider_profile_next_tier_hint">%1$s பெற போர்ட்ஃபோலியோவை முடிக்கவும்</string>
     <string name="provider_action_improve">மேம்படுத்து</string>
     <string name="provider_action_upload">பதிவேற்று</string>
     <string name="provider_section_alerts">முன்னுரிமை எச்சரிக்கைகள்</string>
-    <string name="provider_alerts_count">%1$d புதியவை</string>
+    <plurals name="provider_alerts_count">
+        <item quantity="one">%1$d புதியது</item>
+        <item quantity="other">%1$d புதியவை</item>
+    </plurals>
     <string name="provider_alerts_manage">எச்சரிக்கைகளை நிர்வகி</string>
     <string name="provider_pro_boost_title">உங்கள் வணிகத்தை மேம்படுத்துங்கள்</string>
     <string name="provider_pro_boost_badge">புரோ</string>
     <string name="provider_pro_boost_perks">3x தேடல் தெரிவுநிலை · சரிபார்க்கப்பட்ட பேட்ஜ் · வரம்பற்ற தொடர்புகள்</string>
     <string name="provider_pro_boost_cta">பிரீமியத்திற்கு மேம்படுத்துங்கள்</string>
-    <string name="provider_request_accepted_snackbar">பணி ஏற்றுக்கொள்ளப்பட்டது! வாடிக்கையாளரைத் தொடர்புகொள்கிறது…</string>
+    <string name="settings_title">அமைப்புகள்</string>
+    <string name="settings_section_account">கணக்கு</string>
+    <string name="settings_section_preferences">விருப்பத்தேர்வுகள்</string>
+    <string name="settings_section_privacy_security">தனியுரிமை &amp; பாதுகாப்பு</string>
+    <string name="settings_section_provider">சேவை வழங்குநர்</string>
+    <string name="settings_section_seeker">சேவை தேடுபவர்</string>
+    <string name="settings_section_support">உதவி</string>
+    <string name="settings_edit_profile">சுயவிவரத்தைத் திருத்து</string>
+    <string name="settings_phone_number">தொலைபேசி எண்</string>
+    <string name="settings_push_notifications">அறிவிப்புகள்</string>
+    <string name="settings_job_service_alerts">வேலை &amp; சேவை அறிவிப்புகள்</string>
+    <string name="settings_language">மொழி</string>
+    <string name="settings_location_services">இருப்பிடச் சேவைகள்</string>
+    <string name="settings_who_can_message">உங்களுக்கு யார் செய்தி அனுப்பலாம்</string>
+    <string name="settings_blocked_accounts">தடுக்கப்பட்ட கணக்குகள்</string>
+    <string name="settings_service_listing">சேவைப் பட்டியல்</string>
+    <string name="settings_availability">சேவை வழங்கும் நேரம்</string>
+    <string name="settings_creator_hub">படைப்பாளர் மையம்</string>
+    <string name="settings_saved">சேமித்தவை</string>
+    <string name="settings_history">வரலாறு</string>
+    <string name="settings_my_job_requests">எனது வேலைக் கோரிக்கைகள்</string>
+    <string name="settings_help_center">உதவி மையம்</string>
+    <string name="settings_contact_support">உதவிக் குழுவைத் தொடர்புகொள்</string>
+    <string name="settings_terms_privacy">விதிமுறைகள் &amp; தனியுரிமை</string>
+    <string name="settings_logout">வெளியேறு</string>
+    <string name="settings_clear_app_data">செயலித் தரவை அழி</string>
+    <string name="settings_logout_confirm_title">வெளியேற வேண்டுமா?</string>
+    <string name="settings_logout_confirm_msg">உங்கள் AskIT கணக்கிலிருந்து வெளியேற விரும்புகிறீர்களா?</string>
+    <string name="settings_clear_data_confirm_title">செயலியின் அனைத்துத் தரவையும் அழிக்க வேண்டுமா?</string>
+    <string name="settings_clear_data_confirm_msg">இந்தச் சாதனத்தில் சேமித்த வேலைகள், சேவைப் பட்டியல்கள் மற்றும் விருப்பத்தேர்வுகள் அனைத்தும் மீட்டமைக்கப்படும்.</string>
+    <string name="settings_clear_data_action">தரவை அழி</string>
+    <string name="settings_status_live">செயலில் உள்ளது</string>
+    <string name="settings_status_manage">நிர்வகி</string>
+    <string name="settings_status_on">இயக்கத்தில்</string>
+    <string name="settings_status_off">முடக்கத்தில்</string>
+    <string name="settings_data_cleared">சாதனத்தில் சேமித்த தரவு அழிக்கப்பட்டது.</string>
+    <string name="story_message_empty_state">செய்தி அனுப்பும் வசதி கிடைக்கும்போது பெறுநர்கள் இங்கே தோன்றுவார்கள்.</string>
+    <string name="story_share_action">பகிர்</string>
+    <string name="settings_blocked_empty">தடுக்கப்பட்ட கணக்குகள் இல்லை. நீங்கள் தடுக்கும் கணக்குகளால் உங்களுக்குச் செய்தி அனுப்பவோ உங்கள் சேவைப் பட்டியல்களைப் பார்க்கவோ முடியாது.</string>
+    <string name="settings_saved_empty">நீங்கள் இன்னும் வேலைகளையோ நிபுணர்களையோ சேமிக்கவில்லை. சேமிக்க, பட்டியல்களில் உள்ள புக்மார்க் அல்லது இதயக் குறியீட்டைத் தட்டவும்.</string>
+    <string name="settings_history_empty">நீங்கள் முடித்த சேவைகளின் வரலாறும் முன்பு விண்ணப்பித்த வேலைகளும் இங்கே தோன்றும்.</string>
+    <string name="settings_close">மூடு</string>
+    <string name="auth_logo">AskIT சின்னம்</string>
+    <string name="auth_clear_phone">தொலைபேசி எண்ணை அழி</string>
+    <string name="form_a_step">படி 2 / 2</string>
+    <string name="form_a_add_photo">சுயவிவரப் படத்தைச் சேர்</string>
+    <string name="form_a_full_name">முழுப் பெயர்</string>
+
+
+    <string name="form_a_detected">கண்டறியப்பட்டது</string>
+
+
+
+    <string name="form_a_location_hint">GPS மூலம் உங்கள் பகுதியையும் நகரத்தையும் தானாகக் கண்டறியும்</string>
+    <string name="home_empty_title">இன்னும் பதிவுகள் இல்லை</string>
+    <string name="home_empty_body">சிறிது நேரம் கழித்துப் பார்க்கவும் அல்லது புதுப்பிக்கக் கீழே இழுக்கவும்.</string>
+    <string name="home_error_title">பதிவுகளை ஏற்ற முடியவில்லை</string>
+    <string name="service_detail_title">சேவை விவரங்கள்</string>
+
+    <string name="user_profile_unavailable_body">இந்தச் சுயவிவரத்தைக் கண்டறிய முடியவில்லை.</string>
+    <string name="service_detail_unavailable">இந்தச் சேவை தற்போது கிடைக்கவில்லை.</string>
+    <string name="service_detail_starting_price">தொடக்கக் கட்டணம்</string>
+    <string name="service_detail_response_time">பதில் அளிக்கும் நேரம்</string>
+    <string name="service_detail_area">சேவை வழங்கும் பகுதி</string>
+    <string name="service_detail_about">இந்தச் சேவையைப் பற்றி</string>
+    <string name="service_detail_inclusions">சேவையில் அடங்குபவை</string>
+    <plurals name="service_detail_review_count">
+        <item quantity="one">(%1$d மதிப்புரை)</item>
+        <item quantity="other">(%1$d மதிப்புரைகள்)</item>
+    </plurals>
+    <string name="task_detail_title">வேலை விவரங்கள்</string>
+    <string name="task_detail_apply">வேலைக்கு விண்ணப்பி</string>
+    <string name="task_detail_budget">மதிப்பிடப்பட்ட செலவு</string>
+    <string name="task_detail_urgency">அவசரத் தேவை</string>
+    <string name="task_detail_requirements">முக்கியத் தேவைகள்</string>
+    <string name="task_detail_not_found">வேலை கிடைக்கவில்லை</string>
+    <string name="task_detail_not_found_body">கோரிய வேலை (அடையாள எண்: %1$s) இப்போது கிடைக்கவில்லை அல்லது கண்டறிய முடியவில்லை.</string>
+    <string name="task_detail_go_back">திரும்பிச் செல்</string>
+    <string name="home_people_title">உங்களுக்கு அருகிலுள்ள சிறந்த நிபுணர்கள்</string>
+    <string name="home_services_title">உங்களுக்குத் தேவைப்படக்கூடிய சேவைகள்</string>
+    <string name="home_tasks_title">உங்களுக்கு அருகிலுள்ள வேலை வாய்ப்புகள்</string>
+    <plurals name="home_person_jobs">
+        <item quantity="one">· %1$d வேலை</item>
+        <item quantity="other">· %1$d வேலைகள்</item>
+    </plurals>
+    <plurals name="home_person_jobs_completed">
+        <item quantity="one">%1$d வேலை முடிக்கப்பட்டது</item>
+        <item quantity="other">%1$d வேலைகள் முடிக்கப்பட்டன</item>
+    </plurals>
+    <string name="create_post_media_title">படங்கள்</string>
+    <string name="create_post_change_before">முந்தைய படத்தை மாற்று</string>
+    <string name="create_post_change_after">பிந்தைய படத்தை மாற்று</string>
+    <string name="create_post_initial_problem">ஆரம்பப் பிரச்சினை</string>
+    <string name="create_post_finished_result">முடிக்கப்பட்ட வேலை</string>
+    <string name="create_post_remove_slot_photo">%1$s படத்தை நீக்கு</string>
+    <string name="create_post_work_photos">உங்கள் வேலைப் படங்களைச் சேர்</string>
+    <string name="create_post_gallery_limit">படத்தொகுப்பிலிருந்து அதிகபட்சம் 10 படங்களைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="create_post_photo_position">%2$d படங்களில் %1$d</string>
+    <string name="create_post_hide_photo_description">பட விளக்கத்தை மறை</string>
+    <string name="create_post_add_photo_description">+ பட விளக்கத்தைச் சேர் (விருப்பத்தேர்வு)</string>
+    <string name="create_post_photo_description_label">பட விளக்கம்</string>
+    <string name="create_post_hide_before_description">முந்தைய நிலை விளக்கத்தை மறை</string>
+    <string name="create_post_add_before_description">+ முந்தைய நிலை விளக்கத்தைச் சேர் (விருப்பத்தேர்வு)</string>
+    <string name="create_post_before_description_label">வேலைக்கு முந்தைய நிலை விளக்கம்</string>
+    <string name="create_post_hide_after_description">பிந்தைய நிலை விளக்கத்தை மறை</string>
+    <string name="create_post_add_after_description">+ பிந்தைய நிலை விளக்கத்தைச் சேர் (விருப்பத்தேர்வு)</string>
+    <string name="create_post_after_description_label">வேலைக்குப் பிந்தைய நிலை விளக்கம்</string>
+    <string name="create_post_add_ons_title">உங்கள் பதிவில் சேர்</string>
+    <string name="create_post_publish">பதிவிடு</string>
+
+    <string name="post_task_feed_preview">முகப்புப் பதிவு முன்னோட்டம்</string>
+    <string name="post_task_you_creator">நீங்கள் (வேலையைப் பதிவிட்டவர்)</string>
+    <string name="post_task_you_initial">நீ</string>
+    <string name="post_task_review_draft">வரைவை மதிப்பாய்வு செய்</string>
+    <string name="post_task_full_details">வேலையின் முழு விவரங்கள்</string>
+    <string name="post_task_timeline">காலக்கெடு</string>
+    <string name="post_task_private_information">தனிப்பட்ட தகவல்</string>
+    <string name="post_task_private_visibility">🔒 சேவை வழங்குநரின் சலுகையை நீங்கள் ஏற்ற பிறகு, நியமிக்கப்பட்ட சேவை வழங்குநருக்கு மட்டுமே தெரியும்.</string>
+    <plurals name="post_task_preview_photos">
+        <item quantity="one">படம் (%1$d)</item>
+        <item quantity="other">படங்கள் (%1$d)</item>
+    </plurals>
+
+    <string name="profile_update_photo">படத்தைப் புதுப்பி</string>
+    <string name="profile_completed">முடித்தவை</string>
+    <string name="profile_followers">பின்தொடர்பவர்கள்</string>
+    <string name="profile_following">பின்தொடர்பவை</string>
+    <string name="profile_showcase">படைப்புகள்</string>
+
+    <string name="profile_service_offering">வழங்கும் சேவை</string>
+    <string name="profile_service_active">செயலில்</string>
+    <string name="profile_service_unavailable">கிடைக்கவில்லை</string>
+    <string name="profile_service_area">சேவைப் பகுதி</string>
+    <string name="profile_edit_service">சேவையைத் திருத்து</string>
+    <string name="profile_services_empty">இன்னும் சேவைகள் பட்டியலிடப்படவில்லை</string>
+
+
+    <string name="settings_provider_name">சேவை வழங்குநர்</string>
+    <string name="form_a_location_failed">உங்கள் இருப்பிடத்தைக் கண்டறிய முடியவில்லை. மீண்டும் முயற்சிக்கவும் அல்லது கீழே உங்கள் நகரத்தையும் அஞ்சல் குறியீட்டையும் உள்ளிடவும்.</string>
+    <string name="post_task_local_area">உள்ளூர் பகுதி</string>
+    <string name="form_a_save_failed">உங்கள் சுயவிவரத்தைச் சேமிக்க முடியவில்லை. உங்கள் விவரங்கள் இங்கேயே உள்ளன; மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="auth_logging_out">வெளியேறுகிறது…</string>
+    <string name="auth_logout_storage_failed">சேமித்த உள்நுழைவை அகற்ற முடியவில்லை. வெளியேறுவதை முடிக்க மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="settings_terms_link">விதிமுறைகள்</string>
+    <string name="settings_privacy_policy">தனியுரிமைக் கொள்கை</string>
+    <string name="external_link_unavailable">இந்த இணைப்பைத் திறக்க முடியவில்லை. பின்னர் மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="story_video_unavailable">இந்தக் காணொளியை இயக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும் அல்லது வேறு காணொளியைத் தேர்ந்தெடுக்கவும்.</string>
+    <string name="form_a_photo_required">சுயவிவரப் படம் (விருப்பம்)</string>
+    <string name="form_a_photo_checking">புகைப்படம் சரிபார்க்கப்படுகிறது…</string>
+    <string name="form_a_photo_error">திறக்கக்கூடிய புகைப்படத்தைத் தேர்ந்தெடுக்கவும்.</string>
+
+
+    <string name="form_a_app_language">செயலியின் மொழி</string>
+
+    <string name="task_provider_preferences">சேவை வழங்குநர் விருப்பங்கள் (விருப்பத்தேர்வு)</string>
+    <string name="task_preference_none">விருப்பம் இல்லை</string>
+    <string name="task_preference_male">ஆண்</string>
+    <string name="task_preference_female">பெண்</string>
+    <string name="task_preference_other">மற்றவை</string>
+    <string name="task_language_english">ஆங்கிலம்</string>
+    <string name="task_language_tamil">தமிழ்</string>
+    <string name="task_preference_minimum_age">குறைந்தபட்ச வயது</string>
+    <string name="task_preference_maximum_age">அதிகபட்ச வயது</string>
+    <string name="task_preference_gender">விருப்ப பாலினம்</string>
+    <string name="task_preference_languages">விருப்ப பேச்சு மொழிகள்</string>
+    <string name="task_preference_age_error">18 முதல் 100 வரையிலான முழு எண் வயதை உள்ளிடவும். குறைந்தபட்ச வயது அதிகபட்ச வயதை விட அதிகமாக இருக்கக்கூடாது.</string>
+    <string name="task_preference_age_hint">குறைந்தபட்ச அல்லது அதிகபட்ச வரம்பு வேண்டாம் எனில் அந்த வயதைக் காலியாக விடவும்.</string>
+    <string name="task_preference_age_range">%1$d–%2$d</string>
+    <string name="task_preference_age_minimum">%1$d+</string>
+    <string name="task_preference_age_maximum">%1$d வரை</string>
+    <string name="task_preference_age_summary">வயது: %1$s</string>
+    <string name="task_preference_gender_summary">பாலினம்: %1$s</string>
+    <string name="task_preference_language_summary">மொழிகள்: %1$s</string>
+    <string name="task_public_quantity">எண்ணிக்கை / அளவுகள்: %1$s</string>
+    <string name="task_public_brand">பிராண்ட் / மாடல்: %1$s</string>
+    <string name="task_public_materials">பொருட்கள்: %1$s</string>
+    <string name="task_just_posted">இப்போது</string>
+    <string name="task_photo_position">புகைப்படம் %1$d / %2$d</string>
+
+    <string name="task_discussion_comment">கருத்திடு</string>
+    <string name="task_discussion_title">பணி கலந்துரையாடல்</string>
+    <string name="task_discussion_placeholder">கேள்வி கேளுங்கள் அல்லது தீர்வைப் பகிருங்கள்…</string>
+    <string name="task_discussion_empty">இன்னும் கலந்துரையாடல் இல்லை. கேள்வி கேளுங்கள், தேவைகளைத் தெளிவுபடுத்துங்கள் அல்லது தீர்வைப் பகிருங்கள்.</string>
+    <string name="task_discussion_sign_in">கருத்திட அல்லது பதிலளிக்க உள்நுழையவும்.</string>
+    <string name="task_discussion_empty_message">அனுப்புவதற்கு முன் செய்தியை உள்ளிடவும்.</string>
+    <string name="task_discussion_task_unavailable">இந்தப் பணி இனி கிடைக்கவில்லை. உங்கள் செய்தி பாதுகாக்கப்பட்டுள்ளது.</string>
+    <string name="task_discussion_reply_unavailable">பதிலளிக்க வேண்டிய கருத்து கிடைக்கவில்லை. உங்கள் செய்தியைப் புதிய கருத்தாகப் பதிவிட பதிலளிப்பதை ரத்துசெய்யவும்.</string>
+    <string name="task_discussion_missing_target">கிடைக்காத கருத்து</string>
+    <plurals name="task_discussion_minutes">
+        <item quantity="one">%1$d நிமிடத்திற்கு முன்</item>
+        <item quantity="other">%1$d நிமிடங்களுக்கு முன்</item>
+    </plurals>
+    <plurals name="task_discussion_hours">
+        <item quantity="one">%1$d மணிநேரத்திற்கு முன்</item>
+        <item quantity="other">%1$d மணிநேரங்களுக்கு முன்</item>
+    </plurals>
+    <plurals name="task_discussion_days">
+        <item quantity="one">%1$d நாளுக்கு முன்</item>
+        <item quantity="other">%1$d நாட்களுக்கு முன்</item>
+    </plurals>
+
+    <!-- Task actions -->
+    <string name="task_action_sign_in">பணி நடவடிக்கைகளைப் பயன்படுத்த உள்நுழையவும்.</string>
+    <string name="task_action_unavailable">இந்தப் பணி இனி கிடைக்கவில்லை.</string>
+    <string name="task_action_not_allowed">உங்கள் கணக்கிற்கு இந்த நடவடிக்கை கிடைக்கவில்லை.</string>
+    <string name="task_action_invalid_draft">சேமிப்பதற்கு முன் தேவையான பணி விவரங்களைச் சரிபார்க்கவும்.</string>
+    <string name="task_edit_unavailable">அசல் பணி வரைவு இல்லாததால் திருத்த முடியவில்லை.</string>
+    <string name="task_edit_title">பணியைத் திருத்து</string>
+    <string name="task_edit">திருத்து</string>
+    <string name="task_delete">நீக்கு</string>
+    <string name="task_save_changes">மாற்றங்களைச் சேமி</string>
+    <string name="task_delete_title">பணியை நீக்கவா?</string>
+    <string name="task_delete_message">“%1$s” பணியை நீக்கவா? பணிப் பதிவும் அதன் விவாதமும் நீக்கப்படும். ஏற்கெனவே உள்ள வேலைகள் தொடரும்.</string>
+    <string name="task_action_cancel">ரத்துசெய்</string>
+    <string name="task_more_actions">மேலும் பணி நடவடிக்கைகள்</string>
+    <string name="task_report">புகாரளி</string>
+    <string name="task_report_spam">தேவையற்ற பதிவு அல்லது மோசடி</string>
+    <string name="task_report_inappropriate">பொருத்தமற்ற உள்ளடக்கம்</string>
+    <string name="task_report_misleading">தவறாக வழிநடத்தும் பணி</string>
+    <string name="task_report_other">மற்றவை</string>
+    <string name="task_report_confirm">புகாரை உறுதிசெய்</string>
+    <string name="task_report_local_notice">ஒரு காரணத்தைத் தேர்ந்தெடுக்கவும். புகார்கள் இந்தச் சாதனத்தில் சேமிக்கப்படும்; மதிப்பாய்வுக்கு அனுப்பும் வசதி இன்னும் இணைக்கப்படவில்லை.</string>
+    <string name="task_report_saved_locally">புகார் சாதனத்தில் சேமிக்கப்பட்டது. மதிப்பாய்வுக்கு அனுப்பும் வசதி இன்னும் இணைக்கப்படவில்லை.</string>
+    <string name="task_report_already_saved">இந்தப் பணிக்கு ஏற்கெனவே சாதனத்தில் புகாரளித்துள்ளீர்கள்.</string>
+    <string name="task_like_count">விருப்பம் · %1$d</string>
+    <string name="task_liked_count">விரும்பியது · %1$d</string>
+    <string name="task_applied">விண்ணப்பிக்கப்பட்டது</string>
+
+    <!-- Story controls -->
+    <string name="story_follow">பின்தொடர்</string>
+    <string name="story_actions_title">கதை விருப்பங்கள்</string>
+    <string name="story_action_sign_in">கதை நடவடிக்கைகளைப் பயன்படுத்த உள்நுழையவும்.</string>
+    <string name="story_action_unavailable">இந்தக் கதை நடவடிக்கை கிடைக்கவில்லை.</string>
+    <string name="story_action_not_allowed">உங்கள் சொந்தக் கதையில் இந்த நடவடிக்கையைப் பயன்படுத்த முடியாது.</string>
+    <string name="story_mute_author">இந்தப் பயனரின் கதைகளை மறை</string>
+    <string name="story_not_interested">இந்தக் கதையில் ஆர்வமில்லை</string>
+    <string name="story_muted">இந்தப் பயனரின் கதைகள் மறைக்கப்பட்டன.</string>
+    <string name="story_hidden">இந்தக் கதை மறைக்கப்பட்டது.</string>
+    <string name="story_undo">மீட்டெடு</string>
+    <string name="story_unmute">மீண்டும் காட்டு</string>
+    <string name="story_muted_settings">மறைக்கப்பட்ட கதைகள்</string>
+    <string name="story_muted_empty">எந்தப் பயனரின் கதைகளையும் நீங்கள் மறைக்கவில்லை.</string>
+    <string name="story_report_title">கதை குறித்து புகாரளி</string>
+    <string name="story_reported">ஏற்கெனவே புகாரளிக்கப்பட்டது</string>
+    <string name="story_report_duplicate">இந்தக் கதைக்கு ஏற்கெனவே சாதனத்தில் புகாரளித்துள்ளீர்கள்.</string>
+    <string name="story_report_notice">ஒரு காரணத்தைத் தேர்ந்தெடுக்கவும். புகார்கள் சாதனத்தில் சேமிக்கப்படும்; மதிப்பாய்வுக்கு அனுப்பும் வசதி இன்னும் இணைக்கப்படவில்லை.</string>
+    <string name="story_report_saved">புகார் சாதனத்தில் சேமிக்கப்பட்டது. மதிப்பாய்வுக்கு அனுப்பும் வசதி இன்னும் இணைக்கப்படவில்லை.</string>
+    <string name="story_report_confirm">புகாரை உறுதிசெய்</string>
+    <string name="story_report_spam">தேவையற்ற பதிவு அல்லது மோசடி</string>
+    <string name="story_report_inappropriate">பொருத்தமற்ற உள்ளடக்கம்</string>
+    <string name="story_report_misleading">தவறாக வழிநடத்தும் உள்ளடக்கம்</string>
+    <string name="story_report_other">மற்றவை</string>
+    <string name="post_actions_title">இடுகை விருப்பங்கள்</string>
+    <string name="post_action_sign_in">இடுகை நடவடிக்கைகளைப் பயன்படுத்த உள்நுழையவும்.</string>
+    <string name="post_action_not_allowed">இந்த இடுகையை நீங்கள் மாற்ற முடியாது.</string>
+    <string name="post_unavailable">இந்த இடுகை இப்போது கிடைக்கவில்லை.</string>
+    <string name="post_invalid_draft">சேமிப்பதற்கு முன் இடுகை விவரங்களைச் சரிபார்க்கவும்.</string>
+    <string name="post_edit_unavailable">இந்த இடுகைக்கான அசல் திருத்த விவரங்கள் கிடைக்கவில்லை.</string>
+    <string name="post_edit_title">இடுகையைத் திருத்து</string>
+    <string name="post_save_changes">மாற்றங்களைச் சேமி</string>
+    <string name="post_save">இடுகையைச் சேமி</string>
+    <string name="post_unsave">சேமிப்பிலிருந்து அகற்று</string>
+    <string name="post_archive">இடுகையைக் காப்பகப்படுத்து</string>
+    <string name="post_unarchive">இடுகையை மீட்டமை</string>
+    <string name="post_archive_message">இந்த இடுகை முகப்பிலிருந்து அகற்றப்படும். அமைப்புகளில் உள்ள காப்பக இடுகைகளிலிருந்து இதை மீட்டமைக்கலாம்.</string>
+    <string name="post_archived_title">காப்பக இடுகைகள்</string>
+    <string name="post_archived_empty">காப்பக இடுகைகள் எதுவும் இல்லை.</string>
+    <string name="post_saved_title">சேமித்த இடுகைகள்</string>
+    <string name="post_saved_empty">சேமித்த இடுகைகள் எதுவும் இல்லை.</string>
+    <string name="post_hide_likes">விருப்ப எண்ணிக்கையை மறை</string>
+    <string name="post_show_likes">விருப்ப எண்ணிக்கையைக் காட்டு</string>
+    <string name="post_disable_comments">கருத்திடுவதை முடக்கு</string>
+    <string name="post_enable_comments">கருத்திடுவதை இயக்கு</string>
+    <string name="post_comments_disabled">இந்த இடுகைக்குக் கருத்திடுவது முடக்கப்பட்டுள்ளது.</string>
+    <string name="post_report_title">இடுகை குறித்து புகாரளி</string>
+    <string name="post_report_spam">தேவையற்ற தகவல் அல்லது மோசடி</string>
+    <string name="post_report_inappropriate">பொருத்தமற்ற உள்ளடக்கம்</string>
+    <string name="post_report_misleading">தவறாக வழிநடத்தும் உள்ளடக்கம்</string>
+    <string name="post_report_other">மற்றவை</string>
+    <string name="post_report_duplicate">இந்த இடுகையை ஏற்கனவே புகாரளித்துள்ளீர்கள்.</string>
+    <string name="post_report_notice">புகார்கள் தற்போது இந்தச் சாதனத்தில் மட்டும் சேமிக்கப்படும். மதிப்பாய்வுக் குழுவிற்கு அனுப்புவது இன்னும் இணைக்கப்படவில்லை.</string>
+    <string name="post_report_saved">புகார் சாதனத்தில் சேமிக்கப்பட்டது. மதிப்பாய்வுக் குழுவிற்கு அனுப்புவது இன்னும் இணைக்கப்படவில்லை.</string>
+    <string name="post_report_confirm">புகாரைச் சேமி</string>
+    <string name="post_action_done">இடுகை புதுப்பிக்கப்பட்டது</string>
+    <string name="post_crop_title">படத்தைச் செதுக்கு</string>
+    <string name="post_crop_cancel">ரத்து</string>
+    <string name="post_crop_done">படங்களைப் பயன்படுத்து</string>
+    <string name="post_crop_next">அடுத்து</string>
+    <string name="post_crop_position">படம் %1$d / %2$d</string>
+    <string name="post_crop_instructions">படத்தை நகர்த்த இழுக்கவும். பெரிதாக்க விரல்களை விரிக்கவும் அல்லது கீழுள்ள கட்டுப்பாட்டைப் பயன்படுத்தவும். சட்டகத்திற்குள் உள்ள பகுதி மட்டுமே பயன்படுத்தப்படும்.</string>
+    <string name="post_crop_landscape">4:3 கிடைமட்டம்</string>
+    <string name="post_crop_portrait">3:4 செங்குத்து</string>
+    <string name="post_crop_ratio_locked">இந்த இடுகையின் எல்லாப் படங்களும் ஒரே விகிதத்தில் இருக்கும்.</string>
+    <string name="post_crop_load_failed">இந்தப் படத்தைத் திறக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும் அல்லது ரத்து செய்து வேறு படத்தைத் தேர்ந்தெடுக்கவும்.</string>
+    <string name="post_crop_save_failed">செதுக்கிய படத்தைச் சேமிக்க முடியவில்லை. வரைவு மாறவில்லை. மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="post_crop_retry">மீண்டும் முயற்சி</string>
+    <string name="post_crop_zoom">பெரிதாக்கு</string>
+    <string name="post_crop_reset">மீட்டமை</string>
+    <string name="post_crop_left">செதுக்கும் பகுதியை இடப்புறம் நகர்த்து</string>
+    <string name="post_crop_right">செதுக்கும் பகுதியை வலப்புறம் நகர்த்து</string>
+    <string name="post_crop_up">செதுக்கும் பகுதியை மேலே நகர்த்து</string>
+    <string name="post_crop_down">செதுக்கும் பகுதியை கீழே நகர்த்து</string>
+    <string name="post_crop_too_many">ஒரு இடுகையில் அதிகபட்சம் 10 படங்கள் இருக்கலாம். மேலும் சேர்க்கும் முன் ஒரு படத்தை அகற்றவும்.</string>
+    <string name="post_crop_invalid">தொடரும் முன் ஒவ்வொரு படத்தையும் 4:3 அல்லது 3:4 விகிதத்தில் செதுக்கவும். எல்லாப் படங்களும் ஒரே விகிதத்தில் இருக்க வேண்டும்.</string>
+    <string name="post_crop_hint">படங்களை 4:3 அல்லது 3:4 விகிதத்தில் செதுக்கவும். முதல் படம் இந்த இடுகையின் விகிதத்தை நிர்ணயிக்கும்.</string>
+
+    <string name="explore_filter_group_reviews">நிபுணரின் மதிப்புரைகள் எண்ணிக்கை</string>
+    <string name="explore_filter_rating_four_point_five_plus">4.5+ நட்சத்திரங்கள்</string>
+    <string name="explore_filter_reviews_ten_plus">10+ மதிப்புரைகள்</string>
+    <string name="explore_filter_reviews_fifty_plus">50+ மதிப்புரைகள்</string>
+    <string name="explore_price_hour">ஒரு மணிநேரத்திற்கு</string>
+    <string name="explore_price_visit">ஒரு வருகைக்கு</string>
+    <string name="explore_price_service">ஒரு சேவைக்கு</string>
+    <string name="explore_price_fixed">நிலையான மொத்தம்</string>
+    <string name="explore_price_heading">விலை / செலவுத்திட்டம்</string>
+    <string name="explore_price_minimum">குறைந்தபட்சம் (விருப்பம்)</string>
+    <string name="explore_price_maximum">அதிகபட்சம் (விருப்பம்)</string>
+    <string name="explore_price_unit">சேவை விலை அலகு</string>
+    <string name="explore_price_any_unit">எந்த அலகும்</string>
+    <string name="explore_price_hint">விலைகள் பட்டியலிடப்பட்ட அலகிற்கு இந்திய ரூபாயில் உள்ளன. ஒரே அலகிலுள்ள விலைகளை ஒப்பிட சேவை விலை அலகைத் தேர்ந்தெடுக்கவும். பணிகளுக்கு மொத்த செலவுத்திட்டம் பயன்படுத்தப்படும். பொருந்தும் விலை வரம்புகள் சேர்க்கப்படும்; வரம்பு அமைக்கும்போது விலையில்லாத பட்டியல்கள் நீக்கப்படும்.</string>
+    <string name="explore_price_task_hint">மொத்த செலவுத்திட்டங்களை இந்திய ரூபாயில் வடிகட்டவும். பொருந்தும் செலவுத்திட்ட வரம்புகள் சேர்க்கப்படும். விலை வரம்பு அமைக்கும்போது விலைப்புள்ளி கோரும் பணிகள் நீக்கப்படும்.</string>
+    <string name="explore_price_error">சரியான தொகைகளை உள்ளிடவும் (2 தசம இடங்கள் வரை). குறைந்தபட்சம் அதிகபட்சத்தை விட அதிகமாக இருக்கக்கூடாது.</string>
+    <string name="explore_price_no_maximum">அதிகபட்சம் இல்லை</string>
+    <string name="explore_price_summary">₹%1$s – %2$s · %3$s</string>
+    <string name="explore_filter_scope_hint">வடிகட்டிகள் %1$s என்பதற்குப் பொருந்தும். அனைத்திலும், மதிப்பீடும் மதிப்புரை எண்ணிக்கையும் நிபுணர்களுக்கும், விலை அலகுகள் சேவைகளுக்கும் பொருந்தும்.</string>
+    <string name="explore_price_clear">விலை வடிகட்டியை நீக்கு</string>
+    <string name="nearby_follow_description">%1$s-ஐப் பின்தொடர்</string>
+    <string name="nearby_unfollow_description">%1$s-ஐப் பின்தொடர்வதை நிறுத்து</string>
+    <string name="nearby_not_following">பின்தொடரவில்லை</string>
+    <string name="nearby_follow_sign_in">நிபுணர்களைப் பின்தொடர உள்நுழையவும்.</string>
+    <string name="nearby_follow_unavailable">இந்தச் சுயவிவரத்தைப் பின்தொடர முடியவில்லை.</string>
+    <string name="explore_search_short_placeholder">தேடுக</string>
+    <string name="explore_change_area_description">பகுதியை மாற்றவும்: %1$s, %2$s</string>
+    <string name="explore_choose_area_title">தேடல் பகுதியைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="story_unlike">விருப்பத்தை நீக்கு</string>
+    <string name="story_shared_unavailable">கதை கிடைக்கவில்லை</string>
+    <string name="story_shared_author">%1$s இன் கதை</string>
+    <string name="story_shared_preview">ஒரு கதையைப் பகிர்ந்தார்</string>
+    <string name="story_send_heading">கதையைப் பகிர்</string>
+    <string name="story_send_local">இந்தச் சாதனத்தில் உள்ள அரட்டையில் சேமிக்கப்படும். மற்ற பயனர்களுக்கு அனுப்பும் வசதி இன்னும் இணைக்கப்படவில்லை.</string>
+    <string name="story_send_failed">பகிர முடியவில்லை. கதை கிடைக்காமல் இருக்கலாம் அல்லது இந்த அரட்டை தடுக்கப்பட்டிருக்கலாம்.</string>
+    <string name="story_send_empty">பெறுநர்கள் இல்லை.</string>
+    <string name="story_send_sent">பகிரப்பட்டது</string>
+    <string name="story_send_action">பகிர்</string>
+    <string name="story_send_done">முடிந்தது</string>
+    <string name="post_pin">சுயவிவரத்தில் பொருத்து</string>
+    <string name="post_unpin">சுயவிவரப் பொருத்தத்தை நீக்கு</string>
+    <string name="post_pinned">பொருத்தப்பட்டது</string>
+    <string name="post_not_interested">ஆர்வமில்லை</string>
+    <string name="post_hidden_from_home">உங்கள் முகப்பிலிருந்து பதிவு மறைக்கப்பட்டது</string>
+
+    <string name="account_email">மின்னஞ்சல்</string>
+    <string name="account_postcode">அஞ்சல் குறியீடு</string>
+    <string name="account_invalid_field">சரியான விவரத்தை உள்ளிடவும்.</string>
+    <string name="profile_optional_title">தலைப்பு / தொழில் (விருப்பம்)</string>
+    <string name="profile_phone_verification_needed">உள்நுழைவு எண்ணை மாற்ற சரிபார்ப்பு தேவை. இந்தச் சேவை இன்னும் கிடைக்கவில்லை.</string>
+    <string name="profile_save_unavailable">மாற்றங்களைச் சேமிக்க முடியவில்லை. கணக்குச் சேவை கிடைக்கும்போது மீண்டும் முயலவும்.</string>
+    <string name="service_experience_years">அனுபவம் ஆண்டுகளில் (0–60) *</string>
+    <string name="service_required_details">தொழில் விவரங்கள்</string>
+    <string name="service_required_details_error">கிடைக்கும் நேரம், 0–60 ஆண்டுகள் அனுபவம் மற்றும் சரியான தொடர்பு விவரங்களை உள்ளிடவும்.</string>
+    <string name="profile_banner">சுயவிவர முகப்பு படம்</string>
+    <string name="profile_edit_banner">முகப்பு படத்தைத் திருத்து</string>
+    <string name="profile_remove_banner">முகப்பு படத்தை அகற்று</string>
+    <string name="profile_banner_failed">முகப்பு படத்தை ஏற்ற அல்லது சேமிக்க முடியவில்லை. வேறு படத்தை முயற்சிக்கவும்.</string>
+    <string name="profile_distance_consent">எனது தோராயமான தொலைவை மற்ற உறுப்பினர்களுக்குக் காட்டு</string>
+    <string name="profile_distance_consent_hint">இயல்பாக முடக்கப்பட்டுள்ளது. அஞ்சல் குறியீடு பகுதிகளை மட்டுமே பயன்படுத்தும்; உங்கள் அஞ்சல் குறியீடும் துல்லியமான இடமும் தனிப்பட்டவை.</string>
+    <string name="profile_approximate_distance">தோராயமாக %1$d கி.மீ. தொலைவில்</string>
+    <string name="profile_highlights">சிறப்புத் தொகுப்புகள்</string>
+    <string name="profile_highlight_new">புதிய சிறப்புத் தொகுப்பு</string>
+    <string name="profile_highlight_name">தொகுப்பின் பெயர் *</string>
+    <string name="profile_highlight_manage">%1$s தொகுப்பை நிர்வகி</string>
+    <string name="profile_highlights_empty">இன்னும் சிறப்புத் தொகுப்புகள் இல்லை.</string>
+    <string name="profile_highlight_no_stories">முதலில் ஒரு ஸ்டோரியை வெளியிட்டு இந்தத் தொகுப்பில் சேர்க்கவும்.</string>
+    <string name="profile_highlight_delete">தொகுப்பை நீக்கு</string>
+    <string name="profile_highlight_unavailable">இந்த ஸ்டோரிகள் கிடைக்கவில்லை அல்லது அணுகல் கட்டுப்படுத்தப்பட்டுள்ளது. வேறு தொகுப்பை முயற்சிக்க சுயவிவரத்திற்குத் திரும்பவும்.</string>
+    <string name="profile_highlight_label">சிறப்புத் தொகுப்பு</string>
+    <string name="profile_received_provider">சேவை வழங்குநராகப் பெற்றவை</string>
+    <string name="profile_received_seeker">சேவை தேடுபவராகப் பெற்றவை</string>
+    <string name="profile_people_unavailable">இந்த உறுப்பினர் பட்டியல் கிடைக்கவில்லை. பின்னர் முயற்சிக்கவும்.</string>
+    <string name="profile_people_empty">இந்தப் பட்டியலில் இன்னும் கணக்குகள் இல்லை.</string>
+    <string name="profile_unfollow">பின்தொடர்வதை நிறுத்து</string>
+    <string name="profile_view_as">பொது காட்சி</string>
+    <string name="profile_my_dashboard">எனது கட்டுப்பாட்டகம்</string>
+    <string name="profile_view_dashboard">கட்டுப்பாட்டகத்தைக் காண்க</string>
+    <string name="profile_post_task">பணியைப் பதிவிடு</string>
+    <string name="profile_contact">தொடர்பு</string>
+    <string name="profile_about_account">கணக்கைப் பற்றி</string>
+    <string name="profile_copy_url">சுயவிவர இணைப்பை நகலெடு</string>
+    <string name="profile_link_unavailable">பொது சுயவிவர இணைப்புகள் இன்னும் அமைக்கப்படவில்லை.</string>
+    <string name="profile_url_copied">சுயவிவர இணைப்பு நகலெடுக்கப்பட்டது</string>
+    <string name="profile_action_unavailable">இந்தச் சேவை இன்னும் கிடைக்கவில்லை.</string>
+    <string name="profile_contact_unavailable">தொடர்பு விவரங்கள் வெளியிடப்படவில்லை.</string>
+    <string name="profile_message">செய்தி அனுப்பு</string>
+    <string name="profile_preview_controls">மாதிரி பயன்பாட்டுக் கணக்குகள்</string>
+    <string name="profile_preview_provider">சேவை வழங்குநராக உள்நுழை</string>
+    <string name="profile_preview_seeker">சேவை தேடுபவராக உள்நுழை</string>
+    <string name="profile_preview_view_provider">வழங்குநர் சுயவிவரத்தைக் காண்க</string>
+    <string name="profile_preview_view_seeker">தேடுபவர் சுயவிவரத்தைக் காண்க</string>
+    <string name="profile_photo_unavailable">இந்தப் படத்தைத் திறக்க முடியவில்லை. வேறு படத்தை முயற்சிக்கவும்.</string>
+    <string name="profile_my_services">எனது சேவைகள்</string>
+    <string name="profile_my_post">எனது பதிவு</string>
+    <string name="profile_post_your_task">உங்கள் பணியைப் பதிவிடுங்கள்</string>
+    <string name="profile_posts_empty">இன்னும் பதிவுகள் இல்லை.</string>
+    <string name="profile_tasks_empty">இன்னும் பணிகள் பதிவிடப்படவில்லை.</string>
+    <string name="profile_service_category">வகை</string>
+    <string name="profile_service_experience">அனுபவம் (ஆண்டுகள்)</string>
+    <string name="profile_contact_phone">வெளியிடப்பட்ட தொலைபேசி</string>
+    <string name="profile_contact_email">வெளியிடப்பட்ட மின்னஞ்சல்</string>
+    <string name="profile_service_certificate">சான்றிதழ்</string>
+    <string name="profile_service_materials">பொருட்கள் மற்றும் உபகரணங்கள்</string>
+    <string name="messages_contacts_only">இவர் தனது செய்தித் தொடர்புப் பட்டியலில் உள்ளவர்களிடமிருந்து மட்டுமே செய்திகளை ஏற்கிறார்.</string>
+    <string name="messages_verified_only">இவர் சரிபார்க்கப்பட்ட கணக்குகளிடமிருந்து மட்டுமே செய்திகளை ஏற்கிறார்.</string>
+    <string name="messages_privacy_blocked">இந்தக் கணக்கு தடுக்கப்பட்டுள்ளதால் செய்தி அனுப்ப முடியாது.</string>
+    <string name="messages_unavailable">தற்போது செய்தி அனுப்ப முடியவில்லை. பின்னர் மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="settings_message_privacy_hint">தொடர்புகள் என்பவை உங்கள் செய்தித் தொடர்புப் பட்டியலில் உள்ளவர்கள்; பின்தொடர்பவர்கள் அல்ல. இந்த முன்னோட்டத்தில் உங்கள் தேர்வு உள்ளூரில் செயல்படும்; உண்மையான செய்திகளுக்கான பாதுகாப்பிற்கு செய்திச் சேவை தேவை.</string>
+    <string name="profile_highlight_new_label">புதியது</string>
+    <string name="profile_highlight_edit">ஹைலைட்டைத் திருத்து</string>
+    <string name="profile_highlight_manage_hint">திருத்த அல்லது நீக்க ஹைலைட்டைத் தொட்டுப் பிடிக்கவும்.</string>
+    <string name="profile_highlight_edit_cover">அட்டையைத் திருத்து</string>
+    <string name="profile_highlight_choose_cover">அட்டையைத் தேர்ந்தெடு</string>
+    <string name="profile_highlight_choose_cover_hint">அட்டையாகப் பயன்படுத்த ஒரு ஸ்டோரியைத் தட்டவும்.</string>
+    <string name="profile_highlight_selection_count">%1$d தேர்ந்தெடுக்கப்பட்டது · குறைந்தது ஒரு ஸ்டோரியைத் தேர்ந்தெடுக்கவும்.</string>
+    <string name="profile_highlight_delete_title">“%1$s” ஐ நீக்கவா?</string>
+    <string name="profile_highlight_delete_hint">இந்தத் தொகுப்பு உங்கள் சுயவிவரத்திலிருந்து அகற்றப்படும். இதில் உள்ள ஸ்டோரிகள் நீக்கப்படாது.</string>
 </resources>

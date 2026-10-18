@@ -1,116 +1,35 @@
 package com.askit.designsystem.profile
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.askit.designsystem.R
+
+data class ProfileMenuItem(val id: String, val label: String, val onClick: () -> Unit, val enabled: Boolean = true)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileTopBar(
-    username: String,
-    moreContentDescription: String,
-    shareLabel: String,
-    copyLabel: String,
-    onShare: () -> Unit,
-    onCopyUsername: () -> Unit,
-    modifier: Modifier = Modifier,
-    onBack: (() -> Unit)? = null,
-    backContentDescription: String = "",
-    settingsLabel: String = "",
-    onSettingsClick: (() -> Unit)? = null,
-) {
-    var menuExpanded by remember { mutableStateOf(false) }
-    TopAppBar(
-        title = {
-            Text(
-                text = username,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        },
-        navigationIcon = {
-            if (onBack != null) {
-                IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_arrow_back),
-                        contentDescription = backContentDescription,
-                    )
+fun ProfileTopBar(username: String, moreContentDescription: String, menuItems: List<ProfileMenuItem>,
+    onBack: (() -> Unit)? = null, backContentDescription: String = "", onSettingsClick: (() -> Unit)? = null) {
+    var expanded by remember(username) { mutableStateOf(false) }
+    TopAppBar(title = { Text(username) }, navigationIcon = {
+        if (onBack != null) IconButton(onClick = onBack) {
+            Icon(painterResource(R.drawable.ic_arrow_back), backContentDescription)
+        }
+    }, actions = {
+        Box {
+            IconButton(onClick = { if (onSettingsClick != null) onSettingsClick() else expanded = true }, modifier = Modifier.testTag("profile_more")) {
+                Icon(painterResource(R.drawable.ic_more), moreContentDescription)
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                menuItems.forEach { item ->
+                    DropdownMenuItem(text = { Text(item.label) }, enabled = item.enabled,
+                        onClick = { expanded = false; item.onClick() }, modifier = Modifier.testTag("profile_menu_${item.id}"))
                 }
             }
-        },
-        actions = {
-            Box {
-                IconButton(
-                    onClick = { menuExpanded = true },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .testTag("profile_more"),
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_more),
-                        contentDescription = moreContentDescription,
-                    )
-                }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false },
-                    modifier = Modifier.testTag("profile_more_menu"),
-                ) {
-                    if (onSettingsClick != null) {
-                        DropdownMenuItem(
-                            text = { Text(settingsLabel.ifBlank { "Settings" }) },
-                            onClick = {
-                                menuExpanded = false
-                                onSettingsClick()
-                            },
-                            modifier = Modifier.testTag("profile_settings"),
-                        )
-                    }
-                    DropdownMenuItem(
-                        text = { Text(shareLabel) },
-                        onClick = {
-                            menuExpanded = false
-                            onShare()
-                        },
-                        modifier = Modifier.testTag("profile_share"),
-                    )
-                    DropdownMenuItem(
-                        text = { Text(copyLabel) },
-                        onClick = {
-                            menuExpanded = false
-                            onCopyUsername()
-                        },
-                        modifier = Modifier.testTag("profile_copy_username"),
-                    )
-                }
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background,
-        ),
-        modifier = modifier.testTag("profile_top_bar"),
-    )
+        }
+    })
 }

@@ -1,6 +1,31 @@
 # AskIT Android
 
-Minimal production-ready Compose foundation for AskIT.
+Native Android app for local services and community activity, built with Jetpack Compose.
+
+## Backend handoff
+
+See [handoff status](docs/frontend-handoff.md), the [proposed authentication contract](docs/auth-backend-contract.md),
+[current-account response contract](docs/current-account-contract.md),
+and [admin-editable legal/support configuration](docs/app-config-contract.md).
+The backend does not exist yet. The current app is not ready for a URL-only production handoff;
+the remaining frontend work is listed explicitly so it is not transferred to the backend team.
+
+## Client checkpoint APK
+
+`./gradlew :app:assemblePreview` builds an installable, optimized APK at
+`app/build/outputs/apk/preview/app-preview.apk`. It uses the current AskIT name and UI,
+without an in-app preview notice or banner. Only this build opens Home without sign-in;
+the normal debug/release entry rules are unchanged. The backend URL is forced empty,
+and logout closes the checkpoint so reopening starts a fresh local session.
+
+The preview uses the local debug signing key for direct APK sharing, not the owner's
+Play upload key. It has the existing application ID, so it can update a matching-key
+AskIT installation; it does not install a separate app. Do not uninstall a signing-mismatched
+installation without checking whether its local data needs to be kept.
+
+Send the [client checkpoint notes](docs/client-checkpoint.md) with the APK. Sample data,
+temporary changes, incomplete backend operations, and release limitations are documented
+outside the app. Never publish this preview build to Google Play.
 
 ## Modules
 
@@ -11,20 +36,31 @@ Minimal production-ready Compose foundation for AskIT.
 
 ## Stack
 
-Kotlin · Jetpack Compose · Material 3 · Navigation 3 · Coil · ViewModel/StateFlow · Roborazzi · Gradle version catalog · Java 17 · minSdk 26
+Kotlin · Jetpack Compose · Material 3 · Navigation 3 · Coil · ViewModel/StateFlow · Gradle version catalog · Java 17 · minSdk 26
 
 ## Verify
 
 ```powershell
-.\gradlew lintDebug
-.\gradlew testDebugUnitTest
-.\gradlew verifyRoborazziDebug
+.\gradlew lintDebug lintRelease
 .\gradlew assembleDebug
-.\gradlew assembleRelease
+.\gradlew assembleRelease bundleRelease
 ```
 
-Record screenshot baselines after intentional UI changes:
+For USB device checks, see the [device validation record and commands](docs/device-validation.md).
 
-```powershell
-.\gradlew recordRoborazziDebug
-```
+CI runs lint and builds. Add automated tests only when necessary to verify a meaningful regression; keep verification focused.
+
+`bundleRelease` produces the Android App Bundle in `app/build/outputs/bundle/release/`.
+Release artifacts are unsigned by default. For an explicitly signed release, supply these
+environment variables through your local secure environment or CI secret store:
+
+- `ASKIT_UPLOAD_STORE_FILE`: path to the app owner's upload keystore (relative paths resolve from the repository root).
+- `ASKIT_UPLOAD_STORE_PASSWORD`: keystore password.
+- `ASKIT_UPLOAD_KEY_ALIAS`: upload-key alias.
+- `ASKIT_UPLOAD_KEY_PASSWORD`: key password.
+
+Then run `./gradlew bundleRelease -PsignRelease=true --no-configuration-cache`.
+Do not put passwords in commands, tracked files, or build logs. Keep the upload keystore outside
+the repository, backed up under the app owner's control. Missing signing inputs fail the build;
+the flag never falls back to the debug key. A signed build still requires backend integration
+and the remaining product/release checks before publishing.

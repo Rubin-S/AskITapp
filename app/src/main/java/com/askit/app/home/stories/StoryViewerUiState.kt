@@ -2,17 +2,27 @@ package com.askit.app.home.stories
 
 import com.askit.app.home.model.Story
 
+sealed interface StoryPlaybackContext {
+    data object Ephemeral : StoryPlaybackContext
+    data class Highlight(val ownerId: String, val collectionId: String) : StoryPlaybackContext
+}
+
 data class StoryViewerUiState(
     val isLoading: Boolean = true,
+    val playbackContext: StoryPlaybackContext = StoryPlaybackContext.Ephemeral,
     val groups: List<StoryGroup> = emptyList(),
     val groupIndex: Int = 0,
     val itemIndex: Int = 0,
     val paused: Boolean = false,
-    val likedStoryIds: Set<String> = emptySet(),
+    val menuStoryId: String? = null,
+    val reporting: Boolean = false,
+    val reportReason: StoryReportReason? = null,
+    val actionError: StoryActionFailure? = null,
+    val shouldClose: Boolean = false,
+    val entryStoryId: String? = null,
 ) {
     val currentGroup: StoryGroup? get() = groups.getOrNull(groupIndex)
     val currentStory: Story? get() = currentGroup?.stories?.getOrNull(itemIndex)
-    val isCurrentStoryLiked: Boolean get() = currentStory?.id in likedStoryIds
 
     companion object {
         /**

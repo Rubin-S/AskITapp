@@ -3,7 +3,6 @@ package com.askit.app.home.details
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,7 +35,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.home.components.HomePostItem
-import com.askit.app.home.data.getFeedPostById
+import com.askit.app.home.posts.PostStore
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.layout.safeDrawingPadding
 import com.askit.app.home.model.FeedPost
 import com.askit.designsystem.posts.CommentsBottomSheet
 import com.askit.designsystem.posts.PostShareSheet
@@ -45,10 +47,23 @@ import com.askit.designsystem.posts.PostShareSheet
 @Composable
 fun PostDetailScreen(
     postId: String,
+    store: PostStore,
+    currentAccountId: () -> String? = { null },
+    onEditPost: (String) -> Unit = {},
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val post = remember(postId) { getFeedPostById(postId) }
+    val postRecords by store.posts.collectAsStateWithLifecycle()
+    val account by store.account.collectAsStateWithLifecycle()
+    var showOptions by rememberSaveable(postId, account.accountId) { mutableStateOf(false) }
+    val post = postRecords[postId]?.takeIf { !it.archived || store.isOwner(it, account.accountId) }
+    if (post == null) {
+        Column(modifier.fillMaxSize().safeDrawingPadding().padding(24.dp)) {
+            Text(stringResource(R.string.post_unavailable))
+            androidx.compose.material3.TextButton(onClick = onBack) { Text(stringResource(R.string.explore_back)) }
+        }
+        return
+    }
     var activeCommentPost by remember { mutableStateOf<FeedPost?>(null) }
     var activeSharePost by remember { mutableStateOf<FeedPost?>(null) }
     val context = LocalContext.current
@@ -61,7 +76,7 @@ fun PostDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding(),
+                .safeDrawingPadding(),
         ) {
             // Top Bar
             Row(
@@ -87,7 +102,7 @@ fun PostDetailScreen(
                         .padding(start = 8.dp),
                 )
 
-                IconButton(onClick = {}) {
+                IconButton(onClick = { showOptions = true }) {
                     Icon(
                         painter = painterResource(com.askit.designsystem.R.drawable.ic_more_horiz),
                         contentDescription = stringResource(com.askit.designsystem.R.string.post_feed_more_options),
@@ -108,14 +123,23 @@ fun PostDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     onCommentClick = { activeCommentPost = post },
                     onShareClick = { activeSharePost = post },
+                    onMoreClick = { showOptions = true },
+                    isLiked = post.id in account.liked,
+                    isSaved = post.id in account.saved,
+                    onLikeClick = { val result = store.toggleLiked(post.id, currentAccountId()); if (result is com.askit.app.home.posts.PostResult.Failure) Toast.makeText(context, result.messageRes, Toast.LENGTH_SHORT).show() },
+                    onSaveClick = { val result = store.toggleSaved(post.id, currentAccountId()); if (result is com.askit.app.home.posts.PostResult.Failure) Toast.makeText(context, result.messageRes, Toast.LENGTH_SHORT).show() },
                 )
             }
         }
     }
 
+    if (showOptions) com.askit.app.home.posts.PostActionsSheet(postId, store, currentAccountId,
+        onDismiss = { showOptions = false }, onEdit = onEditPost)
     activeCommentPost?.let { _ ->
         CommentsBottomSheet(
             onDismiss = { activeCommentPost = null },
+            canComment = post.commentsEnabled && store.isCurrentAccount(currentAccountId()),
+            disabledMessage = stringResource(if (!post.commentsEnabled) R.string.post_comments_disabled else R.string.post_action_sign_in),
             currentUserAvatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
         )
     }

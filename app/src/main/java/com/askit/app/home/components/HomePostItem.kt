@@ -22,6 +22,9 @@ fun HomePostItem(
     onShareClick: (() -> Unit)? = null,
     onLikeClick: (() -> Unit)? = null,
     onSaveClick: (() -> Unit)? = null,
+    onMoreClick: (() -> Unit)? = null,
+    isLiked: Boolean = false,
+    isSaved: Boolean = false,
 ) {
     val author = PostFeedAuthor(
         displayName = post.authorName,
@@ -34,18 +37,19 @@ fun HomePostItem(
                 image = PostFeedMedia(
                     model = media.url,
                     contentDescription = media.contentDescription,
+                    aspectRatio = media.aspectRatio,
                 ),
             )
         }
         is PostMedia.Carousel -> {
             PostFeedMediaContent.Carousel(
-                items = media.urls.map { url -> PostFeedMedia(model = url) },
+                items = media.urls.map { url -> PostFeedMedia(model = url, aspectRatio = media.aspectRatio) },
             )
         }
         is PostMedia.BeforeAfter -> {
             PostFeedMediaContent.BeforeAfter(
-                before = PostFeedMedia(model = media.beforeUrl),
-                after = PostFeedMedia(model = media.afterUrl),
+                before = PostFeedMedia(model = media.beforeUrl, aspectRatio = media.aspectRatio),
+                after = PostFeedMedia(model = media.afterUrl, aspectRatio = media.aspectRatio),
             )
         }
         null -> null
@@ -78,6 +82,10 @@ fun HomePostItem(
         onShareClick = onShareClick,
         onLikeClick = onLikeClick,
         onSaveClick = onSaveClick,
+        onMoreClick = onMoreClick,
+        isLiked = isLiked,
+        isSaved = isSaved,
+        hideLikeCount = post.hideLikeCount,
         modifier = modifier,
     )
 }

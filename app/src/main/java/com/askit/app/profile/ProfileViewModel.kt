@@ -1,7 +1,10 @@
 package com.askit.app.profile
 
+import android.content.ContentResolver
 import androidx.lifecycle.ViewModel
 import com.askit.app.R
+import com.askit.app.auth.SignupDraft
+import com.askit.app.auth.isSignupPhotoReadable
 import com.askit.app.session.ProfileAvailability
 import com.askit.app.session.SessionProfile
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -10,6 +13,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 sealed interface ProfileLoadState {
     data object Loading : ProfileLoadState
@@ -29,55 +34,55 @@ class ProfileViewModel(
     val messages: SharedFlow<Int> = _messages.asSharedFlow()
 
     init {
-        _loadState.value = if (repository.profile.value.username.isNotBlank()) {
+        _loadState.value = if (repository.profile.value.displayName.isNotBlank()) {
             ProfileLoadState.Ready
         } else {
             ProfileLoadState.Failed(R.string.profile_load_error)
         }
     }
 
-    fun saveIdentity(state: EditProfileFormState) {
-        runCatching {
-            val current = repository.profile.value
-            repository.updateIdentity(
-                displayName = state.displayName.trim(),
-                username = state.username.trim(),
-                city = state.city.trim(),
-                bio = state.bio.trim(),
-                about = current.about,
-                avatarUrl = state.avatarUrl,
-            )
-        }.onFailure { emitError() }
+    suspend fun completeSignup(draft: SignupDraft, contentResolver: ContentResolver): Boolean {
+        if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) { emitError(); return false }
+        val photoReadable = withContext(Dispatchers.IO) {
+            isSignupPhotoReadable(contentResolver, draft.avatarUri)
+        }
+        if (!draft.validation(photoReadable).isValid) return false
+        return runCatching {
+            repository.completeSignup(draft.normalized())
+            _loadState.value = ProfileLoadState.Ready
+        }.isSuccess
     }
 
-    fun updateAbout(about: String) = runCatching { repository.updateAbout(about) }.onFailure { emitError() }
-
-    fun updateLookingFor(lookingFor: List<String>) =
-        runCatching { repository.updateLookingFor(lookingFor) }.onFailure { emitError() }
-
-    fun updateSkills(skills: List<String>) =
-        runCatching { repository.updateSkills(skills) }.onFailure { emitError() }
+    fun saveIdentity(state: EditProfileFormState): Boolean {
+        if (!state.isValid) return false
+        if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) {
+            emitError()
+            return false // Profile mutation/phone verification requires the backend contract.
+        }
+        return runCatching { repository.updateIdentity(state) }.onFailure { emitError() }.isSuccess
+    }
 
     fun updateAvailability(availability: ProfileAvailability) =
         runCatching { repository.updateAvailability(availability) }.onFailure { emitError() }
 
-    fun setAvatar(avatarUrl: String?) =
-        runCatching { repository.setAvatar(avatarUrl) }.onFailure { emitError() }
+    fun saveHighlight(actorId: String, highlight: ProfileHighlight): Boolean =
+        com.askit.app.BuildConfig.CLIENT_PREVIEW && runCatching { repository.saveHighlight(actorId, highlight) }.isSuccess
 
-    fun appendGallery(uris: List<String>) =
-        runCatching { repository.appendGallery(uris) }.onFailure { emitError() }
+    fun deleteHighlight(actorId: String, id: String): Boolean =
+        com.askit.app.BuildConfig.CLIENT_PREVIEW && runCatching { repository.deleteHighlight(actorId, id) }.isSuccess
 
-    fun appendReview(review: ProfileReview) =
-        runCatching { repository.appendReview(review) }.onFailure { emitError() }
+    fun setBanner(actorId: String, uri: String?): Boolean {
+        if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) return false
+        return runCatching { repository.setBanner(actorId, uri) }.isSuccess
+    }
 
-    fun addLicense(license: String) =
-        runCatching { repository.addLicense(license) }.onFailure { emitError() }
+    fun setAvatar(actorId: String, avatarUrl: String?) {
+        if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) { emitError(); return }
+        runCatching { repository.setAvatar(actorId, avatarUrl) }.onFailure { emitError() }
+    }
 
     fun updateActiveRole(role: String) =
         runCatching { repository.updateActiveRole(role) }.onFailure { emitError() }
-
-    fun updatePhoneNumber(phone: String) =
-        runCatching { repository.updatePhoneNumber(phone) }.onFailure { emitError() }
 
     fun updatePushNotifications(enabled: Boolean) =
         runCatching { repository.updatePushNotifications(enabled) }.onFailure { emitError() }
@@ -91,8 +96,10 @@ class ProfileViewModel(
     fun updateLocationServices(enabled: Boolean) =
         runCatching { repository.updateLocationServices(enabled) }.onFailure { emitError() }
 
-    fun updateWhoCanMessage(option: String) =
-        runCatching { repository.updateWhoCanMessage(option) }.onFailure { emitError() }
+    fun updateWhoCanMessage(option: String): Boolean {
+        if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) return false
+        return runCatching { repository.updateWhoCanMessage(option) }.isSuccess
+    }
 
     fun resetAppData() =
         runCatching {
@@ -100,14 +107,7 @@ class ProfileViewModel(
             _messages.tryEmit(R.string.settings_data_cleared)
         }.onFailure { emitError() }
 
-    fun notifyCopied() {
-        _messages.tryEmit(R.string.profile_username_copied)
-    }
-
     private fun emitError() {
         _messages.tryEmit(R.string.profile_action_error)
     }
 }
-
-fun SessionProfile.locationLine(joinedLabel: String): String =
-    "$city · $joinedLabel"

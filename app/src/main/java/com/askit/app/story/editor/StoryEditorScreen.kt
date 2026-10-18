@@ -28,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
@@ -36,6 +38,7 @@ import com.askit.app.story.StoryFormState
 import com.askit.app.story.StoryLayer
 import com.askit.app.story.StoryMediaType
 import com.askit.app.story.StoryViewModel
+import com.askit.app.story.StoryViewport
 import com.askit.app.story.stickers.PostReshareSticker
 import com.askit.designsystem.dialogs.AskITDiscardDialog
 import com.askit.designsystem.navigation.AskITVerticalToolColumn
@@ -66,6 +69,7 @@ fun StoryEditorScreen(
     }
 
     BackHandler(onBack = ::requestBack)
+    val density = LocalDensity.current
 
     Box(
         modifier = modifier
@@ -73,41 +77,56 @@ fun StoryEditorScreen(
             .background(Color.Black)
             .imePadding(),
     ) {
-        StoryCanvas(
-            mediaUri = state.mediaUri,
-            mediaType = state.mediaType,
-            solidBackgroundArgb = if (state.mediaType == StoryMediaType.SolidBackground) {
-                viewModel.solidBackgroundArgb()
-            } else {
-                null
-            },
-            durationMs = state.durationMs,
-            transform = state.transform,
-            layers = state.layers,
-            selectedLayerId = state.selectedLayerId,
-            drawMode = state.activeTool == StoryEditorTool.Draw,
-            onTransformChanged = viewModel::updateTransform,
-            onLayerTransformChanged = viewModel::updateLayerTransform,
-            onLayerSelected = viewModel::selectLayer,
-            onDrawPoint = viewModel::addDrawPoint,
-            onDrawFinished = viewModel::finishDrawStroke,
-            editingTextLayerId = state.editingTextLayerId,
-            onTextChanged = { id, text -> viewModel.updateTextLayer(id, text = text) },
-            modifier = Modifier.fillMaxSize(),
-        )
-
-        state.sharedPost?.let { post ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp),
-                contentAlignment = Alignment.Center,
+        StoryStage {
+            StoryFrame(
+                viewport = state.viewport,
+                modifier = Modifier.onSizeChanged { size ->
+                    if (size.width > 0 && size.height > 0) {
+                        viewModel.setViewport(StoryViewport(size.width, size.height, density.density, density.fontScale))
+                    }
+                },
             ) {
-                PostReshareSticker(
-                    post = post,
-                    cardStyle = state.reshareCardStyle,
-                    onClick = { viewModel.toggleReshareCardStyle() },
+                StoryCanvas(
+                    mediaUri = state.mediaUri,
+                    mediaType = state.mediaType,
+                    solidBackgroundArgb = if (state.mediaType == StoryMediaType.SolidBackground) {
+                        viewModel.solidBackgroundArgb()
+                    } else {
+                        null
+                    },
+                    durationMs = state.durationMs,
+                    trimStartMs = state.trimStartMs,
+                    trimEndMs = state.trimEndMs,
+                    videoActive = !state.showShareSheet,
+                    videoPlaying = editingTextLayer == null && state.activeTool == null && !state.showStickerTray,
+                    transform = state.transform,
+                    layers = state.layers,
+                    selectedLayerId = state.selectedLayerId,
+                    drawMode = state.activeTool == StoryEditorTool.Draw,
+                    onTransformChanged = viewModel::updateTransform,
+                    onLayerTransformChanged = viewModel::updateLayerTransform,
+                    onLayerSelected = viewModel::selectLayer,
+                    onDrawPoint = viewModel::addDrawPoint,
+                    onDrawFinished = viewModel::finishDrawStroke,
+                    editingTextLayerId = state.editingTextLayerId,
+                    onTextChanged = { id, text -> viewModel.updateTextLayer(id, text = text) },
+                    modifier = Modifier.fillMaxSize(),
                 )
+    
+                state.sharedPost?.let { post ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 24.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        PostReshareSticker(
+                            post = post,
+                            cardStyle = state.reshareCardStyle,
+                            onClick = { viewModel.toggleReshareCardStyle() },
+                        )
+                    }
+                }
             }
         }
 
@@ -256,6 +275,7 @@ fun StoryEditorScreen(
             onDismissRequest = { showDiscardConfirm = false },
             onDiscard = {
                 showDiscardConfirm = false
+                viewModel.startNewDraft()
                 onBack()
             },
         )

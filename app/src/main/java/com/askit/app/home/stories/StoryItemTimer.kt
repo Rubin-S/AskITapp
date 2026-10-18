@@ -6,6 +6,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 /**
  * Drives one story item's playback fraction (0f..1f) over [STORY_ITEM_DURATION_MS].
@@ -22,11 +26,10 @@ fun rememberStoryItemProgress(
     onFinished: () -> Unit,
 ): Float {
     val progress = remember(restartKey) { Animatable(0f) }
+    var finished by remember(restartKey) { mutableStateOf(false) }
+    val currentOnFinished by rememberUpdatedState(onFinished)
     LaunchedEffect(restartKey, paused) {
-        if (paused) {
-            progress.stop()
-            return@LaunchedEffect
-        }
+        if (paused || finished) return@LaunchedEffect
         val remaining = ((1f - progress.value) * STORY_ITEM_DURATION_MS).toLong()
         progress.animateTo(
             targetValue = 1f,
@@ -35,7 +38,8 @@ fun rememberStoryItemProgress(
                 easing = LinearEasing,
             ),
         )
-        onFinished()
+        finished = true
+        currentOnFinished()
     }
     return progress.value
 }

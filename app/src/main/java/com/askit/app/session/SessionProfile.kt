@@ -1,14 +1,16 @@
 package com.askit.app.session
 
 import com.askit.app.listservice.ListServiceDraft
+import com.askit.app.auth.SignupDraft
 import com.askit.app.profile.ProfileGalleryItem
 import com.askit.app.profile.ProfileReview
 import com.askit.app.profile.SavedProfessional
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ServiceListing(
     val title: String,
     val category: String,
@@ -24,8 +26,14 @@ data class ServiceListing(
     val tags: List<String>,
     val experience: String,
     val live: Boolean = true,
+    val phoneNumber: String = "",
+    val email: String = "",
+    val materials: String? = null,
+    val certificate: String? = null,
+    val deliveryModes: Set<com.askit.app.listservice.ListServiceDeliveryMode> = emptySet(),
 )
 
+@Serializable
 data class ProfileAvailability(
     val available: Boolean = true,
     val fromMillis: Long? = null,
@@ -34,6 +42,7 @@ data class ProfileAvailability(
     val muteNotifications: Boolean = false,
 )
 
+@Serializable
 data class SessionProfile(
     val displayName: String = "Meera Raman",
     val username: String = "meera.raman",
@@ -70,6 +79,14 @@ data class SessionProfile(
     val locationServicesEnabled: Boolean = true,
     val whoCanMessage: String = "Everyone",
     val blockedAccountsCount: Int = 0,
+    val pincode: String = "",
+    val isVerified: Boolean = false,
+    val email: String? = null,
+    val accountId: String = "",
+    val title: String = "",
+    val bannerUrl: String? = null,
+    val highlights: List<com.askit.app.profile.ProfileHighlight> = emptyList(),
+    val discloseApproximateLocation: Boolean = false,
 ) {
     val showsServiceCard: Boolean get() = hasListedService && listing != null
     val maskedPhoneNumber: String
@@ -82,25 +99,46 @@ data class SessionProfile(
 
 class SessionProfileStore(
     initial: SessionProfile = SessionProfile(),
+    private val persist: (SessionProfile) -> SessionProfile = { it },
 ) {
     private val _profile = MutableStateFlow(initial)
     val profile: StateFlow<SessionProfile> = _profile.asStateFlow()
 
-    fun markServiceListed() {
-        _profile.update { current ->
-            current.copy(
-                hasListedService = true,
-                listing = current.listing ?: DefaultCarpentryListing,
-                skills = current.skills.ifEmpty { DefaultCarpentryListing.tags },
-                profileStrengthPercent = 90,
-            )
-        }
+    fun replaceAccount(profile: SessionProfile) {
+        commit(profile)
+    }
+
+    fun completeSignup(draft: SignupDraft) {
+        commit(SessionProfile(
+            accountId = _profile.value.accountId,
+            displayName = draft.fullName,
+            username = draft.username,
+            bio = "",
+            about = "",
+            city = if (draft.area.isNotBlank() && !draft.city.contains(draft.area, ignoreCase = true)) {
+                "${draft.area}, ${draft.city}"
+            } else {
+                draft.city
+            },
+            joinedYear = java.time.Year.now().toString(),
+            avatarUrl = draft.avatarUri,
+            lookingFor = emptyList(),
+            languages = emptyList(),
+            profileStrengthPercent = 0,
+            phoneNumber = draft.phoneNumber,
+            activeRole = "Seeker",
+            selectedLanguage = draft.preferredLanguage,
+            pincode = draft.pincode,
+            email = draft.email,
+        ))
     }
 
     fun applyListing(listing: ServiceListing, draft: ListServiceDraft? = null) {
-        _profile.update {
+        update {
             it.copy(
                 hasListedService = true,
+                phoneNumber = draft?.contactPhone?.takeIf(String::isNotBlank) ?: it.phoneNumber,
+                email = draft?.contactEmail?.takeIf(String::isNotBlank) ?: it.email,
                 listing = listing,
                 listingDraft = draft,
                 skills = listing.tags,
@@ -109,40 +147,44 @@ class SessionProfileStore(
         }
     }
 
-    fun updateIdentity(
-        displayName: String,
-        username: String,
-        city: String,
-        bio: String,
-        about: String = bio,
-        avatarUrl: String?,
-    ) {
-        _profile.update {
-            it.copy(
-                displayName = displayName,
-                username = username,
-                city = city,
-                bio = bio,
-                about = about,
-                avatarUrl = avatarUrl,
-            )
-        }
+    fun updateIdentity(state: com.askit.app.profile.EditProfileFormState) {
+        require(state.isValid)
+        val account = state.accountDraft().normalized()
+        update { it.copy(displayName = account.fullName,
+            username = if (it.username.removePrefix("@") == account.username) it.username else account.username, city = account.city,
+            bio = state.bio.trim(), title = state.title.trim(), avatarUrl = account.avatarUri,
+            email = account.email, pincode = account.pincode, phoneNumber = account.phoneNumber,
+            selectedLanguage = account.preferredLanguage, discloseApproximateLocation = state.discloseApproximateLocation,
+            listing = it.listing?.copy(phoneNumber = account.phoneNumber, email = account.email.orEmpty()),
+            listingDraft = it.listingDraft?.copy(contactPhone = account.phoneNumber, contactEmail = account.email.orEmpty())) }
     }
 
-    fun updateAbout(about: String) {
-        _profile.update { it.copy(about = about, bio = it.bio) }
+    fun saveHighlight(actorId: String, highlight: com.askit.app.profile.ProfileHighlight) = update { current ->
+        require(actorId == current.accountId)
+        highlight.validate(actorId)
+        current.copy(highlights = if (current.highlights.any { it.id == highlight.id }) {
+            current.highlights.map { if (it.id == highlight.id) highlight else it }
+        } else current.highlights + highlight)
     }
 
-    fun updateLookingFor(lookingFor: List<String>) {
-        _profile.update { it.copy(lookingFor = lookingFor) }
+    fun deleteHighlight(actorId: String, id: String) = update { current ->
+        require(actorId.isNotBlank() && actorId == current.accountId)
+        current.copy(highlights = current.highlights.filterNot { it.id == id })
     }
 
-    fun updateSkills(skills: List<String>) {
-        _profile.update { it.copy(skills = skills) }
+    @Synchronized
+    private fun update(transform: (SessionProfile) -> SessionProfile) = commit(transform(_profile.value))
+
+    @Synchronized
+    private fun commit(next: SessionProfile) { _profile.value = persist(next) }
+
+    fun setBanner(actorId: String, uri: String?) = update {
+        require(actorId.isNotBlank() && actorId == it.accountId)
+        it.copy(bannerUrl = uri)
     }
 
     fun updateAvailability(availability: ProfileAvailability) {
-        _profile.update {
+        update {
             it.copy(
                 availability = availability,
                 listing = it.listing?.copy(live = availability.available),
@@ -150,71 +192,47 @@ class SessionProfileStore(
         }
     }
 
-    fun setAvatar(avatarUrl: String?) {
-        _profile.update { it.copy(avatarUrl = avatarUrl) }
-    }
-
-    fun appendGallery(uris: List<String>) {
-        if (uris.isEmpty()) return
-        _profile.update { current ->
-            val existing = current.gallery.map { it.uri }.toSet()
-            val added = uris
-                .filter { it.isNotBlank() }
-                .distinct()
-                .filter { it !in existing }
-                .map { uri -> ProfileGalleryItem(id = uri, uri = uri) }
-            if (added.isEmpty()) current else current.copy(gallery = current.gallery + added)
-        }
+    fun setAvatar(actorId: String, avatarUrl: String?) = update {
+        require(actorId.isNotBlank() && actorId == it.accountId)
+        it.copy(avatarUrl = avatarUrl)
     }
 
     fun appendReview(review: ProfileReview) {
-        _profile.update { current ->
+        update { current ->
+            require(review.recipientAccountId == current.accountId && review.reviewerAccountId != current.accountId && review.direction != null)
             if (current.reviews.any { it.id == review.id }) current else {
                 current.copy(reviews = listOf(review) + current.reviews)
             }
         }
     }
 
-    fun addLicense(license: String) {
-        val trimmed = license.trim()
-        if (trimmed.isEmpty()) return
-        _profile.update { current ->
-            if (trimmed in current.licenses) current else {
-                current.copy(licenses = current.licenses + trimmed)
-            }
-        }
-    }
-
     fun updateActiveRole(role: String) {
-        _profile.update { it.copy(activeRole = role) }
-    }
-
-    fun updatePhoneNumber(phone: String) {
-        _profile.update { it.copy(phoneNumber = phone) }
+        update { it.copy(activeRole = role) }
     }
 
     fun updatePushNotifications(enabled: Boolean) {
-        _profile.update { it.copy(pushNotificationsEnabled = enabled) }
+        update { it.copy(pushNotificationsEnabled = enabled) }
     }
 
     fun updateJobAlerts(enabled: Boolean) {
-        _profile.update { it.copy(jobAlertsEnabled = enabled) }
+        update { it.copy(jobAlertsEnabled = enabled) }
     }
 
     fun updateLanguage(lang: String) {
-        _profile.update { it.copy(selectedLanguage = lang) }
+        update { it.copy(selectedLanguage = lang) }
     }
 
     fun updateLocationServices(enabled: Boolean) {
-        _profile.update { it.copy(locationServicesEnabled = enabled) }
+        update { it.copy(locationServicesEnabled = enabled) }
     }
 
     fun updateWhoCanMessage(option: String) {
-        _profile.update { it.copy(whoCanMessage = option) }
+        require(option in setOf("Everyone", "Contacts only", "Verified users only"))
+        update { it.copy(whoCanMessage = option) }
     }
 
     fun resetAppData() {
-        _profile.value = SessionProfile()
+        commit(SessionProfile(accountId = _profile.value.accountId))
     }
 }
 

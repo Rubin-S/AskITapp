@@ -16,7 +16,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,9 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -42,6 +41,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,7 +51,6 @@ import androidx.compose.ui.unit.sp
 import com.askit.app.R
 import com.askit.designsystem.components.AskITPrimaryButton
 import com.askit.designsystem.jobs.OtpBoxes
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -57,25 +58,20 @@ fun AuthOtpScreen(
     phoneNumber: String,
     onBack: () -> Unit,
     onEditPhone: () -> Unit,
-    onVerifySuccess: () -> Unit,
+    onVerify: (String) -> Unit,
     modifier: Modifier = Modifier,
-    initialCountdownSeconds: Int = 30,
+    resendCountdownSeconds: Long = 30,
+    isSubmitting: Boolean = false,
+    errorMessage: String? = null,
+    onResend: () -> Unit = {},
+    challengeId: String? = null,
+    isResending: Boolean = false,
 ) {
-    var otpCode by remember { mutableStateOf("") }
-    var countdown by remember { mutableIntStateOf(initialCountdownSeconds) }
-    var isError by remember { mutableStateOf(false) }
+    var otpCode by remember(phoneNumber, challengeId) { mutableStateOf("") }
 
     val scrollState = rememberScrollState()
     val isDark = isSystemInDarkTheme()
     val isComplete = otpCode.length == 6
-
-    // Resend Countdown Timer
-    LaunchedEffect(countdown) {
-        if (countdown > 0) {
-            delay(1000L)
-            countdown -= 1
-        }
-    }
 
     Surface(
         modifier = modifier
@@ -115,7 +111,7 @@ fun AuthOtpScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.explore_back),
                             tint = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.size(24.dp),
                         )
@@ -140,7 +136,7 @@ fun AuthOtpScreen(
                 ) {
                     androidx.compose.foundation.Image(
                         painter = painterResource(R.drawable.ic_askit_launcher),
-                        contentDescription = "AskIT Logo",
+                        contentDescription = stringResource(R.string.auth_logo),
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -163,10 +159,11 @@ fun AuthOtpScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Subtitle with Phone and inline Edit button with accessible touch target
-                Row(
+                // Keep the edit action below the destination, independent of number length.
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.auth_otp_subtitle, phoneNumber),
@@ -177,10 +174,12 @@ fun AuthOtpScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.testTag("auth_otp_subtitle"),
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
                     TextButton(
                         onClick = onEditPhone,
-                        modifier = Modifier.testTag("auth_otp_edit_phone_btn"),
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .testTag("auth_otp_edit_phone_btn"),
+                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 8.dp),
                     ) {
                         Text(
                             text = stringResource(R.string.auth_otp_edit_phone),
@@ -203,18 +202,28 @@ fun AuthOtpScreen(
                         value = otpCode,
                         onValueChange = { incoming ->
                             otpCode = incoming
-                            isError = false
                         },
                         digitCount = 6,
-                        isError = isError,
+                        isError = errorMessage != null,
+                        enabled = !isSubmitting,
                         autoFocus = true,
-                        onComplete = {
-                            onVerifySuccess()
+                        onComplete = { code ->
+                            if (!isSubmitting) onVerify(code)
                         },
                         modifier = Modifier.testTag("auth_otp_input_boxes"),
                     )
                 }
 
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 12.dp)
+                            .semantics { liveRegion = LiveRegionMode.Polite }
+                            .testTag("auth_otp_error"),
+                    )
+                }
                 Spacer(modifier = Modifier.height(18.dp))
 
                 // Resend Timer / Action directly beneath OTP input boxes
@@ -222,9 +231,9 @@ fun AuthOtpScreen(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (countdown > 0) {
+                    if (resendCountdownSeconds > 0) {
                         Text(
-                            text = stringResource(R.string.auth_otp_resend_countdown, countdown),
+                            text = stringResource(R.string.auth_otp_resend_countdown, resendCountdownSeconds),
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 14.sp,
@@ -235,12 +244,9 @@ fun AuthOtpScreen(
                         )
                     } else {
                         TextButton(
-                            onClick = {
-                                countdown = initialCountdownSeconds
-                                otpCode = ""
-                                isError = false
-                            },
+                            onClick = onResend,
                             modifier = Modifier.testTag("auth_otp_resend_btn"),
+                            enabled = !isSubmitting,
                         ) {
                             Text(
                                 text = stringResource(R.string.auth_otp_resend_action),
@@ -267,17 +273,17 @@ fun AuthOtpScreen(
                 // Primary CTA Button (Light = Black, Dark = Lime Green)
                 AskITPrimaryButton(
                     onClick = {
-                        if (isComplete) {
-                            onVerifySuccess()
-                        } else {
-                            isError = true
-                        }
+                        if (isComplete && !isSubmitting) onVerify(otpCode)
                     },
-                    enabled = isComplete,
+                    enabled = isComplete && !isSubmitting,
                     modifier = Modifier.testTag("auth_otp_btn_verify"),
                 ) {
                     Text(
-                        text = stringResource(R.string.auth_otp_verify_btn),
+                        text = stringResource(when {
+                            isResending -> R.string.auth_phone_requesting
+                            isSubmitting -> R.string.auth_otp_verifying
+                            else -> R.string.auth_otp_verify_btn
+                        }),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,

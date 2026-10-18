@@ -1,6 +1,7 @@
 package com.askit.app.profile
 
-import androidx.compose.material3.AlertDialog
+import com.askit.designsystem.dialogs.AskITAlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -14,16 +15,16 @@ fun DiscardChangesDialog(
     onDismiss: () -> Unit,
     onDiscard: () -> Unit,
 ) {
-    AlertDialog(
+    AskITAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.profile_discard_title)) },
         text = { Text(stringResource(R.string.profile_discard_message)) },
-        confirmButton = {
+        dismissButton = {
             TextButton(onClick = onDiscard, modifier = Modifier.testTag("profile_discard_confirm")) {
-                Text(stringResource(R.string.profile_discard))
+                Text(stringResource(R.string.profile_discard), color = MaterialTheme.colorScheme.error)
             }
         },
-        dismissButton = {
+        confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.profile_keep_editing))
             }

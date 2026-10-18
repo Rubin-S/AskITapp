@@ -9,6 +9,7 @@ data class StoryGroup(
     val authorName: String,
     val authorAvatarUrl: String?,
     val stories: List<Story>,
+    val authorId: String? = null,
 )
 
 /**
@@ -17,13 +18,15 @@ data class StoryGroup(
 fun List<Story>.groupedByAuthor(): List<StoryGroup> {
     val byAuthor = LinkedHashMap<String, MutableList<Story>>()
     forEach { story ->
-        byAuthor.getOrPut(story.authorName) { mutableListOf() }.add(story)
+        val author = story.authorId?.takeIf(String::isNotBlank) ?: "unknown:${story.id}"
+        byAuthor.getOrPut(author) { mutableListOf() }.add(story)
     }
-    return byAuthor.map { (author, stories) ->
+    return byAuthor.values.map { stories ->
         StoryGroup(
-            authorName = author,
+            authorName = stories.first().authorName,
             authorAvatarUrl = stories.first().authorAvatarUrl,
             stories = stories,
+            authorId = stories.first().authorId,
         )
     }
 }

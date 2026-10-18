@@ -46,6 +46,7 @@ enum class StoryStickerKind {
     PostReshare,
 }
 
+@Serializable
 enum class StoryReshareCardStyle {
     FullCard,
     MinimalCard,
@@ -67,6 +68,19 @@ data class StoryTransform(
     val panY: Float = 0f,
     val zoom: Float = 1f,
 )
+
+@Serializable
+data class StoryViewport(
+    val widthPx: Int,
+    val heightPx: Int,
+    val density: Float,
+    val fontScale: Float,
+) {
+    init {
+        require(widthPx > 0 && heightPx > 0)
+        require(density.isFinite() && density > 0 && fontScale.isFinite() && fontScale > 0)
+    }
+}
 
 @Serializable
 sealed class StoryLayer {
@@ -127,6 +141,7 @@ data class StoryPollSticker(
     val options: List<String>,
 )
 
+@Serializable
 data class StoryDraft(
     val mediaUri: String? = null,
     val mediaType: StoryMediaType? = null,
@@ -135,6 +150,7 @@ data class StoryDraft(
     val trimStartMs: Long = 0L,
     val trimEndMs: Long? = null,
     val transform: StoryTransform = StoryTransform(),
+    val viewport: StoryViewport? = null,
     val caption: String = "",
     val audience: StoryAudience = StoryAudience.Everyone,
     val layers: List<StoryLayer> = emptyList(),
@@ -151,10 +167,10 @@ data class StoryFormState(
     val trimStartMs: Long = 0L,
     val trimEndMs: Long? = null,
     val transform: StoryTransform = StoryTransform(),
+    val viewport: StoryViewport? = null,
     val createTextDraft: String = "",
     val layers: List<StoryLayer> = emptyList(),
     val selectedLayerId: String? = null,
-    val caption: String = "",
     val audience: StoryAudience = StoryAudience.Everyone,
     val activeTool: StoryEditorTool? = null,
     val showStickerTray: Boolean = false,
@@ -174,7 +190,6 @@ data class StoryFormState(
             if (mediaUri != null || mediaType == StoryMediaType.SolidBackground) return true
             if (createTextDraft.isNotBlank()) return true
             if (layers.isNotEmpty()) return true
-            if (caption.isNotBlank()) return true
             if (trimStartMs > 0L || trimEndMs != null) return true
             if (transform.panX != 0f || transform.panY != 0f || transform.zoom != 1f) return true
             return false

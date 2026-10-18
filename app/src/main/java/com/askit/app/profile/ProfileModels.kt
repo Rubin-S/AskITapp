@@ -1,25 +1,15 @@
 package com.askit.app.profile
 
-import androidx.annotation.DrawableRes
-import com.askit.app.jobs.Job
-import com.askit.app.jobs.JobStatus
-import com.askit.app.jobs.isSeeker
-import com.askit.app.session.ServiceListing
-import com.askit.designsystem.R as DsR
+import kotlinx.serialization.Serializable
 
-enum class ProfilePane {
-    Gallery,
-    About,
-    Activity,
-    Reviews,
-}
-
+@Serializable
 data class ProfileGalleryItem(
     val id: String,
     val uri: String,
     val isCarousel: Boolean = false,
 )
 
+@Serializable
 data class SavedProfessional(
     val id: String,
     val name: String,
@@ -28,6 +18,7 @@ data class SavedProfessional(
     val avatarUrl: String? = null,
 )
 
+@Serializable
 data class ProfileReview(
     val id: String,
     val name: String,
@@ -36,29 +27,8 @@ data class ProfileReview(
     val body: String,
     val createdAtMillis: Long,
     val jobId: String? = null,
+    val reviewerAccountId: String? = null,
+    val recipientAccountId: String? = null,
+    val direction: ReviewDirection? = null,
     val avatarUrl: String? = null,
 )
-
-data class ProfileExperience(
-    val id: String,
-    val title: String,
-    val subtitle: String,
-    val detail: String,
-    @DrawableRes val iconRes: Int,
-)
-
-fun experiencesFromListing(listing: ServiceListing): List<ProfileExperience> = listOf(
-    ProfileExperience(
-        id = "listing",
-        title = listing.title,
-        subtitle = listing.category,
-        detail = listing.experience,
-        iconRes = DsR.drawable.ic_work,
-    ),
-)
-
-fun List<Job>.profileRequestCount(): Int = count { job ->
-    !job.inHistory && job.isSeeker(job.localParty)
-}
-
-fun List<Job>.profileCompletedCount(): Int = count { it.status == JobStatus.Completed }

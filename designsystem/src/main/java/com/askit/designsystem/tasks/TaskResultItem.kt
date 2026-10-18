@@ -1,21 +1,16 @@
 package com.askit.designsystem.tasks
 
+import com.askit.designsystem.listings.ListingBriefCard
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,11 +21,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImagePainter
@@ -56,7 +49,6 @@ enum class TaskResultStatus {
  * currently pass URI/URL strings; tests can pass an in-memory bitmap without adding an app
  * dependency to the design system.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TaskResultItem(
     title: String,
@@ -74,133 +66,51 @@ fun TaskResultItem(
     scopeHighlights: List<String> = emptyList(),
     onClick: (() -> Unit)? = null,
 ) {
-    val displayTitle = title.trim()
-    val displayCategory = category.trim()
-    val visibleSummary = summary?.trim()?.takeIf(String::isNotEmpty)
-    val visibleStatus = status
-        ?.takeIf { it != TaskResultStatus.Open }
-        ?.let { stringResource(taskStatusString(it)) }
-    val locationWithDistance = listOfNotNull(
-        locationLabel.trim().takeIf(String::isNotEmpty),
-        distanceLabel?.trim()?.takeIf(String::isNotEmpty),
-    ).joinToString(" · ")
-    val taskMetadata = listOf(
-        budgetLabel.trim(),
-        locationWithDistance,
-        timingLabel.trim(),
-    )
-    val posterMetadata = listOf(posterName.trim(), postedLabel.trim())
-    val visibleHighlights = scopeHighlights
-        .map(String::trim)
-        .filter(String::isNotEmpty)
-        .take(2)
-    val openTaskLabel = stringResource(R.string.task_result_view_task, displayTitle)
-    val itemModifier = modifier
-        .fillMaxWidth()
-        .heightIn(min = 48.dp)
-        .semantics(mergeDescendants = true) {}
-        .then(
-            if (onClick == null) {
-                Modifier
-            } else {
-                Modifier.clickable(
-                    role = Role.Button,
-                    onClickLabel = openTaskLabel,
-                    onClick = onClick,
-                )
-            },
-        )
-
-    Card(
-        modifier = itemModifier,
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+    ListingBriefCard(
+        title = title,
+        category = category,
+        summary = summary,
+        priceLabel = budgetLabel,
+        locationLabel = listOfNotNull(locationLabel, distanceLabel).filter(String::isNotBlank).joinToString(" · "),
+        authorName = posterName,
+        metadata = listOf(timingLabel, postedLabel) + scopeHighlights.take(2) + listOfNotNull(
+            status?.takeIf { it != TaskResultStatus.Open }?.let { stringResource(taskStatusString(it)) },
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            if (photoModels.isNotEmpty()) {
-                TaskPhotoMedia(photoModels = photoModels)
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                if (displayCategory.isNotEmpty()) {
-                    Text(
-                        text = displayCategory,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-                if (displayTitle.isNotEmpty()) {
-                    Text(
-                        text = displayTitle,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                if (visibleSummary != null) {
-                    Text(
-                        text = visibleSummary,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                TaskMetadataFlow(values = taskMetadata)
-
-                if (visibleHighlights.isNotEmpty()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        visibleHighlights.forEach { highlight ->
-                            Text(
-                                text = highlight,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
-                    }
-                }
-
-                if (visibleStatus != null) {
-                    Text(
-                        text = visibleStatus,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-                TaskMetadataFlow(values = posterMetadata)
-            }
-        }
-    }
+        photoModels = photoModels,
+        onClickLabel = stringResource(R.string.task_result_view_task, title.trim()),
+        onClick = onClick,
+        modifier = modifier,
+    )
 }
 
 @Composable
-private fun TaskPhotoMedia(photoModels: List<Any>) {
+fun TaskPhotoMedia(
+    photoModels: List<Any>,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop,
+    showCount: Boolean = true,
+    description: String? = null,
+) {
+    if (photoModels.isEmpty()) return
     val context = LocalContext.current
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
             .data(photoModels.first())
+            .size(1280, 1280)
             .crossfade(false)
             .build(),
     )
     val photoCount = photoModels.size
-    val imageUnavailable = painter.state.collectAsState().value is AsyncImagePainter.State.Error
+    val imageState = painter.state.collectAsState().value
+    val imageUnavailable = imageState is AsyncImagePainter.State.Error
     val mediaDescription = if (imageUnavailable) {
         stringResource(R.string.task_result_photo_unavailable)
     } else {
-        pluralStringResource(R.plurals.task_result_photo_count, photoCount, photoCount)
+        description ?: pluralStringResource(R.plurals.task_result_photo_count, photoCount, photoCount)
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .aspectRatio(3f / 2f)
             .background(MaterialTheme.colorScheme.surfaceVariant)
@@ -213,16 +123,22 @@ private fun TaskPhotoMedia(photoModels: List<Any>) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
             )
+        } else if (imageState is AsyncImagePainter.State.Loading || imageState is AsyncImagePainter.State.Empty) {
+            Text(
+                text = stringResource(R.string.task_result_photo_loading),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+            )
         } else {
             Image(
                 painter = painter,
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
+                contentScale = contentScale,
                 modifier = Modifier.fillMaxSize(),
             )
         }
 
-        if (photoCount > 1) {
+        if (showCount) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -244,29 +160,6 @@ private fun TaskPhotoMedia(photoModels: List<Any>) {
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun TaskMetadataFlow(
-    values: List<String>,
-    modifier: Modifier = Modifier,
-) {
-    val visibleValues = values.map(String::trim).filter(String::isNotEmpty)
-    if (visibleValues.isEmpty()) return
-
-    FlowRow(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        visibleValues.forEach { value ->
-            Text(
-                text = value,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-            )
         }
     }
 }

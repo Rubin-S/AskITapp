@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.story.capture.StoryCaptureScreen
 import com.askit.app.story.create.StoryCreateCanvas
@@ -24,6 +25,7 @@ fun StoryRoute(
     viewModel: StoryViewModel,
     onBack: () -> Unit,
     onCompleteDraft: (StoryDraft) -> Unit = {},
+    onPublishDraft: ((StoryDraft) -> Boolean)? = null,
     onOpenCreateSheet: () -> Unit = {},
     useFakeCapturePreview: Boolean = false,
 ) {
@@ -82,7 +84,7 @@ fun StoryRoute(
                 onDownload = {
                     val draft = viewModel.buildValidatedDraft()
                     if (draft?.mediaUri != null) {
-                        copyMediaToGallery(context, Uri.parse(draft.mediaUri))
+                        copyMediaToGallery(context, draft.mediaUri.toUri())
                     }
                 },
             )
@@ -104,10 +106,12 @@ fun StoryRoute(
             onDismiss = viewModel::closeShareSheet,
             onShare = {
                 val draft = viewModel.buildValidatedDraft()
-                if (draft != null) {
+                if (draft != null && onPublishDraft?.invoke(draft) != false) {
                     onCompleteDraft(draft)
                     viewModel.startNewDraft()
                     onBack()
+                } else if (draft != null) {
+                    android.widget.Toast.makeText(context, com.askit.app.R.string.story_action_sign_in, android.widget.Toast.LENGTH_SHORT).show()
                 }
             },
         )
@@ -147,7 +151,7 @@ private fun copyMediaToGallery(context: android.content.Context, uri: Uri) {
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         }
     }
-  val dest = resolver.insert(collection, values) ?: return
+    val dest = resolver.insert(collection, values) ?: return
     resolver.openInputStream(uri)?.use { input ->
         resolver.openOutputStream(dest)?.use { output ->
             input.copyTo(output)

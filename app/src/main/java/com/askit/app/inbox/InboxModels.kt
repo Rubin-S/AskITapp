@@ -1,5 +1,7 @@
 package com.askit.app.inbox
 
+import com.askit.app.home.model.isAvailable
+
 data class ChatContact(
     val id: String,
     val name: String,
@@ -13,7 +15,10 @@ data class ChatMessage(
     val photoUri: String? = null,
     val fromLocalUser: Boolean,
     val sentAtMillis: Long,
+    val sharedStory: StoryReference? = null,
 )
+
+data class StoryReference(val storyId: String, val authorName: String)
 
 data class Conversation(
     val id: String,
@@ -24,11 +29,14 @@ data class Conversation(
     val blocked: Boolean = false,
     val reported: Boolean = false,
     val updatedAtMillis: Long,
+    val previewIsPhoto: Boolean = false,
+    val previewIsStory: Boolean = false,
 )
 
 class InboxStore(
     seed: Boolean = true,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val messageAccess: (String) -> MessageAccess = { MessageAccess.Unavailable },
 ) {
     private val conversations = linkedMapOf<String, Conversation>()
     private val messages = mutableMapOf<String, MutableList<ChatMessage>>()
@@ -82,17 +90,36 @@ class InboxStore(
         conversations[conversationId] = current.copy(reported = true)
     }
 
-    fun sendText(conversationId: String, body: String) {
+    fun sendText(conversationId: String, body: String): Boolean {
         val trimmed = body.trim()
-        if (trimmed.isEmpty()) return
-        appendMessage(conversationId, body = trimmed, photoUri = null)
+        if (trimmed.isEmpty()) return false
+        return appendMessage(conversationId, body = trimmed, photoUri = null)
     }
 
-    fun sendPhoto(conversationId: String, photoUri: String) {
-        appendMessage(conversationId, body = "", photoUri = photoUri)
+    fun sendPhoto(conversationId: String, photoUri: String): Boolean {
+        if (photoUri.isBlank()) return false
+        return appendMessage(conversationId, body = "", photoUri = photoUri)
     }
 
-    fun startConversation(contact: ChatContact): String {
+    fun sendStory(contact: ChatContact, story: com.askit.app.home.model.Story): Boolean {
+        if (contacts.none { it.id == contact.id } || !story.isAvailable()) return false
+        if (conversations[contact.id]?.blocked == true) return false
+        val id = startConversation(contact) ?: return false
+        return appendMessage(id, body = "", photoUri = null, sharedStory = StoryReference(story.id, story.authorName))
+    }
+
+    fun startConversation(contact: ChatContact): String? {
+        if (messageAccess(contact.id) != MessageAccess.Allowed || conversations[contact.id]?.blocked == true) return null
+        return getOrCreateConversation(contact)
+    }
+
+    // Reporting or blocking a person must remain possible when messaging is restricted.
+    fun moderate(contact: ChatContact, report: Boolean) {
+        val id = getOrCreateConversation(contact)
+        if (report) report(id) else block(id)
+    }
+
+    private fun getOrCreateConversation(contact: ChatContact): String {
         conversations[contact.id]?.let { return it.id }
         val conversation = Conversation(
             id = contact.id,
@@ -106,14 +133,9 @@ class InboxStore(
         return contact.id
     }
 
-    fun searchContacts(query: String): List<ChatContact> {
-        val needle = query.trim().lowercase()
-        if (needle.isEmpty()) return contacts
-        return contacts.filter { it.name.lowercase().contains(needle) }
-    }
-
-    private fun appendMessage(conversationId: String, body: String, photoUri: String?) {
-        val conversation = conversations[conversationId] ?: return
+    private fun appendMessage(conversationId: String, body: String, photoUri: String?, sharedStory: StoryReference? = null): Boolean {
+        val conversation = conversations[conversationId] ?: return false
+        if (messageAccess(conversation.contact.id) != MessageAccess.Allowed || conversation.blocked) return false
         val message = ChatMessage(
             id = "msg-${nextMessageId++}",
             conversationId = conversationId,
@@ -121,14 +143,17 @@ class InboxStore(
             photoUri = photoUri,
             fromLocalUser = true,
             sentAtMillis = clock(),
+            sharedStory = sharedStory,
         )
         messages.getOrPut(conversationId) { mutableListOf() }.add(message)
-        val preview = photoUri?.let { "Photo" } ?: body
         conversations[conversationId] = conversation.copy(
-            preview = preview,
+            preview = body,
+            previewIsPhoto = photoUri != null,
+            previewIsStory = sharedStory != null,
             unreadCount = 0,
             updatedAtMillis = message.sentAtMillis,
         )
+        return true
     }
 }
 

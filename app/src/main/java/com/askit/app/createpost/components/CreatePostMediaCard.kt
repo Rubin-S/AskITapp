@@ -1,5 +1,6 @@
 package com.askit.app.createpost.components
 
+import androidx.compose.runtime.getValue
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -7,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,12 +29,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,12 +53,19 @@ import coil3.compose.AsyncImage
 import com.askit.app.R
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.createpost.PostDisclosure
+import com.askit.app.createpost.photoRatio
 import com.askit.app.createpost.PostMediaDraft
 import com.askit.app.createpost.PostMediaLayout
 import com.askit.app.createpost.PostValidationField
 import com.askit.designsystem.R as DesignR
 import com.askit.designsystem.posts.BeforeAfterSlider
 import com.askit.designsystem.posts.PostFeedMedia
+
+enum class BeforeAfterSlot {
+    BEFORE,
+    AFTER,
+    REPLACE,
+}
 
 @Composable
 fun CreatePostMediaCard(
@@ -101,7 +109,7 @@ fun CreatePostMediaCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Visual Media",
+                    text = stringResource(R.string.create_post_media_title),
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
@@ -139,6 +147,9 @@ fun CreatePostMediaCard(
                 }
             }
 
+            Text(stringResource(R.string.post_crop_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             // Body: Adapt according to selected media layout
             if (isBeforeAfter) {
                 BeforeAfterContent(
@@ -254,10 +265,12 @@ private fun BeforeAfterContent(
             BeforeAfterSlider(
                 before = PostFeedMedia(
                     model = before.uri,
+                    aspectRatio = before.photoRatio?.value ?: 4f / 3f,
                     contentDescription = before.imageDescription.trim().takeIf(String::isNotEmpty),
                 ),
                 after = PostFeedMedia(
                     model = after.uri,
+                    aspectRatio = after.photoRatio?.value ?: 4f / 3f,
                     contentDescription = after.imageDescription.trim().takeIf(String::isNotEmpty),
                 ),
             )
@@ -272,7 +285,7 @@ private fun BeforeAfterContent(
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(
-                        text = "Change Before",
+                        text = stringResource(R.string.create_post_change_before),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     )
                 }
@@ -282,7 +295,7 @@ private fun BeforeAfterContent(
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(
-                        text = "Change After",
+                        text = stringResource(R.string.create_post_change_after),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     )
                 }
@@ -294,9 +307,9 @@ private fun BeforeAfterContent(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             SlotCard(
-                step = "1",
-                label = "Before",
-                hint = "Initial problem",
+                step = 1,
+                label = stringResource(DesignR.string.post_feed_before),
+                hint = stringResource(R.string.create_post_initial_problem),
                 photo = before,
                 isError = PostValidationField.BEFORE_PHOTO in validationErrors,
                 errorMessage = R.string.create_post_error_before,
@@ -309,9 +322,9 @@ private fun BeforeAfterContent(
             )
 
             SlotCard(
-                step = "2",
-                label = "After",
-                hint = "Finished result",
+                step = 2,
+                label = stringResource(DesignR.string.post_feed_after),
+                hint = stringResource(R.string.create_post_finished_result),
                 photo = after,
                 isError = PostValidationField.AFTER_PHOTO in validationErrors,
                 errorMessage = R.string.create_post_error_after,
@@ -344,7 +357,7 @@ private fun BeforeAfterContent(
 
 @Composable
 private fun SlotCard(
-    step: String,
+    step: Int,
     label: String,
     hint: String,
     photo: PostMediaDraft,
@@ -414,7 +427,7 @@ private fun SlotCard(
                 ) {
                     Icon(
                         painter = painterResource(DesignR.drawable.ic_close),
-                        contentDescription = "Remove $label photo",
+                        contentDescription = stringResource(R.string.create_post_remove_slot_photo, label),
                         modifier = Modifier.size(14.dp),
                         tint = Color.White,
                     )
@@ -443,7 +456,7 @@ private fun SlotCard(
                 ) {
                     Icon(
                         painter = painterResource(
-                            if (label == "Before") DesignR.drawable.ic_camera else DesignR.drawable.ic_sparkle,
+                            if (step == 1) DesignR.drawable.ic_camera else DesignR.drawable.ic_sparkle,
                         ),
                         contentDescription = null,
                         modifier = Modifier.size(20.dp),
@@ -533,7 +546,7 @@ private fun GalleryContent(
                 }
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    text = "Add photos of your work",
+                    text = stringResource(R.string.create_post_work_photos),
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
@@ -542,7 +555,7 @@ private fun GalleryContent(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Select up to 10 photos from gallery",
+                    text = stringResource(R.string.create_post_gallery_limit),
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -570,7 +583,7 @@ private fun GalleryContent(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 200.dp, max = 340.dp)
+                            .aspectRatio(photos.first().photoRatio?.value ?: 4f / 3f)
                             .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)),
                     )
                     Row(
@@ -616,7 +629,7 @@ private fun GalleryContent(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "${selected + 1} of ${photos.size}",
+                    text = stringResource(R.string.create_post_photo_position, selected + 1, photos.size),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -680,7 +693,7 @@ private fun GalleryContent(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 200.dp, max = 340.dp)
+                            .aspectRatio(photos.first().photoRatio?.value ?: 4f / 3f)
                             .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)),
                     )
 
@@ -750,23 +763,22 @@ private fun GalleryContent(
             ),
         ) {
             Text(
-                text = if (isDescriptionExpanded) "Hide photo description" else "+ Add photo description (optional)",
+                text = if (isDescriptionExpanded) stringResource(R.string.create_post_hide_photo_description) else stringResource(R.string.create_post_add_photo_description),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
         if (isDescriptionExpanded) {
-            OutlinedTextField(
+            AskITTextField(
                 value = selectedItem.imageDescription,
                 onValueChange = { onDescriptionChange(selected, it) },
-                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag(
                         if (photos.size > 1) "create_post_carousel_description" else "create_post_photo_description",
                     ),
-                label = { Text("Photo description") },
+                label = { Text(stringResource(R.string.create_post_photo_description_label)) },
                 minLines = 2,
             )
         }
@@ -790,18 +802,17 @@ private fun BeforeSlotDisclosures(
             modifier = Modifier.testTag("${testTag}_description_toggle"),
         ) {
             Text(
-                text = if (isExpanded) "Hide before description" else "+ Add before description (optional)",
+                text = if (isExpanded) stringResource(R.string.create_post_hide_before_description) else stringResource(R.string.create_post_add_before_description),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (isExpanded) {
-            OutlinedTextField(
+            AskITTextField(
                 value = content.imageDescription,
                 onValueChange = onDescriptionChange,
-                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Before work description") },
+                label = { Text(stringResource(R.string.create_post_before_description_label)) },
                 minLines = 2,
             )
         }
@@ -825,18 +836,17 @@ private fun AfterSlotDisclosures(
             modifier = Modifier.testTag("${testTag}_description_toggle"),
         ) {
             Text(
-                text = if (isExpanded) "Hide after description" else "+ Add after description (optional)",
+                text = if (isExpanded) stringResource(R.string.create_post_hide_after_description) else stringResource(R.string.create_post_add_after_description),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (isExpanded) {
-            OutlinedTextField(
+            AskITTextField(
                 value = content.imageDescription,
                 onValueChange = onDescriptionChange,
-                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("After work description") },
+                label = { Text(stringResource(R.string.create_post_after_description_label)) },
                 minLines = 2,
             )
         }

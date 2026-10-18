@@ -1,6 +1,10 @@
 package com.askit.app.jobs
 
 import com.askit.app.session.SessionProfileStore
+import com.askit.app.task.TaskRepository
+import com.askit.app.task.TaskActionFailure
+import com.askit.app.task.actionPolicy
+import com.askit.app.posttask.PostTaskWorkMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +25,18 @@ class JobsStore(
 
     private var nextId = 100
 
+    internal fun addClientPreviewJobs() {
+        check(com.askit.app.BuildConfig.CLIENT_PREVIEW)
+        _jobs.update { existing -> existing + listOf(
+            Job("preview-verify", "Demo: start an electrical repair", "Priya", kind = JobKind.ServiceRequest,
+                localParty = JobParty.Receiver, status = JobStatus.OnTheWay, workMode = JobWorkMode.OnSite,
+                locationLabel = "Coimbatore", otp = "1234", providerAccountId = "preview-owner", seekerAccountId = "preview-visitor"),
+            Job("preview-review", "Demo: completed lighting installation", "Karthik", kind = JobKind.ServiceRequest,
+                localParty = JobParty.Applicant, status = JobStatus.AwaitingSeekerComplete, workMode = JobWorkMode.OnSite,
+                locationLabel = "Coimbatore", otp = "1234", providerAccountId = "preview-visitor", seekerAccountId = "preview-owner"),
+        ) }
+    }
+
     fun job(id: String): Job? = _jobs.value.firstOrNull { it.id == id }
 
     fun isViewAsOther(jobId: String): Boolean = jobId in _viewAsOtherJobIds.value
@@ -33,21 +49,27 @@ class JobsStore(
         }
     }
 
-    fun applyToTask(
-        title: String,
-        counterpartName: String,
-        workMode: JobWorkMode = JobWorkMode.OnSite,
-    ): ApplyToTaskResult {
-        if (!profileStore.profile.value.hasListedService) {
-            return ApplyToTaskResult.NeedsListedService
+    fun taskApplication(taskId: String, accountId: String?): Job? =
+        if (accountId.isNullOrBlank()) null else _jobs.value.firstOrNull {
+            it.sourceTaskId == taskId && it.applicantAccountId == accountId && it.kind == JobKind.TaskApplication
         }
+
+    @Synchronized
+    fun applyToTask(repository: TaskRepository, taskId: String, accountId: String?): ApplyToTaskResult {
+        if (accountId.isNullOrBlank()) return ApplyToTaskResult.Rejected(TaskActionFailure.SIGN_IN_REQUIRED)
+        val task = repository.getTask(taskId) ?: return ApplyToTaskResult.Rejected(TaskActionFailure.UNAVAILABLE)
+        val profile = profileStore.profile.value
+        val policy = task.actionPolicy(accountId, profile.hasListedService && profile.listing != null)
+        if (policy.isOwner) return ApplyToTaskResult.Rejected(TaskActionFailure.NOT_ALLOWED)
+        if (!policy.showApply) return ApplyToTaskResult.NeedsListedService
+        taskApplication(taskId, accountId)?.let { return ApplyToTaskResult.AlreadyApplied(it.id) }
+        if (!policy.canApply) return ApplyToTaskResult.Rejected(TaskActionFailure.UNAVAILABLE)
         return ApplyToTaskResult.Created(
             createLead(
-                title = title,
-                counterpartName = counterpartName,
-                kind = JobKind.TaskApplication,
-                localParty = JobParty.Applicant,
-                workMode = workMode,
+                title = task.title, counterpartName = task.posterName,
+                kind = JobKind.TaskApplication, localParty = JobParty.Applicant,
+                workMode = if (task.publicDetails?.workMode == PostTaskWorkMode.REMOTE) JobWorkMode.Remote else JobWorkMode.OnSite,
+                sourceTaskId = taskId, applicantAccountId = accountId, providerAccountId = accountId, seekerAccountId = task.posterId,
             ),
         )
     }
@@ -132,25 +154,16 @@ class JobsStore(
         }
     }
 
-    fun canShareOtp(job: Job): Boolean {
-        if (!job.isSeeker(visibleParty(job))) return false
-        return when (job.status) {
-            JobStatus.Accepted, JobStatus.OnTheWay, JobStatus.Started -> true
-            JobStatus.Applied,
-            JobStatus.AwaitingSeekerComplete,
-            JobStatus.Completed,
-            JobStatus.Canceled,
-            JobStatus.Rejected,
-            -> false
-        }
-    }
-
     private fun createLead(
         title: String,
         counterpartName: String,
         kind: JobKind,
         localParty: JobParty,
         workMode: JobWorkMode,
+        sourceTaskId: String? = null,
+        applicantAccountId: String? = null,
+        providerAccountId: String? = null,
+        seekerAccountId: String? = null,
     ): String {
         val id = "job-${nextId++}"
         val otp = ((1000..9999).random()).toString()
@@ -164,6 +177,8 @@ class JobsStore(
                 status = JobStatus.Applied,
                 workMode = workMode,
                 otp = otp,
+                sourceTaskId = sourceTaskId,
+                applicantAccountId = applicantAccountId, providerAccountId = providerAccountId, seekerAccountId = seekerAccountId,
             )
         }
         return id

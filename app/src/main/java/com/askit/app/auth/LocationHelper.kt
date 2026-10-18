@@ -1,18 +1,20 @@
 package com.askit.app.auth
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
+import android.os.CancellationSignal
 import androidx.core.content.ContextCompat
+import androidx.core.location.LocationManagerCompat
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import java.util.Locale
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
 data class GeoLocationResult(
@@ -37,54 +39,54 @@ object LocationHelper {
         return fineLocationGranted || coarseLocationGranted
     }
 
-    @SuppressLint("MissingPermission")
     suspend fun fetchCurrentLocation(context: Context): Result<GeoLocationResult> = withContext(Dispatchers.IO) {
         if (!hasLocationPermission(context)) {
             return@withContext Result.failure(SecurityException("Location permission not granted"))
         }
 
-        try {
-            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-                ?: return@withContext Result.failure(IllegalStateException("Location service unavailable"))
+        withTimeoutOrNull(15_000) {
+            try {
+                val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+                    ?: return@withTimeoutOrNull Result.failure(IllegalStateException("Location service unavailable"))
+                val provider = listOf(LocationManager.NETWORK_PROVIDER, LocationManager.GPS_PROVIDER)
+                    .firstOrNull { locationManager.isProviderEnabled(it) }
+                    ?: return@withTimeoutOrNull Result.failure(IllegalStateException("Location is disabled"))
+                val location = suspendCancellableCoroutine<Location?> { continuation ->
+                    val cancellationSignal = CancellationSignal()
+                    continuation.invokeOnCancellation { cancellationSignal.cancel() }
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        continuation.resume(null)
+                    } else {
+                        LocationManagerCompat.getCurrentLocation(
+                            locationManager, provider, cancellationSignal, { it.run() },
+                        ) { continuation.resume(it) }
+                    }
+                } ?: return@withTimeoutOrNull Result.failure(IllegalStateException("Location unavailable"))
 
-            val providers = locationManager.getProviders(true)
-            var bestLocation: Location? = null
+                val lat = location.latitude
+                val lon = location.longitude
 
-            for (provider in providers) {
-                val l = locationManager.getLastKnownLocation(provider) ?: continue
-                if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
-                    bestLocation = l
+                val geocodeResult = reverseGeocode(context, lat, lon)
+                if (geocodeResult.second.isBlank()) {
+                    return@withTimeoutOrNull Result.failure(IllegalStateException("City lookup unavailable"))
                 }
-            }
-
-            if (bestLocation == null) {
-                // Fallback for emulators/devices without cached location
-                return@withContext Result.success(
+                Result.success(
                     GeoLocationResult(
-                        city = "Coimbatore",
-                        pincode = "641001",
-                        latitude = 11.0168,
-                        longitude = 76.9558,
+                        city = geocodeResult.second,
+                        pincode = geocodeResult.third,
+                        latitude = lat,
+                        longitude = lon,
+                        area = geocodeResult.first,
                     ),
                 )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Result.failure(e)
             }
-
-            val lat = bestLocation.latitude
-            val lon = bestLocation.longitude
-
-            val geocodeResult = reverseGeocode(context, lat, lon)
-            Result.success(
-                GeoLocationResult(
-                    city = geocodeResult.second.ifBlank { "Coimbatore" },
-                    pincode = geocodeResult.third.ifBlank { "641001" },
-                    latitude = lat,
-                    longitude = lon,
-                    area = geocodeResult.first,
-                ),
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        } ?: Result.failure(IllegalStateException("Location lookup timed out"))
     }
 
     @Suppress("DEPRECATION")
@@ -94,7 +96,7 @@ object LocationHelper {
         longitude: Double,
     ): Triple<String, String, String> = withContext(Dispatchers.IO) {
         try {
-            val geocoder = Geocoder(context, Locale.getDefault())
+            val geocoder = Geocoder(context, context.resources.configuration.locales[0])
             if (!Geocoder.isPresent()) {
                 return@withContext Triple("", "", "")
             }
@@ -123,6 +125,8 @@ object LocationHelper {
                 val pincode = addr?.postalCode.orEmpty()
                 Triple(area, city, pincode)
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             Triple("", "", "")
         }

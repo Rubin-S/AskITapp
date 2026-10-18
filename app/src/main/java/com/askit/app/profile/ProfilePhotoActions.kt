@@ -1,6 +1,14 @@
 package com.askit.app.profile
 
 import android.net.Uri
+import android.widget.Toast
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.askit.app.R
+import com.askit.app.auth.isSignupPhotoReadable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,6 +30,15 @@ class ProfilePhotoActions(
 @Composable
 fun rememberProfilePhotoActions(onUri: (String) -> Unit): ProfilePhotoActions {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val latestUri by rememberUpdatedState(onUri)
+    fun failure() { Toast.makeText(context, R.string.profile_photo_unavailable, Toast.LENGTH_LONG).show() }
+    fun deliver(uri: Uri) {
+        scope.launch {
+            if (withContext(Dispatchers.IO) { isSignupPhotoReadable(context.contentResolver, uri.toString()) }) latestUri(uri.toString())
+            else failure()
+        }
+    }
     var pendingCapture by rememberSaveable(stateSaver = CaptureUriSaver) {
         mutableStateOf<Uri?>(null)
     }
@@ -30,23 +47,25 @@ fun rememberProfilePhotoActions(onUri: (String) -> Unit): ProfilePhotoActions {
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         persistPhotoPickerReadAccess(context.contentResolver, listOf(uri))
-        onUri(uri.toString())
+        deliver(uri)
     }
     val camera = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
     ) { success ->
         val captured = pendingCapture
         pendingCapture = null
-        if (success && captured != null) onUri(captured.toString())
+        if (success && captured != null) deliver(captured)
     }
     return ProfilePhotoActions(
         launchLibrary = {
-            library.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            runCatching { library.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }.onFailure { failure() }
         },
         launchCamera = {
-            val uri = createCaptureImageUri(context)
-            pendingCapture = uri
-            camera.launch(uri)
+            runCatching {
+                val uri = createCaptureImageUri(context)
+                pendingCapture = uri
+                camera.launch(uri)
+            }.onFailure { pendingCapture = null; failure() }
         },
     )
 }

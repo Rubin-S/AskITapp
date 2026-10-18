@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,7 +37,7 @@ fun IncomingDispatchCard(
     val seconds = request.remainingSeconds % 60
     val timerText = stringResource(
         R.string.provider_request_respond_time,
-        String.format("%d:%02d", minutes, seconds),
+        String.format(LocalConfiguration.current.locales[0], "%d:%02d", minutes, seconds),
     )
 
     Card(
@@ -89,7 +90,11 @@ fun IncomingDispatchCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = "${request.locality} · ${request.distanceKm} km",
+                        text = stringResource(
+                            R.string.provider_request_location_distance,
+                            request.locality,
+                            request.distanceKm.toString(),
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

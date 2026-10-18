@@ -17,7 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -136,10 +136,9 @@ fun CreatePostPollSection(
                     }
                 }
 
-                OutlinedTextField(
+                AskITTextField(
                     value = content.question,
                     onValueChange = viewModel::updatePollQuestion,
-                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .bringIntoViewRequester(questionBringIntoViewRequester)
@@ -168,10 +167,9 @@ fun CreatePostPollSection(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.Top,
                         ) {
-                            OutlinedTextField(
+                            AskITTextField(
                                 value = option,
                                 onValueChange = { viewModel.updatePollOption(index, it) },
-                                shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
                                     .weight(1f)
                                     .testTag("create_post_poll_option_$index"),

@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,15 +21,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.askit.app.R
 import com.askit.app.story.StoryAudience
 import com.askit.app.story.StoryFormState
-import com.askit.app.story.StoryMediaType
+import com.askit.app.story.editor.StoryCanvas
+import com.askit.app.story.editor.StoryFrame
+import com.askit.app.story.stickers.PostReshareSticker
 import com.askit.app.story.StoryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,24 +73,23 @@ fun StoryShareSheet(
                     .background(Color.Black),
                 contentAlignment = Alignment.Center,
             ) {
-                when (state.mediaType) {
-                    StoryMediaType.Photo, StoryMediaType.Video -> {
-                        AsyncImage(
-                            model = state.mediaUri,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxWidth(),
-                            contentScale = ContentScale.Crop,
-                        )
+                StoryFrame(state.viewport) {
+                    StoryCanvas(
+                        mediaUri = state.mediaUri,
+                        mediaType = state.mediaType,
+                        solidBackgroundArgb = solidBackgroundArgb,
+                        durationMs = state.durationMs,
+                        trimStartMs = state.trimStartMs,
+                        trimEndMs = state.trimEndMs,
+                        transform = state.transform,
+                        layers = state.layers,
+                        readOnly = true,
+                    )
+                    state.sharedPost?.let { post ->
+                        Box(Modifier.fillMaxWidth().padding(horizontal = 24.dp), contentAlignment = Alignment.Center) {
+                            PostReshareSticker(post = post, cardStyle = state.reshareCardStyle)
+                        }
                     }
-                    StoryMediaType.SolidBackground -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(9f / 16f)
-                                .background(Color(solidBackgroundArgb)),
-                        )
-                    }
-                    null -> Unit
                 }
             }
 

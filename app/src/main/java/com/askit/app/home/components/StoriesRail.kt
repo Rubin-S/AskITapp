@@ -18,7 +18,8 @@ fun StoriesRail(
     onAddStoryClick: () -> Unit = {},
 ) {
     val myStory = stories.firstOrNull { it.isOwn }
-    val otherStories = stories.filter { !it.isOwn }
+    val otherStories = stories.filter { !it.isOwn }.groupBy { it.authorId ?: "unknown:${it.id}" }
+        .values.map { group -> group.first().copy(isSeen = group.all { it.isSeen }) }
 
     LazyRow(
         modifier = modifier.fillMaxWidth(),

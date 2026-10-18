@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
@@ -68,7 +69,7 @@ fun ProviderAlertsCard(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                 ) {
                     Text(
-                        text = stringResource(R.string.provider_alerts_count, alerts.size),
+                        text = pluralStringResource(R.plurals.provider_alerts_count, alerts.size, alerts.size),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
@@ -111,7 +112,7 @@ fun ProviderAlertsCard(
                         ) {
                             Icon(
                                 painter = painterResource(com.askit.designsystem.R.drawable.ic_close),
-                                contentDescription = "Dismiss",
+                                contentDescription = stringResource(R.string.dashboard_dismiss),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(16.dp),
                             )

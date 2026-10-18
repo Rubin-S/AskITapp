@@ -41,6 +41,7 @@ fun CreatePostTopBar(
     onPreview: () -> Unit,
     onPost: () -> Unit,
     modifier: Modifier = Modifier,
+    editingExistingPost: Boolean = false,
 ) {
     TopAppBar(
         modifier = modifier,
@@ -52,6 +53,8 @@ fun CreatePostTopBar(
                 text = stringResource(
                     if (screenMode == CreatePostScreenMode.PREVIEW) {
                         R.string.create_post_preview_title
+                    } else if (editingExistingPost) {
+                        R.string.post_edit_title
                     } else {
                         R.string.create_post_screen_title
                     },
@@ -135,7 +138,7 @@ fun CreatePostTopBar(
                         ),
                     ) {
                         Text(
-                            text = "Post",
+                            text = stringResource(if (editingExistingPost) R.string.post_save_changes else R.string.create_post_publish),
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,

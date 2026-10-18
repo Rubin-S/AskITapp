@@ -59,12 +59,22 @@ sealed interface AppDestination : NavKey {
     }
 
     @Serializable
+    data object ExploreLocationDestination : AppDestination {
+        override val bottomBarDestination = AskITDestination.Explore
+    }
+
+    @Serializable
     data object SearchAreaDestination : AppDestination {
         override val bottomBarDestination = AskITDestination.Explore
     }
 
     @Serializable
     data object PostTask : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data class EditTask(val taskId: String) : AppDestination {
         override val bottomBarDestination = AskITDestination.Home
     }
 
@@ -140,6 +150,11 @@ sealed interface AppDestination : NavKey {
 
     @Serializable
     data class StoryViewer(val startStoryId: String) : AppDestination {
+        override val bottomBarDestination = AskITDestination.Home
+    }
+
+    @Serializable
+    data class EditPost(val postId: String) : AppDestination {
         override val bottomBarDestination = AskITDestination.Home
     }
 

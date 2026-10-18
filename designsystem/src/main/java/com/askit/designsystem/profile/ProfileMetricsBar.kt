@@ -35,11 +35,7 @@ data class ProfileMetricItem(
     val onClick: (() -> Unit)? = null,
 )
 
-/**
- * Universal Profile Metrics Bar supporting dynamic stats across dual-identity models:
- * - Form A (Community Member): 3 metrics (Activity, Followers, Following)
- * - Form B (Service Provider): 4 metrics (★ Rating & count, Completed Jobs, Followers, Following)
- */
+/** Shared rating, completed-job and relationship metrics for both account roles. */
 @Composable
 fun ProfileMetricsBar(
     metrics: List<ProfileMetricItem>,

@@ -22,23 +22,23 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.platform.LocalConfiguration
+import com.askit.app.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.askit.designsystem.people.AskITAvatar
 import com.askit.designsystem.R as DsR
-import kotlinx.coroutines.launch
 
 data class ServiceDetailData(
     val id: String,
@@ -53,14 +53,16 @@ data class ServiceDetailData(
     val coverageArea: String,
     val description: String,
     val inclusions: List<String>,
+    val providerId: String? = null,
 )
 
-fun getServiceDetailById(serviceId: String): ServiceDetailData = when (serviceId) {
+fun getServiceDetailById(serviceId: String): ServiceDetailData? = when (serviceId) {
     "srv-1" -> ServiceDetailData(
         id = serviceId,
         title = "Emergency Plumbing & Drain Cleaning",
         category = "Plumbing",
         providerName = "Apex Plumbing Co.",
+        providerId = "provider-apex",
         providerAvatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300",
         startingPrice = "From $75",
         rating = 4.9,
@@ -80,6 +82,7 @@ fun getServiceDetailById(serviceId: String): ServiceDetailData = when (serviceId
         title = "Residential Electrical Repairs & Panels",
         category = "Electrical",
         providerName = "Bright Solutions",
+        providerId = "provider-bright",
         providerAvatarUrl = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300",
         startingPrice = "From $90",
         rating = 4.8,
@@ -99,6 +102,7 @@ fun getServiceDetailById(serviceId: String): ServiceDetailData = when (serviceId
         title = "Custom Cabinetry & Woodworking",
         category = "Carpentry",
         providerName = "Heritage Woodworks",
+        providerId = "provider-heritage",
         providerAvatarUrl = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300",
         startingPrice = "From $150",
         rating = 4.95,
@@ -113,24 +117,7 @@ fun getServiceDetailById(serviceId: String): ServiceDetailData = when (serviceId
             "Delivery and seamless installation",
         ),
     )
-    else -> ServiceDetailData(
-        id = serviceId,
-        title = "Professional Service ($serviceId)",
-        category = "Specialist Service",
-        providerName = "Verified Provider",
-        providerAvatarUrl = null,
-        startingPrice = "From $50",
-        rating = 4.9,
-        reviewCount = 20,
-        responseTime = "Fast Response",
-        coverageArea = "Local Area",
-        description = "High quality on-demand professional service. Contact provider directly to discuss requirements and get a personalized quote.",
-        inclusions = listOf(
-            "Initial consultation",
-            "Professional equipment and tools",
-            "Satisfaction guarantee",
-        ),
-    )
+    else -> null
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -140,19 +127,17 @@ fun ServiceDetailScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onRequestService: () -> Unit = {},
+    onChat: (String) -> Unit = {},
 ) {
     val service = remember(serviceId) { getServiceDetailById(serviceId) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Service Details",
+                        text = stringResource(R.string.service_detail_title),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     )
                 },
@@ -160,51 +145,54 @@ fun ServiceDetailScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(DsR.drawable.ic_arrow_back),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.explore_back),
                         )
                     }
                 },
             )
         },
         bottomBar = {
-            Surface(
-                tonalElevation = 4.dp,
-                shadowElevation = 8.dp,
-                color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+            if (service != null) {
+                Surface(
+                    tonalElevation = 4.dp,
+                    shadowElevation = 8.dp,
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Chat initiated with ${service.providerName}")
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("Chat")
-                    }
-                    Button(
-                        onClick = {
-                            onRequestService()
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Service request sent to ${service.providerName}!")
-                            }
-                        },
-                        modifier = Modifier.weight(1.5f),
-                    ) {
-                        Text("Request Service")
+                        OutlinedButton(
+                            onClick = { service.providerId?.let(onChat) },
+                            enabled = !service.providerId.isNullOrBlank(),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(stringResource(R.string.provider_action_chat))
+                        }
+                        Button(
+                            onClick = onRequestService,
+                            modifier = Modifier.weight(1.5f),
+                        ) {
+                            Text(stringResource(DsR.string.profile_action_request_service))
+                        }
                     }
                 }
             }
         },
     ) { padding ->
+        if (service == null) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(stringResource(R.string.service_detail_unavailable))
+            }
+            return@Scaffold
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -273,12 +261,12 @@ fun ServiceDetailScreen(
                                 modifier = Modifier.size(16.dp),
                             )
                             Text(
-                                text = "%.2f".format(service.rating),
+                                text = String.format(LocalConfiguration.current.locales[0], "%.2f", service.rating),
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "(${service.reviewCount} reviews)",
+                                text = pluralStringResource(R.plurals.service_detail_review_count, service.reviewCount, service.reviewCount),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -306,7 +294,7 @@ fun ServiceDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Starting Price",
+                            text = stringResource(R.string.service_detail_starting_price),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -323,7 +311,7 @@ fun ServiceDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Response Time",
+                            text = stringResource(R.string.service_detail_response_time),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -340,7 +328,7 @@ fun ServiceDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Service Area",
+                            text = stringResource(R.string.service_detail_area),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -355,7 +343,7 @@ fun ServiceDetailScreen(
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "About This Service",
+                    text = stringResource(R.string.service_detail_about),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -368,7 +356,7 @@ fun ServiceDetailScreen(
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Included in Service",
+                    text = stringResource(R.string.service_detail_inclusions),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )

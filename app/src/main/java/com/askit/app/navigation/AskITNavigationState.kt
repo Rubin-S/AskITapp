@@ -25,6 +25,13 @@ internal class AskITNavigationState(
         topLevelRouteState.value = route
     }
 
+    /** Open a top-level screen without leaving a nested screen over its root. */
+    fun navigateToRoot(route: AppDestination) {
+        val stack = backStacks.getValue(route)
+        while (stack.size > 1) stack.removeLastOrNull()
+        topLevelRouteState.value = route
+    }
+
     fun push(route: AppDestination) {
         val currentStack = backStacks.getValue(topLevelRoute)
         if (currentStack.lastOrNull() != route) currentStack.add(route)
@@ -48,6 +55,18 @@ internal class AskITNavigationState(
         val stack = backStacks.getValue(AppDestination.Home)
         while (stack.size > 1) {
             stack.removeLastOrNull()
+        }
+    }
+
+    fun resetForAuthentication(destination: AppDestination) {
+        for ((root, stack) in backStacks) {
+            stack.clear()
+            stack.add(root)
+        }
+        topLevelRouteState.value = AppDestination.Home
+        if (destination != AppDestination.Home) {
+            backStacks.getValue(AppDestination.Home).add(AppDestination.Entry)
+            if (destination != AppDestination.Entry) backStacks.getValue(AppDestination.Home).add(destination)
         }
     }
 

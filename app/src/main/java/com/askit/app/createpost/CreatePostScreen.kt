@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.material3.AlertDialog
+import com.askit.designsystem.dialogs.AskITAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -33,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,6 +75,14 @@ fun CreatePostRoute(
     onCompleteDraft: (PostDraft) -> Unit = {},
 ) {
     val state by viewModel.formState.collectAsStateWithLifecycle()
+    val cropSession by viewModel.cropSession.collectAsStateWithLifecycle()
+    if (cropSession != null) {
+        val session = requireNotNull(cropSession)
+        key(session.source, session.completed.size) {
+            PostPhotoCropScreen(session, viewModel::cancelPhotoCrop) { photo -> viewModel.acceptPhotoCrop(session.source, photo) }
+        }
+        return
+    }
     var showLocationPicker by rememberSaveable { mutableStateOf(false) }
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -139,7 +148,7 @@ fun CreatePostRoute(
     }
 
     if (showDiscardDialog) {
-        AlertDialog(
+        AskITAlertDialog(
             onDismissRequest = { showDiscardDialog = false },
             title = { Text(stringResource(R.string.create_post_discard_title)) },
             text = { Text(stringResource(R.string.create_post_discard_message)) },
@@ -155,7 +164,7 @@ fun CreatePostRoute(
                         onBack()
                     },
                 ) {
-                    Text(stringResource(R.string.create_post_discard))
+                    Text(stringResource(R.string.create_post_discard), color = MaterialTheme.colorScheme.error)
                 }
             },
         )
@@ -177,6 +186,8 @@ private fun CreatePostScreen(
     val contentResolver = LocalContext.current.contentResolver
     var showClosingDatePicker by rememberSaveable { mutableStateOf(false) }
     var beforeAfterSlot by rememberSaveable { mutableStateOf<BeforeAfterSlot?>(null) }
+    var replacementIndex by rememberSaveable { mutableStateOf<Int?>(null) }
+    val cropError by viewModel.cropError.collectAsStateWithLifecycle()
 
     val mediaBringIntoView = remember { BringIntoViewRequester() }
     val bodyBringIntoView = remember { BringIntoViewRequester() }
@@ -194,6 +205,7 @@ private fun CreatePostScreen(
                 }
                 PostValidationField.BEFORE_PHOTO,
                 PostValidationField.AFTER_PHOTO,
+                PostValidationField.PHOTO_RATIO,
                 -> mediaBringIntoView.bringIntoView()
                 PostValidationField.POLL_QUESTION -> {
                     pollQuestionBringIntoView.bringIntoView()
@@ -210,7 +222,7 @@ private fun CreatePostScreen(
     ) { uris ->
         if (uris.isNotEmpty()) {
             persistPhotoPickerReadAccess(contentResolver, uris)
-            viewModel.addPhotos(uris.map(Uri::toString))
+            viewModel.beginPhotoCrop(uris.map(Uri::toString))
         }
     }
     val slotPicker = rememberLauncherForActivityResult(
@@ -219,16 +231,16 @@ private fun CreatePostScreen(
         if (uri != null) {
             persistPhotoPickerReadAccess(contentResolver, listOf(uri))
             when (beforeAfterSlot) {
-                BeforeAfterSlot.BEFORE -> viewModel.setPhotoAt(0, uri.toString())
-                BeforeAfterSlot.AFTER -> viewModel.setPhotoAt(1, uri.toString())
+                BeforeAfterSlot.BEFORE -> viewModel.beginPhotoCrop(listOf(uri.toString()), 0)
+                BeforeAfterSlot.AFTER -> viewModel.beginPhotoCrop(listOf(uri.toString()), 1)
                 BeforeAfterSlot.REPLACE -> {
-                    val index = state.selectedCarouselIndex
-                    viewModel.setPhotoAt(index, uri.toString())
+                    viewModel.beginPhotoCrop(listOf(uri.toString()), replacementIndex)
                 }
-                null -> viewModel.addPhotos(listOf(uri.toString()))
+                null -> viewModel.beginPhotoCrop(listOf(uri.toString()))
             }
         }
         beforeAfterSlot = null
+        replacementIndex = null
     }
 
     val isPostValid = state.body.isNotBlank() || state.photos.any { !it.uri.isNullOrBlank() } || state.poll != null
@@ -239,6 +251,7 @@ private fun CreatePostScreen(
         topBar = {
             CreatePostTopBar(
                 screenMode = state.screenMode,
+                editingExistingPost = viewModel.editingPostId != null,
                 isPostValid = isPostValid,
                 onBack = onBack,
                 onEdit = viewModel::edit,
@@ -267,7 +280,7 @@ private fun CreatePostScreen(
                                 .heightIn(min = 52.dp)
                                 .testTag("create_post_complete"),
                         ) {
-                            Text(stringResource(R.string.create_post_complete_draft))
+                            Text(stringResource(if (viewModel.editingPostId != null) R.string.post_save_changes else R.string.create_post_complete_draft))
                         }
                     }
                 }
@@ -286,6 +299,12 @@ private fun CreatePostScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            if (cropError != null || PostValidationField.PHOTO_RATIO in validationErrors) {
+                item {
+                    Text(stringResource(cropError ?: R.string.post_crop_invalid),
+                        color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(12.dp))
+                }
+            }
             item {
                 if (state.screenMode == CreatePostScreenMode.PREVIEW) {
                     CreatePostPreview(state = state, onEdit = viewModel::edit)
@@ -301,13 +320,13 @@ private fun CreatePostScreen(
                         pollQuestionFocusRequester = pollQuestionFocusRequester,
                         onOpenLocationPicker = onOpenLocationPicker,
                         onPickGallery = {
-                            viewModel.setMediaLayout(PostMediaLayout.GALLERY)
                             galleryPicker.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                             )
                         },
                         onPickSlot = { slot ->
                             beforeAfterSlot = slot
+                            replacementIndex = if (slot == BeforeAfterSlot.REPLACE) state.selectedCarouselIndex else null
                             slotPicker.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                             )
@@ -505,12 +524,14 @@ private fun CreatePostFormState.toFeedContent(): PostFeedContent {
 private fun PostMediaDraft.toFeedMedia(): PostFeedMedia = PostFeedMedia(
     model = uri.orEmpty(),
     contentDescription = imageDescription.trim().takeIf(String::isNotEmpty),
+    aspectRatio = photoRatio?.value ?: 4f / 3f,
 )
 
 private fun firstInvalidField(errors: Set<PostValidationField>): PostValidationField = listOf(
     PostValidationField.CONTENT,
     PostValidationField.BEFORE_PHOTO,
     PostValidationField.AFTER_PHOTO,
+    PostValidationField.PHOTO_RATIO,
     PostValidationField.POLL_QUESTION,
     PostValidationField.POLL_OPTIONS,
     PostValidationField.POLL_CLOSING,

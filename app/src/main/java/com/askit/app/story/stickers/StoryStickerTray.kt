@@ -1,5 +1,8 @@
 package com.askit.app.story.stickers
 
+import com.askit.designsystem.dialogs.AskITAlertDialog
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,15 +16,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
+import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -44,6 +45,7 @@ fun StoryStickerTray(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
+    val photoLabel = stringResource(R.string.story_sticker_photo)
     var query by remember { mutableStateOf("") }
     var showLocationPicker by remember { mutableStateOf(false) }
     var showMentionInput by remember { mutableStateOf(false) }
@@ -67,7 +69,7 @@ fun StoryStickerTray(
             persistPhotoPickerReadAccess(context.contentResolver, listOf(uri))
             viewModel.addSticker(
                 kind = StoryStickerKind.Photo,
-                label = context.getString(R.string.story_sticker_photo),
+                label = photoLabel,
                 payload = uri.toString(),
             )
             onDismiss()
@@ -275,11 +277,11 @@ private fun StickerInputDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    androidx.compose.material3.AlertDialog(
+    AskITAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            OutlinedTextField(
+            AskITTextField(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth(),
@@ -306,13 +308,13 @@ private fun StickerMultiInputDialog(
     onConfirm: (List<String>) -> Unit,
 ) {
     var values by remember(fields) { mutableStateOf(fields) }
-    androidx.compose.material3.AlertDialog(
+    AskITAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 values.forEachIndexed { index, value ->
-                    OutlinedTextField(
+                    AskITTextField(
                         value = value,
                         onValueChange = { newValue ->
                             values = values.toMutableList().also { it[index] = newValue }
@@ -344,19 +346,19 @@ private fun StickerLinkDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    androidx.compose.material3.AlertDialog(
+    AskITAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.story_sticker_link)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
+                AskITTextField(
                     value = url,
                     onValueChange = onUrlChange,
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.story_link_url)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 )
-                OutlinedTextField(
+                AskITTextField(
                     value = label,
                     onValueChange = onLabelChange,
                     modifier = Modifier.fillMaxWidth(),

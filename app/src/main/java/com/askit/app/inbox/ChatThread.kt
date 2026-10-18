@@ -47,14 +47,16 @@ fun ChatThread(
     conversation: Conversation,
     messages: List<ChatMessage>,
     onBack: () -> Unit,
-    onSendText: (String) -> Unit,
+    onSendText: (String) -> Boolean,
     onSendPhoto: (String) -> Unit,
     onMuteChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
     onBlock: () -> Unit = {},
     onReport: () -> Unit = {},
+    resolveStory: (String) -> com.askit.app.home.model.Story? = { null },
+    onOpenStory: (String) -> Unit = {},
     viewAsOtherParty: Boolean = false,
     onViewAsOtherParty: () -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     var draft by rememberSaveable { mutableStateOf("") }
     var menuExpanded by rememberSaveable { mutableStateOf(false) }
@@ -179,8 +181,7 @@ fun ChatThread(
                     value = draft,
                     onValueChange = { draft = it },
                     onSend = {
-                        onSendText(draft)
-                        draft = ""
+                        if (onSendText(draft)) draft = ""
                     },
                     onPhotoPicked = onSendPhoto,
                 )
@@ -201,7 +202,11 @@ fun ChatThread(
                 val previous = ordered.getOrNull(index + 1)
                 val sameAuthor = previous?.fromLocalUser == message.fromLocalUser
                 val fromLocal = if (viewAsOther) !message.fromLocalUser else message.fromLocalUser
-                MessageBubble(
+                if (message.sharedStory != null) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = if (fromLocal) Arrangement.End else Arrangement.Start) {
+                        com.askit.app.home.stories.SharedStoryCard(message.sharedStory, resolveStory, onOpenStory)
+                    }
+                } else MessageBubble(
                     body = message.body,
                     photoModel = message.photoUri,
                     fromLocalUser = fromLocal,

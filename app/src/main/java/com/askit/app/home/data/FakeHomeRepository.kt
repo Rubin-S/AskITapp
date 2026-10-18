@@ -2,11 +2,13 @@ package com.askit.app.home.data
 
 import com.askit.app.home.model.FeedItem
 import com.askit.app.home.model.FeedPost
-import com.askit.app.home.model.PersonPreview
 import com.askit.app.home.model.PostMedia
 import com.askit.app.home.model.PostPoll
 import com.askit.app.home.model.ServicePreview
+import com.askit.app.home.model.isAvailable
 import com.askit.app.home.model.Story
+import com.askit.app.story.StoryDraft
+import com.askit.app.story.StoryMediaType
 import com.askit.app.task.InMemoryTaskRepository
 import com.askit.app.task.TaskRepository
 import com.askit.app.task.toTaskPreview
@@ -14,10 +16,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import com.askit.app.home.stories.StorySocialStore
+import com.askit.app.home.stories.StoryActionResult
+import com.askit.app.home.stories.StoryActionFailure
 
 class FakeHomeRepository(
     private val taskRepository: TaskRepository = InMemoryTaskRepository(),
     initialStoriesList: List<Story> = defaultStories,
+    override val storySocial: StorySocialStore = StorySocialStore(),
 ) : HomeRepository {
 
     companion object {
@@ -25,45 +32,65 @@ class FakeHomeRepository(
             Story(
                 id = "story-1",
                 authorName = "faraan_141",
+                authorId = "story-author-1",
                 authorAvatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300",
-                mediaUrl = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
-                caption = "Finished full home electrical rewiring",
+                content = StoryDraft(
+                    mediaUri = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
+                    mediaType = StoryMediaType.Photo,
+                    caption = "Finished full home electrical rewiring",
+                ),
                 createdAtMillis = System.currentTimeMillis() - 3600_000,
                 isSeen = false,
             ),
             Story(
                 id = "story-2",
                 authorName = "nitpuducherry",
+                authorId = "story-author-2",
                 authorAvatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300",
-                mediaUrl = "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
-                caption = "Installing custom oak kitchen cabinets",
+                content = StoryDraft(
+                    mediaUri = "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
+                    mediaType = StoryMediaType.Photo,
+                    caption = "Installing custom oak kitchen cabinets",
+                ),
                 createdAtMillis = System.currentTimeMillis() - 7200_000,
                 isSeen = false,
             ),
             Story(
                 id = "story-3",
                 authorName = "amy_deliy",
+                authorId = "story-author-3",
                 authorAvatarUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300",
-                mediaUrl = "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800",
-                caption = "HVAC diagnostic and seasonal tune-up",
+                content = StoryDraft(
+                    mediaUri = "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800",
+                    mediaType = StoryMediaType.Photo,
+                    caption = "HVAC diagnostic and seasonal tune-up",
+                ),
                 createdAtMillis = System.currentTimeMillis() - 10800_000,
                 isSeen = false,
             ),
             Story(
                 id = "story-4",
                 authorName = "alex_electric",
+                authorId = "story-author-4",
                 authorAvatarUrl = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300",
-                mediaUrl = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
-                caption = "Commercial panel upgrade",
+                content = StoryDraft(
+                    mediaUri = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800",
+                    mediaType = StoryMediaType.Photo,
+                    caption = "Commercial panel upgrade",
+                ),
                 createdAtMillis = System.currentTimeMillis() - 14400_000,
                 isSeen = true,
             ),
             Story(
                 id = "story-5",
                 authorName = "chloe_craft",
+                authorId = "story-author-5",
                 authorAvatarUrl = "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300",
-                mediaUrl = "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
-                caption = "Modern walnut furniture showcase",
+                content = StoryDraft(
+                    mediaUri = "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
+                    mediaType = StoryMediaType.Photo,
+                    caption = "Modern walnut furniture showcase",
+                ),
                 createdAtMillis = System.currentTimeMillis() - 18000_000,
                 isSeen = true,
             ),
@@ -72,10 +99,17 @@ class FakeHomeRepository(
 
     private val storiesFlow = MutableStateFlow(initialStoriesList)
 
-    override fun getStories(): Flow<List<Story>> = storiesFlow
+    override fun getStory(storyId: String): Story? = storiesFlow.value.firstOrNull { it.id == storyId && it.isAvailable() }
+    override fun getStories(): Flow<List<Story>> = combine(storiesFlow, storySocial.state) { stories, social ->
+        stories.filter { it.isAvailable() && it.authorId !in social.muted && it.id !in social.hiddenStoryIds }
+            .map { it.copy(isOwn = social.accountId != null && it.authorId == social.accountId) }
+    }
 
-    override fun addStory(story: Story) {
+    override fun addStory(story: Story, accountId: String?): StoryActionResult {
+        if (!storySocial.isCurrentAccount(accountId)) return StoryActionResult.Rejected(StoryActionFailure.SIGN_IN)
+        if (story.authorId != accountId) return StoryActionResult.Rejected(StoryActionFailure.NOT_ALLOWED)
         storiesFlow.value = listOf(story) + storiesFlow.value.filter { it.id != story.id }
+        return StoryActionResult.Success
     }
 
     override fun markStorySeen(storyId: String) {
@@ -196,35 +230,7 @@ class FakeHomeRepository(
         ),
         FeedItem.PeopleSection(
             id = "top-providers",
-            people = listOf(
-                PersonPreview(
-                    id = "pro-1",
-                    name = "Lucas Scott",
-                    trade = "Master Electrician",
-                    rating = 4.95,
-                    completedJobsCount = 142,
-                    locationLabel = "North District",
-                    avatarUrl = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300",
-                ),
-                PersonPreview(
-                    id = "pro-2",
-                    name = "Amara Chen",
-                    trade = "Interior Architect",
-                    rating = 4.92,
-                    completedJobsCount = 88,
-                    locationLabel = "Downtown",
-                    avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300",
-                ),
-                PersonPreview(
-                    id = "pro-3",
-                    name = "Carlos Rivera",
-                    trade = "Master Plumber",
-                    rating = 4.88,
-                    completedJobsCount = 196,
-                    locationLabel = "Westside",
-                    avatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300",
-                ),
-            ),
+            people = sampleNearbyProfessionals(),
         ),
         FeedItem.PostItem(
             post = FeedPost(
@@ -298,72 +304,29 @@ class FakeHomeRepository(
         ),
     )
 
-    override fun getFeed(page: Int): Flow<List<FeedItem>> = when (page) {
-        1 -> taskRepository.tasks.map { currentTasks ->
-            val taskPreviews = currentTasks.map { it.toTaskPreview() }
-            buildList {
+    override val posts by lazy {
+        com.askit.app.home.posts.PostStore(
+            (listOf(post1, post2, post3) + page2Items + page3Items)
+                .filterIsInstance<FeedItem.PostItem>()
+                .map { it.post.copy(authorId = "post-author-${it.post.id}") },
+        )
+    }
+
+    override fun getFeed(page: Int): Flow<List<FeedItem>> = combine(taskRepository.tasks, posts.posts, posts.account) { currentTasks, _, _ ->
+        val template = when (page) {
+            1 -> buildList {
+                addAll(posts.publishedPosts().map(FeedItem::PostItem))
                 add(post1)
-                if (taskPreviews.isNotEmpty()) {
-                    add(FeedItem.TaskSection(id = "featured-tasks", tasks = taskPreviews))
-                }
+                val taskPreviews = currentTasks.map { it.toTaskPreview() }
+                if (taskPreviews.isNotEmpty()) add(FeedItem.TaskSection(id = "featured-tasks", tasks = taskPreviews))
                 add(post2)
                 add(post3)
                 add(serviceSection)
             }
+            2 -> page2Items
+            3 -> page3Items
+            else -> emptyList()
         }
-        2 -> flowOf(page2Items)
-        3 -> flowOf(page3Items)
-        else -> flowOf(emptyList())
+        posts.project(template)
     }
-}
-
-fun getFeedPostById(postId: String): FeedPost {
-    val allPosts = listOf(
-        FeedPost(
-            id = "post-1",
-            authorName = "Elena Vance",
-            authorAvatarUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300",
-            locationLabel = "Seattle, WA",
-            content = "Completed master bathroom tiling renovation ahead of schedule. Always inspect waterproofing membrane and seals before laying grout!",
-            media = PostMedia.SinglePhoto(
-                url = "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800",
-                contentDescription = "Modern renovated master bathroom with glass shower",
-            ),
-            createdAtMillis = System.currentTimeMillis() - 1800_000,
-            likesCount = 24,
-            commentsCount = 5,
-        ),
-        FeedPost(
-            id = "post-2",
-            authorName = "Marcus Reed",
-            authorAvatarUrl = "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300",
-            locationLabel = "Portland, OR",
-            content = "Custom live-edge dining table built from local black walnut. Here is the step-by-step milling, joinery, and natural beeswax finish.",
-            media = PostMedia.Carousel(
-                urls = listOf(
-                    "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800",
-                    "https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=800",
-                    "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800",
-                ),
-            ),
-            createdAtMillis = System.currentTimeMillis() - 7200_000,
-            likesCount = 48,
-            commentsCount = 12,
-        ),
-        FeedPost(
-            id = "post-3",
-            authorName = "Sarah Jenkins",
-            authorAvatarUrl = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300",
-            locationLabel = "Denver, CO",
-            content = "Swipe the slider to see the kitchen makeover! Replaced dated laminate cabinets with painted shaker doors and quartz counters.",
-            media = PostMedia.BeforeAfter(
-                beforeUrl = "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800",
-                afterUrl = "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800",
-            ),
-            createdAtMillis = System.currentTimeMillis() - 14400_000,
-            likesCount = 89,
-            commentsCount = 19,
-        ),
-    )
-    return allPosts.find { it.id == postId } ?: allPosts.first()
 }

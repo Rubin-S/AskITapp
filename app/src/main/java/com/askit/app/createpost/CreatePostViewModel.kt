@@ -20,6 +20,7 @@ enum class PostValidationField {
     CONTENT,
     BEFORE_PHOTO,
     AFTER_PHOTO,
+    PHOTO_RATIO,
     POLL_QUESTION,
     POLL_OPTIONS,
     POLL_CLOSING,
@@ -52,6 +53,8 @@ data class PostPublicLocation(
 data class PostMediaDraft(
     val uri: String? = null,
     val imageDescription: String = "",
+    val width: Int = 0,
+    val height: Int = 0,
 )
 
 data class PostPollDraft(
@@ -88,35 +91,138 @@ class CreatePostViewModel(
 
     private val _formState = MutableStateFlow(restoreState())
     val formState: StateFlow<CreatePostFormState> = _formState.asStateFlow()
+    private var accountId: String? = savedStateHandle?.get("create_post_account")
+    var editingPostId: String? = savedStateHandle?.get("create_post_edit_id")
+        private set
+    private var editBaseline: PostDraft? = null
+    private var ownedCrops = savedStateHandle?.let { readStringList(it, "post_owned_crops").toSet() }.orEmpty()
+
+    private fun setOwnedCrops(uris: Set<String>) {
+        ownedCrops = uris
+        savedStateHandle?.set("post_owned_crops", ArrayList(uris))
+    }
+
+    private fun discardOwnedCrops() {
+        ownedCrops.forEach { deletePendingCrop(PostMediaDraft(uri = it)) }
+        setOwnedCrops(emptySet())
+    }
+
+    // Transfer only the published files to the local post repository; discard unused replacements.
+    fun retainPublishedCrops() {
+        val published = _formState.value.photos.mapNotNull { it.uri }.toSet()
+        (ownedCrops - published).forEach { deletePendingCrop(PostMediaDraft(uri = it)) }
+        setOwnedCrops(emptySet())
+    }
+    private val _cropSession = MutableStateFlow(restoreCropSession())
+    internal val cropSession: StateFlow<PostCropSession?> = _cropSession.asStateFlow()
+    private val _cropError = MutableStateFlow<Int?>(null)
+    internal val cropError: StateFlow<Int?> = _cropError.asStateFlow()
+
+    internal fun beginPhotoCrop(sources: List<String>, targetIndex: Int? = null) {
+        if (sources.isEmpty() || _cropSession.value != null) return
+        val photos = _formState.value.photos
+        if (targetIndex != null && targetIndex !in 0 until MAX_POST_PHOTOS) return
+        val remaining = photos.filterIndexed { index, photo -> index != targetIndex && !photo.uri.isNullOrBlank() }
+        if (remaining.size + sources.size > MAX_POST_PHOTOS) {
+            _cropError.value = com.askit.app.R.string.post_crop_too_many
+            return
+        }
+        _cropError.value = null
+        setCropSession(PostCropSession(sources = sources, targetIndex = targetIndex,
+            ratio = remaining.firstNotNullOfOrNull { it.photoRatio }))
+    }
+
+    internal fun cancelPhotoCrop() {
+        _cropSession.value?.completed?.forEach(::deletePendingCrop)
+        setCropSession(null)
+    }
+
+    internal fun acceptPhotoCrop(source: String, photo: PostMediaDraft) {
+        val session = _cropSession.value
+        val ratio = photo.photoRatio
+        if (session == null || session.source != source || ratio == null || (session.ratio != null && ratio != session.ratio)) {
+            deletePendingCrop(photo)
+            return
+        }
+        val next = session.copy(completed = session.completed + photo, ratio = ratio)
+        if (next.completed.size < next.sources.size) {
+            setCropSession(next)
+            return
+        }
+        setOwnedCrops(ownedCrops + next.completed.mapNotNull { it.uri })
+        update {
+            val result = if (next.targetIndex == null) {
+                photos.filter { !it.uri.isNullOrBlank() } + next.completed
+            } else {
+                photos.toMutableList().apply {
+                    while (size <= next.targetIndex) add(PostMediaDraft())
+                    this[next.targetIndex] = photo
+                }
+            }
+            copy(photos = result,
+                mediaLayout = if (next.targetIndex == null) PostMediaLayout.GALLERY else mediaLayout,
+                selectedCarouselIndex = next.targetIndex ?: result.lastIndex.coerceAtLeast(0))
+        }
+        setCropSession(null)
+    }
+
+    private fun setCropSession(session: PostCropSession?) {
+        _cropSession.value = session
+        savedStateHandle?.apply {
+            set("post_crop_sources", session?.sources?.let { ArrayList(it) })
+            set("post_crop_target", session?.targetIndex)
+            set("post_crop_ratio", session?.ratio?.name)
+            set("post_crop_outputs", session?.completed?.map { it.uri.orEmpty() }?.let { ArrayList(it) })
+            set("post_crop_widths", session?.completed?.map { it.width }?.let { ArrayList(it) })
+            set("post_crop_heights", session?.completed?.map { it.height }?.let { ArrayList(it) })
+        }
+    }
+
+    private fun restoreCropSession(): PostCropSession? {
+        val handle = savedStateHandle ?: return null
+        val sources = readStringList(handle, "post_crop_sources").takeIf { it.isNotEmpty() } ?: return null
+        val outputs = readStringList(handle, "post_crop_outputs")
+        val widths = handle.get<ArrayList<Int>>("post_crop_widths").orEmpty()
+        val heights = handle.get<ArrayList<Int>>("post_crop_heights").orEmpty()
+        if (outputs.size >= sources.size) return null
+        return PostCropSession(sources, outputs.mapIndexed { index, uri ->
+            PostMediaDraft(uri = uri, width = widths.getOrElse(index) { 0 }, height = heights.getOrElse(index) { 0 })
+        }, handle.get<Int>("post_crop_target"), handle.get<String>("post_crop_ratio").toEnumOrNull<PostPhotoRatio>())
+    }
+
+    fun activateAccount(id: String?) {
+        val next = id?.takeIf(String::isNotBlank)
+        if (next != accountId) { startNewDraft(); accountId = next }
+        savedStateHandle?.set("create_post_account", next)
+    }
+
+    fun beginEdit(postId: String, draft: PostDraft) {
+        if (editingPostId == postId) { if (editBaseline == null) editBaseline = draft; return }
+        cancelPhotoCrop()
+        discardOwnedCrops()
+        editingPostId = postId
+        savedStateHandle?.set("create_post_edit_id", postId)
+        editBaseline = draft
+        setState(CreatePostFormState(photos = draft.photos, mediaLayout = draft.mediaLayout,
+            body = draft.body, poll = draft.poll, location = draft.location))
+    }
 
     fun startNewDraft() {
+        cancelPhotoCrop()
+        discardOwnedCrops()
+        _cropError.value = null
+        editingPostId = null
+        editBaseline = null
+        savedStateHandle?.set<String?>("create_post_edit_id", null)
         setState(CreatePostFormState())
     }
 
     fun updateTextBody(value: String) = update { copy(body = value) }
 
-    fun addPhotos(uris: List<String>) {
-        val added = uris.map(String::trim).filter(String::isNotEmpty).map { PostMediaDraft(uri = it) }
-        update {
-            val photos = (photos + added)
-                .distinctBy(PostMediaDraft::uri)
-                .take(MAX_POST_PHOTOS)
-            copy(
-                photos = photos,
-                selectedCarouselIndex = photos.lastIndex.coerceAtLeast(0),
-            )
-        }
-    }
-
     fun setPhotoAt(index: Int, uri: String?) = update {
-        val next = photos.toMutableList()
-        while (next.size <= index) next.add(PostMediaDraft())
-        val previous = next[index]
-        next[index] = PostMediaDraft(
-            uri = uri,
-            imageDescription = if (uri == null || uri != previous.uri) "" else previous.imageDescription,
-        )
-        copy(photos = next.take(MAX_POST_PHOTOS), selectedCarouselIndex = index)
+        // Filled media enters through the crop workflow; clearing a slot preserves its position.
+        if (uri != null || index !in photos.indices) return@update this
+        copy(photos = photos.mapIndexed { i, photo -> if (i == index) PostMediaDraft() else photo })
     }
 
     fun removePhotoAt(index: Int) = update {
@@ -161,7 +267,7 @@ class CreatePostViewModel(
             PostMediaLayout.GALLERY -> photos.filter { !it.uri.isNullOrBlank() }
             PostMediaLayout.BEFORE_AFTER -> {
                 val kept = photos.filter { !it.uri.isNullOrBlank() }
-                if (kept.size >= 2) kept else kept + List(2 - kept.size) { PostMediaDraft() }
+                if (kept.size >= 2) kept.take(2) else kept + List(2 - kept.size) { PostMediaDraft() }
             }
         }
         copy(
@@ -269,7 +375,7 @@ class CreatePostViewModel(
     }
 
     val isDirty: Boolean
-        get() = _formState.value.hasMeaningfulChanges
+        get() = if (editingPostId != null && editBaseline != null) _formState.value.toDraft() != editBaseline else _formState.value.hasMeaningfulChanges
 
     private fun update(transform: CreatePostFormState.() -> CreatePostFormState) {
         setState(_formState.value.transform())
@@ -284,6 +390,8 @@ class CreatePostViewModel(
         val handle = savedStateHandle ?: return
         handle[MEDIA_LAYOUT_KEY] = state.mediaLayout.name
         handle[PHOTO_URIS_KEY] = ArrayList(state.photos.map { it.uri.orEmpty() })
+        handle["create_post_photo_widths"] = ArrayList(state.photos.map { it.width })
+        handle["create_post_photo_heights"] = ArrayList(state.photos.map { it.height })
         handle[PHOTO_DESCRIPTIONS_KEY] = ArrayList(state.photos.map(PostMediaDraft::imageDescription))
         handle[TEXT_BODY_KEY] = state.body
         handle[HAS_POLL_KEY] = state.poll != null
@@ -306,10 +414,14 @@ class CreatePostViewModel(
         val handle = savedStateHandle ?: return CreatePostFormState()
         val uris = readStringList(handle, PHOTO_URIS_KEY)
         val descriptions = readStringList(handle, PHOTO_DESCRIPTIONS_KEY)
+        val widths = handle.get<ArrayList<Int>>("create_post_photo_widths").orEmpty()
+        val heights = handle.get<ArrayList<Int>>("create_post_photo_heights").orEmpty()
         val photos = uris.mapIndexed { index, uri ->
             PostMediaDraft(
                 uri = uri.takeIf(String::isNotBlank),
                 imageDescription = descriptions.getOrNull(index).orEmpty(),
+                width = widths.getOrElse(index) { 0 },
+                height = heights.getOrElse(index) { 0 },
             )
         }
         val poll = if (handle.get<Boolean>(HAS_POLL_KEY) == true) {
@@ -398,6 +510,8 @@ private val PostPollDraft?.hasMeaningfulChanges: Boolean
 
 private fun validate(state: CreatePostFormState): Set<PostValidationField> = buildSet {
     val hasMedia = state.filledPhotos().isNotEmpty()
+    val ratios = state.filledPhotos().map { it.photoRatio }
+    if (ratios.any { it == null } || ratios.distinct().size > 1) add(PostValidationField.PHOTO_RATIO)
     val hasBody = state.body.isNotBlank()
     val hasPoll = state.poll != null
     if (!hasMedia && !hasBody && !hasPoll) add(PostValidationField.CONTENT)
@@ -440,6 +554,10 @@ private fun CreatePostFormState.toDraft(): PostDraft = PostDraft(
 
 private fun CreatePostFormState.filledPhotos(): List<PostMediaDraft> =
     photos.filter { !it.uri.isNullOrBlank() }
+
+internal fun PostDraft.isValidPostDraft(): Boolean =
+    photos.size <= CreatePostViewModel.MAX_POST_PHOTOS && photos.all { !it.uri.isNullOrBlank() } &&
+        validate(CreatePostFormState(photos = photos, mediaLayout = mediaLayout, body = body, poll = poll, location = location)).isEmpty()
 
 private const val MIN_POLL_OPTIONS = CreatePostViewModel.MIN_POLL_OPTIONS
 private const val MAX_POLL_OPTIONS = CreatePostViewModel.MAX_POLL_OPTIONS

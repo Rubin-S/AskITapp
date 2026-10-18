@@ -8,6 +8,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import com.askit.designsystem.inputs.AskITInputDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.PlatformTextStyle
@@ -53,6 +55,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
+import com.askit.designsystem.R
 
 @Composable
 fun OtpBoxes(
@@ -69,6 +72,7 @@ fun OtpBoxes(
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val shakeOffset = remember { Animatable(0f) }
+    val inputDescription = pluralStringResource(R.plurals.otp_input_description, digitCount, digitCount)
 
     // Auto-focus keyboard on launch
     LaunchedEffect(autoFocus) {
@@ -110,7 +114,7 @@ fun OtpBoxes(
     )
 
     val isDark = isSystemInDarkTheme()
-    val accentColor = if (isDark) Color(0xFF7CE605) else Color(0xFF121418)
+    val accentColor = MaterialTheme.colorScheme.primary
     val errorColor = MaterialTheme.colorScheme.error
 
     val slotWidth: Dp = if (digitCount > 4) 44.dp else 56.dp
@@ -141,7 +145,7 @@ fun OtpBoxes(
         modifier = modifier
             .focusRequester(focusRequester)
             .offset { IntOffset(shakeOffset.value.roundToInt(), 0) }
-            .semantics { contentDescription = "OTP verification code input, $digitCount digits" },
+            .semantics { contentDescription = inputDescription },
         decorationBox = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(if (digitCount > 4) 8.dp else 10.dp),
@@ -168,23 +172,18 @@ fun OtpBoxes(
                         isError -> errorColor
                         isCurrentSlot -> accentColor
                         isFilled -> accentColor.copy(alpha = if (isDark) 0.6f else 0.4f)
-                        else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        else -> MaterialTheme.colorScheme.outline
                     }
 
                     val borderWidth = if (isCurrentSlot || isError) 2.dp else 1.dp
-                    val containerColor = when {
-                        isError -> errorColor.copy(alpha = 0.08f)
-                        isCurrentSlot -> accentColor.copy(alpha = if (isDark) 0.10f else 0.04f)
-                        isFilled -> if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerLow
-                        else -> if (isDark) MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceContainerLowest
-                    }
+                    val containerColor = AskITInputDefaults.containerColor
 
                     Box(
                         modifier = Modifier
                             .size(width = slotWidth, height = slotHeight)
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(AskITInputDefaults.Shape)
                             .background(containerColor)
-                            .border(borderWidth, borderColor, RoundedCornerShape(14.dp))
+                            .border(borderWidth, borderColor, AskITInputDefaults.Shape)
                             .testTag("otp_box_$index"),
                         contentAlignment = Alignment.Center,
                     ) {

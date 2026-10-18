@@ -2,6 +2,10 @@ package com.askit.app.home
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.askit.app.R
 import com.askit.app.home.components.HomePeopleSection
 import com.askit.app.home.components.HomePostItem
 import com.askit.app.home.components.HomeServicesSection
@@ -67,8 +72,20 @@ fun HomeScreen(
     onTaskClick: (TaskPreview) -> Unit = {},
     onServiceClick: (ServicePreview) -> Unit = {},
     onPersonClick: (PersonPreview) -> Unit = {},
+    followingIds: Set<String> = emptySet(),
+    followingAccountId: String? = null,
+    onTogglePersonFollow: (PersonPreview) -> Unit = {},
+    currentAccountId: () -> String? = { null },
+    onEditPost: (String) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val postRecords by viewModel.posts.posts.collectAsStateWithLifecycle()
+    val postAccount by viewModel.posts.account.collectAsStateWithLifecycle()
+    var menuPostId by androidx.compose.runtime.saveable.rememberSaveable(postAccount.accountId) { mutableStateOf<String?>(null) }
+    val postContext = LocalContext.current
+    fun postAction(result: com.askit.app.home.posts.PostResult) {
+        if (result is com.askit.app.home.posts.PostResult.Failure) Toast.makeText(postContext, result.messageRes, Toast.LENGTH_SHORT).show()
+    }
     var activeCommentPost by remember { mutableStateOf<FeedPost?>(null) }
     var activeSharePost by remember { mutableStateOf<FeedPost?>(null) }
 
@@ -122,13 +139,11 @@ fun HomeScreen(
                             item(key = "home_header") {
                                 Column {
                                     HomeTopBar()
-                                    if (state.stories.isNotEmpty()) {
-                                        StoriesRail(
-                                            stories = state.stories,
-                                            onAddStoryClick = { onAddStoryClick(null) },
-                                            onStoryClick = onStoryClick,
-                                        )
-                                    }
+                                    StoriesRail(
+                                        stories = state.stories,
+                                        onAddStoryClick = { onAddStoryClick(null) },
+                                        onStoryClick = onStoryClick,
+                                    )
                                 }
                             }
                             items(
@@ -149,6 +164,11 @@ fun HomeScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             onCommentClick = { activeCommentPost = item.post },
                                             onShareClick = { activeSharePost = item.post },
+                                            onMoreClick = { menuPostId = item.post.id },
+                                            isLiked = item.post.id in postAccount.liked,
+                                            isSaved = item.post.id in postAccount.saved,
+                                            onLikeClick = { postAction(viewModel.posts.toggleLiked(item.post.id, currentAccountId())) },
+                                            onSaveClick = { postAction(viewModel.posts.toggleSaved(item.post.id, currentAccountId())) },
                                         )
                                     }
                                     is FeedItem.TaskSection -> {
@@ -170,6 +190,9 @@ fun HomeScreen(
                                             section = item,
                                             modifier = Modifier.fillMaxWidth(),
                                             onPersonClick = onPersonClick,
+                                            followingIds = followingIds,
+                                            accountId = followingAccountId,
+                                            onToggleFollow = onTogglePersonFollow,
                                         )
                                     }
                                 }
@@ -204,9 +227,14 @@ fun HomeScreen(
         }
     }
 
-    activeCommentPost?.let { _ ->
-        CommentsBottomSheet(
+    menuPostId?.let { id -> com.askit.app.home.posts.PostActionsSheet(id, viewModel.posts, currentAccountId,
+        onDismiss = { menuPostId = null }, onEdit = onEditPost) }
+    activeCommentPost?.let { selected ->
+        val live = postRecords[selected.id]?.takeUnless { it.archived }
+        if (live != null) CommentsBottomSheet(
             onDismiss = { activeCommentPost = null },
+            canComment = live.commentsEnabled && viewModel.posts.isCurrentAccount(currentAccountId()),
+            disabledMessage = stringResource(if (!live.commentsEnabled) R.string.post_comments_disabled else R.string.post_action_sign_in),
             currentUserAvatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
         )
     }
@@ -293,13 +321,13 @@ private fun HomeTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = "AskIT",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.5).sp,
-            ),
-            color = MaterialTheme.colorScheme.onBackground,
+        Image(
+            painter = painterResource(R.drawable.ic_askit_wordmark),
+            contentDescription = stringResource(R.string.auth_logo),
+            modifier = Modifier
+                .width(108.dp)
+                .height(28.dp)
+                .testTag("home_wordmark"),
         )
     }
 }
@@ -317,7 +345,7 @@ private fun HomeEmptyState(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "No Posts Yet",
+            text = stringResource(R.string.home_empty_title),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
             ),
@@ -325,14 +353,14 @@ private fun HomeEmptyState(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Check back soon or pull down to refresh.",
+            text = stringResource(R.string.home_empty_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedButton(onClick = onRefresh) {
-            Text("Refresh")
+            Text(stringResource(R.string.explore_refresh))
         }
     }
 }
@@ -351,7 +379,7 @@ private fun HomeErrorState(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "Couldn't Load Feed",
+            text = stringResource(R.string.home_error_title),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
             ),
@@ -366,7 +394,7 @@ private fun HomeErrorState(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onRetry) {
-            Text("Retry")
+            Text(stringResource(R.string.explore_retry))
         }
     }
 }

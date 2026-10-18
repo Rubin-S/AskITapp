@@ -1,6 +1,7 @@
 package com.askit.app.profile
 
 import com.askit.app.session.ProfileAvailability
+import com.askit.app.auth.SignupDraft
 import com.askit.app.session.SessionProfile
 import com.askit.app.session.SessionProfileStore
 import kotlinx.coroutines.flow.StateFlow
@@ -11,25 +12,18 @@ import kotlinx.coroutines.flow.StateFlow
 interface ProfileRepository {
     val profile: StateFlow<SessionProfile>
 
-    fun updateIdentity(
-        displayName: String,
-        username: String,
-        city: String,
-        bio: String,
-        about: String,
-        avatarUrl: String?,
-    )
+    fun completeSignup(draft: SignupDraft)
 
-    fun updateAbout(about: String)
-    fun updateLookingFor(lookingFor: List<String>)
-    fun updateSkills(skills: List<String>)
+    fun updateIdentity(state: EditProfileFormState)
+
     fun updateAvailability(availability: ProfileAvailability)
-    fun setAvatar(avatarUrl: String?)
-    fun appendGallery(uris: List<String>)
-    fun appendReview(review: ProfileReview)
-    fun addLicense(license: String)
+    fun saveHighlight(actorId: String, highlight: ProfileHighlight)
+    fun deleteHighlight(actorId: String, id: String)
+    fun setBanner(actorId: String, uri: String?)
+    fun setAvatar(actorId: String, avatarUrl: String?)
+
     fun updateActiveRole(role: String)
-    fun updatePhoneNumber(phone: String)
+
     fun updatePushNotifications(enabled: Boolean)
     fun updateJobAlerts(enabled: Boolean)
     fun updateLanguage(lang: String)
@@ -43,37 +37,21 @@ class LocalProfileRepository(
 ) : ProfileRepository {
     override val profile: StateFlow<SessionProfile> = store.profile
 
-    override fun updateIdentity(
-        displayName: String,
-        username: String,
-        city: String,
-        bio: String,
-        about: String,
-        avatarUrl: String?,
-    ) {
-        store.updateIdentity(displayName, username, city, bio, about, avatarUrl)
-    }
+    override fun completeSignup(draft: SignupDraft) = store.completeSignup(draft)
 
-    override fun updateAbout(about: String) = store.updateAbout(about)
-
-    override fun updateLookingFor(lookingFor: List<String>) = store.updateLookingFor(lookingFor)
-
-    override fun updateSkills(skills: List<String>) = store.updateSkills(skills)
+    override fun updateIdentity(state: EditProfileFormState) = store.updateIdentity(state)
 
     override fun updateAvailability(availability: ProfileAvailability) =
         store.updateAvailability(availability)
 
-    override fun setAvatar(avatarUrl: String?) = store.setAvatar(avatarUrl)
+    override fun saveHighlight(actorId: String, highlight: ProfileHighlight) = store.saveHighlight(actorId, highlight)
+    override fun deleteHighlight(actorId: String, id: String) = store.deleteHighlight(actorId, id)
 
-    override fun appendGallery(uris: List<String>) = store.appendGallery(uris)
+    override fun setBanner(actorId: String, uri: String?) = store.setBanner(actorId, uri)
 
-    override fun appendReview(review: ProfileReview) = store.appendReview(review)
-
-    override fun addLicense(license: String) = store.addLicense(license)
+    override fun setAvatar(actorId: String, avatarUrl: String?) = store.setAvatar(actorId, avatarUrl)
 
     override fun updateActiveRole(role: String) = store.updateActiveRole(role)
-
-    override fun updatePhoneNumber(phone: String) = store.updatePhoneNumber(phone)
 
     override fun updatePushNotifications(enabled: Boolean) = store.updatePushNotifications(enabled)
 

@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -24,6 +25,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -61,6 +64,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberConstraintsSizeResolver
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -75,6 +79,7 @@ data class PostFeedAuthor(
 data class PostFeedMedia(
     val model: Any,
     val contentDescription: String? = null,
+    val aspectRatio: Float = 4f / 3f,
 )
 
 sealed interface PostFeedMediaContent {
@@ -124,6 +129,7 @@ fun PostFeedItem(
     onShareClick: (() -> Unit)? = null,
     onSaveClick: (() -> Unit)? = null,
     onMoreClick: (() -> Unit)? = null,
+    hideLikeCount: Boolean = false,
 ) {
     val displayName = author.displayName.trim().ifBlank {
         stringResource(R.string.post_feed_author_fallback)
@@ -133,6 +139,9 @@ fun PostFeedItem(
     var localLiked by rememberSaveable(isLiked) { mutableStateOf(isLiked) }
     var localLikesCount by rememberSaveable(likesCount) { mutableIntStateOf(likesCount) }
     var localSaved by rememberSaveable(isSaved) { mutableStateOf(isSaved) }
+    val displayedLiked = if (onLikeClick != null) isLiked else localLiked
+    val displayedLikesCount = if (onLikeClick != null) likesCount else localLikesCount
+    val displayedSaved = if (onSaveClick != null) isSaved else localSaved
     var doubleTapTrigger by remember { mutableIntStateOf(0) }
 
     fun handleLikeToggle() {
@@ -151,12 +160,9 @@ fun PostFeedItem(
 
     fun handleDoubleTap() {
         doubleTapTrigger++
-        if (!localLiked) {
-            localLiked = true
-            localLikesCount += 1
-            onLikeClick?.invoke()
-        }
+        if (!displayedLiked) handleLikeToggle()
     }
+    val onDoubleTap by rememberUpdatedState(newValue = { handleDoubleTap() })
 
     Column(
         modifier = modifier
@@ -176,7 +182,7 @@ fun PostFeedItem(
                     .fillMaxWidth()
                     .pointerInput(Unit) {
                         detectTapGestures(
-                            onDoubleTap = { handleDoubleTap() },
+                            onDoubleTap = { onDoubleTap() },
                         )
                     },
             ) {
@@ -198,10 +204,11 @@ fun PostFeedItem(
             }
         }
         PostActionBar(
-            likesCount = localLikesCount,
+            likesCount = displayedLikesCount,
             commentsCount = commentsCount,
-            isLiked = localLiked,
-            isSaved = localSaved,
+            hideLikeCount = hideLikeCount,
+            isLiked = displayedLiked,
+            isSaved = displayedSaved,
             onLikeClick = { handleLikeToggle() },
             onCommentClick = onCommentClick,
             onShareClick = onShareClick,
@@ -347,14 +354,15 @@ private fun PostActionBar(
     commentsCount: Int,
     isLiked: Boolean,
     isSaved: Boolean,
+    hideLikeCount: Boolean = false,
     onLikeClick: (() -> Unit)? = null,
     onCommentClick: (() -> Unit)? = null,
     onShareClick: (() -> Unit)? = null,
     onSaveClick: (() -> Unit)? = null,
 ) {
-    var localLiked by rememberSaveable(isLiked) { mutableStateOf(isLiked) }
-    var localLikesCount by rememberSaveable(likesCount) { mutableIntStateOf(likesCount) }
-    var localSaved by rememberSaveable(isSaved) { mutableStateOf(isSaved) }
+    val localLiked = isLiked
+    val localLikesCount = likesCount
+    val localSaved = isSaved
 
     Row(
         modifier = Modifier
@@ -372,19 +380,7 @@ private fun PostActionBar(
             Row(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .clickable {
-                        if (onLikeClick != null) {
-                            onLikeClick()
-                        } else {
-                            if (localLiked) {
-                                localLiked = false
-                                localLikesCount = maxOf(0, localLikesCount - 1)
-                            } else {
-                                localLiked = true
-                                localLikesCount += 1
-                            }
-                        }
-                    }
+                    .clickable { onLikeClick?.invoke() }
                     .padding(vertical = 4.dp, horizontal = 2.dp)
                     .testTag("post_feed_like_button"),
                 verticalAlignment = Alignment.CenterVertically,
@@ -400,7 +396,7 @@ private fun PostActionBar(
                     tint = if (localLiked) Color(0xFFE91E63) else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(24.dp),
                 )
-                if (localLikesCount > 0) {
+                if (!hideLikeCount && localLikesCount > 0) {
                     Text(
                         text = localLikesCount.toString(),
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
@@ -457,11 +453,7 @@ private fun PostActionBar(
             modifier = Modifier
                 .clip(CircleShape)
                 .clickable {
-                    if (onSaveClick != null) {
-                        onSaveClick()
-                    } else {
-                        localSaved = !localSaved
-                    }
+                    onSaveClick?.invoke()
                 }
                 .padding(vertical = 4.dp, horizontal = 2.dp)
                 .testTag("post_feed_save_button"),
@@ -535,21 +527,16 @@ private fun PostImageMedia(
     fallbackDescription: String = stringResource(R.string.post_feed_photo_content_description),
 ) {
     val context = LocalContext.current
+    val sizeResolver = rememberConstraintsSizeResolver()
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
             .data(media.model)
+            .size(sizeResolver)
             .crossfade(false)
             .build(),
     )
     val painterState by painter.state.collectAsState()
-    val ratio = when (val state = painterState) {
-        is AsyncImagePainter.State.Success -> {
-            val width = state.result.image.width
-            val height = state.result.image.height
-            if (width > 0 && height > 0) width.toFloat() / height.toFloat() else 1f
-        }
-        else -> 1f
-    }.coerceIn(0.65f, 1.85f)
+    val ratio = media.aspectRatio
     val imageDescription = media.contentDescription?.trim()?.takeIf(String::isNotEmpty)
         ?: fallbackDescription
     val unavailable = painterState is AsyncImagePainter.State.Error
@@ -557,6 +544,7 @@ private fun PostImageMedia(
     Box(
         modifier = modifier
             .aspectRatio(ratio)
+            .then(sizeResolver)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .semantics { contentDescription = imageDescription },
         contentAlignment = Alignment.Center,
@@ -574,6 +562,9 @@ private fun PostImageMedia(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
             )
+            if (painterState is AsyncImagePainter.State.Loading || painterState is AsyncImagePainter.State.Empty) {
+                CircularProgressIndicator(Modifier.size(28.dp))
+            }
         }
     }
 }
@@ -586,6 +577,7 @@ private fun CarouselPostBody(
     val pagerState = rememberPagerState(pageCount = { items.size })
     val page = pagerState.currentPage.coerceIn(items.indices)
     val counterLabel = stringResource(R.string.post_feed_carousel_counter, page + 1, items.size)
+    val counterDescription = stringResource(R.string.post_feed_carousel_page, page + 1, items.size)
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -611,25 +603,30 @@ private fun CarouselPostBody(
                     }
                     ?: stringResource(R.string.post_feed_carousel_page, index + 1, items.size)
                 PostImageMedia(
-                    media = item.copy(contentDescription = pageDescription),
+                    media = item.copy(contentDescription = pageDescription, aspectRatio = items.first().aspectRatio),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Box(
+            Surface(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(12.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.92f),
-                        shape = MaterialTheme.shapes.small,
-                    )
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                    .clearAndSetSemantics { contentDescription = counterLabel },
+                    .testTag("post_feed_carousel_counter")
+                    .clearAndSetSemantics { contentDescription = counterDescription },
+                shape = CircleShape,
+                color = Color.Black.copy(alpha = 0.72f),
+                contentColor = Color.White,
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
             ) {
                 Text(
                     text = counterLabel,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.inverseOnSurface,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontFeatureSettings = "tnum",
+                    ),
+                    modifier = Modifier
+                        .heightIn(min = 28.dp)
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
                 )
             }
         }

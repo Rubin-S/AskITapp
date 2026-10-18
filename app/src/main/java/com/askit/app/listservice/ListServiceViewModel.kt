@@ -1,5 +1,6 @@
 package com.askit.app.listservice
 
+import kotlinx.serialization.Serializable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -7,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.math.BigDecimal
 
+@Serializable
 enum class ListServiceDeliveryMode {
     AT_CUSTOMER_LOCATION,
     AT_PROVIDER_LOCATION,
@@ -42,6 +44,7 @@ enum class ListServiceValidationField {
     PROVIDER_LOCATION,
     PRICE,
     PRICE_RANGE,
+    PROFESSIONAL_DETAILS,
 }
 
 const val LIST_SERVICE_OTHER_CATEGORY_ID = "other"
@@ -68,7 +71,7 @@ data class ListServiceFormState(
     val maximumPrice: String = "",
     val portfolioUris: List<String> = emptyList(),
     val availability: String = "",
-    val experience: String = "",
+    val experience: String = "0",
     val typicalDuration: String = "",
     val materials: String = "",
     val credentials: String = "",
@@ -78,16 +81,20 @@ data class ListServiceFormState(
     val hasAttemptedReview: Boolean = false,
     val reviewAttempt: Int = 0,
     val screenMode: ListServiceScreenMode = ListServiceScreenMode.FORM,
+    val contactPhone: String = "",
+    val contactEmail: String = "",
 )
 
+@Serializable
 data class ListServiceCoverage(
     val publicAreaLabel: String,
     val placeId: String?,
     val latitude: Double,
     val longitude: Double,
-    val radiusKm: Int,
+    val radiusKm: Int?,
 )
 
+@Serializable
 data class ListServicePublicLocation(
     val publicAreaLabel: String,
     val placeId: String?,
@@ -95,20 +102,28 @@ data class ListServicePublicLocation(
     val longitude: Double,
 )
 
+@Serializable
 sealed interface ListServicePricing {
+    @Serializable
     data object ContactForQuote : ListServicePricing
 
+    @Serializable
     data class StartingAt(val amount: String) : ListServicePricing
 
+    @Serializable
     data class Fixed(val amount: String) : ListServicePricing
 
+    @Serializable
     data class Hourly(val amount: String) : ListServicePricing
 
+    @Serializable
     data class PerVisit(val amount: String) : ListServicePricing
 
+    @Serializable
     data class Range(val minimum: String, val maximum: String) : ListServicePricing
 }
 
+@Serializable
 data class ListServiceDetails(
     val availability: String?,
     val experience: String?,
@@ -119,6 +134,7 @@ data class ListServiceDetails(
     val advanceNotice: String?,
 )
 
+@Serializable
 data class ListServiceDraft(
     val categoryId: String,
     val customCategory: String? = null,
@@ -130,6 +146,8 @@ data class ListServiceDraft(
     val pricing: ListServicePricing? = null,
     val portfolioUris: List<String> = emptyList(),
     val details: ListServiceDetails,
+    val contactPhone: String = "",
+    val contactEmail: String = "",
 )
 
 class ListServiceViewModel(
@@ -146,6 +164,8 @@ class ListServiceViewModel(
     fun loadDraft(draft: ListServiceDraft) {
         setState(draft.toFormState())
     }
+
+    fun updateContact(phone: String, email: String) = update { copy(contactPhone = phone, contactEmail = email) }
 
     fun updateTitle(value: String) = update { copy(title = value) }
 
@@ -195,7 +215,7 @@ class ListServiceViewModel(
 
     fun selectCoverageRadius(radiusKm: Int) {
         if (radiusKm !in LIST_SERVICE_COVERAGE_RADII_KM) return
-        update { copy(coverageRadiusKm = radiusKm) }
+        update { copy(coverageRadiusKm = radiusKm.takeUnless { it == coverageRadiusKm }) }
     }
 
     fun selectProviderLocation(
@@ -289,6 +309,8 @@ class ListServiceViewModel(
         val handle = savedStateHandle ?: return
         handle[CATEGORY_KEY] = state.categoryId
         handle[CUSTOM_CATEGORY_KEY] = state.customCategory
+        handle["service_contact_phone"] = state.contactPhone
+        handle["service_contact_email"] = state.contactEmail
         handle[TITLE_KEY] = state.title
         handle[DESCRIPTION_KEY] = state.description
         handle[DELIVERY_MODES_KEY] = ArrayList(state.deliveryModes.map { it.name })
@@ -325,6 +347,8 @@ class ListServiceViewModel(
             categoryId = handle.get<String>(CATEGORY_KEY),
             customCategory = handle.get<String>(CUSTOM_CATEGORY_KEY).orEmpty(),
             title = handle.get<String>(TITLE_KEY).orEmpty(),
+            contactPhone = handle.get<String>("service_contact_phone").orEmpty(),
+            contactEmail = handle.get<String>("service_contact_email").orEmpty(),
             description = handle.get<String>(DESCRIPTION_KEY).orEmpty(),
             deliveryModes = handle.get<ArrayList<String>>(DELIVERY_MODES_KEY)
                 .orEmpty()
@@ -346,7 +370,7 @@ class ListServiceViewModel(
             maximumPrice = handle.get<String>(MAXIMUM_PRICE_KEY).orEmpty(),
             portfolioUris = handle.get<ArrayList<String>>(PORTFOLIO_KEY)?.toList().orEmpty(),
             availability = handle.get<String>(AVAILABILITY_KEY).orEmpty(),
-            experience = handle.get<String>(EXPERIENCE_KEY).orEmpty(),
+            experience = handle.get<String>(EXPERIENCE_KEY) ?: "0",
             typicalDuration = handle.get<String>(TYPICAL_DURATION_KEY).orEmpty(),
             materials = handle.get<String>(MATERIALS_KEY).orEmpty(),
             credentials = handle.get<String>(CREDENTIALS_KEY).orEmpty(),
@@ -405,7 +429,7 @@ private val ListServiceFormState.hasMeaningfulChanges: Boolean
         coverageRadiusKm != null || providerAreaLabel.isNotBlank() || providerPlaceId != null ||
         providerLatitude != null || providerLongitude != null || pricingMode != null ||
         priceAmount.isNotBlank() || minimumPrice.isNotBlank() || maximumPrice.isNotBlank() ||
-        portfolioUris.isNotEmpty() || availability.isNotBlank() || experience.isNotBlank() ||
+        portfolioUris.isNotEmpty() || availability.isNotBlank() || experience != "0" ||
         typicalDuration.isNotBlank() || materials.isNotBlank() || credentials.isNotBlank() ||
         warranty.isNotBlank() || advanceNotice.isNotBlank()
 
@@ -416,7 +440,7 @@ private fun ListServiceFormState.toDraft(): ListServiceDraft {
             placeId = customerPlaceId,
             latitude = requireNotNull(customerLatitude),
             longitude = requireNotNull(customerLongitude),
-            radiusKm = requireNotNull(coverageRadiusKm),
+            radiusKm = coverageRadiusKm,
         )
     } else {
         null
@@ -449,6 +473,9 @@ private fun ListServiceFormState.toDraft(): ListServiceDraft {
             categoryId == LIST_SERVICE_OTHER_CATEGORY_ID && it.isNotBlank()
         },
         title = title.trim(),
+        contactPhone = (com.askit.app.auth.PhoneNumberValidator.validate(contactPhone.trim(),
+            if (contactPhone.trim().startsWith('+')) null else "IN") as com.askit.app.auth.PhoneValidation.Valid).e164,
+        contactEmail = contactEmail.trim(),
         description = description.trim(),
         deliveryModes = deliveryModes.toSet(),
         customerCoverage = customerCoverage,
@@ -474,6 +501,10 @@ private fun validate(state: ListServiceFormState): Set<ListServiceValidationFiel
     ) {
         add(ListServiceValidationField.CATEGORY)
     }
+    if (state.availability.isBlank() || state.experience.toIntOrNull() !in 0..60 ||
+        !com.askit.app.auth.validAccountPhone(state.contactPhone) || !com.askit.app.auth.validAccountEmail(state.contactEmail)) {
+        add(ListServiceValidationField.PROFESSIONAL_DETAILS)
+    }
     if (state.title.isBlank()) add(ListServiceValidationField.TITLE)
     if (state.description.isBlank()) add(ListServiceValidationField.DESCRIPTION)
     if (state.deliveryModes.isEmpty()) add(ListServiceValidationField.DELIVERY_MODE)
@@ -485,7 +516,7 @@ private fun validate(state: ListServiceFormState): Set<ListServiceValidationFiel
         ) {
             add(ListServiceValidationField.CUSTOMER_LOCATION)
         }
-        if (state.coverageRadiusKm !in LIST_SERVICE_COVERAGE_RADII_KM) {
+        if (state.coverageRadiusKm != null && state.coverageRadiusKm !in LIST_SERVICE_COVERAGE_RADII_KM) {
             add(ListServiceValidationField.COVERAGE_RADIUS)
         }
     }

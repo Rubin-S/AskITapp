@@ -61,7 +61,7 @@ fun BeforeAfterSlider(
     )
     val beforeState by beforePainter.state.collectAsState()
     val afterState by afterPainter.state.collectAsState()
-    val ratio = imageRatio(afterState) ?: imageRatio(beforeState) ?: 1f
+    val ratio = before.aspectRatio
     var fraction by remember { mutableFloatStateOf(0.5f) }
     val beforeLabel = stringResource(R.string.post_feed_before)
     val afterLabel = stringResource(R.string.post_feed_after)
@@ -181,10 +181,3 @@ private fun ComparisonLabel(text: String, modifier: Modifier = Modifier) {
 private fun Modifier.aspectRatioFor(ratio: Float): Modifier =
     this.then(Modifier.aspectRatio(ratio.coerceIn(0.65f, 1.85f)))
 
-private fun imageRatio(state: AsyncImagePainter.State): Float? {
-    val success = state as? AsyncImagePainter.State.Success ?: return null
-    val width = success.result.image.width
-    val height = success.result.image.height
-    if (width <= 0 || height <= 0) return null
-    return width.toFloat() / height.toFloat()
-}

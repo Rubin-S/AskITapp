@@ -1,14 +1,36 @@
 package com.askit.app
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.activity.compose.BackHandler
+import androidx.core.net.toUri
+import androidx.core.os.LocaleListCompat
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import com.askit.app.explore.ExploreBrowseSection
+import com.askit.app.config.AppLinks
+import com.askit.app.auth.AuthOperation
 import com.askit.app.explore.ExploreBrowseState
 import com.askit.app.explore.ExploreFilterOption
 import com.askit.app.explore.ExploreResultScope
@@ -32,12 +54,12 @@ import com.askit.app.home.details.UserProfileScreen
 import com.askit.app.home.stories.StoryViewerRoute
 import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.ChatThread
+import com.askit.app.inbox.ChatContact
 import com.askit.app.inbox.InboxViewModel
 import com.askit.app.inbox.MessagesPane
 import com.askit.app.inbox.MessagesRoute
 import com.askit.app.inbox.NewMessageScreen
 import com.askit.app.jobs.ApplyToTaskResult
-import com.askit.app.jobs.JobWorkMode
 import com.askit.app.jobs.JobsViewModel
 import com.askit.app.jobs.ui.JobDetail
 import com.askit.app.jobs.ui.JobReview
@@ -53,22 +75,34 @@ import com.askit.app.navigation.AskITNavigationState
 import com.askit.app.posttask.PostTaskDraft
 import com.askit.app.posttask.PostTaskRoute
 import com.askit.app.posttask.PostTaskViewModel
+import com.askit.app.config.profileUrl
+import com.askit.app.profile.toPublicProfile
 import com.askit.app.profile.EditProfileScreen
 import com.askit.app.profile.ProfileReview
 import com.askit.app.profile.ProfileRoute
 import com.askit.app.profile.ProfileSettingsScreen
 import com.askit.app.profile.ProfileViewModel
-import com.askit.app.story.StoryDraft
 import com.askit.app.story.StoryRoute
 import com.askit.app.story.StoryViewModel
 import com.askit.app.task.Task
 import com.askit.app.task.TaskRepository
+import com.askit.app.task.TaskDiscussionViewModel
+import com.askit.app.task.TaskCommentAuthor
+import com.askit.app.task.TaskActionsViewModel
+import com.askit.app.task.TaskMutationResult
+import com.askit.app.task.actionPolicy
+import com.askit.app.posttask.TaskEditUnavailableScreen
 import com.askit.app.task.toExploreTaskResult
 
 @Composable
 internal fun rememberAskITEntryProvider(
     navigationState: AskITNavigationState,
+    authViewModel: com.askit.app.auth.AuthViewModel,
+    appLinks: AppLinks,
     taskRepository: TaskRepository,
+    taskDiscussionViewModel: TaskDiscussionViewModel,
+    taskActionsViewModel: TaskActionsViewModel,
+    discussionAccountId: String?,
     homeViewModel: HomeViewModel,
     exploreViewModel: ExploreViewModel,
     postTaskViewModel: PostTaskViewModel,
@@ -102,9 +136,79 @@ internal fun rememberAskITEntryProvider(
     clock: () -> Long,
 ): (NavKey) -> NavEntry<NavKey> {
     val context = LocalContext.current
+    val linkUnavailableMessage = stringResource(R.string.external_link_unavailable)
+    val openExternalLink: (String) -> Unit = { address ->
+        val uri = address.toUri()
+        val action = if (uri.scheme == "mailto") Intent.ACTION_SENDTO else Intent.ACTION_VIEW
+        try {
+            context.startActivity(Intent(action, uri))
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(context, linkUnavailableMessage, Toast.LENGTH_SHORT).show()
+        } catch (_: SecurityException) {
+            Toast.makeText(context, linkUnavailableMessage, Toast.LENGTH_SHORT).show()
+        }
+    }
+    // Read the current session at action time, rather than trusting a rendered button.
+    fun currentTaskAccountId(): String? = authViewModel.session?.userId?.takeIf { id ->
+        id.isNotBlank() && !authViewModel.state.value.signedOut &&
+            authViewModel.state.value.operation !in setOf(AuthOperation.SignOut, AuthOperation.RestoreSession, AuthOperation.LoadAccount)
+    }
+    fun saveTask(draft: PostTaskDraft, editTaskId: String? = null) {
+        if (!BuildConfig.CLIENT_PREVIEW) {
+            postTaskViewModel.showSubmissionError(R.string.task_action_unavailable)
+            return
+        }
+        val id = currentTaskAccountId()
+        if (id == null || !postTaskViewModel.isActiveAccount(id)) {
+            postTaskViewModel.showSubmissionError(R.string.task_action_sign_in)
+            return
+        }
+        if (postTaskViewModel.editingTaskId != editTaskId) {
+            postTaskViewModel.showSubmissionError(R.string.task_action_unavailable)
+            return
+        }
+        val profile = profileViewModel.profile.value
+        val result = if (editTaskId == null) {
+            taskRepository.createTask(draft, TaskCommentAuthor(id, profile.displayName, profile.avatarUrl))
+        } else taskRepository.updateTask(editTaskId, id, draft)
+        when (result) {
+            is TaskMutationResult.Rejected -> postTaskViewModel.showSubmissionError(result.reason.messageRes)
+            is TaskMutationResult.Success -> {
+                if (editTaskId == null) onPostTaskCompleted(draft)
+                postTaskViewModel.startNewDraft()
+                navigationState.pop()
+            }
+        }
+    }
+    val profileRelationships by storyViewerViewModel.social.relationships.collectAsStateWithLifecycle()
+    fun peopleFor(id: String): com.askit.app.profile.ProfilePeopleState {
+        if (!BuildConfig.CLIENT_PREVIEW) return com.askit.app.profile.ProfilePeopleState(viewerId = currentTaskAccountId())
+        fun person(accountId: String): com.askit.app.profile.ProfilePerson {
+            val account = runCatching { com.askit.app.preview.PreviewProfileStorage(context).load(accountId) }.getOrNull()
+            val sample = com.askit.app.home.details.getUserProfileById(accountId)
+            return com.askit.app.profile.ProfilePerson(accountId, account?.displayName ?: sample?.name ?: accountId, account?.avatarUrl ?: sample?.avatarUrl)
+        }
+        return com.askit.app.profile.ProfilePeopleState(currentTaskAccountId(),
+            profileRelationships.filterValues { id in it }.keys.map(::person),
+            profileRelationships[id].orEmpty().map(::person), profileRelationships[currentTaskAccountId()].orEmpty(), canMutate = true)
+    }
+    fun openProfileDashboard(route: AppDestination) {
+        if (BuildConfig.CLIENT_PREVIEW) navigationState.push(route)
+        else Toast.makeText(context, R.string.profile_action_unavailable, Toast.LENGTH_LONG).show()
+    }
+    fun openProfile(id: String) {
+        if (id == currentTaskAccountId()) navigationState.navigateToRoot(AppDestination.Profile)
+        else navigationState.push(AppDestination.UserProfile(id))
+    }
+    fun followPerson(id: String, following: Boolean): Boolean {
+        if (!BuildConfig.CLIENT_PREVIEW) { Toast.makeText(context, R.string.profile_save_unavailable, Toast.LENGTH_LONG).show(); return false }
+        return storyViewerViewModel.social.setFollowing(currentTaskAccountId(), id, following) is com.askit.app.home.stories.StoryActionResult.Success
+    }
     return entryProvider<NavKey> {
     entry<AppDestination.Entry> {
         EntryScreen(
+            onOpenTerms = { openExternalLink(appLinks.termsUrl) },
+            onOpenPrivacyPolicy = { openExternalLink(appLinks.privacyPolicyUrl) },
             onGetStarted = {
                 navigationState.push(AppDestination.AuthPhone)
             },
@@ -114,16 +218,37 @@ internal fun rememberAskITEntryProvider(
         )
     }
     entry<AppDestination.AuthPhone> {
+        val authState by authViewModel.state.collectAsStateWithLifecycle()
+        DisposableEffect(authViewModel) {
+            onDispose {
+                authViewModel.cancelPendingRequest(AuthOperation.RequestCode)
+            }
+        }
         com.askit.app.auth.AuthPhoneScreen(
+            onOpenTerms = { openExternalLink(appLinks.termsUrl) },
+            onOpenPrivacyPolicy = { openExternalLink(appLinks.privacyPolicyUrl) },
             onBack = {
                 navigationState.pop()
             },
-            onGetOtp = { phoneNumber ->
-                navigationState.push(AppDestination.AuthOtp(phoneNumber = phoneNumber))
-            },
+            onGetOtp = authViewModel::requestCode,
+            isSubmitting = authState.isSubmitting,
+            errorMessage = authState.errorRes?.let { stringResource(it) },
         )
     }
     entry<AppDestination.AuthOtp> { key ->
+        val authState by authViewModel.state.collectAsStateWithLifecycle()
+        val resendSeconds by produceState(0L, authState.resendAvailableAtMillis) {
+            do {
+                val remaining = (authState.resendAvailableAtMillis - android.os.SystemClock.elapsedRealtime()).coerceAtLeast(0)
+                value = remaining / 1000 + if (remaining % 1000 == 0L) 0 else 1
+                if (value > 0) kotlinx.coroutines.delay(1000)
+            } while (value > 0)
+        }
+        DisposableEffect(authViewModel) {
+            onDispose {
+                authViewModel.cancelPendingRequest(AuthOperation.ResendCode, AuthOperation.VerifyCode, AuthOperation.SaveSession)
+            }
+        }
         com.askit.app.auth.AuthOtpScreen(
             phoneNumber = key.phoneNumber,
             onBack = {
@@ -132,26 +257,52 @@ internal fun rememberAskITEntryProvider(
             onEditPhone = {
                 navigationState.pop()
             },
-            onVerifySuccess = {
-                navigationState.push(AppDestination.FormA(phoneNumber = key.phoneNumber))
-            },
+            onVerify = authViewModel::verifyCode,
+            onResend = authViewModel::resendCode,
+            resendCountdownSeconds = resendSeconds,
+            challengeId = authState.challenge?.challengeId,
+            isResending = authState.isResending,
+            isSubmitting = authState.isSubmitting,
+            errorMessage = authState.errorRes?.let { stringResource(it) },
         )
     }
     entry<AppDestination.FormA> { key ->
+        BackHandler(onBack = authViewModel::signOut)
         com.askit.app.auth.FormAScreen(
             phoneNumber = key.phoneNumber,
-            onBack = {
-                navigationState.pop()
+            onBack = authViewModel::signOut,
+            onSubmit = { draft ->
+                val saved = profileViewModel.completeSignup(draft, context.contentResolver)
+                if (saved) {
+                    AppCompatDelegate.setApplicationLocales(
+                        LocaleListCompat.forLanguageTags(if (draft.preferredLanguage == "Tamil") "ta" else "en"),
+                    )
+                    navigationState.clearToHome()
+                }
+                saved
             },
-            onSubmitSuccess = { _, _, _, _ ->
-                navigationState.clearToHome()
-            },
-            initialInterests = emptyList(),
         )
     }
     entry<AppDestination.Home> {
+        val social by storyViewerViewModel.social.state.collectAsStateWithLifecycle()
         HomeScreen(
+            followingIds = social.following,
+            followingAccountId = social.accountId,
+            onTogglePersonFollow = { person ->
+                val store = storyViewerViewModel.social
+                val result = store.setFollowing(
+                    currentTaskAccountId(), person.id, person.id !in store.state.value.following,
+                )
+                if (result is com.askit.app.home.stories.StoryActionResult.Rejected) {
+                    store.notify(
+                        if (result.reason == com.askit.app.home.stories.StoryActionFailure.SIGN_IN)
+                            R.string.nearby_follow_sign_in else R.string.nearby_follow_unavailable,
+                    )
+                }
+            },
             viewModel = homeViewModel,
+            currentAccountId = ::currentTaskAccountId,
+            onEditPost = { navigationState.push(AppDestination.EditPost(it)) },
             onAddStoryClick = { post ->
                 if (post != null) {
                     storyViewModel.startReshareDraft(post)
@@ -193,6 +344,7 @@ internal fun rememberAskITEntryProvider(
         ExploreRoute(
             viewModel = exploreViewModel,
             onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) },
+            onSearchAreaClick = { navigationState.push(AppDestination.ExploreLocationDestination) },
             resultState = effectiveResultState,
             browseState = browseState,
             onRetryResults = onRetryResults,
@@ -210,31 +362,13 @@ internal fun rememberAskITEntryProvider(
             onTaskClick = onTaskClick ?: { taskId ->
                 navigationState.push(AppDestination.TaskDetail(taskId = taskId))
             },
-            onApplyToTask = { task ->
-                when (
-                    val result = jobsViewModel.store.applyToTask(
-                        title = task.title,
-                        counterpartName = task.posterName,
-                        workMode = JobWorkMode.OnSite,
-                    )
-                ) {
-                    ApplyToTaskResult.NeedsListedService -> onApplyBlocked()
-                    is ApplyToTaskResult.Created -> navigationState.navigateAndPush(
-                        AppDestination.Inbox,
-                        AppDestination.JobDetail(result.jobId),
-                    )
-                }
-            },
-            onRequestService = { person ->
-                val jobId = jobsViewModel.store.requestService(
-                    title = person.primaryService ?: person.name,
-                    counterpartName = person.name,
-                )
-                navigationState.navigateAndPush(
-                    AppDestination.Inbox,
-                    AppDestination.JobDetail(jobId),
-                )
-            },
+        )
+    }
+    entry<AppDestination.ExploreLocationDestination> {
+        SearchAreaRoute(
+            viewModel = exploreViewModel,
+            onBack = { navigationState.pop() },
+            showFilterControls = false,
         )
     }
     entry<AppDestination.SearchAreaDestination> {
@@ -249,18 +383,36 @@ internal fun rememberAskITEntryProvider(
     entry<AppDestination.PostTask> {
         PostTaskRoute(
             viewModel = postTaskViewModel,
-            onBack = { navigationState.pop() },
-            onCompleteDraft = { draft ->
-                onPostTaskCompleted(draft)
-                navigationState.pop()
-            },
+            onBack = { postTaskViewModel.startNewDraft(); navigationState.pop() },
+            onCompleteDraft = { draft -> saveTask(draft) },
         )
     }
+    entry<AppDestination.EditTask> { key ->
+        val tasks by taskRepository.tasks.collectAsStateWithLifecycle()
+        val task = tasks.firstOrNull { it.id == key.taskId }
+        val draft = taskRepository.editableDraft(key.taskId, discussionAccountId)
+        if (!task.actionPolicy(discussionAccountId).isOwner || draft == null || !postTaskViewModel.isActiveAccount(discussionAccountId)) {
+            TaskEditUnavailableScreen(onBack = { postTaskViewModel.clearTask(key.taskId); navigationState.pop() })
+        } else {
+            LaunchedEffect(key.taskId, discussionAccountId) { postTaskViewModel.beginEdit(key.taskId, draft) }
+            PostTaskRoute(
+                viewModel = postTaskViewModel,
+                onBack = { postTaskViewModel.startNewDraft(); navigationState.pop() },
+                onCompleteDraft = { updated -> saveTask(updated, key.taskId) },
+            )
+        }
+    }
     entry<AppDestination.ListService> {
+        val profile by profileViewModel.profile.collectAsStateWithLifecycle()
         ListServiceRoute(
             viewModel = listServiceViewModel,
+            profile = profile,
             onBack = { navigationState.pop() },
             onCompleteDraft = { draft ->
+                if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) {
+                    android.widget.Toast.makeText(context, R.string.profile_save_unavailable, android.widget.Toast.LENGTH_LONG).show()
+                    return@ListServiceRoute
+                }
                 jobsViewModel.profileStore.applyListing(
                     listing = draft.toServiceListing(draft.categoryLabel(context::getString)),
                     draft = draft,
@@ -272,12 +424,43 @@ internal fun rememberAskITEntryProvider(
     entry<AppDestination.CreatePost> {
         CreatePostRoute(
             viewModel = createPostViewModel,
-            onBack = { navigationState.pop() },
+            onBack = { createPostViewModel.startNewDraft(); navigationState.pop() },
             onCompleteDraft = { draft ->
-                profileViewModel.appendGallery(draft.photos.mapNotNull { it.uri })
-                onCreatePostCompleted(draft)
+                when (val result = homeViewModel.posts.publish(draft, currentTaskAccountId(), jobsViewModel.profileStore.profile.value)) {
+                    is com.askit.app.home.posts.PostResult.Failure -> android.widget.Toast.makeText(context, result.messageRes, android.widget.Toast.LENGTH_LONG).show()
+                    is com.askit.app.home.posts.PostResult.Success -> {
+                        createPostViewModel.retainPublishedCrops()
+                        createPostViewModel.startNewDraft()
+                        onCreatePostCompleted(draft)
+                        navigationState.clearToHome()
+                    }
+                }
             },
         )
+    }
+    entry<AppDestination.EditPost> { key ->
+        val records by homeViewModel.posts.posts.collectAsStateWithLifecycle()
+        val account by homeViewModel.posts.account.collectAsStateWithLifecycle()
+        val post = records[key.postId]
+        val draft = homeViewModel.posts.editableDraft(key.postId, account.accountId)
+        if (post == null || draft == null || !homeViewModel.posts.isOwner(post, account.accountId)) {
+            androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp)) {
+                androidx.compose.material3.Text(stringResource(R.string.post_edit_unavailable))
+                androidx.compose.material3.TextButton(onClick = { createPostViewModel.startNewDraft(); navigationState.pop() }) {
+                    androidx.compose.material3.Text(stringResource(R.string.explore_back))
+                }
+            }
+        } else {
+            LaunchedEffect(key.postId, account.accountId) { createPostViewModel.beginEdit(key.postId, draft) }
+            CreatePostRoute(viewModel = createPostViewModel,
+                onBack = { createPostViewModel.startNewDraft(); navigationState.pop() },
+                onCompleteDraft = { updated ->
+                    when (val result = homeViewModel.posts.update(key.postId, updated, currentTaskAccountId())) {
+                        is com.askit.app.home.posts.PostResult.Failure -> android.widget.Toast.makeText(context, result.messageRes, android.widget.Toast.LENGTH_LONG).show()
+                        is com.askit.app.home.posts.PostResult.Success -> { createPostViewModel.retainPublishedCrops(); createPostViewModel.startNewDraft(); navigationState.pop() }
+                    }
+                })
+        }
     }
     entry<AppDestination.CreatorDashboard> {
         CreatorDashboardRoute(
@@ -342,11 +525,21 @@ internal fun rememberAskITEntryProvider(
         )
     }
     entry<AppDestination.Profile> {
+        val profilePostRecords by homeViewModel.posts.posts.collectAsStateWithLifecycle()
+        val profileTasks by taskRepository.tasks.collectAsStateWithLifecycle()
         val profile by profileViewModel.profile.collectAsStateWithLifecycle()
         val loadState by profileViewModel.loadState.collectAsStateWithLifecycle()
         val jobs by jobsViewModel.jobs.collectAsStateWithLifecycle()
+        val profileHome by homeViewModel.uiState.collectAsStateWithLifecycle()
         ProfileRoute(
+            people = peopleFor(profile.accountId), onOpenProfile = ::openProfile, onFollowPerson = ::followPerson,
+            stories = (profileHome as? com.askit.app.home.HomeUiState.Success)?.stories.orEmpty(),
+            onSaveHighlight = { profileViewModel.saveHighlight(profile.accountId, it) },
+            onDeleteHighlight = { profileViewModel.deleteHighlight(profile.accountId, it) },
+            posts = com.askit.app.home.posts.orderedProfilePosts(profilePostRecords.values, profile.accountId),
+            onOpenPost = { navigationState.push(AppDestination.PostDetail(it)) },
             profile = profile,
+            tasks = profileTasks, onOpenTask = { navigationState.push(AppDestination.TaskDetail(it)) },
             jobs = jobs,
             loadState = loadState,
             messages = profileViewModel.messages,
@@ -360,27 +553,38 @@ internal fun rememberAskITEntryProvider(
                 }
                 navigationState.push(AppDestination.ListService)
             },
-            onUploadWork = {
-                createPostViewModel.startNewDraft()
-                navigationState.push(AppDestination.CreatePost)
-            },
-            onOpenJob = { navigationState.push(AppDestination.JobDetail(it)) },
-            onViewAllJobs = { navigationState.navigate(AppDestination.Inbox) },
-            onSaveAbout = profileViewModel::updateAbout,
-            onSaveLookingFor = profileViewModel::updateLookingFor,
-            onSaveSkills = profileViewModel::updateSkills,
-            onSaveAvailability = profileViewModel::updateAvailability,
-            onSetAvatar = profileViewModel::setAvatar,
-            onAddLicense = profileViewModel::addLicense,
-            onUsernameCopied = profileViewModel::notifyCopied,
+            onSetAvatar = { uri -> profileViewModel.setAvatar(profile.accountId, uri) },
+            onSaveBanner = { uri -> profileViewModel.setBanner(profile.accountId, uri) },
             onOpenSettings = { navigationState.push(AppDestination.ProfileSettings) },
-            onOpenProviderDashboard = { navigationState.push(AppDestination.ProviderDashboard) },
+            onOpenProviderDashboard = { openProfileDashboard(AppDestination.ProviderDashboard) },
+            onOpenCreatorDashboard = { openProfileDashboard(AppDestination.CreatorDashboard) },
+            onPostTask = { postTaskViewModel.startNewDraft(); navigationState.push(AppDestination.PostTask) },
+            publicProfileUrl = appLinks.profileUrl(profile.accountId),
         )
     }
     entry<AppDestination.ProfileSettings> {
+        val storySocial by storyViewerViewModel.social.state.collectAsStateWithLifecycle()
         val profile by profileViewModel.profile.collectAsStateWithLifecycle()
+        val postRecords by homeViewModel.posts.posts.collectAsStateWithLifecycle()
+        val postAccount by homeViewModel.posts.account.collectAsStateWithLifecycle()
         ProfileSettingsScreen(
+            previewControls = if (BuildConfig.CLIENT_PREVIEW) ({ com.askit.app.preview.PreviewProfileControls(
+                onAccount = { authViewModel.selectPreviewAccount(it); navigationState.navigate(AppDestination.Profile) },
+                onView = { navigationState.push(AppDestination.UserProfile(it)) },
+            ) }) else null,
+            savedPosts = postAccount.saved.mapNotNull { id -> postRecords[id]?.takeIf { !it.archived || homeViewModel.posts.isOwner(it, postAccount.accountId) } },
+            archivedPosts = postRecords.values.filter { it.archived && homeViewModel.posts.isOwner(it, postAccount.accountId) },
+            onOpenPost = { navigationState.push(AppDestination.PostDetail(it)) },
+            onRestorePost = { id ->
+                val result = homeViewModel.posts.setArchived(id, currentTaskAccountId(), false)
+                if (result is com.askit.app.home.posts.PostResult.Failure) Toast.makeText(context, result.messageRes, Toast.LENGTH_LONG).show()
+            },
             profile = profile,
+            mutedStoryAuthors = storySocial.muted.values.toList(),
+            onUnmuteStoryAuthor = { authorId ->
+                val result = storyViewerViewModel.social.unmute(currentTaskAccountId(), authorId)
+                if (result is com.askit.app.home.stories.StoryActionResult.Rejected) storyViewerViewModel.social.notify(result.reason.messageRes)
+            },
             onBack = { navigationState.pop() },
             onNavigateToEditProfile = { navigationState.push(AppDestination.EditProfile) },
             onNavigateToListService = {
@@ -399,20 +603,33 @@ internal fun rememberAskITEntryProvider(
             onNavigateToJobRequests = {
                 navigationState.navigate(AppDestination.Inbox)
             },
-            onNavigateToSupportChat = {
-                navigationState.push(AppDestination.NewMessage)
+            onContactSupport = {
+                openExternalLink(appLinks.supportEmail?.let { Uri.fromParts("mailto", it, null).toString() } ?: appLinks.supportUrl)
             },
-            onUpdatePhoneNumber = profileViewModel::updatePhoneNumber,
+            onOpenHelpCenter = { openExternalLink(appLinks.helpCenterUrl) },
+            onOpenTerms = { openExternalLink(appLinks.termsUrl) },
+            onOpenPrivacyPolicy = { openExternalLink(appLinks.privacyPolicyUrl) },
             onUpdatePushNotifications = profileViewModel::updatePushNotifications,
             onUpdateJobAlerts = profileViewModel::updateJobAlerts,
-            onUpdateLanguage = profileViewModel::updateLanguage,
-            onUpdateLocationServices = profileViewModel::updateLocationServices,
-            onUpdateWhoCanMessage = profileViewModel::updateWhoCanMessage,
-            onSaveAvailability = profileViewModel::updateAvailability,
-            onLogout = {
-                navigationState.navigateAndPush(AppDestination.Home, AppDestination.Entry)
+            onUpdateLanguage = { language ->
+                profileViewModel.updateLanguage(language)
+                AppCompatDelegate.setApplicationLocales(
+                    LocaleListCompat.forLanguageTags(if (language == "Tamil") "ta" else "en"),
+                )
             },
-            onClearAppData = profileViewModel::resetAppData,
+            onUpdateLocationServices = profileViewModel::updateLocationServices,
+            onUpdateWhoCanMessage = { option ->
+                if (!profileViewModel.updateWhoCanMessage(option)) {
+                    val message = if (BuildConfig.CLIENT_PREVIEW) R.string.profile_action_error else R.string.profile_save_unavailable
+                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                }
+            },
+            onSaveAvailability = profileViewModel::updateAvailability,
+            onLogout = authViewModel::signOut,
+            onClearAppData = {
+                profileViewModel.resetAppData()
+                AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
+            },
         )
     }
     entry<AppDestination.EditProfile> {
@@ -421,8 +638,12 @@ internal fun rememberAskITEntryProvider(
             profile = profile,
             onBack = { navigationState.pop() },
             onSave = { state ->
-                profileViewModel.saveIdentity(state)
-                navigationState.pop()
+                profileViewModel.saveIdentity(state).also { saved ->
+                    if (saved) {
+                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(if (state.language == "Tamil") "ta" else "en"))
+                        navigationState.pop()
+                    }
+                }
             },
         )
     }
@@ -430,8 +651,8 @@ internal fun rememberAskITEntryProvider(
         NewMessageScreen(
             contacts = inboxViewModel.store.contacts,
             onBack = { navigationState.pop() },
-            onSelectContact = { contact ->
-                val id = inboxViewModel.startConversation(contact)
+            onSelectContact = select@ { contact ->
+                val id = inboxViewModel.startConversation(contact) ?: return@select
                 navigationState.pop()
                 navigationState.push(AppDestination.ChatThread(id))
             },
@@ -446,6 +667,11 @@ internal fun rememberAskITEntryProvider(
             onBack = { navigationState.pop() },
             onSendText = { inboxViewModel.sendText(key.conversationId, it) },
             onSendPhoto = { inboxViewModel.sendPhoto(key.conversationId, it) },
+            resolveStory = storyViewerViewModel::availableStory,
+            onOpenStory = { id ->
+                if (storyViewerViewModel.availableStory(id) != null) navigationState.push(AppDestination.StoryViewer(id))
+                else storyViewerViewModel.social.notify(R.string.story_shared_unavailable)
+            },
             onMuteChanged = { inboxViewModel.setMuted(key.conversationId, it) },
             onBlock = { inboxViewModel.block(key.conversationId) },
             onReport = { inboxViewModel.report(key.conversationId) },
@@ -487,38 +713,84 @@ internal fun rememberAskITEntryProvider(
             jobId = key.jobId,
             store = jobsViewModel.store,
             onFinished = { navigationState.pop() },
-            onReviewSubmitted = { rating, comment ->
-                val job = jobsViewModel.store.job(key.jobId)
-                if (job != null) {
-                    profileViewModel.appendReview(
-                        ProfileReview(
-                            id = "rev-${job.id}",
-                            name = job.counterpartName,
-                            meta = job.title,
-                            rating = rating.toFloat(),
-                            body = comment,
-                            createdAtMillis = clock(),
-                            jobId = job.id,
-                        ),
-                    )
+            onReviewSubmitted = review@ { rating, comment ->
+                if (!BuildConfig.CLIENT_PREVIEW) return@review false
+                val actor = currentTaskAccountId() ?: return@review false
+                val job = jobsViewModel.store.job(key.jobId) ?: return@review false
+                if (jobsViewModel.store.visibleParty(job) != job.localParty) return@review false
+                val direction = when (actor) {
+                    job.seekerAccountId -> com.askit.app.profile.ReviewDirection.SEEKER_TO_PROVIDER
+                    job.providerAccountId -> com.askit.app.profile.ReviewDirection.PROVIDER_TO_SEEKER
+                    else -> return@review false
                 }
+                val recipient = (if (actor == job.seekerAccountId) job.providerAccountId else job.seekerAccountId) ?: return@review false
+                val storage = com.askit.app.preview.PreviewProfileStorage(context)
+                runCatching {
+                    val target = storage.load(recipient) ?: if (recipient in setOf("preview-owner", "preview-visitor", "preview-seeker")) {
+                        com.askit.app.preview.previewProfile(recipient)
+                    } else return@review false
+                    val review = ProfileReview("review-${job.id}-$actor", profileViewModel.profile.value.displayName,
+                        job.title, rating.toFloat(), comment, clock(), jobId = job.id,
+                        reviewerAccountId = actor, recipientAccountId = recipient, direction = direction)
+                    storage.save(target.copy(reviews = target.reviews.filterNot { it.id == review.id } + review))
+                }.isSuccess
             },
         )
     }
     entry<AppDestination.TaskDetail> { key ->
+        val profile by profileViewModel.profile.collectAsStateWithLifecycle()
+        val discussionAuthor = discussionAccountId?.let { TaskCommentAuthor(it, profile.displayName, profile.avatarUrl) }
+        val serviceProfile by jobsViewModel.profileStore.profile.collectAsStateWithLifecycle()
+        val jobs by jobsViewModel.jobs.collectAsStateWithLifecycle()
+        val hasApplied = discussionAccountId != null && jobs.any { it.sourceTaskId == key.taskId && it.applicantAccountId == discussionAccountId }
         TaskDetailScreen(
             taskId = key.taskId,
             taskRepository = taskRepository,
+            discussionViewModel = taskDiscussionViewModel,
+            discussionAuthor = discussionAuthor,
+            currentDiscussionAuthor = {
+                currentTaskAccountId()?.let { id ->
+                    val currentProfile = profileViewModel.profile.value
+                    TaskCommentAuthor(id, currentProfile.displayName, currentProfile.avatarUrl)
+                }
+            },
+            actionsViewModel = taskActionsViewModel,
+            accountId = discussionAccountId,
+            currentAccountId = ::currentTaskAccountId,
+            hasServiceListing = serviceProfile.hasListedService && serviceProfile.listing != null,
+            hasApplied = hasApplied,
+            onEdit = { task ->
+                val currentId = currentTaskAccountId()
+                val draft = taskRepository.editableDraft(task.id, currentId)
+                if (draft == null || !postTaskViewModel.isActiveAccount(currentId)) {
+                    taskActionsViewModel.feedback(task.id, if (currentId == null) R.string.task_action_sign_in else R.string.task_edit_unavailable)
+                } else {
+                    postTaskViewModel.beginEdit(task.id, draft)
+                    navigationState.push(AppDestination.EditTask(task.id))
+                }
+            },
+            onDeleted = { taskId ->
+                postTaskViewModel.clearTask(taskId)
+                taskDiscussionViewModel.clearTask(taskId)
+                navigationState.pop()
+            },
             onBack = { navigationState.pop() },
+            onMessage = { task ->
+                task.posterId?.takeIf { it.isNotBlank() }?.let { posterId ->
+                    val conversationId = inboxViewModel.startConversation(
+                        ChatContact(posterId, task.posterName, task.posterAvatarUrl),
+                    ) ?: return@let
+                    inboxViewModel.openThread(conversationId)
+                    navigationState.push(AppDestination.ChatThread(conversationId))
+                }
+            },
             onApply = { appliedTask ->
                 when (
-                    val result = jobsViewModel.store.applyToTask(
-                        title = appliedTask.title,
-                        counterpartName = appliedTask.posterName,
-                        workMode = JobWorkMode.OnSite,
-                    )
+                    val result = jobsViewModel.store.applyToTask(taskRepository, appliedTask.id, currentTaskAccountId())
                 ) {
                     ApplyToTaskResult.NeedsListedService -> onApplyBlocked()
+                    is ApplyToTaskResult.Rejected -> taskActionsViewModel.feedback(appliedTask.id, result.reason.messageRes)
+                    is ApplyToTaskResult.AlreadyApplied -> taskActionsViewModel.feedback(appliedTask.id, R.string.task_applied)
                     is ApplyToTaskResult.Created -> navigationState.navigateAndPush(
                         AppDestination.Inbox,
                         AppDestination.JobDetail(result.jobId),
@@ -531,8 +803,18 @@ internal fun rememberAskITEntryProvider(
         ServiceDetailScreen(
             serviceId = key.serviceId,
             onBack = { navigationState.pop() },
-            onRequestService = {
+            onChat = chat@ { providerId ->
                 val service = com.askit.app.home.details.getServiceDetailById(key.serviceId)
+                    ?: return@chat
+                val conversationId = inboxViewModel.startConversation(
+                    ChatContact(providerId, service.providerName, service.providerAvatarUrl),
+                ) ?: return@chat
+                inboxViewModel.openThread(conversationId)
+                navigationState.push(AppDestination.ChatThread(conversationId))
+            },
+            onRequestService = request@ {
+                val service = com.askit.app.home.details.getServiceDetailById(key.serviceId)
+                    ?: return@request
                 val jobId = jobsViewModel.store.requestService(
                     title = service.title,
                     counterpartName = service.providerName,
@@ -545,32 +827,90 @@ internal fun rememberAskITEntryProvider(
         )
     }
     entry<AppDestination.UserProfile> { key ->
-        UserProfileScreen(
-            userId = key.userId,
-            onBack = { navigationState.pop() },
-            onMessage = {
-                navigationState.push(AppDestination.NewMessage)
+        if (key.userId == currentTaskAccountId()) {
+            LaunchedEffect(key.userId) { navigationState.navigateToRoot(AppDestination.Profile) }
+            return@entry
+        }
+        val profilePostRecords by homeViewModel.posts.posts.collectAsStateWithLifecycle()
+        val profileTasks by taskRepository.tasks.collectAsStateWithLifecycle()
+        val social by storyViewerViewModel.social.state.collectAsStateWithLifecycle()
+        val currentProfile by profileViewModel.profile.collectAsStateWithLifecycle()
+        val publicProfile = remember(key.userId, currentProfile) {
+            if (com.askit.app.BuildConfig.CLIENT_PREVIEW) {
+                runCatching {
+                    val account = com.askit.app.preview.PreviewProfileStorage(context).load(key.userId)
+                        ?: if (key.userId in setOf("preview-owner", "preview-visitor", "preview-seeker")) com.askit.app.preview.previewProfile(key.userId) else null
+                    account?.toPublicProfile() ?: com.askit.app.home.details.getUserProfileById(key.userId)
+                }.getOrNull()
+            } else null
+        }
+UserProfileScreen(
+            tasks = profileTasks, onOpenTask = { navigationState.push(AppDestination.TaskDetail(it)) },
+            publicProfileUrl = appLinks.profileUrl(key.userId),
+            isBlocked = inboxViewModel.conversations.any { it.contact.id == key.userId && it.blocked },
+            onModerate = moderate@ { report ->
+                val actor = currentTaskAccountId()
+                if (!BuildConfig.CLIENT_PREVIEW || !com.askit.app.profile.canMutateProfileVisitor(actor, key.userId, false)) return@moderate false
+                val target = publicProfile ?: return@moderate false
+                inboxViewModel.moderate(ChatContact(target.id, target.name, target.avatarUrl), report)
+                if (!report) followPerson(target.id, false)
+                true
             },
-            onRequestService = {
-                val profile = com.askit.app.home.details.getUserProfileById(key.userId)
-                val jobId = jobsViewModel.store.requestService(
-                    title = profile.trade,
-                    counterpartName = profile.name,
-                )
-                navigationState.navigateAndPush(
-                    AppDestination.Inbox,
-                    AppDestination.JobDetail(jobId),
-                )
+            people = peopleFor(key.userId), onOpenProfile = ::openProfile, onFollowPerson = ::followPerson,
+            publicProfile = publicProfile,
+            viewerAccountId = currentTaskAccountId(),
+            viewerPostcode = currentProfile.pincode,
+            posts = com.askit.app.home.posts.orderedProfilePosts(profilePostRecords.values, key.userId),
+            onOpenPost = { navigationState.push(AppDestination.PostDetail(it)) },
+            userId = key.userId,
+            isFollowing = key.userId in social.following,
+            onToggleFollow = { followPerson(key.userId, key.userId !in social.following) },
+            onBack = { navigationState.pop() },
+            onMessage = message@ {
+                if (!BuildConfig.CLIENT_PREVIEW) { Toast.makeText(context, R.string.profile_action_unavailable, Toast.LENGTH_LONG).show(); return@message }
+                val target = publicProfile ?: return@message
+                val conversationId = inboxViewModel.startConversation(ChatContact(target.id, target.name, target.avatarUrl)) ?: return@message
+                inboxViewModel.openThread(conversationId)
+                navigationState.push(AppDestination.ChatThread(conversationId))
             },
         )
     }
     entry<AppDestination.StoryViewer> { key ->
+        val storyAccount by storyViewerViewModel.social.state.collectAsStateWithLifecycle()
+        var sharingId by rememberSaveable(storyAccount.accountId) { mutableStateOf<String?>(null) }
+        sharingId?.let { id ->
+            com.askit.app.home.stories.StorySendSheet(
+                storyId = id,
+                contacts = inboxViewModel.store.contacts.filter { inboxViewModel.store.conversation(it.id)?.blocked != true },
+                onDismiss = { sharingId = null },
+                onSend = { contact ->
+                    val account = currentTaskAccountId()
+                    val story = storyViewerViewModel.availableStory(id)
+                    if (!storyViewerViewModel.social.isCurrentAccount(account)) {
+                        storyViewerViewModel.social.notify(R.string.story_action_sign_in)
+                        false
+                    } else story != null && inboxViewModel.sendStory(account, contact, story)
+                },
+            )
+        }
         LaunchedEffect(key.startStoryId) {
             storyViewerViewModel.startAt(key.startStoryId)
         }
         StoryViewerRoute(
             viewModel = storyViewerViewModel,
-            onDismiss = { navigationState.pop() },
+            shareStoryId = sharingId,
+            onShareStory = { id ->
+                when {
+                    !storyViewerViewModel.social.isCurrentAccount(currentTaskAccountId()) ->
+                        storyViewerViewModel.social.notify(R.string.story_action_sign_in)
+                    storyViewerViewModel.availableStory(id) == null ->
+                        storyViewerViewModel.social.notify(R.string.story_shared_unavailable)
+                    else -> sharingId = id
+                }
+            },
+            startStoryId = key.startStoryId,
+            onDismiss = { storyViewerViewModel.closeViewer(); navigationState.pop() },
+            currentAccountId = ::currentTaskAccountId,
             onViewPost = { postId ->
                 navigationState.push(AppDestination.PostDetail(postId = postId))
             },
@@ -587,9 +927,8 @@ internal fun rememberAskITEntryProvider(
         StoryRoute(
             viewModel = storyViewModel,
             onBack = { navigationState.pop() },
-            onCompleteDraft = { draft ->
-                homeViewModel.addStoryFromDraft(draft)
-                navigationState.pop()
+            onPublishDraft = { draft ->
+                homeViewModel.addStoryFromDraft(draft, jobsViewModel.profileStore.profile.value, currentTaskAccountId())
             },
             onOpenCreateSheet = onShowCreateSheet,
         )
@@ -597,6 +936,9 @@ internal fun rememberAskITEntryProvider(
     entry<AppDestination.PostDetail> { key ->
         PostDetailScreen(
             postId = key.postId,
+            store = homeViewModel.posts,
+            currentAccountId = ::currentTaskAccountId,
+            onEditPost = { navigationState.push(AppDestination.EditPost(it)) },
             onBack = { navigationState.pop() },
         )
     }

@@ -13,7 +13,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -66,7 +66,7 @@ fun ChatComposer(
                 modifier = Modifier.size(24.dp),
             )
         }
-        OutlinedTextField(
+        AskITTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier
@@ -75,7 +75,6 @@ fun ChatComposer(
             placeholder = { Text(stringResource(R.string.messages_composer_hint)) },
             minLines = 1,
             maxLines = 5,
-            shape = MaterialTheme.shapes.small,
         )
         FilledIconButton(
             onClick = onSend,

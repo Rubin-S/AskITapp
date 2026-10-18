@@ -2,7 +2,6 @@ package com.askit.app.inbox
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -10,15 +9,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -26,6 +23,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.askit.designsystem.navigation.AskITSectionTabs
+import com.askit.designsystem.navigation.SectionTab
 import com.askit.app.R
 import com.askit.app.jobs.Job
 import com.askit.app.jobs.ui.JobsHub
@@ -51,9 +50,9 @@ fun MessagesRoute(
     onCancelJob: (String) -> Unit = {},
     viewAsOtherJobIds: Set<String> = emptySet(),
 ) {
-    var selectedIndex by rememberSaveable { mutableIntStateOf(initialPane.ordinal) }
+    var selectedId by rememberSaveable(initialPane) { mutableStateOf(initialPane.name) }
     val panes = MessagesPane.entries
-    val selectedPane = panes[selectedIndex]
+    val selectedPane = panes.firstOrNull { it.name == selectedId } ?: initialPane
     val listPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -81,31 +80,14 @@ fun MessagesRoute(
                     actionIconContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
             )
-            PrimaryTabRow(
-                selectedTabIndex = selectedIndex,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("messages_segments"),
-                containerColor = MaterialTheme.colorScheme.background,
-            ) {
-                panes.forEachIndexed { index, pane ->
-                    Tab(
-                        selected = selectedIndex == index,
-                        onClick = { selectedIndex = index },
-                        text = {
-                            Text(
-                                text = stringResource(
-                                    if (pane == MessagesPane.Chats) {
-                                        R.string.messages_tab_chats
-                                    } else {
-                                        R.string.messages_tab_jobs
-                                    },
-                                ),
-                            )
-                        },
-                    )
-                }
-            }
+            AskITSectionTabs(
+                tabs = panes.map { pane -> SectionTab(pane.name, stringResource(
+                    if (pane == MessagesPane.Chats) R.string.messages_tab_chats else R.string.messages_tab_jobs)) },
+                selectedId = selectedPane.name,
+                onSelect = { selectedId = it },
+                modifier = Modifier.testTag("messages_segments"),
+                tabTagPrefix = "messages_tab_",
+            )
             when (selectedPane) {
                 MessagesPane.Chats -> ChatsPane(
                     conversations = conversations,

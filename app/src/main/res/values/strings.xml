@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="profile_joined_year">Joined %1$s</string>
+    <string name="provider_request_location_distance">%1$s · %2$s km</string>
+    <string name="messages_photo">Photo</string>
     <string name="explore_search_placeholder">Search people, services, or tasks</string>
     <string name="explore_clear_search">Clear search</string>
     <string name="explore_search_filters_content_description">Search filters</string>
@@ -117,7 +120,6 @@
     <string name="post_task_details">Details</string>
     <string name="post_task_details_helper">Describe the work and what a good result looks like.</string>
     <string name="post_task_where">Where will it happen?</string>
-    <string name="post_task_work_mode">Work mode</string>
     <string name="post_task_at_my_location">At my location</string>
     <string name="post_task_at_provider_location">At the provider’s location</string>
     <string name="post_task_remote">Remote</string>
@@ -129,14 +131,11 @@
     <string name="post_task_location_privacy">Providers can see your general area. Your exact location and access details stay private.</string>
     <string name="post_task_address_optional">Address or landmark (optional)</string>
     <string name="post_task_when">When do you need it?</string>
-    <string name="post_task_timing">Timing</string>
     <string name="post_task_asap">As soon as possible</string>
     <string name="post_task_on_date">On a date</string>
     <string name="post_task_flexible">Flexible</string>
-    <string name="post_task_date">Date</string>
     <string name="post_task_select_date">Select a date</string>
     <string name="post_task_selected_date">Date: %1$s</string>
-    <string name="post_task_budget">Budget</string>
     <string name="post_task_add_budget">Add a budget</string>
     <string name="post_task_request_quotes">Request quotes</string>
     <string name="post_task_fixed_amount">Fixed amount</string>
@@ -144,17 +143,13 @@
     <string name="post_task_amount">Amount</string>
     <string name="post_task_minimum_amount">Minimum amount</string>
     <string name="post_task_maximum_amount">Maximum amount</string>
-    <string name="post_task_fixed_amount_value">Fixed amount: %1$s</string>
-    <string name="post_task_budget_range_value">%1$s to %2$s</string>
     <string name="post_task_add_photos">Add photos</string>
     <string name="post_task_add_more_photos">Add more photos</string>
     <string name="post_task_choose_photos">Choose photos</string>
-    <string name="post_task_photos">Photos</string>
     <string name="post_task_photos_helper">Photos can help providers understand the task.</string>
     <string name="post_task_photo_description">Task photo %1$d</string>
     <string name="post_task_remove_photo">Remove task photo %1$d</string>
     <string name="post_task_add_item_details">Add item details</string>
-    <string name="post_task_item_details">Item details</string>
     <string name="post_task_quantity_measurements">Quantity or measurements (optional)</string>
     <string name="post_task_brand_model">Brand or model (optional)</string>
     <string name="post_task_materials">Materials (optional)</string>
@@ -169,16 +164,8 @@
     <string name="post_task_review_task">Review task</string>
     <string name="post_task_review_title">Review your task</string>
     <string name="post_task_review_helper">Check the details before completing this draft.</string>
-    <string name="post_task_provider_preview">Provider preview</string>
-    <string name="post_task_provider_preview_helper">This is how providers will see your task.</string>
-    <string name="post_task_provider_preview_privacy">Your exact location and access details stay private.</string>
-    <string name="post_task_provider_preview_live_data">Distance and posted time appear after your task is live.</string>
     <string name="post_task_budget_fixed_value">₹%1$s</string>
     <string name="post_task_budget_range_display">₹%1$s–₹%2$s</string>
-    <string name="post_task_public_area">Public area</string>
-    <string name="post_task_public_information">Public information</string>
-    <string name="post_task_private_location">Private location</string>
-    <string name="post_task_private_information">Only you and the provider who accepts the work should see these private details.</string>
     <string name="post_task_edit">Edit</string>
     <string name="post_task_complete_draft">Complete draft</string>
     <string name="post_task_discard_title">Discard this draft?</string>
@@ -298,18 +285,12 @@
     <string name="create_post_identity_helper">Posting as your current account</string>
     <string name="create_post_whats_on_your_mind">What is on your mind?</string>
     <string name="create_post_error_content">Add a photo, write something, or add a poll.</string>
-    <string name="create_post_photos_empty_title">Add photos</string>
     <string name="create_post_add_poll">Add a poll</string>
     <string name="create_post_remove_poll">Remove poll</string>
     <string name="create_post_before_after">Before / after</string>
-    <string name="create_post_add_photo">Add photo</string>
     <string name="create_post_photo_content_description">Post photo</string>
     <string name="create_post_replace">Replace</string>
     <string name="create_post_remove">Remove</string>
-    <string name="create_post_add_image_description">Add image description</string>
-    <string name="create_post_hide_image_description">Hide image description</string>
-    <string name="create_post_image_description_optional">Image description (optional)</string>
-    <string name="create_post_image_description_helper">Describe important visual details for people who cannot see the image. Include important text that appears in the image.</string>
     <string name="create_post_add_photos">Add photos</string>
     <plurals name="create_post_carousel_count">
         <item quantity="one">%d of 10 photos</item>
@@ -319,10 +300,6 @@
     <string name="create_post_image_description_number" tools:ignore="PluralsCandidate">Image %1$d description</string>
     <string name="create_post_move_earlier">Move earlier</string>
     <string name="create_post_move_later">Move later</string>
-    <string name="create_post_before">Before</string>
-    <string name="create_post_after">After</string>
-    <string name="create_post_before_content_description">Before image</string>
-    <string name="create_post_after_content_description">After image</string>
     <string name="create_post_error_before">Add the before photo.</string>
     <string name="create_post_error_after">Add the after photo.</string>
     <string name="create_post_question">Question</string>
@@ -366,14 +343,9 @@
     <string name="messages_attach">Attach photo</string>
     <string name="messages_send">Send</string>
     <string name="messages_online">Active now</string>
-    <string name="jobs_filter_active">Active</string>
     <string name="jobs_filter_history">History</string>
     <string name="jobs_empty_title">No jobs yet</string>
     <string name="jobs_empty_supporting">When you apply for a task or request a service, it will show up here.</string>
-    <string name="jobs_empty_history_title">No past jobs</string>
-    <string name="jobs_empty_history_supporting">Completed, canceled, and rejected jobs will appear here.</string>
-    <string name="job_apply">Apply</string>
-    <string name="job_request">Request</string>
     <string name="job_apply_gate_title">List a service to apply</string>
     <string name="job_apply_gate_message">List a service to apply for tasks.</string>
     <string name="job_apply_gate_action">List a service</string>
@@ -440,99 +412,53 @@
     <string name="job_review_submit">Submit review</string>
     <string name="job_review_later">Later</string>
 
-    <string name="profile_more">More options</string>
-    <string name="profile_copy_username">Copy username</string>
-    <string name="profile_share_body">%1$s (@%2$s)\n%3$s</string>
-    <string name="profile_username_copied">Username copied</string>
+
     <string name="profile_load_error">Couldn\'t load profile.</string>
     <string name="profile_action_error">Couldn\'t save that change.</string>
-    <string name="profile_gallery_empty_title">No photos yet</string>
-    <string name="profile_gallery_empty_supporting">Photos from your posts and completed jobs will show up here.</string>
-    <string name="profile_licenses_empty">No licenses added yet.</string>
-    <string name="profile_license_hint">License or certification</string>
+
     <string name="profile_availability_range_error">End date must be on or after the start date.</string>
     <string name="profile_pick_date">Pick</string>
-    <string name="profile_activity_empty">Nothing active right now.</string>
+
     <string name="profile_metric_reviews">REVIEWS</string>
     <string name="profile_metric_positive">4★+</string>
-    <string name="profile_theme">Theme</string>
     <string name="profile_edit">Edit profile</string>
     <string name="profile_share">Share profile</string>
-    <string name="profile_availability">Availability</string>
-    <string name="profile_camera">Update photo</string>
-    <string name="profile_contact">Contact info</string>
-    <string name="profile_badge_seeker">Seeker</string>
-    <string name="profile_badge_provider">Provider</string>
-    <string name="profile_joined">Joined %1$s</string>
-    <string name="profile_stat_activity">Activity</string>
-    <string name="profile_stat_requests">Requests</string>
-    <string name="profile_stat_completed">Completed</string>
-    <string name="profile_stat_following">Following</string>
-    <string name="profile_stat_followers">Followers</string>
-    <string name="profile_strength_title">Profile strength · %1$s</string>
-    <string name="profile_strength_good">Good</string>
-    <string name="profile_strength_excellent">Excellent</string>
-    <string name="profile_strength_hint">Add preferred services to get sharper matches.</string>
-    <string name="profile_strength_listed_hint">Listing live — keep portfolio fresh for Explore rank.</string>
-    <string name="profile_tab_gallery">Gallery</string>
-    <string name="profile_tab_about">About</string>
-    <string name="profile_tab_activity">Activity</string>
-    <string name="profile_tab_reviews">Reviews</string>
-    <string name="profile_gallery_caption">Photos from your requests and completed jobs.</string>
-    <string name="profile_upload_work">+ Upload work post</string>
+
+
     <string name="profile_about">About</string>
-    <string name="profile_edit_section">Edit</string>
-    <string name="profile_looking_for">Looking for</string>
-    <string name="profile_looking_for_hint">Service needs that help match the right pros.</string>
-    <string name="profile_add_chip">+ Add</string>
-    <string name="profile_reliability">Reliability</string>
-    <string name="profile_metric_response">RESPONSE</string>
-    <string name="profile_metric_jobs_done">JOBS DONE</string>
-    <string name="profile_metric_avg_reply">AVG REPLY</string>
-    <string name="profile_skills">Skills</string>
-    <string name="profile_experience">Experience</string>
-    <string name="profile_languages">Languages</string>
-    <string name="profile_licenses">Licenses &amp; certs</string>
-    <string name="profile_licenses_add">Add</string>
-    <string name="profile_active_requests">Active requests</string>
-    <string name="profile_active_requests_hint">Jobs you’re hiring for right now</string>
+
+
+
+
     <string name="profile_view_all">View all</string>
-    <string name="profile_saved_professionals">Saved professionals</string>
-    <string name="profile_see_all">See all</string>
-    <string name="profile_active_jobs">Active jobs</string>
-    <string name="profile_dashboard">Dashboard</string>
+
     <string name="profile_reviews">Reviews</string>
     <string name="profile_reviews_summary">★ %1$s · %2$d</string>
     <string name="profile_metric_rating">RATING</string>
-    <string name="profile_metric_recommend">RECOMMEND</string>
-    <string name="profile_metric_reply">REPLY</string>
-    <string name="profile_review_verified">%1$s · Verified</string>
     <string name="profile_reviews_empty_title">No reviews yet</string>
     <string name="profile_reviews_empty_supporting">Reviews from completed jobs will show up here.</string>
-    <string name="profile_your_service">Your service</string>
-    <string name="profile_live">Live</string>
-    <string name="profile_not_available">Not available</string>
+
+
     <string name="profile_from">From</string>
     <string name="profile_visit_quote">Visit / quote</string>
-    <string name="profile_coverage">Coverage</string>
+
     <string name="profile_hours">Hours</string>
     <string name="profile_response">Response</string>
-    <string name="profile_edit_listing">Edit listing</string>
-    <string name="profile_insights">Insights</string>
+
     <string name="profile_edit_title">Edit profile</string>
-    <string name="profile_edit_helper">This is how you appear to others on ASKIT.</string>
+
     <string name="profile_save">Save</string>
-    <string name="profile_photo">Profile photo</string>
+
     <string name="profile_photo_tap">Tap to update</string>
-    <string name="profile_basic_info">Basic info</string>
-    <string name="profile_display_name">Display name</string>
+
+
     <string name="profile_username">Username</string>
-    <string name="profile_username_helper">Letters, numbers, periods, and underscores only</string>
-    <string name="profile_username_error">Use letters, numbers, periods, and underscores only</string>
-    <string name="profile_display_name_error">Enter a display name</string>
+
+
+
     <string name="profile_city">City</string>
     <string name="profile_bio">Bio</string>
-    <string name="profile_bio_count">%1$d/200</string>
+
     <string name="profile_photo_camera">Camera</string>
     <string name="profile_photo_library">Photo library</string>
     <string name="profile_photo_remove">Remove photo</string>
@@ -551,9 +477,7 @@
     <string name="profile_availability_mute">Mute my notifications</string>
     <string name="profile_availability_auto">Your profile will be automatically turned back to live on %1$s.</string>
     <string name="profile_cancel">Cancel</string>
-    <string name="profile_looking_for_title">Looking for</string>
-    <string name="profile_chip_input">Add a service</string>
-    <string name="profile_percent">%1$d%%</string>
+
 
     <string name="settings_title">Settings</string>
     <string name="settings_section_account">ACCOUNT</string>
@@ -564,7 +488,6 @@
     <string name="settings_section_support">SUPPORT</string>
     <string name="settings_edit_profile">Edit profile</string>
     <string name="settings_phone_number">Phone number</string>
-    <string name="settings_active_role">Active role</string>
     <string name="settings_push_notifications">Push notifications</string>
     <string name="settings_job_service_alerts">Job &amp; service alerts</string>
     <string name="settings_language">Language</string>
@@ -587,14 +510,10 @@
     <string name="settings_clear_data_confirm_title">Clear all app data?</string>
     <string name="settings_clear_data_confirm_msg">This will reset all local saved tasks, listings, and preferences.</string>
     <string name="settings_clear_data_action">Clear data</string>
-    <string name="settings_role_both">Both</string>
-    <string name="settings_role_provider">Provider</string>
-    <string name="settings_role_seeker">Seeker</string>
     <string name="settings_status_live">Live</string>
     <string name="settings_status_manage">Manage</string>
     <string name="settings_status_on">On</string>
     <string name="settings_status_off">Off</string>
-    <string name="settings_status_everyone">Everyone</string>
     <string name="settings_data_cleared">Local data cleared successfully.</string>
 
     <string name="story_close">Close story</string>
@@ -603,12 +522,28 @@
     <string name="story_create_text">Create text story</string>
     <string name="story_more_create">Create a task, service, or post</string>
     <string name="story_shutter">Capture photo, hold for video</string>
+    <string name="story_record_video">Record video</string>
+    <string name="story_stop_recording">Stop recording</string>
+    <string name="story_camera_permission">Allow camera access to take photos and videos. You can still choose from Gallery or create a text story.</string>
+    <string name="story_allow_camera">Allow camera</string>
+    <string name="story_open_settings">Open settings</string>
+    <string name="story_settings_unavailable">Could not open settings. You can change camera access in your phone’s app settings.</string>
+    <string name="story_camera_unavailable">The camera could not open. Try again, switch cameras, or choose from Gallery.</string>
+    <string name="story_photo_failed">The photo could not be saved. Check camera access and free storage, then try again.</string>
+    <string name="story_media_unavailable">This photo or video could not be opened. Choose another item from Gallery.</string>
+    <string name="story_video_failed">The video could not be saved. Check camera and microphone access and free storage, then try again.</string>
+    <string name="story_flash_failed">The flash could not be changed. Try again.</string>
+    <string name="story_microphone_title">Sound for your video</string>
+    <string name="story_microphone_explanation">Allow microphone access to include sound in videos, or continue without sound. Photos do not need microphone access.</string>
+    <string name="story_allow_microphone">Allow microphone</string>
+    <string name="story_without_sound">Without sound</string>
+    <string name="story_video_without_sound">Videos will be recorded without sound.</string>
+    <string name="story_hold_again">Hold the capture button again to record a video.</string>
     <string name="story_gallery">Gallery</string>
     <string name="story_flip_camera">Flip camera</string>
     <string name="story_create_text_hint">Tap to type</string>
     <string name="story_background_cycle">Cycle background</string>
     <string name="story_create_confirm">Add text to story</string>
-    <string name="story_more">More options</string>
     <string name="story_tool_text">Text</string>
     <string name="story_tool_stickers">Stickers</string>
     <string name="story_tool_background">Background</string>
@@ -617,15 +552,11 @@
     <string name="story_tool_more">More</string>
     <string name="story_keep_draft">Keep draft</string>
     <string name="story_trim_title">Trim video</string>
-    <string name="story_caption_hint">Add a caption…</string>
     <string name="story_your_story">Your story</string>
     <string name="story_add_new_title">Add to your story</string>
     <string name="story_activity">Activity</string>
     <string name="story_close_circle">Close circle</string>
     <string name="story_next">Next</string>
-    <string name="story_discard_editor_title">Discard story?</string>
-    <string name="story_discard_editor_message">Your story edits will be lost.</string>
-    <string name="story_text_tool_title">Text</string>
     <string name="story_text_done">Done</string>
     <string name="story_text_placeholder">Type something</string>
     <string name="story_text_size">Text size</string>
@@ -656,19 +587,17 @@
     <string name="story_link_label">Label</string>
     <string name="story_share_title">Share</string>
     <string name="story_share_destination">Sharing to %1$s</string>
-    <string name="story_audience_everyone">Your story</string>
-    <string name="story_audience_close_circle">Close circle</string>
     <string name="story_audience_message">Message</string>
     <string name="story_message_empty_state">Recipients will appear here when messaging is available.</string>
     <string name="story_share_action">Share</string>
 
     <!-- Entry / Onboarding Screen -->
-    <string name="entry_headline">Find help nearby,\nor offer your skills</string>
-    <string name="entry_subtitle">Book local pros. Grow your service business. All in one place.</string>
+    <string name="entry_headline">Find what you need.\nOffer what you do.</string>
+    <string name="entry_subtitle">Discover services in your community, or offer your own.</string>
     <string name="entry_get_started">Get started</string>
     <string name="entry_already_have_account">I already have an account</string>
-    <string name="entry_trust_badge">Verified local pros &amp; community</string>
-    <string name="entry_legal_disclaimer">By continuing, you agree to our Terms &amp; Privacy Policy</string>
+    <string name="entry_trust_badge">Local pros &amp; community</string>
+    <string name="entry_legal_disclaimer">By creating an account, you agree to our <annotation link="terms">Terms of Service</annotation> and acknowledge our <annotation link="privacy">Privacy Policy</annotation>.</string>
 
     <!-- Authentication: Phone Number & OTP -->
     <string name="auth_phone_title">Continue with your\nmobile number</string>
@@ -676,7 +605,7 @@
     <string name="auth_phone_label">Mobile number</string>
     <string name="auth_phone_placeholder">98989 89898</string>
     <string name="auth_phone_get_otp">Get OTP</string>
-    <string name="auth_phone_disclaimer">By continuing you agree to our Terms &amp; Privacy Policy.</string>
+    <string name="auth_phone_disclaimer">By continuing you agree to our <annotation link="terms">Terms</annotation> &amp; <annotation link="privacy">Privacy Policy</annotation>.</string>
     <string name="auth_country_picker_title">Select country</string>
     <string name="auth_country_search_placeholder">Search country or dial code…</string>
     <string name="auth_otp_title">Verify your phone</string>
@@ -685,34 +614,36 @@
     <string name="auth_otp_resend_countdown">Resend code in %1$ds</string>
     <string name="auth_otp_resend_action">Resend code</string>
     <string name="auth_otp_verify_btn">Verify &amp; Continue</string>
-    <string name="auth_otp_invalid">Please enter a valid 6-digit code</string>
+    <string name="auth_otp_verifying">Verifying…</string>
+    <string name="auth_phone_requesting">Requesting code…</string>
+    <string name="auth_invalid_phone">Enter a valid phone number with its country code.</string>
+    <string name="auth_phone_invalid_india">Enter a valid 10-digit Indian mobile number.</string>
+    <string name="auth_phone_invalid_mobile">Enter a valid mobile number for the selected country.</string>
+    <string name="auth_phone_country_mismatch">Select the country that matches this number.</string>
+    <string name="auth_not_configured">Sign-in is not available in this build yet.</string>
+    <string name="auth_rate_limited">Too many requests. Please wait before trying again.</string>
+    <string name="auth_request_failed">Could not request a code. Please try again.</string>
+    <string name="auth_invalid_code">The code is incorrect. Please try again.</string>
+    <string name="auth_expired_code">This code has expired. Request a new code.</string>
+    <string name="auth_new_code_required">Request a new code to continue signing in.</string>
+    <string name="auth_verification_failed">Could not verify the code. Please try again.</string>
+    <string name="auth_session_storage_failed">Secure sign-in storage is unavailable. Please try again.</string>
+    <string name="auth_restoring_session">Restoring your sign-in…</string>
+    <string name="auth_loading_account">Loading your account…</string>
+    <string name="auth_account_load_failed">Couldn\'t load your account. Please retry or sign in again.</string>
+    <string name="auth_session_expired">Your sign-in has expired. Please sign in again.</string>
+    <string name="auth_sign_in_again">Sign in again</string>
 
     <!-- Form A: User Profile Setup & GPS Geocoding -->
-    <string name="form_a_top_title">About you</string>
     <string name="form_a_headline">Tell us about yourself</string>
     <string name="form_a_subtitle">This helps us match the right providers near you.</string>
-    <string name="form_a_full_name_label">Full name *</string>
-    <string name="form_a_full_name_placeholder">Your full name</string>
-    <string name="form_a_location_label">Location</string>
+
     <string name="form_a_location_use_current">Use my current location</string>
     <string name="form_a_location_locating">Detecting GPS location…</string>
     <string name="form_a_location_located">Location detected</string>
-    <string name="form_a_location_permission_denied">Location permission denied. Enter manually.</string>
-    <string name="form_a_city_label">City *</string>
-    <string name="form_a_city_placeholder">e.g. Coimbatore</string>
-    <string name="form_a_pincode_label">Pincode</string>
-    <string name="form_a_pincode_placeholder">641001</string>
-    <string name="form_a_interests_label">What kind of help do you usually need?</string>
-    <string name="form_a_category_home_repairs">Home repairs</string>
-    <string name="form_a_category_plumbing">Plumbing</string>
-    <string name="form_a_category_cleaning">Cleaning</string>
-    <string name="form_a_category_electrical">Electrical</string>
-    <string name="form_a_category_tutoring">Tutoring</string>
-    <string name="form_a_category_design">Design</string>
-    <string name="form_a_category_it_support">IT support</string>
-    <string name="form_a_category_other">Other</string>
-    <string name="form_a_custom_category_placeholder">Specify other service or skill…</string>
-    <string name="form_a_submit_btn">Unlock my dashboard</string>
+
+
+    <string name="form_a_submit_btn">Continue</string>
 
     <string name="story_view_post">View Post</string>
     <string name="post_detail_title">Post</string>
@@ -745,18 +676,16 @@
     <string name="creator_ai_insight_timing_body">Best time to post today is %1$s. %2$s is trending %3$s in your area.</string>
     <string name="creator_ai_cta_create_post">Create Trending Post</string>
     <string name="creator_milestone_title">Audience Growth</string>
-    <string name="creator_milestone_target">Next milestone: %1$d followers</string>
-    <string name="creator_milestone_remaining">%1$d followers away</string>
+    <plurals name="creator_milestone_target">
+        <item quantity="one">Next milestone: %1$d follower</item>
+        <item quantity="other">Next milestone: %1$d followers</item>
+    </plurals>
+    <plurals name="creator_milestone_remaining">
+        <item quantity="one">%1$d follower away</item>
+        <item quantity="other">%1$d followers away</item>
+    </plurals>
     <string name="creator_milestone_growth_pace">%1$s this week · %2$s MoM</string>
     <string name="creator_recent_activity_title">Recent Activity</string>
-    <string name="creator_activity_new_follower">%1$s started following you</string>
-    <string name="creator_activity_follower_context">From %1$s · %2$s</string>
-    <string name="creator_activity_dm_title">New message from %1$s</string>
-    <string name="creator_activity_dm_snippet">“%1$s” · %2$s</string>
-    <string name="creator_activity_like_title">%1$s and others liked your post</string>
-    <string name="creator_activity_like_context">Post: “%1$s” · %2$s</string>
-    <string name="creator_activity_comment_title">%1$s commented on your post</string>
-    <string name="creator_activity_view_analytics">View full analytics</string>
 
     <!-- Provider Dashboard -->
     <string name="provider_dashboard_title">Provider Dashboard</string>
@@ -766,9 +695,11 @@
     <string name="provider_status_offline_hint">Go online to receive incoming requests from nearby customers.</string>
     <string name="provider_status_online_hint">You are visible to customers within %1$s km.</string>
     <string name="provider_section_incoming">Incoming Requests</string>
-    <string name="provider_incoming_count">%1$d Live</string>
+    <plurals name="provider_incoming_count">
+        <item quantity="one">%1$d Live</item>
+        <item quantity="other">%1$d Live</item>
+    </plurals>
     <string name="provider_request_respond_time">Respond in %1$s</string>
-    <string name="provider_request_distance">%1$s km away</string>
     <string name="provider_action_accept">Accept</string>
     <string name="provider_action_decline">Decline</string>
     <string name="provider_section_active_jobs">Active Jobs</string>
@@ -777,7 +708,6 @@
     <string name="provider_job_otp_pending">OTP Verification Pending</string>
     <string name="provider_job_progress">%1$d%% completed</string>
     <string name="provider_action_chat">Chat</string>
-    <string name="provider_action_call">Call</string>
     <string name="provider_action_details">Details</string>
     <string name="provider_section_kpis">Performance &amp; Operations</string>
     <string name="provider_kpi_todays_jobs">Today\'s Jobs</string>
@@ -790,18 +720,409 @@
     <string name="provider_kpi_avg_response_value">%1$.1fm</string>
     <string name="provider_section_trust">Trust &amp; Profile Strength</string>
     <string name="provider_trust_score_title">Trust Score</string>
-    <string name="provider_trust_percentile">%1$s · ↑%2$d this week</string>
+    <string name="provider_trust_percentile">Top %1$s%% in area · ↑%2$s this week</string>
+    <string name="settings_message_everyone">Everyone</string>
+    <string name="settings_message_contacts">Contacts only</string>
+    <string name="settings_message_verified">Verified users only</string>
+    <string name="dashboard_dismiss">Dismiss</string>
     <string name="provider_profile_strength_title">Profile Strength %1$d%%</string>
-    <string name="provider_profile_tier">%1$s</string>
     <string name="provider_profile_next_tier_hint">Complete portfolio to unlock %1$s</string>
     <string name="provider_action_improve">Improve</string>
     <string name="provider_action_upload">Upload</string>
     <string name="provider_section_alerts">Priority Alerts</string>
-    <string name="provider_alerts_count">%1$d new</string>
+    <plurals name="provider_alerts_count">
+        <item quantity="one">%1$d new</item>
+        <item quantity="other">%1$d new</item>
+    </plurals>
     <string name="provider_alerts_manage">Manage Alerts</string>
     <string name="provider_pro_boost_title">Boost Your Business</string>
     <string name="provider_pro_boost_badge">PRO</string>
     <string name="provider_pro_boost_perks">3x search visibility · Verified badge · Unlimited connections</string>
     <string name="provider_pro_boost_cta">Upgrade to Premium</string>
-    <string name="provider_request_accepted_snackbar">Job accepted! Contacting customer…</string>
+    <string name="settings_blocked_empty">No blocked accounts. Accounts you block won\'t be able to message or view your listings.</string>
+    <string name="settings_saved_empty">You haven\'t saved any tasks or professionals yet. Tap the bookmark or heart icon on listings to save them.</string>
+    <string name="settings_history_empty">Your completed service history and past task applications will appear here.</string>
+    <string name="settings_close">Close</string>
+    <string name="auth_logo">AskIT Logo</string>
+    <string name="auth_clear_phone">Clear phone</string>
+    <string name="form_a_step">Step 2 of 2</string>
+    <string name="form_a_add_photo">Add profile photo</string>
+    <string name="form_a_full_name">Full name</string>
+
+
+    <string name="form_a_detected">Detected</string>
+
+
+
+    <string name="form_a_location_hint">Auto-detects your locality and city via GPS</string>
+    <string name="home_empty_title">No Posts Yet</string>
+    <string name="home_empty_body">Check back soon or pull down to refresh.</string>
+    <string name="home_error_title">Couldn\'t Load Feed</string>
+    <string name="service_detail_title">Service Details</string>
+
+    <string name="user_profile_unavailable_body">This profile could not be found.</string>
+    <string name="service_detail_unavailable">This service is no longer available.</string>
+    <string name="service_detail_starting_price">Starting Price</string>
+    <string name="service_detail_response_time">Response Time</string>
+    <string name="service_detail_area">Service Area</string>
+    <string name="service_detail_about">About This Service</string>
+    <string name="service_detail_inclusions">Included in Service</string>
+    <plurals name="service_detail_review_count">
+        <item quantity="one">(%1$d review)</item>
+        <item quantity="other">(%1$d reviews)</item>
+    </plurals>
+    <string name="task_detail_title">Task Details</string>
+    <string name="task_detail_apply">Apply to Task</string>
+    <string name="task_detail_budget">Estimated Budget</string>
+    <string name="task_detail_urgency">Urgency</string>
+    <string name="task_detail_requirements">Key Requirements</string>
+    <string name="task_detail_not_found">Task Not Found</string>
+    <string name="task_detail_not_found_body">The requested task (ID: %1$s) is no longer available or could not be found.</string>
+    <string name="task_detail_go_back">Go Back</string>
+    <string name="home_people_title">Top Professionals Near You</string>
+    <string name="home_services_title">Services You May Need</string>
+    <string name="home_tasks_title">Open Tasks Near You</string>
+    <plurals name="home_person_jobs">
+        <item quantity="one">· %1$d job</item>
+        <item quantity="other">· %1$d jobs</item>
+    </plurals>
+    <plurals name="home_person_jobs_completed">
+        <item quantity="one">%1$d job completed</item>
+        <item quantity="other">%1$d jobs completed</item>
+    </plurals>
+    <string name="create_post_media_title">Visual Media</string>
+    <string name="create_post_change_before">Change Before</string>
+    <string name="create_post_change_after">Change After</string>
+    <string name="create_post_initial_problem">Initial problem</string>
+    <string name="create_post_finished_result">Finished result</string>
+    <string name="create_post_remove_slot_photo">Remove %1$s photo</string>
+    <string name="create_post_work_photos">Add photos of your work</string>
+    <string name="create_post_gallery_limit">Select up to 10 photos from gallery</string>
+    <string name="create_post_photo_position">%1$d of %2$d</string>
+    <string name="create_post_hide_photo_description">Hide photo description</string>
+    <string name="create_post_add_photo_description">+ Add photo description (optional)</string>
+    <string name="create_post_photo_description_label">Photo description</string>
+    <string name="create_post_hide_before_description">Hide before description</string>
+    <string name="create_post_add_before_description">+ Add before description (optional)</string>
+    <string name="create_post_before_description_label">Before work description</string>
+    <string name="create_post_hide_after_description">Hide after description</string>
+    <string name="create_post_add_after_description">+ Add after description (optional)</string>
+    <string name="create_post_after_description_label">After work description</string>
+    <string name="create_post_add_ons_title">Add to your post</string>
+    <string name="create_post_publish">Post</string>
+
+    <string name="post_task_feed_preview">Feed Card Preview</string>
+    <string name="post_task_you_creator">You (Task Creator)</string>
+    <string name="post_task_you_initial">Y</string>
+    <string name="post_task_review_draft">Review Draft</string>
+    <string name="post_task_full_details">Full Task Details</string>
+    <string name="post_task_timeline">Timeline</string>
+    <string name="post_task_private_information">Private Information</string>
+    <string name="post_task_private_visibility">🔒 Visible only to your assigned provider after you accept their offer.</string>
+    <plurals name="post_task_preview_photos">
+        <item quantity="one">Photo (%1$d)</item>
+        <item quantity="other">Photos (%1$d)</item>
+    </plurals>
+
+    <string name="profile_update_photo">Update photo</string>
+    <string name="profile_completed">Completed</string>
+    <string name="profile_followers">Followers</string>
+    <string name="profile_following">Following</string>
+    <string name="profile_showcase">Showcase</string>
+
+    <string name="profile_service_offering">Service offering</string>
+    <string name="profile_service_active">Active</string>
+    <string name="profile_service_unavailable">Unavailable</string>
+    <string name="profile_service_area">Service area</string>
+    <string name="profile_edit_service">Edit service</string>
+    <string name="profile_services_empty">No services listed yet</string>
+
+
+    <string name="settings_provider_name">Provider</string>
+    <string name="form_a_location_failed">Couldn\'t detect your location. Try again or enter your city and postcode below.</string>
+    <string name="post_task_local_area">Local Area</string>
+    <string name="form_a_save_failed">Couldn\'t save your profile. Your details are still here; please try again.</string>
+    <string name="auth_logging_out">Logging out…</string>
+    <string name="auth_logout_storage_failed">Couldn\'t remove your saved sign-in. Please retry to finish logging out.</string>
+    <string name="settings_terms_link">Terms</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="external_link_unavailable">Could not open this link. Please try again later.</string>
+    <string name="story_video_unavailable">Could not play this video. Try again or choose another video.</string>
+    <string name="form_a_photo_required">Profile photo (optional)</string>
+    <string name="form_a_photo_checking">Checking photo…</string>
+    <string name="form_a_photo_error">Choose a photo that can be opened.</string>
+
+
+    <string name="form_a_app_language">App language</string>
+
+    <string name="task_provider_preferences">Provider preferences (optional)</string>
+    <string name="task_preference_none">No preference</string>
+    <string name="task_preference_male">Male</string>
+    <string name="task_preference_female">Female</string>
+    <string name="task_preference_other">Other</string>
+    <string name="task_language_english">English</string>
+    <string name="task_language_tamil">Tamil</string>
+    <string name="task_preference_minimum_age">Minimum age</string>
+    <string name="task_preference_maximum_age">Maximum age</string>
+    <string name="task_preference_gender">Preferred gender</string>
+    <string name="task_preference_languages">Preferred spoken languages</string>
+    <string name="task_preference_age_error">Enter whole ages from 18 to 100. Minimum age must not exceed maximum age.</string>
+    <string name="task_preference_age_hint">Leave either age blank for no lower or upper limit.</string>
+    <string name="task_preference_age_range">%1$d–%2$d</string>
+    <string name="task_preference_age_minimum">%1$d+</string>
+    <string name="task_preference_age_maximum">Up to %1$d</string>
+    <string name="task_preference_age_summary">Age: %1$s</string>
+    <string name="task_preference_gender_summary">Gender: %1$s</string>
+    <string name="task_preference_language_summary">Languages: %1$s</string>
+    <string name="task_public_quantity">Quantity / measurements: %1$s</string>
+    <string name="task_public_brand">Brand / model: %1$s</string>
+    <string name="task_public_materials">Materials: %1$s</string>
+    <string name="task_just_posted">Just now</string>
+    <string name="task_photo_position">Photo %1$d of %2$d</string>
+
+    <string name="task_discussion_comment">Comment</string>
+    <string name="task_discussion_title">Task discussion</string>
+    <string name="task_discussion_placeholder">Ask a question or share a solution…</string>
+    <string name="task_discussion_empty">No discussion yet. Ask a question, clarify the requirements or share a solution.</string>
+    <string name="task_discussion_sign_in">Sign in to comment or reply.</string>
+    <string name="task_discussion_empty_message">Enter a message before sending.</string>
+    <string name="task_discussion_task_unavailable">This task is no longer available. Your message has been kept.</string>
+    <string name="task_discussion_reply_unavailable">This reply target is unavailable. Cancel the reply to post your message as a new comment.</string>
+    <string name="task_discussion_missing_target">Unavailable comment</string>
+    <plurals name="task_discussion_minutes">
+        <item quantity="one">%1$d minute ago</item>
+        <item quantity="other">%1$d minutes ago</item>
+    </plurals>
+    <plurals name="task_discussion_hours">
+        <item quantity="one">%1$d hour ago</item>
+        <item quantity="other">%1$d hours ago</item>
+    </plurals>
+    <plurals name="task_discussion_days">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
+
+    <!-- Task actions -->
+    <string name="task_action_sign_in">Sign in to use task actions.</string>
+    <string name="task_action_unavailable">This task is no longer available.</string>
+    <string name="task_action_not_allowed">This action is unavailable for your account.</string>
+    <string name="task_action_invalid_draft">Check the required task details before saving.</string>
+    <string name="task_edit_unavailable">Editing is unavailable because the original task draft is missing.</string>
+    <string name="task_edit_title">Edit task</string>
+    <string name="task_edit">Edit</string>
+    <string name="task_delete">Delete</string>
+    <string name="task_save_changes">Save changes</string>
+    <string name="task_delete_title">Delete task?</string>
+    <string name="task_delete_message">Delete “%1$s”? This removes the listing and its discussion. Existing jobs will remain.</string>
+    <string name="task_action_cancel">Cancel</string>
+    <string name="task_more_actions">More task actions</string>
+    <string name="task_report">Report task</string>
+    <string name="task_report_spam">Spam or scam</string>
+    <string name="task_report_inappropriate">Inappropriate content</string>
+    <string name="task_report_misleading">Misleading task</string>
+    <string name="task_report_other">Other</string>
+    <string name="task_report_confirm">Confirm report</string>
+    <string name="task_report_local_notice">Choose a reason. Reports are saved on this device; moderation delivery is not connected yet.</string>
+    <string name="task_report_saved_locally">Report saved locally. Moderation delivery is not connected yet.</string>
+    <string name="task_report_already_saved">You have already reported this task locally.</string>
+    <string name="task_like_count">Like · %1$d</string>
+    <string name="task_liked_count">Liked · %1$d</string>
+    <string name="task_applied">Applied</string>
+
+    <!-- Story controls -->
+    <string name="story_follow">Follow</string>
+    <string name="story_actions_title">Story options</string>
+    <string name="story_action_sign_in">Sign in to use story actions.</string>
+    <string name="story_action_unavailable">This story action is unavailable.</string>
+    <string name="story_action_not_allowed">You cannot use this action on your own story.</string>
+    <string name="story_mute_author">Mute stories from this author</string>
+    <string name="story_not_interested">Not interested in this story</string>
+    <string name="story_muted">Stories from this author are muted.</string>
+    <string name="story_hidden">This story is hidden.</string>
+    <string name="story_undo">Undo</string>
+    <string name="story_unmute">Unmute</string>
+    <string name="story_muted_settings">Muted stories</string>
+    <string name="story_muted_empty">You have not muted any story authors.</string>
+    <string name="story_report_title">Report story</string>
+    <string name="story_reported">Already reported</string>
+    <string name="story_report_duplicate">You have already reported this story locally.</string>
+    <string name="story_report_notice">Choose a reason. Reports are saved locally; moderation delivery is not connected yet.</string>
+    <string name="story_report_saved">Report saved locally. Moderation delivery is not connected yet.</string>
+    <string name="story_report_confirm">Confirm report</string>
+    <string name="story_report_spam">Spam or scam</string>
+    <string name="story_report_inappropriate">Inappropriate content</string>
+    <string name="story_report_misleading">Misleading content</string>
+    <string name="story_report_other">Other</string>
+    <string name="post_actions_title">Post options</string>
+    <string name="post_action_sign_in">Sign in to use post actions.</string>
+    <string name="post_action_not_allowed">You cannot change this post.</string>
+    <string name="post_unavailable">This post is no longer available.</string>
+    <string name="post_invalid_draft">Check the post details before saving.</string>
+    <string name="post_edit_unavailable">The original editing details are unavailable for this post.</string>
+    <string name="post_edit_title">Edit post</string>
+    <string name="post_save_changes">Save changes</string>
+    <string name="post_save">Save post</string>
+    <string name="post_unsave">Remove from saved</string>
+    <string name="post_archive">Archive post</string>
+    <string name="post_unarchive">Restore post</string>
+    <string name="post_archive_message">This post will leave the feed. You can restore it from Archived posts in Settings.</string>
+    <string name="post_archived_title">Archived posts</string>
+    <string name="post_archived_empty">You have no archived posts.</string>
+    <string name="post_saved_title">Saved posts</string>
+    <string name="post_saved_empty">You have no saved posts.</string>
+    <string name="post_hide_likes">Hide like count</string>
+    <string name="post_show_likes">Show like count</string>
+    <string name="post_disable_comments">Turn commenting off</string>
+    <string name="post_enable_comments">Turn commenting on</string>
+    <string name="post_comments_disabled">Commenting is turned off for this post.</string>
+    <string name="post_report_title">Report post</string>
+    <string name="post_report_spam">Spam or scam</string>
+    <string name="post_report_inappropriate">Inappropriate content</string>
+    <string name="post_report_misleading">Misleading content</string>
+    <string name="post_report_other">Other</string>
+    <string name="post_report_duplicate">You have already reported this post.</string>
+    <string name="post_report_notice">Reports are saved on this device for now. Delivery to moderation is not connected.</string>
+    <string name="post_report_saved">Report saved locally. Moderation delivery is not connected.</string>
+    <string name="post_report_confirm">Save report</string>
+    <string name="post_action_done">Post updated</string>
+    <string name="post_crop_title">Crop photo</string>
+    <string name="post_crop_cancel">Cancel</string>
+    <string name="post_crop_done">Use photos</string>
+    <string name="post_crop_next">Next</string>
+    <string name="post_crop_position">Photo %1$d of %2$d</string>
+    <string name="post_crop_instructions">Drag to position the photo. Pinch or use the slider to zoom. Only the area inside the frame will be used.</string>
+    <string name="post_crop_landscape">4:3 Landscape</string>
+    <string name="post_crop_portrait">3:4 Portrait</string>
+    <string name="post_crop_ratio_locked">All photos in this post use the same ratio.</string>
+    <string name="post_crop_load_failed">This photo could not be opened. Retry or cancel to choose another photo.</string>
+    <string name="post_crop_save_failed">The crop could not be saved. Your draft is unchanged. Try again.</string>
+    <string name="post_crop_retry">Retry</string>
+    <string name="post_crop_zoom">Zoom</string>
+    <string name="post_crop_reset">Reset</string>
+    <string name="post_crop_left">Move crop left</string>
+    <string name="post_crop_right">Move crop right</string>
+    <string name="post_crop_up">Move crop up</string>
+    <string name="post_crop_down">Move crop down</string>
+    <string name="post_crop_too_many">A post can contain up to 10 photos. Remove a photo before adding more.</string>
+    <string name="post_crop_invalid">Crop each photo to 4:3 or 3:4 before continuing. All photos must use the same ratio.</string>
+    <string name="post_crop_hint">Crop photos to 4:3 or 3:4. The first photo sets the ratio for this post.</string>
+
+    <string name="explore_filter_group_reviews">Professional review count</string>
+    <string name="explore_filter_rating_four_point_five_plus">4.5+ stars</string>
+    <string name="explore_filter_reviews_ten_plus">10+ reviews</string>
+    <string name="explore_filter_reviews_fifty_plus">50+ reviews</string>
+    <string name="explore_price_hour">Per hour</string>
+    <string name="explore_price_visit">Per visit</string>
+    <string name="explore_price_service">Per service</string>
+    <string name="explore_price_fixed">Fixed total</string>
+    <string name="explore_price_heading">Price / budget</string>
+    <string name="explore_price_minimum">Minimum (optional)</string>
+    <string name="explore_price_maximum">Maximum (optional)</string>
+    <string name="explore_price_unit">Service rate unit</string>
+    <string name="explore_price_any_unit">Any unit</string>
+    <string name="explore_price_hint">Prices are in INR per listed unit. Choose a service rate unit to compare like-for-like. Task budgets use total amounts. Overlapping ranges are included; unpriced listings are excluded when a limit is set.</string>
+    <string name="explore_price_task_hint">Filter total budgets in INR. Overlapping budget ranges are included. Tasks requesting quotes are excluded when a price limit is set.</string>
+    <string name="explore_price_error">Enter valid amounts (up to 2 decimal places). Minimum must not exceed maximum.</string>
+    <string name="explore_price_no_maximum">No maximum</string>
+    <string name="explore_price_summary">₹%1$s – %2$s · %3$s</string>
+    <string name="explore_filter_scope_hint">Filters apply to %1$s. In All, rating and review count affect professionals; service rate units affect services.</string>
+    <string name="explore_price_clear">Clear price</string>
+    <string name="nearby_follow_description">Follow %1$s</string>
+    <string name="nearby_unfollow_description">Unfollow %1$s</string>
+    <string name="nearby_not_following">Not following</string>
+    <string name="nearby_follow_sign_in">Sign in to follow professionals.</string>
+    <string name="nearby_follow_unavailable">Following is unavailable for this profile.</string>
+    <string name="explore_search_short_placeholder">Search</string>
+    <string name="explore_change_area_description">Change area: %1$s, %2$s</string>
+    <string name="explore_choose_area_title">Choose search area</string>
+    <string name="story_unlike">Unlike story</string>
+    <string name="story_shared_unavailable">Story unavailable</string>
+    <string name="story_shared_author">%1$s’s story</string>
+    <string name="story_shared_preview">Shared a story</string>
+    <string name="story_send_heading">Share story</string>
+    <string name="story_send_local">Saved in this chat on this device. Delivery to other users is not connected yet.</string>
+    <string name="story_send_failed">Could not share. The story may be unavailable or this chat may be blocked.</string>
+    <string name="story_send_empty">No recipients available.</string>
+    <string name="story_send_sent">Shared</string>
+    <string name="story_send_action">Share</string>
+    <string name="story_send_done">Done</string>
+    <string name="post_pin">Pin to profile</string>
+    <string name="post_unpin">Unpin from profile</string>
+    <string name="post_pinned">Pinned</string>
+    <string name="post_not_interested">Not interested</string>
+    <string name="post_hidden_from_home">Post hidden from your Home feed</string>
+
+    <string name="account_email">Email</string>
+    <string name="account_postcode">Postcode</string>
+    <string name="account_invalid_field">Enter a valid value.</string>
+    <string name="profile_optional_title">Title / profession (optional)</string>
+    <string name="profile_phone_verification_needed">Changing your sign-in number requires verification. This service is not available yet.</string>
+    <string name="profile_save_unavailable">Changes could not be saved. Please try again when the account service is available.</string>
+    <string name="service_experience_years">Experience in years (0–60) *</string>
+    <string name="service_required_details">Professional details</string>
+    <string name="service_required_details_error">Enter availability, 0–60 years of experience, and valid contact details.</string>
+    <string name="profile_banner">Profile banner</string>
+    <string name="profile_edit_banner">Edit banner</string>
+    <string name="profile_remove_banner">Remove banner</string>
+    <string name="profile_banner_failed">Banner unavailable or could not be saved. Try another image.</string>
+    <string name="profile_distance_consent">Show my approximate distance to other members</string>
+    <string name="profile_distance_consent_hint">Off by default. Uses postcode areas only; your postcode and exact location stay private.</string>
+    <string name="profile_approximate_distance">About %1$d km away</string>
+    <string name="profile_highlights">Highlights</string>
+    <string name="profile_highlight_new">New highlight</string>
+    <string name="profile_highlight_name">Collection name *</string>
+    <string name="profile_highlight_manage">Manage %1$s</string>
+    <string name="profile_highlights_empty">No highlights yet.</string>
+    <string name="profile_highlight_no_stories">Publish a story first, then add it to this collection.</string>
+    <string name="profile_highlight_delete">Delete collection</string>
+    <string name="profile_highlight_unavailable">These stories are unavailable or restricted. Return to the profile to try another collection.</string>
+    <string name="profile_highlight_label">Highlight</string>
+    <string name="profile_received_provider">Received as provider</string>
+    <string name="profile_received_seeker">Received as seeker</string>
+    <string name="profile_people_unavailable">This people list is unavailable. Please try again later.</string>
+    <string name="profile_people_empty">No accounts in this list yet.</string>
+    <string name="profile_unfollow">Unfollow</string>
+    <string name="profile_view_as">View as</string>
+    <string name="profile_my_dashboard">My dashboard</string>
+    <string name="profile_view_dashboard">View dashboard</string>
+    <string name="profile_post_task">Post a task</string>
+    <string name="profile_contact">Contact</string>
+    <string name="profile_about_account">About account</string>
+    <string name="profile_copy_url">Copy profile URL</string>
+    <string name="profile_link_unavailable">Public profile links are not configured yet.</string>
+    <string name="profile_url_copied">Profile URL copied</string>
+    <string name="profile_action_unavailable">This service is not available yet.</string>
+    <string name="profile_contact_unavailable">No contact details have been published.</string>
+    <string name="profile_message">Message</string>
+    <string name="profile_preview_controls">Client preview accounts</string>
+    <string name="profile_preview_provider">Sign in as provider</string>
+    <string name="profile_preview_seeker">Sign in as seeker</string>
+    <string name="profile_preview_view_provider">View provider profile</string>
+    <string name="profile_preview_view_seeker">View seeker profile</string>
+    <string name="profile_photo_unavailable">This image could not be opened. Please try another photo.</string>
+    <string name="profile_my_services">My services</string>
+    <string name="profile_my_post">My post</string>
+    <string name="profile_post_your_task">Post your task</string>
+    <string name="profile_posts_empty">No posts yet.</string>
+    <string name="profile_tasks_empty">No tasks posted yet.</string>
+    <string name="profile_service_category">Category</string>
+    <string name="profile_service_experience">Experience (years)</string>
+    <string name="profile_contact_phone">Published phone</string>
+    <string name="profile_contact_email">Published email</string>
+    <string name="profile_service_certificate">Certificate</string>
+    <string name="profile_service_materials">Materials and equipment</string>
+    <string name="messages_contacts_only">This person only accepts messages from their messaging contacts.</string>
+    <string name="messages_verified_only">This person only accepts messages from verified accounts.</string>
+    <string name="messages_privacy_blocked">Messaging is unavailable because this account is blocked.</string>
+    <string name="messages_unavailable">Messaging is currently unavailable. Please try again later.</string>
+    <string name="settings_message_privacy_hint">Contacts are people in your messaging contact list, not followers. This preview applies your choice locally; protection for real messages requires the messaging service.</string>
+    <string name="profile_highlight_new_label">New</string>
+    <string name="profile_highlight_edit">Edit highlight</string>
+    <string name="profile_highlight_manage_hint">Touch and hold a highlight to edit or delete it.</string>
+    <string name="profile_highlight_edit_cover">Edit cover</string>
+    <string name="profile_highlight_choose_cover">Choose cover</string>
+    <string name="profile_highlight_choose_cover_hint">Tap a story to use it as the cover.</string>
+    <string name="profile_highlight_selection_count">%1$d selected · Choose at least one story.</string>
+    <string name="profile_highlight_delete_title">Delete “%1$s”?</string>
+    <string name="profile_highlight_delete_hint">This collection will be removed from your profile. Its stories will not be deleted.</string>
 </resources>

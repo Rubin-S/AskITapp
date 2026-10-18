@@ -3,6 +3,9 @@ package com.askit.designsystem.profile
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.askit.designsystem.jobs.AskITSecondaryButton
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun YourServiceCard(
     eyebrow: String,
@@ -168,13 +172,14 @@ fun YourServiceCard(
             }
 
             // 3-Metric Row: Coverage, Hours, Response
-            Row(
+            FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                ListingMetric(coverageLabel, coverageValue, coverageHint, Modifier.weight(1f))
-                ListingMetric(hoursLabel, hoursValue, hoursHint, Modifier.weight(1f))
-                ListingMetric(responseLabel, responseValue, responseHint, Modifier.weight(1f))
+                ListingMetric(coverageLabel, coverageValue, coverageHint, Modifier.widthIn(min = 140.dp).weight(1f))
+                ListingMetric(hoursLabel, hoursValue, hoursHint, Modifier.widthIn(min = 140.dp).weight(1f))
+                ListingMetric(responseLabel, responseValue, responseHint, Modifier.widthIn(min = 140.dp).weight(1f))
             }
 
             // Tags
@@ -219,16 +224,12 @@ private fun ListingMetric(label: String, value: String, hint: String, modifier: 
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
             if (hint.isNotBlank()) {
                 Text(
                     text = hint,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

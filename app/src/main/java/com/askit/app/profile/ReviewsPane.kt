@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
@@ -50,7 +51,7 @@ fun ReviewsPane(
             }
         } else {
             val average = reviews.map { it.rating }.average()
-            val averageLabel = String.format("%.1f", average)
+            val averageLabel = String.format(LocalConfiguration.current.locales[0], "%.1f", average)
             ProfileSectionCard(
                 title = stringResource(R.string.profile_reviews),
                 actionLabel = stringResource(R.string.profile_reviews_summary, averageLabel, reviews.size),

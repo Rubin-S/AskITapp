@@ -99,27 +99,3 @@ fun ProfileIdentityBlock(
         }
     }
 }
-
-/**
- * Backward-compatible overload for legacy callers specifying [locationLine] and non-null [bio].
- */
-@Deprecated(
-    message = "Use ProfileIdentityBlock with localityLine and optional tradeHeadline/isVerified",
-    replaceWith = ReplaceWith("ProfileIdentityBlock(displayName = displayName, localityLine = locationLine, modifier = modifier, bio = bio)"),
-)
-@Composable
-fun ProfileIdentityBlock(
-    displayName: String,
-    bio: String,
-    locationLine: String,
-    modifier: Modifier = Modifier,
-) {
-    ProfileIdentityBlock(
-        displayName = displayName,
-        localityLine = locationLine,
-        modifier = modifier,
-        tradeHeadline = null,
-        isVerified = false,
-        bio = bio,
-    )
-}

@@ -1,5 +1,7 @@
 package com.askit.app.posttask
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -33,7 +35,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import com.askit.designsystem.dialogs.AskITAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,7 +51,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -60,11 +62,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,6 +75,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.error
@@ -91,6 +92,12 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.askit.app.R
+import com.askit.app.task.toPublicTask
+import com.askit.app.task.presentation
+import com.askit.app.task.formatTaskDate
+import com.askit.app.task.TaskPreferencesSummary
+import com.askit.app.task.TaskPhotoGallery
+import com.askit.app.task.labelRes
 import com.askit.app.category.ASKIT_SERVICE_CATEGORIES
 import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
@@ -98,9 +105,6 @@ import com.askit.app.explore.SearchAreaScreen
 import com.askit.app.media.persistPhotoPickerReadAccess
 import com.askit.designsystem.R as DsR
 import com.askit.designsystem.tasks.TaskResultItem
-import java.text.DateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,6 +114,7 @@ fun PostTaskRoute(
     onCompleteDraft: (PostTaskDraft) -> Unit = {},
 ) {
     val state by viewModel.formState.collectAsStateWithLifecycle()
+    val submissionError by viewModel.submissionError.collectAsStateWithLifecycle()
     var showLocationPicker by rememberSaveable { mutableStateOf(false) }
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -168,11 +173,12 @@ fun PostTaskRoute(
             onBack = ::requestBack,
             onOpenLocationPicker = { showLocationPicker = true },
             onCompleteDraft = onCompleteDraft,
+            submissionError = submissionError,
         )
     }
 
     if (showDiscardDialog) {
-        AlertDialog(
+        AskITAlertDialog(
             onDismissRequest = { showDiscardDialog = false },
             title = { Text(stringResource(R.string.post_task_discard_title)) },
             text = { Text(stringResource(R.string.post_task_discard_message)) },
@@ -188,7 +194,7 @@ fun PostTaskRoute(
                         onBack()
                     },
                 ) {
-                    Text(stringResource(R.string.post_task_discard))
+                    Text(stringResource(R.string.post_task_discard), color = MaterialTheme.colorScheme.error)
                 }
             },
         )
@@ -204,6 +210,7 @@ private fun PostTaskScreen(
     onBack: () -> Unit,
     onOpenLocationPicker: () -> Unit,
     onCompleteDraft: (PostTaskDraft) -> Unit,
+    submissionError: Int?,
 ) {
     val listState = rememberLazyListState()
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -217,6 +224,7 @@ private fun PostTaskScreen(
     val locationBringIntoView = remember { BringIntoViewRequester() }
     val timingBringIntoView = remember { BringIntoViewRequester() }
     val dateBringIntoView = remember { BringIntoViewRequester() }
+    val preferencesBringIntoView = remember { BringIntoViewRequester() }
     val fixedBudgetBringIntoView = remember { BringIntoViewRequester() }
     val rangeBudgetBringIntoView = remember { BringIntoViewRequester() }
     val titleFocusRequester = remember { FocusRequester() }
@@ -240,6 +248,7 @@ private fun PostTaskScreen(
                 PostTaskValidationField.LOCATION -> locationBringIntoView.bringIntoView()
                 PostTaskValidationField.TIMING -> timingBringIntoView.bringIntoView()
                 PostTaskValidationField.DATE -> dateBringIntoView.bringIntoView()
+                PostTaskValidationField.AGE_PREFERENCE -> preferencesBringIntoView.bringIntoView()
                 PostTaskValidationField.FIXED_BUDGET -> {
                     fixedBudgetBringIntoView.bringIntoView()
                     fixedBudgetFocusRequester.requestFocus()
@@ -262,7 +271,7 @@ private fun PostTaskScreen(
         contract = ActivityResultContracts.PickMultipleVisualMedia(),
     ) { uris ->
         if (uris.isNotEmpty()) {
-                persistPhotoPickerReadAccess(contentResolver, uris)
+            persistPhotoPickerReadAccess(contentResolver, uris)
             viewModel.setPhotoUris(viewModel.formState.value.photoUris + uris.map(Uri::toString))
         }
     }
@@ -272,7 +281,7 @@ private fun PostTaskScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.post_task_title)) },
+                title = { Text(stringResource(if (viewModel.editingTaskId != null) R.string.task_edit_title else R.string.post_task_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -287,6 +296,10 @@ private fun PostTaskScreen(
             Surface(color = MaterialTheme.colorScheme.surface) {
                 Column(Modifier.navigationBarsPadding()) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    submissionError?.let {
+                        Text(stringResource(it), color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                    }
                     Button(
                         onClick = {
                             if (state.screenMode == PostTaskScreenMode.REVIEW) {
@@ -311,7 +324,7 @@ private fun PostTaskScreen(
                         Text(
                             stringResource(
                                 if (state.screenMode == PostTaskScreenMode.REVIEW) {
-                                    R.string.post_task_complete_draft
+                                    if (viewModel.editingTaskId != null) R.string.task_save_changes else R.string.post_task_complete_draft
                                 } else {
                                     R.string.post_task_review_task
                                 },
@@ -353,6 +366,7 @@ private fun PostTaskScreen(
                             locationBringIntoView = locationBringIntoView,
                             timingBringIntoView = timingBringIntoView,
                             dateBringIntoView = dateBringIntoView,
+                            preferencesBringIntoView = preferencesBringIntoView,
                             fixedBudgetBringIntoView = fixedBudgetBringIntoView,
                             rangeBudgetBringIntoView = rangeBudgetBringIntoView,
                             titleFocusRequester = titleFocusRequester,
@@ -422,6 +436,7 @@ private fun PostTaskForm(
     locationBringIntoView: BringIntoViewRequester,
     timingBringIntoView: BringIntoViewRequester,
     dateBringIntoView: BringIntoViewRequester,
+    preferencesBringIntoView: BringIntoViewRequester,
     fixedBudgetBringIntoView: BringIntoViewRequester,
     rangeBudgetBringIntoView: BringIntoViewRequester,
     titleFocusRequester: FocusRequester,
@@ -470,7 +485,7 @@ private fun PostTaskForm(
                 .bringIntoViewRequester(categoryBringIntoView)
                 .testTag("post_task_category_options"),
         ) {
-            OutlinedTextField(
+            AskITTextField(
                 value = selectedCategoryLabel,
                 onValueChange = {},
                 readOnly = true,
@@ -522,7 +537,7 @@ private fun PostTaskForm(
             }
         }
         if (state.categoryId == POST_TASK_OTHER_CATEGORY_ID) {
-            OutlinedTextField(
+            AskITTextField(
                 value = state.customCategory,
                 onValueChange = viewModel::updateCustomCategory,
                 modifier = Modifier
@@ -541,7 +556,7 @@ private fun PostTaskForm(
             )
         }
 
-        OutlinedTextField(
+        AskITTextField(
             value = state.title,
             onValueChange = onUpdateTitle,
             modifier = Modifier
@@ -562,7 +577,7 @@ private fun PostTaskForm(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         )
 
-        OutlinedTextField(
+        AskITTextField(
             value = state.details,
             onValueChange = onUpdateDetails,
             modifier = Modifier
@@ -656,7 +671,7 @@ private fun PostTaskForm(
                         .padding(top = 4.dp)
                         .testTag("post_task_location_privacy"),
                 )
-                OutlinedTextField(
+                AskITTextField(
                     value = state.privateAddressOrLandmark,
                     onValueChange = viewModel::updatePrivateAddressOrLandmark,
                     modifier = Modifier
@@ -751,7 +766,7 @@ private fun PostTaskForm(
             }
             when (state.budgetMode) {
                 PostTaskBudgetMode.FIXED -> {
-                    OutlinedTextField(
+                    AskITTextField(
                         value = state.fixedBudget,
                         onValueChange = viewModel::updateFixedBudget,
                         modifier = Modifier
@@ -775,7 +790,7 @@ private fun PostTaskForm(
                 }
                 PostTaskBudgetMode.RANGE -> {
                     Column(Modifier.bringIntoViewRequester(rangeBudgetBringIntoView)) {
-                        OutlinedTextField(
+                        AskITTextField(
                             value = state.minimumBudget,
                             onValueChange = viewModel::updateMinimumBudget,
                             modifier = Modifier
@@ -790,7 +805,7 @@ private fun PostTaskForm(
                                 imeAction = ImeAction.Next,
                             ),
                         )
-                        OutlinedTextField(
+                        AskITTextField(
                             value = state.maximumBudget,
                             onValueChange = viewModel::updateMaximumBudget,
                             modifier = Modifier
@@ -814,6 +829,21 @@ private fun PostTaskForm(
                 }
                 PostTaskBudgetMode.REQUEST_QUOTES, null -> Unit
             }
+        }
+
+        OptionalSectionRow(
+            titleRes = R.string.task_provider_preferences,
+            expanded = PostTaskOptionalSection.PREFERENCES in state.expandedOptionalSections,
+            onClick = { viewModel.toggleOptionalSection(PostTaskOptionalSection.PREFERENCES) },
+            testTag = "post_task_preferences_disclosure",
+        )
+        if (PostTaskOptionalSection.PREFERENCES in state.expandedOptionalSections) {
+            PostTaskPreferences(
+                viewModel = viewModel,
+                state = state,
+                ageError = PostTaskValidationField.AGE_PREFERENCE in validationErrors,
+                modifier = Modifier.bringIntoViewRequester(preferencesBringIntoView),
+            )
         }
 
         OptionalSectionRow(
@@ -858,7 +888,7 @@ private fun PostTaskForm(
             testTag = "post_task_item_details_disclosure",
         )
         if (PostTaskOptionalSection.ITEM_DETAILS in state.expandedOptionalSections) {
-            OutlinedTextField(
+            AskITTextField(
                 value = state.quantityOrMeasurements,
                 onValueChange = viewModel::updateQuantityOrMeasurements,
                 modifier = Modifier
@@ -867,7 +897,7 @@ private fun PostTaskForm(
                 label = { Text(stringResource(R.string.post_task_quantity_measurements)) },
                 minLines = 2,
             )
-            OutlinedTextField(
+            AskITTextField(
                 value = state.brandOrModel,
                 onValueChange = viewModel::updateBrandOrModel,
                 modifier = Modifier
@@ -922,7 +952,7 @@ private fun PostTaskForm(
                 testTag = "post_task_access_disclosure",
             )
             if (PostTaskOptionalSection.ACCESS_INSTRUCTIONS in state.expandedOptionalSections) {
-                OutlinedTextField(
+                AskITTextField(
                     value = state.accessInstructions,
                     onValueChange = viewModel::updateAccessInstructions,
                     modifier = Modifier
@@ -999,81 +1029,19 @@ private fun PostTaskReview(
     state: PostTaskFormState,
     onEdit: () -> Unit,
 ) {
-    val category = ASKIT_SERVICE_CATEGORIES.firstOrNull { it.id == state.categoryId }
-    val categoryLabel = when {
-        state.categoryId == POST_TASK_OTHER_CATEGORY_ID -> state.customCategory.trim()
-        category != null -> stringResource(category.labelRes)
-        else -> state.categoryId.orEmpty()
-    }
-    val workModeLabel = when (state.workMode) {
-        PostTaskWorkMode.AT_MY_LOCATION -> stringResource(R.string.post_task_at_my_location)
-        PostTaskWorkMode.AT_PROVIDER_LOCATION -> stringResource(R.string.post_task_at_provider_location)
-        PostTaskWorkMode.REMOTE -> stringResource(R.string.post_task_remote)
-        null -> ""
-    }
-    val timingLabel = when (state.timingMode) {
-        PostTaskTimingMode.ASAP -> stringResource(R.string.post_task_asap)
-        PostTaskTimingMode.DATE -> if (state.selectedDateMillis != null) {
-            formatDate(state.selectedDateMillis)
-        } else {
-            stringResource(R.string.post_task_on_date)
-        }
-        PostTaskTimingMode.FLEXIBLE -> stringResource(R.string.post_task_flexible)
-        null -> ""
-    }
+    val context = LocalContext.current
+    val draft = state.toDraft()
+    val task = draft.toPublicTask("review", context.getString(R.string.post_task_you_creator))
+    val display = task.presentation(context)
+    val categoryLabel = display.category
+    val timingLabel = display.timing
+    val previewLocationLabel = display.location
+    val previewTimingLabel = display.timing
+    val previewBudgetLabel = display.budget
+    val requirementsList = display.requirements
+    val scopeHighlights = display.requirements.take(2)
     val privateAddress = state.privateAddressOrLandmark.trim()
     val accessInstructions = state.accessInstructions.trim()
-    val previewLocationLabel = when (state.workMode) {
-        PostTaskWorkMode.AT_MY_LOCATION -> state.publicAreaLabel.trim().ifEmpty { "Local Area" }
-        PostTaskWorkMode.AT_PROVIDER_LOCATION ->
-            stringResource(R.string.post_task_at_provider_location)
-        PostTaskWorkMode.REMOTE -> stringResource(R.string.post_task_remote)
-        null -> "Local Area"
-    }
-    val previewTimingLabel = when (state.timingMode) {
-        PostTaskTimingMode.ASAP -> stringResource(R.string.post_task_asap)
-        PostTaskTimingMode.DATE -> state.selectedDateMillis?.let(::formatDate).orEmpty()
-        PostTaskTimingMode.FLEXIBLE -> stringResource(R.string.post_task_flexible)
-        null -> ""
-    }
-    val previewBudgetLabel = when (state.budgetMode) {
-        PostTaskBudgetMode.REQUEST_QUOTES -> stringResource(R.string.post_task_request_quotes)
-        PostTaskBudgetMode.FIXED -> state.fixedBudget.trim().takeIf(String::isNotEmpty)?.let {
-            stringResource(R.string.post_task_budget_fixed_value, it)
-        }.orEmpty().ifEmpty { "Request Quotes" }
-        PostTaskBudgetMode.RANGE -> {
-            val minimum = state.minimumBudget.trim()
-            val maximum = state.maximumBudget.trim()
-            if (minimum.isEmpty() || maximum.isEmpty()) {
-                "Request Quotes"
-            } else {
-                stringResource(R.string.post_task_budget_range_display, minimum, maximum)
-            }
-        }
-        null -> "Request Quotes"
-    }
-    val scopeHighlights = listOfNotNull(
-        listOf(state.quantityOrMeasurements.trim(), state.brandOrModel.trim())
-            .filter(String::isNotEmpty)
-            .joinToString(" · ")
-            .takeIf(String::isNotEmpty),
-        state.materialsPolicy?.let { policy -> stringResource(policy.labelRes) },
-    ).take(2)
-
-    val requirementsList = buildList {
-        if (workModeLabel.isNotBlank()) {
-            add("Work mode: $workModeLabel")
-        }
-        if (state.quantityOrMeasurements.isNotBlank()) {
-            add("Quantity / Measurements: ${state.quantityOrMeasurements.trim()}")
-        }
-        if (state.brandOrModel.isNotBlank()) {
-            add("Brand / Model: ${state.brandOrModel.trim()}")
-        }
-        state.materialsPolicy?.let { policy ->
-            add("Materials: ${stringResource(policy.labelRes)}")
-        }
-    }
 
     Column(
         modifier = modifier
@@ -1108,7 +1076,7 @@ private fun PostTaskReview(
                     modifier = Modifier.size(18.dp),
                 )
                 Text(
-                    text = "Feed Card Preview",
+                    text = stringResource(R.string.post_task_feed_preview),
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -1121,8 +1089,8 @@ private fun PostTaskReview(
                 budgetLabel = previewBudgetLabel,
                 locationLabel = previewLocationLabel,
                 timingLabel = previewTimingLabel,
-                posterName = "You (Task Creator)",
-                postedLabel = "Review Draft",
+                posterName = stringResource(R.string.post_task_you_creator),
+                postedLabel = stringResource(R.string.post_task_review_draft),
                 status = null,
                 photoModels = state.photoUris,
                 scopeHighlights = scopeHighlights,
@@ -1137,7 +1105,7 @@ private fun PostTaskReview(
 
         // Full Task Details Header
         Text(
-            text = "Full Task Details",
+            text = stringResource(R.string.post_task_full_details),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -1161,7 +1129,7 @@ private fun PostTaskReview(
             }
 
             Text(
-                text = timingLabel.ifEmpty { "Flexible" },
+                text = timingLabel.ifEmpty { stringResource(R.string.post_task_flexible) },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1191,7 +1159,7 @@ private fun PostTaskReview(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Estimated Budget",
+                        text = stringResource(R.string.task_detail_budget),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1207,12 +1175,12 @@ private fun PostTaskReview(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
-                        text = "Timeline",
+                        text = stringResource(R.string.post_task_timeline),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = timingLabel.ifEmpty { "Flexible" },
+                        text = timingLabel.ifEmpty { stringResource(R.string.post_task_flexible) },
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = if (state.timingMode == PostTaskTimingMode.ASAP) {
                             MaterialTheme.colorScheme.error
@@ -1238,7 +1206,7 @@ private fun PostTaskReview(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Y",
+                    text = stringResource(R.string.post_task_you_initial),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
@@ -1246,7 +1214,7 @@ private fun PostTaskReview(
 
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = "You (Task Creator)",
+                    text = stringResource(R.string.post_task_you_creator),
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -1261,7 +1229,7 @@ private fun PostTaskReview(
         // Description (matching TaskDetailScreen)
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "Description",
+                text = stringResource(R.string.list_service_description),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -1276,7 +1244,7 @@ private fun PostTaskReview(
         if (requirementsList.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Key Requirements",
+                    text = stringResource(R.string.task_detail_requirements),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -1305,13 +1273,15 @@ private fun PostTaskReview(
         if (state.photoUris.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Photos (${state.photoUris.size})",
+                    text = pluralStringResource(R.plurals.post_task_preview_photos, state.photoUris.size, state.photoUris.size),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                PhotoList(uris = state.photoUris, onRemovePhoto = {}, allowRemove = false)
+                TaskPhotoGallery(state.photoUris)
             }
         }
+
+        TaskPreferencesSummary(draft.preferences)
 
         // Dedicated Private Information Card (with lock icon & reassurance)
         if (state.workMode == PostTaskWorkMode.AT_MY_LOCATION &&
@@ -1341,14 +1311,14 @@ private fun PostTaskReview(
                             modifier = Modifier.size(18.dp),
                         )
                         Text(
-                            text = "Private Information",
+                            text = stringResource(R.string.post_task_private_information),
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
 
                     Text(
-                        text = "🔒 Visible only to your assigned provider after you accept their offer.",
+                        text = stringResource(R.string.post_task_private_visibility),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1380,13 +1350,6 @@ private fun PostTaskReview(
         }
     }
 }
-
-private val PostTaskMaterialsPolicy.labelRes: Int
-    get() = when (this) {
-        PostTaskMaterialsPolicy.REQUESTER_HAS_MATERIALS -> R.string.post_task_materials_requester
-        PostTaskMaterialsPolicy.PROVIDER_BRINGS_MATERIALS -> R.string.post_task_materials_provider
-        PostTaskMaterialsPolicy.DECIDE_AFTER_INSPECTION -> R.string.post_task_materials_decide_later
-    }
 
 @Composable
 private fun PostTaskSectionHeading(@StringRes titleRes: Int) {
@@ -1524,7 +1487,26 @@ private fun firstInvalidField(errors: Set<PostTaskValidationField>): PostTaskVal
         PostTaskValidationField.DATE,
         PostTaskValidationField.FIXED_BUDGET,
         PostTaskValidationField.BUDGET_RANGE,
+        PostTaskValidationField.AGE_PREFERENCE,
     ).first { it in errors }
 
 private fun formatDate(millis: Long): String =
-    DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).format(Date(millis))
+    formatTaskDate(millis)
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TaskEditUnavailableScreen(onBack: () -> Unit) {
+    Scaffold(topBar = {
+        TopAppBar(title = { Text(stringResource(R.string.task_edit_title)) }, navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.explore_back))
+            }
+        })
+    }) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding).padding(24.dp), verticalArrangement = Arrangement.Center) {
+            Text(stringResource(R.string.task_edit_unavailable))
+            TextButton(onClick = onBack) { Text(stringResource(R.string.task_detail_go_back)) }
+        }
+    }
+}

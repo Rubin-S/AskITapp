@@ -2,6 +2,8 @@
 .gradle/
 local.properties
 secrets.properties
+*.jks
+*.keystore
 /.idea/
 .DS_Store
 **/build/
@@ -10,3 +12,4 @@ secrets.properties
 .cxx/
 *.log
 /screenshots/
+/deliverables/

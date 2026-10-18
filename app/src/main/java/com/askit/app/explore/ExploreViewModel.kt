@@ -105,6 +105,27 @@ class ExploreViewModel(
     val appliedFilterOptions: StateFlow<Map<ExploreResultScope, Set<ExploreFilterOption>>> =
         appliedFilterOptionsState.asStateFlow()
 
+    private val priceFiltersState = MutableStateFlow(
+        ExploreResultScope.entries.associateWith { scope ->
+            ExplorePriceFilter(
+                minimum = savedStateHandle.get<String>("explore_price_min_${scope.name}").orEmpty(),
+                maximum = savedStateHandle.get<String>("explore_price_max_${scope.name}").orEmpty(),
+                unit = savedStateHandle.get<String>("explore_price_unit_${scope.name}")
+                    ?.let { name -> ExploreRateUnit.entries.firstOrNull { it.name == name } },
+            )
+        }.filterValues { it.isValid && it.isActive },
+    )
+    val priceFilters = priceFiltersState.asStateFlow()
+
+    fun onPriceFilterChanged(scope: ExploreResultScope, filter: ExplorePriceFilter) {
+        if (!filter.isValid) return
+        val normalized = if (scope == ExploreResultScope.Tasks) filter.copy(unit = null) else filter
+        priceFiltersState.value = priceFiltersState.value + (scope to normalized)
+        savedStateHandle["explore_price_min_${scope.name}"] = normalized.minimum
+        savedStateHandle["explore_price_max_${scope.name}"] = normalized.maximum
+        savedStateHandle["explore_price_unit_${scope.name}"] = normalized.unit?.name
+    }
+
     private val searchAreaBaseState = combine(
         searchAreaNameState,
         searchAreaSupportingTextState,
@@ -198,14 +219,15 @@ class ExploreViewModel(
     }
 
     fun onFiltersChanged(scope: ExploreResultScope, options: Set<ExploreFilterOption>) {
+        val normalized = normalizeAppliedExploreFilterOptions(scope, defaultExploreFilterOptions()[scope].orEmpty(), options)
         val updated = appliedFilterOptionsState.value.toMutableMap()
-        if (options.isEmpty()) {
+        if (normalized.isEmpty()) {
             updated.remove(scope)
         } else {
-            updated[scope] = options.toSet()
+            updated[scope] = normalized
         }
         appliedFilterOptionsState.value = updated.toMap()
-        savedStateHandle[filterOptionsKey(scope)] = ArrayList(options.map { it.name }.sorted())
+        savedStateHandle[filterOptionsKey(scope)] = ArrayList(normalized.map { it.name }.sorted())
     }
 
     private companion object {

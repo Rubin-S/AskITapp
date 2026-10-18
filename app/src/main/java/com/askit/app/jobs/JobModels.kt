@@ -52,11 +52,17 @@ data class Job(
     val otp: String,
     val startedAtMillis: Long? = null,
     val inHistory: Boolean = false,
+    val sourceTaskId: String? = null,
+    val applicantAccountId: String? = null,
+    val providerAccountId: String? = null,
+    val seekerAccountId: String? = null,
 )
 
 sealed interface ApplyToTaskResult {
     data class Created(val jobId: String) : ApplyToTaskResult
     data object NeedsListedService : ApplyToTaskResult
+    data class AlreadyApplied(val jobId: String) : ApplyToTaskResult
+    data class Rejected(val reason: com.askit.app.task.TaskActionFailure) : ApplyToTaskResult
 }
 
 fun JobParty.other(): JobParty = when (this) {

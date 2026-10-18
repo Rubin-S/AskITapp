@@ -137,7 +137,7 @@ fun CreatePostAddOnsTray(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = "Add to your post",
+                        text = stringResource(R.string.create_post_add_ons_title),
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp,
@@ -169,7 +169,7 @@ fun CreatePostAddOnsTray(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "Poll",
+                                        text = stringResource(R.string.story_sticker_poll),
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             fontWeight = FontWeight.SemiBold,
                                         ),
@@ -202,7 +202,7 @@ fun CreatePostAddOnsTray(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "Location",
+                                        text = stringResource(R.string.story_sticker_location),
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             fontWeight = FontWeight.SemiBold,
                                         ),

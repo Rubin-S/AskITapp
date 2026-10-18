@@ -1,7 +1,6 @@
 package com.askit.app.providerdashboard
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,13 +48,13 @@ import com.askit.app.providerdashboard.components.ProviderTrustCard
 fun ProviderDashboardRoute(
     viewModel: ProviderDashboardViewModel,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     onOpenJob: (String) -> Unit = {},
     onOpenChat: (String) -> Unit = {},
     onEditProfile: () -> Unit = {},
     onUploadWork: () -> Unit = {},
     onManageAlerts: () -> Unit = {},
     onUpgradePro: () -> Unit = {},
-    modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -164,7 +164,7 @@ fun ProviderDashboardScreen(
                 item(key = "section_incoming_title") {
                     SectionHeader(
                         title = stringResource(R.string.provider_section_incoming),
-                        badgeText = stringResource(R.string.provider_incoming_count, uiState.incomingRequests.size),
+                        badgeText = pluralStringResource(R.plurals.provider_incoming_count, uiState.incomingRequests.size, uiState.incomingRequests.size),
                     )
                 }
                 items(
@@ -250,8 +250,8 @@ fun ProviderDashboardScreen(
 @Composable
 private fun SectionHeader(
     title: String,
-    badgeText: String? = null,
     modifier: Modifier = Modifier,
+    badgeText: String? = null,
 ) {
     Row(
         modifier = modifier

@@ -14,6 +14,7 @@ fun sampleExplorePeople(): List<ExplorePersonResult> = listOf(
         locationLabel = "1.2 km away",
         priceLabel = "₹350/hr",
         statusLabel = "Available now",
+        listedPrice = ExploreListedPrice(java.math.BigDecimal("350"), java.math.BigDecimal("350"), ExploreRateUnit.Hour),
         matchReasons = setOf(PersonMatchReason.Identity, PersonMatchReason.Service),
     ),
     ExplorePersonResult(
@@ -27,6 +28,7 @@ fun sampleExplorePeople(): List<ExplorePersonResult> = listOf(
         locationLabel = "2.5 km away",
         priceLabel = "₹400/hr",
         statusLabel = "Available today",
+        listedPrice = ExploreListedPrice(java.math.BigDecimal("400"), java.math.BigDecimal("400"), ExploreRateUnit.Hour),
         matchReasons = setOf(PersonMatchReason.Identity, PersonMatchReason.Service),
     ),
     ExplorePersonResult(
@@ -40,6 +42,7 @@ fun sampleExplorePeople(): List<ExplorePersonResult> = listOf(
         locationLabel = "3.1 km away",
         priceLabel = "₹799/visit",
         statusLabel = "Available tomorrow",
+        listedPrice = ExploreListedPrice(java.math.BigDecimal("799"), java.math.BigDecimal("799"), ExploreRateUnit.Visit),
         matchReasons = setOf(PersonMatchReason.Identity, PersonMatchReason.Service),
     ),
     ExplorePersonResult(
@@ -53,6 +56,7 @@ fun sampleExplorePeople(): List<ExplorePersonResult> = listOf(
         locationLabel = "4.0 km away",
         priceLabel = "₹599/service",
         statusLabel = "Available today",
+        listedPrice = ExploreListedPrice(java.math.BigDecimal("599"), java.math.BigDecimal("599"), ExploreRateUnit.Service),
         matchReasons = setOf(PersonMatchReason.Identity, PersonMatchReason.Service),
     ),
     ExplorePersonResult(
@@ -66,6 +70,7 @@ fun sampleExplorePeople(): List<ExplorePersonResult> = listOf(
         locationLabel = "1.8 km away",
         priceLabel = "₹500/hr",
         statusLabel = "Evenings",
+        listedPrice = ExploreListedPrice(java.math.BigDecimal("500"), java.math.BigDecimal("500"), ExploreRateUnit.Hour),
         matchReasons = setOf(PersonMatchReason.Identity, PersonMatchReason.Service),
     ),
     ExplorePersonResult(
@@ -79,6 +84,7 @@ fun sampleExplorePeople(): List<ExplorePersonResult> = listOf(
         locationLabel = "3.5 km away",
         priceLabel = "₹450/visit",
         statusLabel = "Available today",
+        listedPrice = ExploreListedPrice(java.math.BigDecimal("450"), java.math.BigDecimal("450"), ExploreRateUnit.Visit),
         matchReasons = setOf(PersonMatchReason.Identity, PersonMatchReason.Service),
     ),
 )

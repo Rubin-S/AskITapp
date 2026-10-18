@@ -31,19 +31,11 @@ class StoryViewModel(
 
     fun startReshareDraft(post: FeedPost) {
         setState(
-            _formState.value.copy(
+            StoryFormState(
                 screenMode = StoryScreenMode.Editor,
                 mediaType = StoryMediaType.SolidBackground,
-                mediaUri = null,
-                durationMs = null,
-                trimStartMs = 0L,
-                trimEndMs = null,
-                layers = emptyList(),
-                selectedLayerId = null,
-                createTextDraft = "",
                 sharedPost = post,
-                reshareCardStyle = StoryReshareCardStyle.FullCard,
-                solidBackgroundIndex = 4, // Deep dark gradient background
+                solidBackgroundIndex = 4,
             ),
         )
     }
@@ -56,8 +48,6 @@ class StoryViewModel(
         }
         copy(reshareCardStyle = next)
     }
-
-    fun setScreenMode(mode: StoryScreenMode) = update { copy(screenMode = mode) }
 
     fun toggleFlash() = update { copy(flashEnabled = !flashEnabled) }
 
@@ -76,6 +66,10 @@ class StoryViewModel(
             _formState.value.copy(
                 mediaUri = uri,
                 mediaType = type,
+                transform = StoryTransform(),
+                viewport = null,
+                sharedPost = null,
+                reshareCardStyle = StoryReshareCardStyle.FullCard,
                 durationMs = durationMs,
                 trimStartMs = 0L,
                 trimEndMs = trimEnd,
@@ -105,6 +99,7 @@ class StoryViewModel(
             id = newLayerId(),
             zIndex = nextZIndex(),
             text = text,
+            colorArgb = if (solidBackgroundArgb() == 0xFFFFFFFF) 0xFF000000 else 0xFFFFFFFF,
         )
         setState(
             _formState.value.copy(
@@ -114,6 +109,10 @@ class StoryViewModel(
                 trimStartMs = 0L,
                 trimEndMs = null,
                 layers = listOf(layer),
+                transform = StoryTransform(),
+                viewport = null,
+                sharedPost = null,
+                reshareCardStyle = StoryReshareCardStyle.FullCard,
                 selectedLayerId = layer.id,
                 screenMode = StoryScreenMode.Editor,
                 createTextDraft = "",
@@ -141,7 +140,6 @@ class StoryViewModel(
         )
     }
 
-    fun updateCaption(value: String) = update { copy(caption = value) }
 
     fun setAudience(audience: StoryAudience) = update { copy(audience = audience) }
 
@@ -169,25 +167,21 @@ class StoryViewModel(
 
     fun closeShareSheet() = update { copy(showShareSheet = false) }
 
-    fun updateTrimStart(value: Long) = update {
-        val end = trimEndMs ?: durationMs ?: STORY_MAX_DURATION_MS
-        copy(trimStartMs = value.coerceIn(0L, (end - 1_000L).coerceAtLeast(0L)))
-    }
-
-    fun updateTrimEnd(value: Long) = update {
-        val max = durationMs ?: STORY_MAX_DURATION_MS
-        copy(trimEndMs = value.coerceIn(trimStartMs + 1_000L, max))
-    }
-
     fun updateTrimRange(startMs: Long, endMs: Long) {
         val max = _formState.value.durationMs ?: STORY_MAX_DURATION_MS
-        val start = startMs.coerceIn(0L, (max - 1_000L).coerceAtLeast(0L))
-        val end = endMs.coerceIn(start + 1_000L, max)
+        if (max <= 0L) return
+        val minDuration = minOf(1_000L, max)
+        val start = startMs.coerceIn(0L, max - minDuration)
+        val end = endMs.coerceIn(start + minDuration, minOf(max, start + STORY_MAX_DURATION_MS))
         update { copy(trimStartMs = start, trimEndMs = end) }
     }
 
     fun updateTransform(panX: Float, panY: Float, zoom: Float) = update {
         copy(transform = StoryTransform(panX, panY, zoom.coerceIn(0.5f, 3f)))
+    }
+
+    fun setViewport(viewport: StoryViewport) {
+        if (_formState.value.viewport == null) update { copy(viewport = viewport) }
     }
 
     fun selectLayer(id: String?) = update { copy(selectedLayerId = id) }
@@ -346,7 +340,7 @@ class StoryViewModel(
             trimStartMs = state.trimStartMs,
             trimEndMs = state.trimEndMs,
             transform = state.transform,
-            caption = state.caption.trim(),
+            viewport = state.viewport,
             audience = state.audience,
             layers = state.layers.sortedBy(StoryLayer::zIndex),
             sharedPost = state.sharedPost,
@@ -381,10 +375,12 @@ class StoryViewModel(
         handle[TRIM_START_KEY] = state.trimStartMs
         handle[TRIM_END_KEY] = state.trimEndMs
         handle[TRANSFORM_KEY] = json.encodeToString(state.transform)
+        handle[VIEWPORT_KEY] = state.viewport?.let { json.encodeToString(it) }
+        handle[SHARED_POST_KEY] = state.sharedPost?.let { json.encodeToString(it) }
+        handle[RESHARE_STYLE_KEY] = state.reshareCardStyle.name
         handle[CREATE_TEXT_KEY] = state.createTextDraft
         handle[LAYERS_KEY] = json.encodeToString(state.layers)
         handle[SELECTED_LAYER_KEY] = state.selectedLayerId
-        handle[CAPTION_KEY] = state.caption
         handle[AUDIENCE_KEY] = state.audience.name
         handle[FLASH_KEY] = state.flashEnabled
         handle[FRONT_CAMERA_KEY] = state.useFrontCamera
@@ -412,10 +408,17 @@ class StoryViewModel(
             trimStartMs = handle.get<Long>(TRIM_START_KEY) ?: 0L,
             trimEndMs = handle.get<Long>(TRIM_END_KEY),
             transform = transform,
+            viewport = handle.get<String>(VIEWPORT_KEY)?.let {
+                runCatching { json.decodeFromString<StoryViewport>(it) }.getOrNull()
+            },
+            sharedPost = handle.get<String>(SHARED_POST_KEY)?.let {
+                runCatching { json.decodeFromString<FeedPost>(it) }.getOrNull()
+            },
+            reshareCardStyle = handle.get<String>(RESHARE_STYLE_KEY)
+                .toEnumOrNull<StoryReshareCardStyle>() ?: StoryReshareCardStyle.FullCard,
             createTextDraft = handle.get<String>(CREATE_TEXT_KEY).orEmpty(),
             layers = layers,
             selectedLayerId = handle.get<String>(SELECTED_LAYER_KEY),
-            caption = handle.get<String>(CAPTION_KEY).orEmpty(),
             audience = handle.get<String>(AUDIENCE_KEY)
                 .toEnumOrNull<StoryAudience>() ?: StoryAudience.Everyone,
             flashEnabled = handle.get<Boolean>(FLASH_KEY) ?: false,
@@ -437,10 +440,12 @@ class StoryViewModel(
         private const val TRIM_START_KEY = "story_trim_start_ms"
         private const val TRIM_END_KEY = "story_trim_end_ms"
         private const val TRANSFORM_KEY = "story_transform"
+        private const val VIEWPORT_KEY = "story_viewport"
+        private const val SHARED_POST_KEY = "story_shared_post"
+        private const val RESHARE_STYLE_KEY = "story_reshare_style"
         private const val CREATE_TEXT_KEY = "story_create_text"
         private const val LAYERS_KEY = "story_layers"
         private const val SELECTED_LAYER_KEY = "story_selected_layer"
-        private const val CAPTION_KEY = "story_caption"
         private const val AUDIENCE_KEY = "story_audience"
         private const val FLASH_KEY = "story_flash"
         private const val FRONT_CAMERA_KEY = "story_front_camera"

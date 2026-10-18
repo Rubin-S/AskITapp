@@ -4,9 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.askit.app.home.data.FakeHomeRepository
 import com.askit.app.home.data.HomeRepository
-import com.askit.app.home.model.PostMedia
+import com.askit.app.home.model.FeedItem
 import com.askit.app.home.model.Story
+import com.askit.app.session.SessionProfile
 import com.askit.app.story.StoryDraft
+import java.util.UUID
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,63 +22,67 @@ import kotlinx.coroutines.launch
 class HomeViewModel(
     private val repository: HomeRepository = FakeHomeRepository(),
 ) : ViewModel() {
+    val posts = repository.posts
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val loadedPages = sortedMapOf<Int, List<FeedItem>>()
+    private var homeJob: Job? = null
+    private var loadMoreJob: Job? = null
 
     init {
         loadHomeData()
     }
 
     fun loadHomeData() {
-        viewModelScope.launch {
-            _uiState.value = HomeUiState.Loading
-            combine(
-                repository.getStories(),
-                repository.getFeed(page = 1),
-            ) { stories, feed ->
-                HomeUiState.Success(
-                    stories = stories,
-                    feedItems = feed,
-                    currentPage = 1,
-                    hasMore = feed.isNotEmpty(),
-                    isRefreshing = false,
-                    isLoadingMore = false,
-                )
-            }
-                .catch { throwable ->
-                    _uiState.value = HomeUiState.Error(throwable.message)
-                }
-                .collect { state ->
-                    _uiState.value = state
-                }
-        }
+        observeHome(keepContent = false)
     }
 
     fun refresh() {
-        val currentState = _uiState.value
-        if (currentState is HomeUiState.Success) {
-            _uiState.value = currentState.copy(isRefreshing = true)
+        if ((_uiState.value as? HomeUiState.Success)?.isRefreshing == true) return
+        observeHome(keepContent = true)
+    }
+
+    private fun observeHome(keepContent: Boolean) {
+        homeJob?.cancel()
+        loadMoreJob?.cancel()
+        val current = _uiState.value as? HomeUiState.Success
+        _uiState.value = if (keepContent && current != null) {
+            current.copy(isRefreshing = true, isLoadingMore = false)
+        } else {
+            HomeUiState.Loading
         }
-        viewModelScope.launch {
-            try {
-                val stories = repository.getStories().first()
-                val feed = repository.getFeed(page = 1).first()
-                _uiState.value = HomeUiState.Success(
-                    stories = stories,
-                    feedItems = feed,
-                    currentPage = 1,
-                    hasMore = feed.isNotEmpty(),
-                    isRefreshing = false,
-                    isLoadingMore = false,
-                )
-            } catch (e: Exception) {
-                if (currentState !is HomeUiState.Success) {
-                    _uiState.value = HomeUiState.Error(e.message)
-                } else {
-                    _uiState.value = currentState.copy(isRefreshing = false)
+        homeJob = viewModelScope.launch {
+            var firstEmission = true
+            combine(
+                repository.getStories(),
+                repository.getFeed(page = 1),
+            ) { stories, feed -> stories to feed }
+                .catch { throwable ->
+                    val latest = _uiState.value as? HomeUiState.Success
+                    _uiState.value = latest?.copy(isRefreshing = false, isLoadingMore = false)
+                        ?: HomeUiState.Error(throwable.message)
                 }
-            }
+                .collect { (stories, feed) ->
+                    if (firstEmission) loadedPages.clear()
+                    loadedPages[1] = feed
+                    val latest = _uiState.value as? HomeUiState.Success
+                    _uiState.value = if (firstEmission || latest == null) {
+                        HomeUiState.Success(
+                            stories = stories,
+                            feedItems = feed,
+                            currentPage = 1,
+                            hasMore = feed.isNotEmpty(),
+                        )
+                    } else {
+                        latest.copy(
+                            stories = stories,
+                            feedItems = posts.project(loadedPages.values.flatten()),
+                            hasMore = if (loadedPages.containsKey(2)) latest.hasMore else feed.isNotEmpty(),
+                        )
+                    }
+                    firstEmission = false
+                }
         }
     }
 
@@ -87,50 +95,37 @@ class HomeViewModel(
         _uiState.value = currentState.copy(isLoadingMore = true)
         val nextPage = currentState.currentPage + 1
 
-        viewModelScope.launch {
+        loadMoreJob = viewModelScope.launch {
             try {
                 val nextItems = repository.getFeed(page = nextPage).first()
-                if (nextItems.isEmpty()) {
-                    _uiState.value = currentState.copy(
-                        isLoadingMore = false,
-                        hasMore = false,
-                    )
-                } else {
-                    _uiState.value = currentState.copy(
-                        feedItems = currentState.feedItems + nextItems,
-                        currentPage = nextPage,
-                        isLoadingMore = false,
-                        hasMore = nextItems.isNotEmpty(),
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.value = currentState.copy(isLoadingMore = false)
+                val latest = _uiState.value as? HomeUiState.Success ?: return@launch
+                loadedPages[nextPage] = nextItems
+                _uiState.value = latest.copy(
+                    feedItems = posts.project(loadedPages.values.flatten()),
+                    currentPage = if (nextItems.isEmpty()) latest.currentPage else nextPage,
+                    isLoadingMore = false,
+                    hasMore = nextItems.isNotEmpty(),
+                )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                val latest = _uiState.value as? HomeUiState.Success
+                if (latest != null) _uiState.value = latest.copy(isLoadingMore = false)
             }
         }
     }
 
-    fun addStoryFromDraft(draft: StoryDraft) {
-        val currentState = _uiState.value as? HomeUiState.Success ?: return
+    fun addStoryFromDraft(draft: StoryDraft, author: SessionProfile, accountId: String?): Boolean {
         val newStory = Story(
-            id = "story-${System.currentTimeMillis()}",
-            authorName = "You",
-            authorAvatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300",
-            mediaUrl = draft.mediaUri ?: draft.sharedPost?.media?.let { media ->
-                when (media) {
-                    is PostMedia.SinglePhoto -> media.url
-                    is PostMedia.Carousel -> media.urls.firstOrNull() ?: ""
-                    is PostMedia.BeforeAfter -> media.afterUrl
-                }
-            } ?: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800",
-            caption = draft.caption.ifBlank { draft.sharedPost?.content },
+            id = UUID.randomUUID().toString(),
+            authorName = author.username,
+            authorId = accountId,
+            authorAvatarUrl = author.avatarUrl,
+            content = draft,
             createdAtMillis = System.currentTimeMillis(),
-            isSeen = false,
-            sharedPost = draft.sharedPost,
+            isOwn = true,
         )
-
-        val updatedStories = listOf(newStory) + currentState.stories.filter { it.authorName != "You" }
-        _uiState.value = currentState.copy(stories = updatedStories)
-        repository.addStory(newStory)
+        return repository.addStory(newStory, accountId) is com.askit.app.home.stories.StoryActionResult.Success
     }
 
     fun markStorySeen(storyId: String) {

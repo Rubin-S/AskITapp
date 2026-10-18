@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,7 +24,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
@@ -38,9 +36,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -49,14 +44,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.askit.designsystem.navigation.AskITSectionTabs
+import com.askit.designsystem.navigation.SectionTab
 import com.askit.app.R
 import com.askit.app.creatordashboard.components.CreatorAiInsightCard
 import com.askit.app.creatordashboard.components.CreatorMetricCard
@@ -154,32 +153,14 @@ fun CreatorDashboardScreen(
             // 2. Time Range Selector
             item(key = "time_range_selector") {
                 val ranges = CreatorTimeRange.entries
-                SingleChoiceSegmentedButtonRow(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    ranges.forEachIndexed { index, range ->
-                        SegmentedButton(
-                            shape = SegmentedButtonDefaults.itemShape(index = index, count = ranges.size),
-                            onClick = { onSelectTimeRange(range) },
-                            selected = uiState.selectedTimeRange == range,
-                            icon = {},
-                            colors = SegmentedButtonDefaults.colors(
-                                activeContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                activeContentColor = MaterialTheme.colorScheme.onSurface,
-                                inactiveContainerColor = MaterialTheme.colorScheme.surface,
-                                inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            ),
-                        ) {
-                            Text(
-                                text = stringResource(range.labelRes),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = if (uiState.selectedTimeRange == range) FontWeight.Bold else FontWeight.Medium,
-                                ),
-                                maxLines = 1,
-                            )
-                        }
-                    }
-                }
+                AskITSectionTabs(
+                    tabs = ranges.map { SectionTab(it.name, stringResource(it.labelRes)) },
+                    selectedId = uiState.selectedTimeRange.name,
+                    onSelect = { id -> onSelectTimeRange(ranges.first { it.name == id }) },
+                    modifier = Modifier.testTag("creator_time_ranges"),
+                    tabTagPrefix = "creator_range_",
+                    contentPadding = PaddingValues(vertical = 6.dp),
+                )
             }
 
             // 3. Hero KPI Spotlight Card with Trend Graph
@@ -500,7 +481,7 @@ private fun MilestoneCard(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = stringResource(R.string.creator_milestone_target, milestone.targetFollowers),
+                    text = pluralStringResource(R.plurals.creator_milestone_target, milestone.targetFollowers, milestone.targetFollowers),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -538,7 +519,7 @@ private fun MilestoneCard(
             )
 
             Text(
-                text = stringResource(R.string.creator_milestone_remaining, milestone.remainingCount),
+                text = pluralStringResource(R.plurals.creator_milestone_remaining, milestone.remainingCount, milestone.remainingCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

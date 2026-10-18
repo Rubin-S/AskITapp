@@ -2,12 +2,12 @@ package com.askit.app.story.editor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -15,10 +15,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
@@ -26,6 +25,7 @@ import com.askit.app.story.StoryAudience
 import com.askit.app.story.StoryFormState
 import com.askit.app.story.StoryViewModel
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StoryEditorBottomChrome(
     viewModel: StoryViewModel,
@@ -57,30 +57,10 @@ fun StoryEditorBottomChrome(
             )
         }
 
-        BasicTextField(
-            value = state.caption,
-            onValueChange = viewModel::updateCaption,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White),
-            cursorBrush = SolidColor(Color.White),
-            modifier = Modifier.fillMaxWidth(),
-            decorationBox = { inner ->
-                Box {
-                    if (state.caption.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.story_caption_hint),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White.copy(alpha = 0.7f),
-                        )
-                    }
-                    inner()
-                }
-            },
-        )
-
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             val chipColors = FilterChipDefaults.filterChipColors(
                 containerColor = Color.White.copy(alpha = 0.12f),
@@ -100,12 +80,12 @@ fun StoryEditorBottomChrome(
                 label = { Text(stringResource(R.string.story_close_circle)) },
                 colors = chipColors,
             )
-            Button(
-                onClick = onNext,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.story_next))
-            }
+        }
+        Button(
+            onClick = onNext,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("story_editor_next"),
+        ) {
+            Text(stringResource(R.string.story_next))
         }
     }
 }

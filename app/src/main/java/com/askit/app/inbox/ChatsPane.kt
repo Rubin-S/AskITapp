@@ -39,7 +39,13 @@ fun ChatsPane(
         itemsIndexed(conversations, key = { _, conversation -> conversation.id }) { index, conversation ->
             ConversationRow(
                 name = conversation.contact.name,
-                preview = conversation.preview,
+                preview = if (conversation.previewIsStory) {
+                    stringResource(com.askit.app.R.string.story_shared_preview)
+                } else if (conversation.previewIsPhoto) {
+                    stringResource(com.askit.app.R.string.messages_photo)
+                } else {
+                    conversation.preview
+                },
                 unreadCount = conversation.unreadCount,
                 timeLabel = relativeTimeLabel(conversation.updatedAtMillis, nowMillis),
                 avatarUrl = conversation.contact.avatarUrl,

@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.displayCutoutPadding
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,11 +46,17 @@ fun StoryTopOverlay(
     modifier: Modifier = Modifier,
     isOwnStory: Boolean = false,
     onAddStory: (() -> Unit)? = null,
+    showFollow: Boolean = false,
+    showActions: Boolean = true,
+    canFollow: Boolean = false,
+    onFollow: () -> Unit = {},
+    onMore: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
+            .displayCutoutPadding()
             .testTag("story_top_overlay"),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -129,6 +137,19 @@ fun StoryTopOverlay(
                     contentDescription = stringResource(R.string.story_viewer_close),
                     tint = Color.White,
                 )
+            }
+        }
+        if (!isOwnStory && showActions) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End) {
+                if (showFollow) {
+                    TextButton(onClick = onFollow, enabled = canFollow) {
+                        Text(stringResource(com.askit.app.R.string.story_follow), color = Color.White.copy(alpha = if (canFollow) 1f else 0.4f))
+                    }
+                }
+                IconButton(onClick = onMore) {
+                    Icon(painterResource(R.drawable.ic_more_horiz), stringResource(com.askit.app.R.string.story_actions_title), tint = Color.White)
+                }
             }
         }
     }

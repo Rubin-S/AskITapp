@@ -1,16 +1,12 @@
 package com.askit.app.auth
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,29 +26,29 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import com.askit.designsystem.inputs.AskITTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -63,78 +59,127 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.askit.app.R
+import com.askit.app.media.persistPhotoPickerReadAccess
 import com.askit.designsystem.components.AskITPrimaryButton
 import com.askit.designsystem.profile.ProfileAvatar
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import com.askit.designsystem.R as DsR
-
-val defaultServiceInterests = listOf(
-    "Home repairs",
-    "Plumbing",
-    "Cleaning",
-    "Electrical",
-    "Tutoring",
-    "Design",
-    "IT support",
-    "Other",
-)
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FormAScreen(
     phoneNumber: String,
     onBack: () -> Unit,
-    onSubmitSuccess: (fullName: String, city: String, pincode: String, interests: List<String>) -> Unit,
+    onSubmit: suspend (SignupDraft) -> Boolean,
     modifier: Modifier = Modifier,
-    initialInterests: List<String> = listOf("Home repairs", "Plumbing", "Cleaning"),
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    val isDark = isSystemInDarkTheme()
+    val initialLanguage = if (LocalConfiguration.current.locales[0].language == "ta") "Tamil" else "English"
 
-    var avatarUri by remember { mutableStateOf<String?>(null) }
-    var fullName by remember { mutableStateOf("") }
-    var bio by remember { mutableStateOf("") }
-    var area by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
-    var pincode by remember { mutableStateOf("") }
-    var customInterest by remember { mutableStateOf("") }
+    var editablePhone by rememberSaveable(phoneNumber) { mutableStateOf(phoneNumber) }
+    var avatarUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var fullName by rememberSaveable { mutableStateOf("") }
+    var username by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var preferredLanguage by rememberSaveable { mutableStateOf(initialLanguage) }
+    var area by rememberSaveable { mutableStateOf("") }
+    var city by rememberSaveable { mutableStateOf("") }
+    var pincode by rememberSaveable { mutableStateOf("") }
+    var photoTouched by rememberSaveable { mutableStateOf(false) }
     var isLocating by remember { mutableStateOf(false) }
-    var isLocationDetected by remember { mutableStateOf(false) }
+    var isLocationDetected by rememberSaveable { mutableStateOf(false) }
+    var locationFailed by rememberSaveable { mutableStateOf(false) }
+    var submissionFailed by rememberSaveable { mutableStateOf(false) }
+    var isSubmitting by remember { mutableStateOf(false) }
+    var photoCheckVersion by remember { mutableIntStateOf(0) }
+    var photoReadable by remember(avatarUri, photoCheckVersion) { mutableStateOf(false) }
+    var photoCheckComplete by remember(avatarUri, photoCheckVersion) { mutableStateOf(false) }
 
-    val selectedInterests = remember {
-        mutableStateListOf<String>().apply { addAll(initialInterests) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { photoCheckVersion++ }
+    LaunchedEffect(avatarUri, photoCheckVersion) {
+        photoReadable = withContext(Dispatchers.IO) {
+            isSignupPhotoReadable(context.contentResolver, avatarUri)
+        }
+        photoCheckComplete = true
     }
 
-    val isFormValid = fullName.isNotBlank() && city.isNotBlank()
+    val draft = SignupDraft(
+        fullName = fullName,
+        username = username,
+        city = city,
+        area = area,
+        pincode = pincode,
+        phoneNumber = editablePhone,
+        avatarUri = avatarUri,
+        preferredLanguage = preferredLanguage,
+        email = email,
+    )
+    val validation = draft.validation(photoReadable)
+    val isFormValid = validation.isValid && !isSubmitting &&
+        (com.askit.app.BuildConfig.CLIENT_PREVIEW || editablePhone == phoneNumber)
+
+    fun submit() {
+        if (!isFormValid || isSubmitting) return
+        isSubmitting = true
+        submissionFailed = false
+        scope.launch {
+            try {
+                submissionFailed = !onSubmit(draft)
+                if (submissionFailed) photoCheckVersion++
+            } finally {
+                isSubmitting = false
+            }
+        }
+    }
+
+    fun detectLocation() {
+        isLocating = true
+        isLocationDetected = false
+        locationFailed = false
+        val originalLocation = Triple(area, city, pincode)
+        scope.launch {
+            try {
+                LocationHelper.fetchCurrentLocation(context)
+                    .onSuccess { geo ->
+                        if (Triple(area, city, pincode) == originalLocation && !isSubmitting) {
+                            area = geo.area
+                            city = geo.city
+                            pincode = geo.pincode
+                            isLocationDetected = true
+                        }
+                    }
+                    .onFailure { locationFailed = true }
+            } finally {
+                isLocating = false
+            }
+        }
+    }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri ->
+        photoTouched = true
         if (uri != null) {
+            persistPhotoPickerReadAccess(context.contentResolver, listOf(uri))
             avatarUri = uri.toString()
         }
     }
-
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
-        val isGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (isGranted) {
-            isLocating = true
-            scope.launch {
-                val result = LocationHelper.fetchCurrentLocation(context)
-                isLocating = false
-                result.onSuccess { geo ->
-                    if (geo.area.isNotBlank()) area = geo.area
-                    city = geo.city
-                    pincode = geo.pincode
-                    isLocationDetected = true
-                }
-            }
+        ) {
+            detectLocation()
+        } else {
+            isLocationDetected = false
+            locationFailed = true
         }
     }
 
@@ -170,7 +215,7 @@ fun FormAScreen(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrow_back),
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.explore_back),
                         tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(24.dp),
                     )
@@ -184,7 +229,7 @@ fun FormAScreen(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
                 ) {
                     Text(
-                        text = "Step 2 of 2",
+                        text = stringResource(R.string.form_a_step),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -201,13 +246,31 @@ fun FormAScreen(
             ) {
                 ProfileAvatar(
                     avatarUrl = avatarUri,
-                    cameraContentDescription = "Add profile photo",
-                    onCamera = {
-                        photoPickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                        )
+                    cameraContentDescription = stringResource(R.string.form_a_add_photo),
+                    onCamera = if (isSubmitting) null else {
+                        {
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                            )
+                        }
                     },
                     modifier = Modifier.testTag("form_a_avatar"),
+                )
+            }
+
+            Text(
+                text = stringResource(R.string.form_a_photo_required),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            if (avatarUri != null && !photoCheckComplete) {
+                Text(stringResource(R.string.form_a_photo_checking), style = MaterialTheme.typography.bodySmall)
+            } else if ((photoTouched || avatarUri != null) && !validation.photoValid) {
+                Text(
+                    text = stringResource(R.string.form_a_photo_error),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
 
@@ -237,108 +300,13 @@ fun FormAScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Full Name Input
-            OutlinedTextField(
-                value = fullName,
-                onValueChange = { fullName = it },
-                label = { Text("Full name") },
-                placeholder = { Text(stringResource(R.string.form_a_full_name_placeholder)) },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(DsR.drawable.ic_person),
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                },
-                trailingIcon = if (fullName.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { fullName = "" }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_clear),
-                                contentDescription = "Clear",
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                } else null,
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Words,
-                    imeAction = ImeAction.Next,
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("form_a_input_name"),
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // One-line Bio / Headline (Optional)
-            OutlinedTextField(
-                value = bio,
-                onValueChange = { bio = it },
-                label = { Text("Bio (Optional)") },
-                placeholder = { Text("e.g. Homeowner in R.S. Puram, or Electrician") },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(DsR.drawable.ic_edit),
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                },
-                trailingIcon = if (bio.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { bio = "" }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_clear),
-                                contentDescription = "Clear",
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                } else null,
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Sentences,
-                    imeAction = ImeAction.Next,
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("form_a_input_bio"),
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             // Location Quick Action Card (GPS Auto-detect)
             OutlinedCard(
+                enabled = !isLocating && !isSubmitting,
                 onClick = {
-                    if (!isLocating) {
+                    if (!isLocating && !isSubmitting) {
                         if (LocationHelper.hasLocationPermission(context)) {
-                            isLocating = true
-                            scope.launch {
-                                val result = LocationHelper.fetchCurrentLocation(context)
-                                isLocating = false
-                                result.onSuccess { geo ->
-                                    if (geo.area.isNotBlank()) area = geo.area
-                                    city = geo.city
-                                    pincode = geo.pincode
-                                    isLocationDetected = true
-                                }
-                            }
+                            detectLocation()
                         } else {
                             locationPermissionLauncher.launch(
                                 arrayOf(
@@ -399,10 +367,12 @@ fun FormAScreen(
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = if (isLocationDetected && city.isNotBlank()) {
+                                text = if (locationFailed) {
+                                    stringResource(R.string.form_a_location_failed)
+                                } else if (isLocationDetected && city.isNotBlank()) {
                                     "${if (area.isNotBlank()) "$area, " else ""}$city ${if (pincode.isNotBlank()) "· $pincode" else ""}"
                                 } else {
-                                    "Auto-detects your locality and city via GPS"
+                                    stringResource(R.string.form_a_location_hint)
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -411,7 +381,7 @@ fun FormAScreen(
                         if (isLocationDetected) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_check),
-                                contentDescription = "Detected",
+                                contentDescription = stringResource(R.string.form_a_detected),
                                 modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.onBackground,
                             )
@@ -422,261 +392,37 @@ fun FormAScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Area / Neighborhood (Hyperlocal anchor)
-            OutlinedTextField(
-                value = area,
-                onValueChange = { area = it },
-                label = { Text("Area / Neighborhood") },
-                placeholder = { Text("e.g. R.S. Puram, Gandhipuram") },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(DsR.drawable.ic_location),
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                },
-                trailingIcon = if (area.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { area = "" }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_clear),
-                                contentDescription = "Clear",
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                } else null,
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Words,
-                    imeAction = ImeAction.Next,
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("form_a_input_area"),
-            )
+            AccountFormFields(draft, onChange = { updated ->
+                fullName = updated.fullName; username = updated.username; email = updated.email.orEmpty()
+                city = updated.city; pincode = updated.pincode; preferredLanguage = updated.preferredLanguage
+                editablePhone = updated.phoneNumber; isLocationDetected = false
+            }, enabled = !isSubmitting, tag = "form_a_input")
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Compact 2-Column City & Pincode
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                OutlinedTextField(
-                    value = city,
-                    onValueChange = { city = it },
-                    label = { Text("City") },
-                    placeholder = { Text(stringResource(R.string.form_a_city_placeholder)) },
-                    leadingIcon = {
-                        Icon(
-                            painter = painterResource(DsR.drawable.ic_location),
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                    trailingIcon = if (city.isNotEmpty()) {
-                        {
-                            IconButton(onClick = { city = "" }) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_clear),
-                                    contentDescription = "Clear",
-                                    modifier = Modifier.size(18.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    } else null,
-                    singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Words,
-                        imeAction = ImeAction.Next,
-                    ),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                    ),
-                    modifier = Modifier
-                        .weight(1.5f)
-                        .testTag("form_a_input_city"),
-                )
-
-                OutlinedTextField(
-                    value = pincode,
-                    onValueChange = { pincode = it.filter(Char::isDigit).take(10) },
-                    label = { Text(stringResource(R.string.form_a_pincode_label)) },
-                    placeholder = { Text(stringResource(R.string.form_a_pincode_placeholder)) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done,
-                    ),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                    ),
-                    modifier = Modifier
-                        .weight(1.1f)
-                        .testTag("form_a_input_pincode"),
-                )
+            if (!com.askit.app.BuildConfig.CLIENT_PREVIEW && editablePhone != phoneNumber) {
+                Text(stringResource(R.string.profile_phone_verification_needed))
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Areas of interest section
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.Start,
-            ) {
+            if (submissionFailed) {
                 Text(
-                    text = stringResource(R.string.form_a_interests_label),
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Choose topics you want to explore, offer, or request",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = stringResource(R.string.form_a_save_failed),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.testTag("form_a_save_error"),
                 )
             }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("form_a_interests_flow_row"),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                defaultServiceInterests.forEach { interest ->
-                    val isSelected = selectedInterests.contains(interest)
-
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            if (isSelected) {
-                                selectedInterests.remove(interest)
-                            } else {
-                                selectedInterests.add(interest)
-                            }
-                        },
-                        label = {
-                            Text(
-                                text = interest,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                ),
-                            )
-                        },
-                        leadingIcon = if (isSelected) {
-                            {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_check),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                )
-                            }
-                        } else null,
-                        shape = RoundedCornerShape(20.dp),
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            labelColor = MaterialTheme.colorScheme.onSurface,
-                            selectedContainerColor = if (isDark) {
-                                MaterialTheme.colorScheme.surfaceContainerHighest
-                            } else {
-                                MaterialTheme.colorScheme.primary
-                            },
-                            selectedLabelColor = if (isDark) {
-                                MaterialTheme.colorScheme.onSurface
-                            } else {
-                                MaterialTheme.colorScheme.onPrimary
-                            },
-                            selectedLeadingIconColor = if (isDark) {
-                                MaterialTheme.colorScheme.onSurface
-                            } else {
-                                MaterialTheme.colorScheme.onPrimary
-                            },
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = isSelected,
-                            borderColor = if (isSelected) {
-                                if (isDark) MaterialTheme.colorScheme.outline else Color.Transparent
-                            } else {
-                                MaterialTheme.colorScheme.outlineVariant
-                            },
-                        ),
-                        modifier = Modifier.testTag("chip_$interest"),
-                    )
-                }
-            }
-
-            AnimatedVisibility(
-                visible = selectedInterests.contains("Other"),
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
-            ) {
-                Column(modifier = Modifier.padding(top = 10.dp)) {
-                    OutlinedTextField(
-                        value = customInterest,
-                        onValueChange = { customInterest = it },
-                        placeholder = { Text(stringResource(R.string.form_a_custom_category_placeholder)) },
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("form_a_input_custom_interest"),
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // CTA Submit Button
+            Spacer(modifier = Modifier.height(16.dp))
             AskITPrimaryButton(
-                onClick = {
-                    if (isFormValid) {
-                        val finalInterests = selectedInterests.toMutableList()
-                        if (customInterest.isNotBlank() && finalInterests.contains("Other")) {
-                            finalInterests.remove("Other")
-                            finalInterests.add(customInterest.trim())
-                        }
-                        val submittedCity = if (area.isNotBlank() && !city.contains(area, ignoreCase = true)) {
-                            "$area, $city"
-                        } else {
-                            city
-                        }
-                        onSubmitSuccess(fullName.trim(), submittedCity.trim(), pincode.trim(), finalInterests)
-                    }
-                },
+                onClick = ::submit,
                 enabled = isFormValid,
                 modifier = Modifier.testTag("form_a_btn_submit"),
             ) {
+                if (isSubmitting) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 Text(
                     text = stringResource(R.string.form_a_submit_btn),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                    ),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp),
                 )
             }
-
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

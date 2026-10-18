@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -13,6 +15,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,7 +37,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -53,20 +57,28 @@ fun StoryCanvas(
     durationMs: Long?,
     transform: StoryTransform,
     layers: List<StoryLayer>,
-    selectedLayerId: String?,
-    drawMode: Boolean,
-    onTransformChanged: (Float, Float, Float) -> Unit,
-    onLayerTransformChanged: (String, Float, Float, Float, Float) -> Unit,
-    onLayerSelected: (String?) -> Unit,
-    onDrawPoint: (Float, Float) -> Unit,
-    onDrawFinished: () -> Unit,
+    modifier: Modifier = Modifier,
+    selectedLayerId: String? = null,
+    drawMode: Boolean = false,
+    onTransformChanged: (Float, Float, Float) -> Unit = { _, _, _ -> },
+    onLayerTransformChanged: (String, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> },
+    onLayerSelected: (String?) -> Unit = {},
+    onDrawPoint: (Float, Float) -> Unit = { _, _ -> },
+    onDrawFinished: () -> Unit = {},
     editingTextLayerId: String? = null,
     onTextChanged: (String, String) -> Unit = { _, _ -> },
-    modifier: Modifier = Modifier,
+    readOnly: Boolean = false,
+    trimStartMs: Long = 0L,
+    trimEndMs: Long? = null,
+    videoActive: Boolean = true,
+    videoPlaying: Boolean = true,
+    videoLoop: Boolean = true,
+    onVideoProgress: (Float) -> Unit = {},
+    onVideoFinished: () -> Unit = {},
 ) {
-    var mediaPanX by remember { mutableFloatStateOf(transform.panX) }
-  var mediaPanY by remember { mutableFloatStateOf(transform.panY) }
-  var mediaZoom by remember { mutableFloatStateOf(transform.zoom) }
+    var mediaPanX by remember(mediaUri, transform.panX) { mutableFloatStateOf(transform.panX) }
+    var mediaPanY by remember(mediaUri, transform.panY) { mutableFloatStateOf(transform.panY) }
+    var mediaZoom by remember(mediaUri, transform.zoom) { mutableFloatStateOf(transform.zoom) }
 
     Box(
         modifier = modifier
@@ -74,46 +86,57 @@ fun StoryCanvas(
             .background(Color.Black),
         contentAlignment = Alignment.Center,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    translationX = mediaPanX
-                    translationY = mediaPanY
-                    scaleX = mediaZoom
-                    scaleY = mediaZoom
-                }
-                .pointerInput(drawMode, mediaType, editingTextLayerId) {
-                    if (!drawMode &&
-                        editingTextLayerId == null &&
-                        mediaType != StoryMediaType.SolidBackground
-                    ) {
-                        detectTransformGestures { _, pan, zoom, _ ->
-                            mediaPanX += pan.x
-                            mediaPanY += pan.y
-                            mediaZoom = (mediaZoom * zoom).coerceIn(0.5f, 3f)
-                            onTransformChanged(mediaPanX, mediaPanY, mediaZoom)
-                        }
+        val mediaModifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                translationX = mediaPanX
+                translationY = mediaPanY
+                scaleX = mediaZoom
+                scaleY = mediaZoom
+            }
+            .pointerInput(drawMode, mediaType, editingTextLayerId, readOnly) {
+                if (!readOnly && !drawMode &&
+                    editingTextLayerId == null &&
+                    mediaType != StoryMediaType.SolidBackground
+                ) {
+                    detectTransformGestures { _, pan, zoom, _ ->
+                        mediaPanX += pan.x
+                        mediaPanY += pan.y
+                        mediaZoom = (mediaZoom * zoom).coerceIn(0.5f, 3f)
+                        onTransformChanged(mediaPanX, mediaPanY, mediaZoom)
                     }
-                },
-        ) {
+                }
+            }
+        Box(Modifier.fillMaxSize()) {
             when (mediaType) {
                 StoryMediaType.Photo -> {
-                    AsyncImage(
-                        model = mediaUri,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                    )
+                    var failed by remember(mediaUri) { mutableStateOf(false) }
+                    var retry by remember(mediaUri) { mutableIntStateOf(0) }
+                    key(retry) {
+                        AsyncImage(model = mediaUri, contentDescription = null,
+                            modifier = mediaModifier, contentScale = ContentScale.Crop,
+                            onError = { failed = true })
+                    }
+                    if (failed) Column(Modifier.align(Alignment.Center)) {
+                        Text(stringResource(R.string.profile_highlight_unavailable), color = Color.White)
+                        TextButton(onClick = { failed = false; retry++ }) {
+                            Text(stringResource(R.string.explore_retry))
+                        }
+                    }
                 }
                 StoryMediaType.Video -> {
-                    AsyncImage(
-                        model = mediaUri,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
+                    StoryVideo(
+                        uri = mediaUri,
+                        trimStartMs = trimStartMs,
+                        trimEndMs = trimEndMs,
+                        contentModifier = mediaModifier,
+                        active = videoActive,
+                        playing = videoPlaying,
+                        loop = videoLoop,
+                        onProgress = onVideoProgress,
+                        onFinished = onVideoFinished,
                     )
-                    if (durationMs != null) {
+                    if (!readOnly && durationMs != null) {
                         Text(
                             text = formatDurationBadge(durationMs),
                             modifier = Modifier
@@ -144,26 +167,26 @@ fun StoryCanvas(
             when (layer) {
                 is StoryLayer.Text -> StoryTextLayer(
                     layer = layer,
-                    isSelected = layer.id == selectedLayerId,
-                    isEditing = layer.id == editingTextLayerId,
+                    isSelected = !readOnly && layer.id == selectedLayerId,
+                    isEditing = !readOnly && layer.id == editingTextLayerId,
+                    readOnly = readOnly,
                     onSelected = { onLayerSelected(layer.id) },
                     onTransformChanged = onLayerTransformChanged,
                     onTextChanged = { onTextChanged(layer.id, it) },
                 )
                 is StoryLayer.Sticker -> StoryStickerLayer(
                     layer = layer,
-                    isSelected = layer.id == selectedLayerId,
+                    readOnly = readOnly,
                     onSelected = { onLayerSelected(layer.id) },
                     onTransformChanged = onLayerTransformChanged,
                 )
                 is StoryLayer.Draw -> StoryDrawLayer(
                     layer = layer,
-                    isSelected = layer.id == selectedLayerId,
                 )
             }
         }
 
-        if (drawMode) {
+        if (drawMode && !readOnly) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -189,14 +212,15 @@ private fun StoryTextLayer(
     layer: StoryLayer.Text,
     isSelected: Boolean,
     isEditing: Boolean,
+    readOnly: Boolean,
     onSelected: () -> Unit,
     onTransformChanged: (String, Float, Float, Float, Float) -> Unit,
     onTextChanged: (String) -> Unit,
 ) {
-    var offsetX by remember(layer.id) { mutableFloatStateOf(layer.offsetX) }
-    var offsetY by remember(layer.id) { mutableFloatStateOf(layer.offsetY) }
-    var rotation by remember(layer.id) { mutableFloatStateOf(layer.rotation) }
-    var scale by remember(layer.id) { mutableFloatStateOf(layer.scale) }
+    var offsetX by remember(layer.id, layer.offsetX) { mutableFloatStateOf(layer.offsetX) }
+    var offsetY by remember(layer.id, layer.offsetY) { mutableFloatStateOf(layer.offsetY) }
+    var rotation by remember(layer.id, layer.rotation) { mutableFloatStateOf(layer.rotation) }
+    var scale by remember(layer.id, layer.scale) { mutableFloatStateOf(layer.scale) }
     val focusRequester = remember { FocusRequester() }
     val textColor = Color(layer.colorArgb)
     val textAlign = when (layer.alignment) {
@@ -224,7 +248,7 @@ private fun StoryTextLayer(
                 scaleY = scale
             }
             .then(
-                if (isEditing) {
+                if (isEditing || readOnly) {
                     Modifier
                 } else {
                     Modifier.pointerInput(layer.id) {
@@ -287,14 +311,14 @@ private fun StoryTextLayer(
 @Composable
 private fun StoryStickerLayer(
     layer: StoryLayer.Sticker,
-    isSelected: Boolean,
+    readOnly: Boolean,
     onSelected: () -> Unit,
     onTransformChanged: (String, Float, Float, Float, Float) -> Unit,
 ) {
-    var offsetX by remember(layer.id) { mutableFloatStateOf(layer.offsetX) }
-    var offsetY by remember(layer.id) { mutableFloatStateOf(layer.offsetY) }
-    var rotation by remember(layer.id) { mutableFloatStateOf(layer.rotation) }
-    var scale by remember(layer.id) { mutableFloatStateOf(layer.scale) }
+    var offsetX by remember(layer.id, layer.offsetX) { mutableFloatStateOf(layer.offsetX) }
+    var offsetY by remember(layer.id, layer.offsetY) { mutableFloatStateOf(layer.offsetY) }
+    var rotation by remember(layer.id, layer.rotation) { mutableFloatStateOf(layer.rotation) }
+    var scale by remember(layer.id, layer.scale) { mutableFloatStateOf(layer.scale) }
 
     Box(
         modifier = Modifier
@@ -304,14 +328,16 @@ private fun StoryStickerLayer(
                 scaleX = scale
                 scaleY = scale
             }
-            .pointerInput(layer.id) {
-                detectTransformGestures { _, pan, zoom, rotationChange ->
-                    offsetX += pan.x
-                    offsetY += pan.y
-                    scale = (scale * zoom).coerceIn(0.5f, 3f)
-                    rotation += rotationChange
-                    onTransformChanged(layer.id, offsetX, offsetY, rotation, scale)
-                    onSelected()
+            .pointerInput(layer.id, readOnly) {
+                if (!readOnly) {
+                    detectTransformGestures { _, pan, zoom, rotationChange ->
+                        offsetX += pan.x
+                        offsetY += pan.y
+                        scale = (scale * zoom).coerceIn(0.5f, 3f)
+                        rotation += rotationChange
+                        onTransformChanged(layer.id, offsetX, offsetY, rotation, scale)
+                        onSelected()
+                    }
                 }
             }
             .background(
@@ -331,9 +357,14 @@ private fun StoryStickerLayer(
 @Composable
 private fun StoryDrawLayer(
     layer: StoryLayer.Draw,
-    isSelected: Boolean,
 ) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
+    Canvas(modifier = Modifier.fillMaxSize().graphicsLayer {
+        translationX = layer.offsetX
+        translationY = layer.offsetY
+        rotationZ = layer.rotation
+        scaleX = layer.scale
+        scaleY = layer.scale
+    }) {
         val path = Path()
         layer.points.forEachIndexed { index, point ->
             val offset = Offset(point.first, point.second)

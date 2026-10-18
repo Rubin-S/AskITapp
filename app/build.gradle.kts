@@ -1,14 +1,35 @@
+import java.net.URI
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.secrets)
-    alias(libs.plugins.roborazzi)
+}
+
+val signRelease = providers.gradleProperty("signRelease").map {
+    requireNotNull(it.toBooleanStrictOrNull()) { "signRelease must be true or false." }
+}.getOrElse(false)
+
+val backendBaseUrl = providers.gradleProperty("askitBackendBaseUrl")
+    .orElse(providers.environmentVariable("ASKIT_BACKEND_BASE_URL"))
+    .getOrElse("")
+if (backendBaseUrl.isNotEmpty()) {
+    val uri = runCatching { URI(backendBaseUrl) }.getOrNull()
+    require(uri != null && uri.scheme == "https" && !uri.host.isNullOrBlank() &&
+        uri.userInfo == null && uri.query == null && uri.fragment == null) {
+        "ASKIT_BACKEND_BASE_URL must be an HTTPS URL without credentials, query, or fragment."
+    }
 }
 
 android {
     namespace = "com.askit.app"
     compileSdk = 37
+
+    androidResources {
+        generateLocaleConfig = true
+        localeFilters += listOf("en", "ta")
+    }
 
     defaultConfig {
         applicationId = "com.askit.app"
@@ -16,18 +37,48 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
-        // The unit-test manifest merge does not receive the secrets plugin's injected placeholder.
-        manifestPlaceholders["PLACES_API_KEY"] = "DEFAULT_API_KEY"
+        buildConfigField("boolean", "CLIENT_PREVIEW", "false")
+        buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
+    }
+
+    if (signRelease) {
+        val requiredNames = listOf(
+            "ASKIT_UPLOAD_STORE_FILE",
+            "ASKIT_UPLOAD_STORE_PASSWORD",
+            "ASKIT_UPLOAD_KEY_ALIAS",
+            "ASKIT_UPLOAD_KEY_PASSWORD",
+        )
+        val credentials = requiredNames.associateWith { providers.environmentVariable(it).orNull }
+        val missing = credentials.filterValues { it.isNullOrBlank() }.keys
+        require(missing.isEmpty()) { "Release signing requires: ${missing.joinToString()}" }
+        val uploadStore = rootProject.file(credentials.getValue("ASKIT_UPLOAD_STORE_FILE")!!)
+        require(uploadStore.isFile) { "ASKIT_UPLOAD_STORE_FILE must point to an existing keystore." }
+        signingConfigs.create("upload") {
+            storeFile = uploadStore
+            storePassword = credentials.getValue("ASKIT_UPLOAD_STORE_PASSWORD")
+            keyAlias = credentials.getValue("ASKIT_UPLOAD_KEY_ALIAS")
+            keyPassword = credentials.getValue("ASKIT_UPLOAD_KEY_PASSWORD")
+        }
     }
 
     buildTypes {
         release {
+            if (signRelease) signingConfig = signingConfigs.getByName("upload")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+        }
+        create("preview") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".preview"
+            versionNameSuffix = "-client-preview"
+            matchingFallbacks += "release"
+            signingConfig = signingConfigs.getByName("debug")
+            buildConfigField("boolean", "CLIENT_PREVIEW", "true")
+            buildConfigField("String", "BACKEND_BASE_URL", "\"\"")
         }
     }
 
@@ -40,16 +91,6 @@ android {
         compose = true
         // The secrets plugin injects values into both BuildConfig and the manifest.
         buildConfig = true
-    }
-
-    testOptions {
-        unitTests {
-            isIncludeAndroidResources = true
-            all {
-                it.maxHeapSize = "2048m"
-                it.forkEvery = 20
-            }
-        }
     }
 
     lint {
@@ -65,14 +106,11 @@ secrets {
     defaultPropertiesFileName = "local.defaults.properties"
 }
 
-roborazzi {
-    outputDir.set(layout.projectDirectory.dir("src/test/screenshots"))
-}
-
 dependencies {
     implementation(project(":designsystem"))
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.activity.compose)
@@ -85,9 +123,13 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.okhttp)
+    implementation(libs.libphonenumber)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui.compose)
 
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
@@ -97,11 +139,5 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
-    testImplementation(libs.robolectric)
-    testImplementation(platform(libs.androidx.compose.bom))
-    testImplementation(libs.androidx.compose.ui.test.junit4)
-    testImplementation(libs.roborazzi)
-    testImplementation(libs.roborazzi.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

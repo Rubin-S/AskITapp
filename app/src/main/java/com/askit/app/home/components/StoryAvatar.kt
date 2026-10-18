@@ -16,7 +16,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,7 +23,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import com.askit.app.R as AppR
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,18 +37,27 @@ import coil3.compose.AsyncImage
 import com.askit.app.home.model.Story
 import com.askit.designsystem.R
 
-// Instagram-grade continuous rainbow ring gradient
-val InstagramStoryGradient = Brush.sweepGradient(
-    colors = listOf(
-        Color(0xFFFEDA75), // Yellow
-        Color(0xFFFA7E1E), // Orange
-        Color(0xFFD62976), // Pink
-        Color(0xFF962FBF), // Purple
-        Color(0xFF4F5BD5), // Indigo
-        Color(0xFFD62976), // Pink
-        Color(0xFFFEDA75), // Wrap
-    ),
-)
+// Keep ring geometry in dp so the subtle spacing survives density changes.
+@Composable
+private fun Modifier.storyRing(isSeen: Boolean): Modifier {
+    val ring = if (isSeen) {
+        Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+    } else {
+        Modifier.border(
+            width = 2.dp,
+            brush = Brush.sweepGradient(
+                listOf(
+                    MaterialTheme.colorScheme.secondary,
+                    Color(0xFF159E92),
+                    MaterialTheme.colorScheme.secondary,
+                ),
+            ),
+            shape = CircleShape,
+        )
+    }
+    // Unseen: 2dp stroke + 1dp gap. Seen: 1dp stroke + 2.5dp gap.
+    return then(ring).padding(if (isSeen) 3.5.dp else 3.dp)
+}
 
 @Composable
 fun StoryAvatar(
@@ -53,20 +65,6 @@ fun StoryAvatar(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val ringModifier = if (story.isSeen) {
-        Modifier.border(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant,
-            shape = CircleShape,
-        )
-    } else {
-        Modifier.border(
-            width = 2.5.dp,
-            brush = InstagramStoryGradient,
-            shape = CircleShape,
-        )
-    }
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -77,8 +75,7 @@ fun StoryAvatar(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(80.dp)
-                .then(ringModifier)
-                .padding(3.dp),
+                .storyRing(story.isSeen),
         ) {
             if (!story.authorAvatarUrl.isNullOrBlank()) {
                 AsyncImage(
@@ -134,20 +131,7 @@ fun AddStoryAvatar(
 ) {
     val actualAddClick = onClick ?: onAddStoryClick
     val avatarUrl = myStory?.authorAvatarUrl ?: userAvatarUrl
-
-    val ringModifier = when {
-        myStory == null -> Modifier
-        myStory.isSeen -> Modifier.border(
-            width = 1.2.dp,
-            color = MaterialTheme.colorScheme.outlineVariant,
-            shape = CircleShape,
-        )
-        else -> Modifier.border(
-            width = 2.5.dp,
-            brush = InstagramStoryGradient,
-            shape = CircleShape,
-        )
-    }
+    val yourStoryLabel = stringResource(AppR.string.story_your_story)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -170,12 +154,12 @@ fun AddStoryAvatar(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxSize()
-                    .then(ringModifier)
-                    .padding(if (myStory != null) 3.dp else 0.dp)
+                    .then(if (myStory != null) Modifier.storyRing(myStory.isSeen) else Modifier)
                     .then(
                         if (myStory != null) {
                             Modifier
                                 .clip(CircleShape)
+                                .semantics { contentDescription = yourStoryLabel }
                                 .clickable(role = Role.Button) {
                                     onStoryClick?.invoke(myStory)
                                 }
@@ -241,7 +225,7 @@ fun AddStoryAvatar(
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Your story",
+            text = stringResource(AppR.string.story_your_story),
             style = MaterialTheme.typography.labelSmall.copy(
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
@@ -265,4 +249,3 @@ fun AddStoryAvatar(
         )
     }
 }
-

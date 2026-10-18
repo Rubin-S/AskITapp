@@ -10,12 +10,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,28 +29,45 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import com.askit.app.R
+import coil3.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.task.Task
+import com.askit.app.task.presentation
+import com.askit.app.task.TaskPhotoGallery
+import com.askit.app.task.TaskPreferencesSummary
+import com.askit.app.task.TaskProviderPreferences
+import androidx.compose.ui.platform.LocalContext
 import com.askit.app.task.TaskRepository
+import com.askit.app.task.TaskActionPolicy
+import com.askit.app.task.TaskActionsViewModel
+import com.askit.app.task.TaskActionDraft
+import com.askit.app.task.TaskActionDialogs
+import com.askit.app.task.actionPolicy
+import com.askit.app.task.TaskCommentAuthor
+import com.askit.app.task.TaskDiscussionViewModel
+import com.askit.app.task.TaskDiscussionSheet
 import com.askit.designsystem.R as DsR
-import kotlinx.coroutines.launch
 
 @Composable
 fun TaskDetailScreen(
@@ -54,6 +76,17 @@ fun TaskDetailScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onApply: (Task) -> Unit = {},
+    onMessage: (Task) -> Unit = {},
+    discussionViewModel: TaskDiscussionViewModel? = null,
+    discussionAuthor: TaskCommentAuthor? = null,
+    currentDiscussionAuthor: () -> TaskCommentAuthor? = { discussionAuthor },
+    actionsViewModel: TaskActionsViewModel? = null,
+    accountId: String? = null,
+    currentAccountId: () -> String? = { accountId },
+    hasServiceListing: Boolean = false,
+    hasApplied: Boolean = false,
+    onEdit: (Task) -> Unit = {},
+    onDeleted: (String) -> Unit = {},
 ) {
     val tasks by taskRepository.tasks.collectAsStateWithLifecycle()
     val task = tasks.firstOrNull { it.id == taskId } ?: taskRepository.getTask(taskId)
@@ -65,12 +98,51 @@ fun TaskDetailScreen(
             modifier = modifier,
         )
     } else {
+        val likes by taskRepository.likes.collectAsStateWithLifecycle()
+        val likedBy = likes[task.id].orEmpty()
+        val policy = task.actionPolicy(accountId, hasServiceListing, hasApplied)
+        val snackbar = remember { SnackbarHostState() }
+        val context = LocalContext.current
+        val actionDraft = if (actionsViewModel != null) {
+            val drafts by actionsViewModel.drafts.collectAsStateWithLifecycle()
+            if (actionsViewModel.isActiveAccount(accountId)) drafts[task.id] ?: TaskActionDraft() else TaskActionDraft()
+        } else TaskActionDraft()
+        LaunchedEffect(actionDraft.feedbackRes) {
+            actionDraft.feedbackRes?.let {
+                snackbar.showSnackbar(context.getString(it))
+                actionsViewModel?.consumeFeedback(task.id)
+            }
+        }
         TaskDetailScreen(
             task = task,
             onBack = onBack,
             modifier = modifier,
             onApply = onApply,
+            onMessage = onMessage,
+            onComment = { discussionViewModel?.open(task.id) },
+            policy = policy,
+            likeCount = likedBy.size,
+            isLiked = accountId != null && accountId in likedBy,
+            hasApplied = hasApplied,
+            onLike = { actionsViewModel?.like(task.id, currentAccountId()) },
+            onEdit = { onEdit(task) },
+            onDelete = { actionsViewModel?.openDelete(task.id, currentAccountId()) },
+            onReport = { actionsViewModel?.openReport(task.id, currentAccountId()) },
+            snackbar = snackbar,
         )
+        discussionViewModel?.let { TaskDiscussionSheet(task, it, discussionAuthor, currentDiscussionAuthor) }
+        actionsViewModel?.let { vm ->
+            TaskActionDialogs(
+                draft = actionDraft,
+                policy = policy,
+                taskTitle = task.title,
+                onCancelReport = { vm.cancelReport(task.id) },
+                onSelectReason = { vm.selectReason(task.id, it) },
+                onReport = { vm.report(task.id, currentAccountId()) },
+                onCancelDelete = { vm.cancelDelete(task.id) },
+                onDelete = { if (vm.delete(task.id, currentAccountId())) onDeleted(task.id) },
+            )
+        }
     }
 }
 
@@ -81,18 +153,29 @@ fun TaskDetailScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onApply: (Task) -> Unit = {},
+    onMessage: (Task) -> Unit = {},
+    onComment: () -> Unit = {},
+    policy: TaskActionPolicy = task.actionPolicy(null),
+    likeCount: Int = 0,
+    isLiked: Boolean = false,
+    hasApplied: Boolean = false,
+    onLike: () -> Unit = {},
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    onReport: () -> Unit = {},
+    snackbar: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
 
+    val display = task.presentation(LocalContext.current)
+    var showMenu by rememberSaveable(task.id, policy.signedIn, policy.isOwner) { mutableStateOf(false) }
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Task Details",
+                        text = stringResource(R.string.task_detail_title),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     )
                 },
@@ -100,8 +183,24 @@ fun TaskDetailScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(DsR.drawable.ic_arrow_back),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.explore_back),
                         )
+                    }
+                },
+                actions = {
+                    if (!policy.isOwner) {
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(painterResource(DsR.drawable.ic_more_horiz), stringResource(R.string.task_more_actions))
+                            }
+                            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.task_report)) },
+                                    enabled = policy.canReport,
+                                    onClick = { showMenu = false; onReport() },
+                                )
+                            }
+                        }
                     }
                 },
             )
@@ -116,30 +215,28 @@ fun TaskDetailScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .navigationBarsPadding()
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Message sent to ${task.posterName}")
+                    if (policy.isOwner) {
+                        OutlinedButton(onClick = onDelete, modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.task_delete), color = MaterialTheme.colorScheme.error)
+                        }
+                        Button(onClick = onEdit, modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.task_edit))
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { onMessage(task) },
+                            enabled = !task.posterId.isNullOrBlank(), modifier = Modifier.weight(1f),
+                        ) { Text(stringResource(DsR.string.profile_action_message)) }
+                        if (policy.showApply) {
+                            Button(onClick = { onApply(task) }, enabled = policy.canApply, modifier = Modifier.weight(1.5f)) {
+                                Text(stringResource(if (hasApplied) R.string.task_applied else R.string.task_detail_apply))
                             }
-                        },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text("Message")
-                    }
-                    Button(
-                        onClick = {
-                            onApply(task)
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Application submitted successfully!")
-                            }
-                        },
-                        modifier = Modifier.weight(1.5f),
-                    ) {
-                        Text("Apply to Task")
+                        }
                     }
                 }
             }
@@ -163,7 +260,7 @@ fun TaskDetailScreen(
                     color = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Text(
-                        text = task.category,
+                        text = display.category,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -171,7 +268,7 @@ fun TaskDetailScreen(
                 }
 
                 Text(
-                    text = task.postedTime,
+                    text = display.posted,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -199,12 +296,12 @@ fun TaskDetailScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = "Estimated Budget",
+                            text = stringResource(R.string.task_detail_budget),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            text = task.budget,
+                            text = display.budget,
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -215,14 +312,14 @@ fun TaskDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Text(
-                            text = "Urgency",
+                            text = stringResource(R.string.task_detail_urgency),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            text = task.urgency,
+                            text = display.timing,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = if (task.urgency.contains("Urgent", ignoreCase = true)) {
+                            color = if (display.timing.contains("Urgent", ignoreCase = true)) {
                                 MaterialTheme.colorScheme.error
                             } else {
                                 MaterialTheme.colorScheme.primary
@@ -249,6 +346,10 @@ fun TaskDetailScreen(
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
+                    task.posterAvatarUrl?.takeIf(String::isNotBlank)?.let { avatar ->
+                        AsyncImage(model = avatar, contentDescription = null,
+                            contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    }
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -258,16 +359,33 @@ fun TaskDetailScreen(
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        text = task.location,
+                        text = display.location,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(onClick = onLike, enabled = policy.canLike, modifier = Modifier.weight(1f)) {
+                    Icon(
+                        painterResource(if (isLiked) DsR.drawable.ic_heart_filled else DsR.drawable.ic_heart_outline),
+                        contentDescription = null, modifier = Modifier.size(18.dp),
+                    )
+                    Text(stringResource(if (isLiked) R.string.task_liked_count else R.string.task_like_count, likeCount),
+                        modifier = Modifier.padding(start = 6.dp))
+                }
+                OutlinedButton(onClick = onComment, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.task_discussion_comment))
+                }
+            }
+
+            TaskPhotoGallery(task.photos)
+            TaskPreferencesSummary(task.publicDetails?.preferences ?: TaskProviderPreferences())
+
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Description",
+                    text = stringResource(R.string.list_service_description),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -278,14 +396,14 @@ fun TaskDetailScreen(
                 )
             }
 
-            if (task.requirements.isNotEmpty()) {
+            if (display.requirements.isNotEmpty()) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Key Requirements",
+                        text = stringResource(R.string.task_detail_requirements),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface,
                     )
-                    task.requirements.forEach { req ->
+                    display.requirements.forEach { req ->
                         Row(
                             verticalAlignment = Alignment.Top,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -324,7 +442,7 @@ private fun TaskNotFoundContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Task Details",
+                        text = stringResource(R.string.task_detail_title),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     )
                 },
@@ -332,7 +450,7 @@ private fun TaskNotFoundContent(
                     IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(DsR.drawable.ic_arrow_back),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.explore_back),
                         )
                     }
                 },
@@ -351,18 +469,18 @@ private fun TaskNotFoundContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(
-                    text = "Task Not Found",
+                    text = stringResource(R.string.task_detail_not_found),
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "The requested task (ID: $taskId) is no longer available or could not be found.",
+                    text = stringResource(R.string.task_detail_not_found_body, taskId),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
                 Button(onClick = onBack) {
-                    Text("Go Back")
+                    Text(stringResource(R.string.task_detail_go_back))
                 }
             }
         }

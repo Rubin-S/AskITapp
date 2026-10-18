@@ -1,6 +1,6 @@
 package com.askit.designsystem.dialogs
 
-import androidx.compose.material3.AlertDialog
+import com.askit.designsystem.dialogs.AskITAlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,11 +14,11 @@ fun AskITDiscardDialog(
     onDismissRequest: () -> Unit,
     onDiscard: () -> Unit,
 ) {
-    AlertDialog(
+    AskITAlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(stringResource(R.string.discard_dialog_title)) },
         text = { Text(stringResource(R.string.discard_dialog_message)) },
-        confirmButton = {
+        dismissButton = {
             TextButton(
                 onClick = onDiscard,
                 colors = ButtonDefaults.textButtonColors(
@@ -28,7 +28,7 @@ fun AskITDiscardDialog(
                 Text(stringResource(R.string.discard_dialog_discard))
             }
         },
-        dismissButton = {
+        confirmButton = {
             TextButton(onClick = onDismissRequest) {
                 Text(stringResource(R.string.discard_dialog_keep_editing))
             }

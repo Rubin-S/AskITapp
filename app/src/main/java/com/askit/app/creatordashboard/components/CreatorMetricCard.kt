@@ -36,8 +36,8 @@ import com.askit.app.creatordashboard.MetricTrend
 @Composable
 fun CreatorMetricCard(
     item: CreatorMetricItem,
-    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
 ) {
     val title = stringResource(item.titleRes)
     val (trendColor, trendContainerColor, trendIcon) = when (item.trend) {

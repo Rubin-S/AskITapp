@@ -22,6 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalConfiguration
+import java.text.NumberFormat
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
@@ -71,8 +73,8 @@ fun ProviderTrustCard(
                     Text(
                         text = stringResource(
                             R.string.provider_trust_percentile,
-                            "Top ${trustScore.percentileRank}% in area",
-                            trustScore.weeklyDelta,
+                            NumberFormat.getIntegerInstance(LocalConfiguration.current.locales[0]).format(trustScore.percentileRank),
+                            NumberFormat.getIntegerInstance(LocalConfiguration.current.locales[0]).format(trustScore.weeklyDelta),
                         ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
