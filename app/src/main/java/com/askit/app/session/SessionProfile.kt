@@ -1,6 +1,7 @@
 package com.askit.app.session
 
 import com.askit.app.auth.SignupDraft
+import com.askit.app.format.pickerDate
 import com.askit.app.listservice.ListServiceDraft
 import com.askit.app.profile.ProfileGalleryItem
 import com.askit.app.profile.ProfileReview
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 
 @Serializable
 data class ServiceListing(
@@ -38,6 +40,12 @@ data class ServiceListing(
     val coverageRadiusKm: Int? = null,
 )
 
+/**
+ * Availability window. `available = false` pauses the listing from [fromMillis] to [toMillis]
+ * (both inclusive date-picker days, stored as UTC midnight). The effective status is computed at
+ * read time from the window, so a future start only schedules the pause and the listing comes back
+ * on its own the day after [toMillis]; no background job is needed.
+ */
 @Serializable
 data class ProfileAvailability(
     val available: Boolean = true,
@@ -46,6 +54,27 @@ data class ProfileAvailability(
     val message: String = "",
     val muteNotifications: Boolean = false,
 )
+
+/** What the availability window means on [today] (the device's calendar day). */
+sealed interface AvailabilityStatus {
+    data object Available : AvailabilityStatus
+    data class Scheduled(val from: LocalDate) : AvailabilityStatus
+    data class Away(val until: LocalDate?) : AvailabilityStatus
+}
+
+fun ProfileAvailability.statusOn(today: LocalDate): AvailabilityStatus {
+    if (available) return AvailabilityStatus.Available
+    val from = fromMillis?.let(::pickerDate)
+    val until = toMillis?.let(::pickerDate)
+    return when {
+        until != null && today.isAfter(until) -> AvailabilityStatus.Available
+        from != null && today.isBefore(from) -> AvailabilityStatus.Scheduled(from)
+        else -> AvailabilityStatus.Away(until)
+    }
+}
+
+/** A scheduled pause has not started yet, so the provider is still available until `from`. */
+fun ProfileAvailability.isAvailableOn(today: LocalDate): Boolean = statusOn(today) !is AvailabilityStatus.Away
 
 @Serializable
 data class SessionProfile(
@@ -76,7 +105,6 @@ data class SessionProfile(
     val pushNotificationsEnabled: Boolean = true,
     val jobAlertsEnabled: Boolean = true,
     val selectedLanguage: String = AppLanguage.English.storedValue,
-    val locationServicesEnabled: Boolean = true,
     val whoCanMessage: String = MessagingAudience.Everyone.storedValue,
     val blockedAccountsCount: Int = 0,
     val pincode: String = "",
@@ -91,30 +119,35 @@ data class SessionProfile(
     /** True when the account has a published service listing, so it can apply to tasks as a provider. */
     val hasActiveServiceListing: Boolean get() = hasListedService && listing != null
 
+    /** Country code (for E.164) and the last two digits only, e.g. "+91 ••••••98". */
     val maskedPhoneNumber: String
-        get() = if (phoneNumber.length >= 4) {
-            "${phoneNumber.take(2)}••••••${phoneNumber.takeLast(2)}"
-        } else {
-            phoneNumber
+        get() = when {
+            phoneNumber.length < 4 -> phoneNumber
+            phoneNumber.startsWith("+91") -> "+91 ••••••${phoneNumber.takeLast(2)}"
+            else -> "${phoneNumber.take(2)}••••••${phoneNumber.takeLast(2)}"
         }
 }
 
-class SessionProfileStore(initial: SessionProfile = SessionProfile(), private val persist: (SessionProfile) -> SessionProfile = { it }) {
+/**
+ * The signed-in account's profile. It is also the profile repository: writes go straight to this
+ * store and its persist hook (preview: durable snapshots; release: none). Call writes off the main
+ * thread, since the preview hook copies media.
+ */
+class SessionProfileStore(initial: SessionProfile = SessionProfile(), private val persist: (SessionProfile) -> SessionProfile = { it }) :
+    com.askit.app.profile.ProfileRepository {
     private val _profile = MutableStateFlow(initial)
-    val profile: StateFlow<SessionProfile> = _profile.asStateFlow()
+    override val profile: StateFlow<SessionProfile> = _profile.asStateFlow()
 
     fun replaceAccount(profile: SessionProfile) {
         commit(profile)
     }
 
-    fun completeSignup(draft: SignupDraft) {
+    override fun completeSignup(draft: SignupDraft) {
         commit(
             SessionProfile(
                 accountId = _profile.value.accountId,
                 displayName = draft.fullName,
                 username = draft.username,
-                bio = "",
-                about = "",
                 city = if (draft.area.isNotBlank() && !draft.city.contains(draft.area, ignoreCase = true)) {
                     "${draft.area}, ${draft.city}"
                 } else {
@@ -122,9 +155,6 @@ class SessionProfileStore(initial: SessionProfile = SessionProfile(), private va
                 },
                 joinedYear = java.time.Year.now().toString(),
                 avatarUrl = draft.avatarUri,
-                lookingFor = emptyList(),
-                languages = emptyList(),
-                profileStrengthPercent = 0,
                 phoneNumber = draft.phoneNumber,
                 activeRole = AccountRole.Seeker.storedValue,
                 selectedLanguage = draft.preferredLanguage,
@@ -134,7 +164,7 @@ class SessionProfileStore(initial: SessionProfile = SessionProfile(), private va
         )
     }
 
-    fun applyListing(listing: ServiceListing, draft: ListServiceDraft? = null) {
+    override fun applyListing(listing: ServiceListing, draft: ListServiceDraft?) {
         update {
             it.copy(
                 // Account phone/email change only through the verified identity flow, never as a
@@ -143,27 +173,29 @@ class SessionProfileStore(initial: SessionProfile = SessionProfile(), private va
                 listing = listing.copy(phoneNumber = "", email = ""),
                 listingDraft = draft,
                 skills = listing.tags,
-                profileStrengthPercent = maxOf(it.profileStrengthPercent, 90),
+                profileStrengthPercent = maxOf(it.profileStrengthPercent, LISTED_PROFILE_STRENGTH),
             )
         }
     }
 
-    fun updateIdentity(state: com.askit.app.profile.EditProfileFormState) {
+    override fun updateIdentity(state: com.askit.app.profile.EditProfileFormState) {
         require(state.isValid)
         val account = state.accountDraft().normalized()
         update {
             it.copy(
                 displayName = account.fullName,
+                // Keeps the stored display prefix ("@") when only the prefix differs (profile contract).
                 username = if (it.username.removePrefix("@") == account.username) it.username else account.username, city = account.city,
                 bio = state.bio.trim(), title = state.title.trim(), avatarUrl = account.avatarUri,
                 email = account.email, pincode = account.pincode, phoneNumber = account.phoneNumber,
                 selectedLanguage = account.preferredLanguage, discloseApproximateLocation = state.discloseApproximateLocation,
+                // Form B publishes the canonical account contact (profile contract), so it follows the account.
                 listingDraft = it.listingDraft?.copy(contactPhone = account.phoneNumber, contactEmail = account.email.orEmpty()),
             )
         }
     }
 
-    fun saveHighlight(actorId: String, highlight: com.askit.app.profile.ProfileHighlight) = update { current ->
+    override fun saveHighlight(actorId: String, highlight: com.askit.app.profile.ProfileHighlight) = update { current ->
         require(actorId == current.accountId)
         highlight.validate(actorId)
         current.copy(
@@ -175,7 +207,7 @@ class SessionProfileStore(initial: SessionProfile = SessionProfile(), private va
         )
     }
 
-    fun deleteHighlight(actorId: String, id: String) = update { current ->
+    override fun deleteHighlight(actorId: String, id: String) = update { current ->
         require(actorId.isNotBlank() && actorId == current.accountId)
         current.copy(highlights = current.highlights.filterNot { it.id == id })
     }
@@ -188,51 +220,46 @@ class SessionProfileStore(initial: SessionProfile = SessionProfile(), private va
         _profile.value = persist(next)
     }
 
-    fun setBanner(actorId: String, uri: String?) = update {
+    override fun setBanner(actorId: String, uri: String?) = update {
         require(actorId.isNotBlank() && actorId == it.accountId)
         it.copy(bannerUrl = uri)
     }
 
-    fun updateAvailability(availability: ProfileAvailability) {
-        update {
-            it.copy(
-                availability = availability,
-                listing = it.listing?.copy(live = availability.available),
-            )
-        }
+    /**
+     * Stores the window only. `listing.live` stays the "published" flag (older builds cleared it when
+     * pausing, so saving availability re-publishes); the effective status comes from [statusOn].
+     */
+    override fun updateAvailability(availability: ProfileAvailability) = update {
+        require(availability.available || (availability.fromMillis != null && availability.toMillis != null))
+        it.copy(availability = availability, listing = it.listing?.copy(live = true))
     }
 
-    fun setAvatar(actorId: String, avatarUrl: String?) = update {
+    override fun setAvatar(actorId: String, avatarUrl: String?) = update {
         require(actorId.isNotBlank() && actorId == it.accountId)
         it.copy(avatarUrl = avatarUrl)
     }
 
-    fun updateActiveRole(role: String) {
-        update { it.copy(activeRole = role) }
+    override fun updateNotifications(push: Boolean, jobAlerts: Boolean) = update {
+        it.copy(pushNotificationsEnabled = push, jobAlertsEnabled = jobAlerts)
     }
 
-    fun updatePushNotifications(enabled: Boolean) {
-        update { it.copy(pushNotificationsEnabled = enabled) }
+    override fun updateLanguage(lang: String) = update {
+        require(lang in AppLanguage.storedValues)
+        it.copy(selectedLanguage = lang)
     }
 
-    fun updateJobAlerts(enabled: Boolean) {
-        update { it.copy(jobAlertsEnabled = enabled) }
-    }
-
-    fun updateLanguage(lang: String) {
-        update { it.copy(selectedLanguage = lang) }
-    }
-
-    fun updateLocationServices(enabled: Boolean) {
-        update { it.copy(locationServicesEnabled = enabled) }
-    }
-
-    fun updateWhoCanMessage(option: String) {
+    override fun updateWhoCanMessage(option: String) = update {
         require(option in MessagingAudience.storedValues)
-        update { it.copy(whoCanMessage = option) }
+        it.copy(whoCanMessage = option)
     }
 
-    fun resetAppData() {
-        commit(SessionProfile(accountId = _profile.value.accountId))
+    /**
+     * Forgets the account in memory. The blank profile has no account id, so the preview persist
+     * hook never writes it over the stored persona (that left "Couldn't load profile" behind).
+     */
+    override fun resetAppData() = commit(SessionProfile())
+
+    private companion object {
+        const val LISTED_PROFILE_STRENGTH = 90
     }
 }

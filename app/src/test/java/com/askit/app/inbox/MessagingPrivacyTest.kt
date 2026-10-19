@@ -94,8 +94,11 @@ class MessagingPrivacyTest {
 
     @Test fun productionCannotPretendToSavePrivacyWithoutTheAccountService() {
         val store = com.askit.app.session.SessionProfileStore()
-        val profile = com.askit.app.profile.ProfileViewModel(com.askit.app.profile.LocalProfileRepository(store))
-        assertFalse(profile.updateWhoCanMessage("Contacts only"))
+        val capabilities = com.askit.app.profile.ProfileCapabilities.forBuild(clientPreview = false)
+        val profile = com.askit.app.profile.ProfileViewModel(store, capabilities)
+        // Release hides the control (capabilities.editProfile is false) and the view model refuses the write.
+        assertFalse(capabilities.editProfile)
+        profile.updateWhoCanMessage("Contacts only")
         assertEquals("Everyone", store.profile.value.whoCanMessage)
     }
 }

@@ -19,7 +19,7 @@ class SignupAvailabilityTest {
 
     @Test fun releaseSignupSaysUnavailableAndSavesNothing() = runBlocking {
         val store = SessionProfileStore(SessionProfile(accountId = "u1"))
-        val viewModel = ProfileViewModel(LocalProfileRepository(store), signupAvailable = false)
+        val viewModel = ProfileViewModel(store, ProfileCapabilities.forBuild(clientPreview = false))
         assertFalse(viewModel.canSignUp)
         assertEquals(SignupResult.Unavailable, viewModel.completeSignup(draft) { true })
         assertEquals("", store.profile.value.displayName)
@@ -27,7 +27,7 @@ class SignupAvailabilityTest {
 
     @Test fun previewSignupSavesAValidDraftAndBecomesReady() = runBlocking {
         val store = SessionProfileStore(SessionProfile(accountId = "u1"))
-        val viewModel = ProfileViewModel(LocalProfileRepository(store), signupAvailable = true)
+        val viewModel = ProfileViewModel(store, ProfileCapabilities.forBuild(clientPreview = true))
         assertEquals(SignupResult.Saved, viewModel.completeSignup(draft) { true })
         assertEquals("Arun Kumar", store.profile.value.displayName)
         assertEquals(ProfileLoadState.Ready, loadStateFor(store.profile.value))
@@ -35,7 +35,7 @@ class SignupAvailabilityTest {
 
     @Test fun unreadablePhotoIsInvalidNotSaved() = runBlocking {
         val store = SessionProfileStore(SessionProfile(accountId = "u1"))
-        val viewModel = ProfileViewModel(LocalProfileRepository(store), signupAvailable = true)
+        val viewModel = ProfileViewModel(store, ProfileCapabilities.forBuild(clientPreview = true))
         assertEquals(SignupResult.Invalid, viewModel.completeSignup(draft) { false })
         assertTrue(store.profile.value.displayName.isEmpty())
     }

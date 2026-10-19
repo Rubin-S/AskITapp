@@ -270,7 +270,8 @@ class AuthViewModel(
             if (code != PREVIEW_OTP) {
                 mutableState.value = state.value.copy(errorRes = R.string.auth_invalid_code)
             } else {
-                val signupId = "preview-signup"
+                // One demo account per phone number, so testers sharing a device don't share a profile.
+                val signupId = "preview-signup-" + state.value.phoneNumber.filter(Char::isDigit)
                 val signupProfile = com.askit.app.session.SessionProfile(
                     accountId = signupId, displayName = "", username = "", bio = "", about = "", city = "",
                     joinedYear = "", lookingFor = emptyList(), languages = emptyList(),
@@ -338,11 +339,23 @@ class AuthViewModel(
         mutableState.value = state.value.copy(destination = null)
     }
 
-    fun signOut() {
-        if (clientPreview) {
+    /**
+     * Signs out. [restartApp] (Clear app data) also ends the preview session, so the app restarts on
+     * a fresh graph instead of keeping this session's in-memory personas, tasks and posts.
+     */
+    private fun signOutPreview(restartApp: Boolean) {
+        if (restartApp) {
+            previewProfiles.clear()
+        } else {
             session?.userId?.let { previewProfiles[it] = profileStore.profile.value }
-            session = null
-            mutableState.value = AuthUiState(destination = AuthDestination.Entry)
+        }
+        session = null
+        mutableState.value = if (restartApp) AuthUiState(signedOut = true) else AuthUiState(destination = AuthDestination.Entry)
+    }
+
+    fun signOut(restartApp: Boolean = false) {
+        if (clientPreview) {
+            signOutPreview(restartApp)
             return
         }
         if (state.value.signedOut || (state.value.operation == AuthOperation.SignOut && state.value.errorRes == null)) return

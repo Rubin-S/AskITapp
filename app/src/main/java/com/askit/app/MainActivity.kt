@@ -105,12 +105,9 @@ class MainActivity : AppCompatActivity() {
                         profileViewModel = profileViewModel,
                         onExit = ::finish,
                         onSignedOut = {
-                            if (BuildConfig.CLIENT_PREVIEW) {
-                                finishAndRemoveTask()
-                            } else {
-                                startActivity(Intent.makeRestartActivityTask(componentName).putExtra("extra_start_entry", true))
-                                finish()
-                            }
+                            // A fresh task drops this session's graph (tasks, posts, jobs, inbox) with the activity.
+                            startActivity(Intent.makeRestartActivityTask(componentName).putExtra("extra_start_entry", true))
+                            finish()
                         },
                         availableFilterOptions = defaultExploreFilterOptions(),
                         initialRoute = initialRoute,

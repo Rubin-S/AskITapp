@@ -189,6 +189,10 @@ fun AskITApp(
     val resolvedProviderDashboardViewModel = providerDashboardViewModel
     val resolvedInboxViewModel = inboxViewModel
     val messagingProfiles = remember(storyContext) { com.askit.app.variant.AppVariant.previewProfileStorage(storyContext) }
+    // Profile results from any screen (Profile, Settings, Edit, listing) surface here, not only on the Profile tab.
+    LaunchedEffect(profileViewModel) {
+        profileViewModel.messages.collect { message -> storySnackbar.showSnackbar(resources.getString(message)) }
+    }
     LaunchedEffect(resolvedInboxViewModel) {
         resolvedInboxViewModel.feedback.collect { message ->
             android.widget.Toast.makeText(storyContext, message, android.widget.Toast.LENGTH_LONG).show()

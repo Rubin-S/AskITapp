@@ -239,7 +239,7 @@ class AuthViewModelFlowTest {
             assertNull(awaitItemMatching { it.destination == AuthDestination.Signup }.errorRes)
             cancelAndIgnoreRemainingEvents()
         }
-        assertEquals("preview-signup", vm.session?.userId)
+        assertEquals("preview-signup-" + vm.state.value.phoneNumber.filter(Char::isDigit), vm.session?.userId)
         assertTrue(requests.isEmpty())
     }
 

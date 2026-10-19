@@ -48,7 +48,7 @@ class ServiceFormTest {
         val edit = com.askit.app.profile.EditProfileFormState(
             "Arun",
             "arun",
-            "",
+            "Chennai",
             "",
             null,
             email = "new@example.com",

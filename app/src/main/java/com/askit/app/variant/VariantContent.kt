@@ -75,4 +75,7 @@ interface ProfileSnapshotStorage {
     fun saveRelationships(relationships: Map<String, Set<String>>)
     fun load(accountId: String): SessionProfile?
     fun save(profile: SessionProfile): SessionProfile
+
+    /** Deletes every stored persona, relationship and retained media file (Clear app data). */
+    fun clearAll()
 }

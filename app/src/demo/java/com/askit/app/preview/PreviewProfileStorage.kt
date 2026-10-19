@@ -89,6 +89,14 @@ internal class PreviewProfileStorage(private val context: Context) : ProfileSnap
         return durable
     }
 
+    @android.annotation.SuppressLint("UseKtx")
+    override fun clearAll() {
+        check(BuildConfig.CLIENT_PREVIEW)
+        check(preferences.edit().clear().commit())
+        check(context.getSharedPreferences("preview_relationships_v1", Context.MODE_PRIVATE).edit().clear().commit())
+        File(context.filesDir, "preview_profile_media").deleteRecursively()
+    }
+
     private fun retain(accountId: String, value: String?): String? {
         val uri = value?.let(Uri::parse) ?: return null
         if (uri.scheme !in setOf("content", "file")) return value

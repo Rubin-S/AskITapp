@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import coil3.SingletonImageLoader
 import com.askit.app.auth.AuthApi
 import com.askit.app.auth.AuthSessionStore
 import com.askit.app.auth.AuthViewModel
@@ -20,8 +21,11 @@ import com.askit.app.home.stories.StoryViewerViewModel
 import com.askit.app.inbox.InboxViewModel
 import com.askit.app.jobs.JobsViewModel
 import com.askit.app.listservice.ListServiceViewModel
+import com.askit.app.location.LocationPreference
 import com.askit.app.posttask.PostTaskViewModel
-import com.askit.app.profile.LocalProfileRepository
+import com.askit.app.profile.DeviceSettings
+import com.askit.app.profile.LocalDataCleaner
+import com.askit.app.profile.ProfileCapabilities
 import com.askit.app.profile.ProfileViewModel
 import com.askit.app.providerdashboard.ProviderDashboardViewModel
 import com.askit.app.story.StoryViewModel
@@ -30,6 +34,7 @@ import com.askit.app.task.TaskDiscussionViewModel
 import com.askit.app.variant.AppVariant
 import com.askit.app.variant.ProfileSnapshotStorage
 import com.askit.app.variant.VariantContent
+import java.io.File
 
 /**
  * Hand-rolled dependency container, created once by [com.askit.app.AskITApplication].
@@ -43,6 +48,8 @@ class AppContainer(
     val content: VariantContent,
     previewStorage: () -> ProfileSnapshotStorage?,
     private val authSessionStore: (backendBaseUrl: String) -> AuthSessionStore?,
+    deviceSettings: () -> DeviceSettings = { com.askit.app.profile.InMemoryDeviceSettings() },
+    private val localDataCleaner: LocalDataCleaner = LocalDataCleaner {},
 ) {
     constructor(
         context: Context,
@@ -55,10 +62,15 @@ class AppContainer(
             if (config.clientPreview) content.previewProfileStorage(context.applicationContext) else null
         },
         authSessionStore = { baseUrl -> AuthSessionStore(context.applicationContext, baseUrl) },
+        deviceSettings = { LocationPreference(context.applicationContext) },
+        localDataCleaner = LocalDataCleaner { clearLocalData(context.applicationContext, content.previewProfileStorage(context)) },
     )
 
     /** Local persona snapshots; only the client-preview build has any. */
     val previewStorage: ProfileSnapshotStorage? by lazy(previewStorage)
+
+    /** Device preferences that are not account fields (the Location services switch). */
+    private val deviceSettings: DeviceSettings by lazy(deviceSettings)
 
     fun newSessionGraph(): SessionGraph = SessionGraph(config, content, previewStorage)
 
@@ -105,11 +117,32 @@ class AppContainer(
             )
         }
         initializer {
-            ProfileViewModel(LocalProfileRepository(graph.profileStore), signupAvailable = config.clientPreview)
+            ProfileViewModel(
+                graph.profileStore,
+                capabilities = ProfileCapabilities.forBuild(config.clientPreview),
+                deviceSettings = deviceSettings,
+                localData = localDataCleaner,
+            )
         }
         initializer { CreatorDashboardViewModel(graph.profileStore, content::creatorDashboardSample) }
         initializer { ProviderDashboardViewModel(graph.profileStore, content::providerDashboardSample) }
     }
 }
 
-private const val DEMO_PROFILE_BASE_URL = "https://askit.in/u/"
+/** Reserved `.example` domain: demo links can be copied and shared but never resolve to a real profile. */
+private const val DEMO_PROFILE_BASE_URL = "https://demo.askit.example/u/"
+
+/**
+ * Clear app data: everything the app keeps on the device. Account sign-out (credentials) and the
+ * in-memory session are handled by the caller, which restarts the app afterwards.
+ */
+private fun clearLocalData(context: Context, previewStorage: ProfileSnapshotStorage?) {
+    previewStorage?.clearAll()
+    LocationPreference.clear(context)
+    File(context.filesDir, "post_photos").deleteRecursively()
+    val images = SingletonImageLoader.get(context)
+    images.memoryCache?.clear()
+    images.diskCache?.clear()
+    val imageCache = images.diskCache?.directory?.toFile()
+    context.cacheDir.listFiles()?.filter { it != imageCache }?.forEach { it.deleteRecursively() }
+}
