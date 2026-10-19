@@ -100,41 +100,6 @@
     <file name="app/src/main/java/com/askit/app/profile/ProfilePostsPane.kt">
         <error line="4" column="1" source="standard:no-wildcard-imports" />
     </file>
-    <file name="app/src/test/java/com/askit/app/auth/AccountFormTest.kt">
-        <error line="4" column="1" source="standard:no-wildcard-imports" />
-    </file>
-    <file name="app/src/test/java/com/askit/app/auth/AccountProfileContractTest.kt">
-        <error line="9" column="1" source="standard:no-wildcard-imports" />
-    </file>
-    <file name="app/src/test/java/com/askit/app/inbox/MessagingPrivacyTest.kt">
-        <error line="3" column="1" source="standard:no-wildcard-imports" />
-    </file>
-    <file name="app/src/test/java/com/askit/app/listservice/ServiceFormTest.kt">
-        <error line="3" column="1" source="standard:no-wildcard-imports" />
-    </file>
-    <file name="app/src/test/java/com/askit/app/profile/ProfileActionsTest.kt">
-        <error line="5" column="1" source="standard:no-wildcard-imports" />
-    </file>
-    <file name="app/src/test/java/com/askit/app/profile/ProfileHighlightsTest.kt">
-        <error line="7" column="1" source="standard:no-wildcard-imports" />
-        <error line="10" column="1" source="standard:no-wildcard-imports" />
-    </file>
-    <file name="app/src/test/java/com/askit/app/profile/ProfileIdentityTest.kt">
-        <error line="6" column="1" source="standard:no-wildcard-imports" />
-    </file>
-    <file name="app/src/test/java/com/askit/app/profile/ProfileMetricsTest.kt">
-        <error line="6" column="1" source="standard:no-wildcard-imports" />
-        <error line="7" column="1" source="standard:no-wildcard-imports" />
-    </file>
-    <file name="app/src/test/java/com/askit/app/profile/ProfilePrivacyTest.kt">
-        <error line="4" column="1" source="standard:no-wildcard-imports" />
-    </file>
-    <file name="app/src/test/java/com/askit/app/profile/ProfileReturnNavigationTest.kt">
-        <error line="8" column="1" source="standard:no-wildcard-imports" />
-    </file>
-    <file name="app/src/test/java/com/askit/app/profile/ProfileSectionsTest.kt">
-        <error line="6" column="1" source="standard:no-wildcard-imports" />
-    </file>
     <file name="designsystem/src/main/java/com/askit/designsystem/navigation/AskITSectionTabs.kt">
         <error line="6" column="1" source="standard:no-wildcard-imports" />
         <error line="11" column="1" source="standard:no-wildcard-imports" />

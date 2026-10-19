@@ -352,8 +352,6 @@
     <ID>ViewModelForwarding:StoryViewerScreen.kt:StoryActionSheet(viewModel, state, social, currentAccountId)</ID>
     <ID>WildcardImport:AccountFormFields.kt:import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:AccountFormFields.kt:import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:AccountFormTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:AccountProfileContractTest.kt:import org.junit.Assert.*</ID>
     <ID>WildcardImport:AskITSectionTabs.kt:import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:AskITSectionTabs.kt:import androidx.compose.material3.*</ID>
     <ID>WildcardImport:AskITSectionTabs.kt:import androidx.compose.runtime.*</ID>
@@ -361,20 +359,10 @@
     <ID>WildcardImport:ClientPreview.kt:import com.askit.app.listservice.*</ID>
     <ID>WildcardImport:ClientPreview.kt:import com.askit.app.posttask.*</ID>
     <ID>WildcardImport:ClientPreview.kt:import com.askit.app.task.*</ID>
-    <ID>WildcardImport:MessagingPrivacyTest.kt:import org.junit.Assert.*</ID>
     <ID>WildcardImport:PostPhotoCropScreen.kt:import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:PostPhotoCropScreen.kt:import androidx.compose.material3.*</ID>
     <ID>WildcardImport:PostPhotoCropScreen.kt:import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:ProfileActionRow.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ProfileActionsTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ProfileHighlightsTest.kt:import com.askit.app.story.*</ID>
-    <ID>WildcardImport:ProfileHighlightsTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ProfileIdentityTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ProfileMetricsTest.kt:import com.askit.app.jobs.*</ID>
-    <ID>WildcardImport:ProfileMetricsTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ProfilePrivacyTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ProfileSectionsTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ServiceFormTest.kt:import org.junit.Assert.*</ID>
     <ID>WildcardImport:SharedStoryCard.kt:import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:SharedStoryCard.kt:import androidx.compose.material3.*</ID>
     <ID>WildcardImport:SharedStoryCard.kt:import androidx.compose.runtime.*</ID>
