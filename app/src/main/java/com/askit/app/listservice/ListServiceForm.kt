@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.app.category.ASKIT_SERVICE_CATEGORIES
 import com.askit.app.forms.FormFieldError
+import com.askit.designsystem.components.AskITDisclosureRow
+import com.askit.designsystem.components.AskITPhotoThumbnails
 import com.askit.designsystem.inputs.AskITTextField
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -331,11 +333,14 @@ internal fun ListServiceForm(
         }
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-        ListServiceOptionalSectionRow(
-            titleRes = R.string.list_service_pricing,
-            expanded = ListServiceOptionalSection.PRICING in state.expandedOptionalSections,
+        val pricingExpanded = ListServiceOptionalSection.PRICING in state.expandedOptionalSections
+        AskITDisclosureRow(
+            title = stringResource(R.string.list_service_pricing),
+            expanded = pricingExpanded,
+            actionLabel = stringResource(if (pricingExpanded) R.string.list_service_hide else R.string.list_service_show),
             onClick = { viewModel.toggleOptionalSection(ListServiceOptionalSection.PRICING) },
-            testTag = "list_service_pricing_toggle",
+            modifier = Modifier.testTag("list_service_pricing_toggle"),
+            supportingLabel = stringResource(R.string.list_service_optional),
         )
         if (ListServiceOptionalSection.PRICING in state.expandedOptionalSections) {
             ListServicePricingEditor(
@@ -377,19 +382,23 @@ internal fun ListServiceForm(
                 ),
             )
         }
-        PortfolioPhotoList(
-            uris = state.portfolioUris,
+        AskITPhotoThumbnails(
+            photos = state.portfolioUris,
+            photoDescription = { stringResource(R.string.list_service_photo_description, it) },
+            removeDescription = { stringResource(R.string.list_service_remove_photo, it) },
             onRemovePhoto = viewModel::removePortfolioPhoto,
+            modifier = Modifier.testTag("list_service_portfolio_photos"),
         )
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-        ListServiceOptionalSectionRow(
-            titleRes = R.string.list_service_more_about,
-            expanded = ListServiceOptionalSection.MORE_DETAILS in state.expandedOptionalSections,
-            onClick = {
-                viewModel.toggleOptionalSection(ListServiceOptionalSection.MORE_DETAILS)
-            },
-            testTag = "list_service_more_about_toggle",
+        val moreDetailsExpanded = ListServiceOptionalSection.MORE_DETAILS in state.expandedOptionalSections
+        AskITDisclosureRow(
+            title = stringResource(R.string.list_service_more_about),
+            expanded = moreDetailsExpanded,
+            actionLabel = stringResource(if (moreDetailsExpanded) R.string.list_service_hide else R.string.list_service_show),
+            onClick = { viewModel.toggleOptionalSection(ListServiceOptionalSection.MORE_DETAILS) },
+            modifier = Modifier.testTag("list_service_more_about_toggle"),
+            supportingLabel = stringResource(R.string.list_service_optional),
         )
         if (ListServiceOptionalSection.MORE_DETAILS in state.expandedOptionalSections) {
             ListServiceMoreDetailsEditor(state = state, viewModel = viewModel)

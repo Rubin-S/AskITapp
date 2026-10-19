@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +25,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
@@ -150,44 +148,6 @@ internal fun ListServiceCheckboxRow(label: String, selected: Boolean, onClick: (
             text = label,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-internal fun ListServiceOptionalSectionRow(@StringRes titleRes: Int, expanded: Boolean, onClick: () -> Unit, testTag: String) {
-    val stateText = stringResource(
-        if (expanded) R.string.list_service_hide else R.string.list_service_show,
-    )
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .testTag(testTag)
-            .semantics { stateDescription = stateText }
-            .selectable(
-                selected = expanded,
-                onClick = onClick,
-                role = Role.Button,
-            )
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = stringResource(titleRes),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = stringResource(R.string.list_service_optional),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.size(8.dp))
-        Text(
-            text = stateText,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.secondary,
         )
     }
 }
