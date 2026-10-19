@@ -32,6 +32,20 @@ internal class AskITNavigationState(
         topLevelRouteState.value = route
     }
 
+    /**
+     * Opens a person's profile. Your own id always lands on the Profile tab root, and any
+     * `UserProfile(self)` left on another tab's stack is dropped, so that tab never bounces back.
+     */
+    fun openProfile(userId: String, currentUserId: String?) {
+        if (userId.isNotBlank() && userId == currentUserId) {
+            val self = AppDestination.UserProfile(userId)
+            backStacks.values.forEach { stack -> stack.removeAll { it == self } }
+            navigateToRoot(AppDestination.Profile)
+        } else {
+            push(AppDestination.UserProfile(userId))
+        }
+    }
+
     fun push(route: AppDestination) {
         val currentStack = backStacks.getValue(topLevelRoute)
         if (currentStack.lastOrNull() != route) currentStack.add(route)

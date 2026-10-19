@@ -194,13 +194,7 @@ internal fun rememberAskITEntryProvider(
             Toast.makeText(context, R.string.profile_action_unavailable, Toast.LENGTH_LONG).show()
         }
     }
-    fun openProfile(id: String) {
-        if (id == currentTaskAccountId()) {
-            navigationState.navigateToRoot(AppDestination.Profile)
-        } else {
-            navigationState.push(AppDestination.UserProfile(id))
-        }
-    }
+    fun openProfile(id: String) = navigationState.openProfile(id, currentTaskAccountId())
     fun followPerson(id: String, following: Boolean): Boolean {
         if (!BuildConfig.CLIENT_PREVIEW) {
             Toast.makeText(context, R.string.profile_save_unavailable, Toast.LENGTH_LONG).show()
@@ -352,9 +346,7 @@ internal fun rememberAskITEntryProvider(
                 onServiceClick = { service ->
                     navigationState.push(AppDestination.ServiceDetail(serviceId = service.id))
                 },
-                onPersonClick = { person ->
-                    navigationState.push(AppDestination.UserProfile(userId = person.id))
-                },
+                onPersonClick = { person -> openProfile(person.id) },
             )
         }
         entry<AppDestination.Explore> {
@@ -369,9 +361,7 @@ internal fun rememberAskITEntryProvider(
                 appliedFilterOptions = appliedFilterOptions,
                 onFiltersChanged = onFiltersChanged,
                 onFilterScopeChanged = exploreViewModel::onFilterScopeSelected,
-                onPersonClick = { personId ->
-                    navigationState.push(AppDestination.UserProfile(userId = personId))
-                },
+                onPersonClick = ::openProfile,
                 onTaskClick = { taskId ->
                     navigationState.push(AppDestination.TaskDetail(taskId = taskId))
                 },
@@ -530,9 +520,7 @@ internal fun rememberAskITEntryProvider(
                 onOpenPostDetail = { postId ->
                     navigationState.push(AppDestination.PostDetail(postId))
                 },
-                onOpenProfile = { userId ->
-                    navigationState.push(AppDestination.UserProfile(userId))
-                },
+                onOpenProfile = ::openProfile,
             )
         }
         entry<AppDestination.ProviderDashboard> {
@@ -633,7 +621,7 @@ internal fun rememberAskITEntryProvider(
                                     authViewModel.selectPreviewAccount(it)
                                     navigationState.navigate(AppDestination.Profile)
                                 },
-                                onView = { navigationState.push(AppDestination.UserProfile(it)) },
+                                onView = ::openProfile,
                             )
                         }
                         )
@@ -944,7 +932,7 @@ internal fun rememberAskITEntryProvider(
         }
         entry<AppDestination.UserProfile> { key ->
             if (key.userId == currentTaskAccountId()) {
-                LaunchedEffect(key.userId) { navigationState.navigateToRoot(AppDestination.Profile) }
+                LaunchedEffect(key.userId) { openProfile(key.userId) }
                 return@entry
             }
             val profilePostRecords by homeViewModel.posts.posts.collectAsStateWithLifecycle()
