@@ -84,6 +84,8 @@ fun AuthPhoneScreen(
     errorMessage: String? = null,
     onOpenTerms: () -> Unit = {},
     onOpenPrivacyPolicy: () -> Unit = {},
+    /** Shown under the number field in builds that sign in locally (the demo build). */
+    hint: String? = null,
 ) {
     var selectedCountryIso by rememberSaveable { mutableStateOf(initialCountry.isoCode) }
     val selectedCountry = availableCountries.firstOrNull { it.isoCode == selectedCountryIso } ?: initialCountry
@@ -366,6 +368,7 @@ fun AuthPhoneScreen(
                             .testTag("auth_phone_error"),
                     )
                 }
+                if (hint != null) AuthHint(hint, Modifier.testTag("auth_phone_hint"))
                 Spacer(modifier = Modifier.height(36.dp))
             }
 
@@ -539,4 +542,15 @@ fun AuthPhoneScreen(
             }
         }
     }
+}
+
+/** A short informational line under an auth input, used by local-only builds. */
+@Composable
+internal fun AuthHint(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        color = MaterialTheme.colorScheme.primary,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = modifier.padding(top = 12.dp),
+    )
 }

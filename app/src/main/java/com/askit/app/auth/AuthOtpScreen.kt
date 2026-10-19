@@ -66,6 +66,8 @@ fun AuthOtpScreen(
     onResend: () -> Unit = {},
     challengeId: String? = null,
     isResending: Boolean = false,
+    /** Shown under the code boxes in builds that sign in locally (the demo build's test OTP). */
+    hint: String? = null,
 ) {
     // Saveable so a rotation or dark-mode switch keeps what the user typed; a new challenge resets it.
     var otpCode by rememberSaveable(phoneNumber, challengeId) { mutableStateOf("") }
@@ -225,6 +227,7 @@ fun AuthOtpScreen(
                             .testTag("auth_otp_error"),
                     )
                 }
+                if (hint != null) AuthHint(hint, Modifier.testTag("auth_otp_hint"))
                 Spacer(modifier = Modifier.height(18.dp))
 
                 // Resend Timer / Action directly beneath OTP input boxes

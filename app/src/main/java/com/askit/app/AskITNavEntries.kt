@@ -223,6 +223,7 @@ internal fun rememberAskITEntryProvider(
                 onLogin = {
                     navigationState.push(AppDestination.AuthPhone)
                 },
+                onExploreDemo = if (BuildConfig.DEMO_BUILD) authViewModel::enterDemo else null,
             )
         }
         entry<AppDestination.AuthPhone> {
@@ -246,6 +247,7 @@ internal fun rememberAskITEntryProvider(
                 onGetOtp = authViewModel::requestCode,
                 isSubmitting = authState.isSubmitting,
                 errorMessage = authState.errorRes?.let { stringResource(it) },
+                hint = if (BuildConfig.DEMO_BUILD) stringResource(R.string.demo_phone_hint) else null,
             )
         }
         entry<AppDestination.AuthOtp> { key ->
@@ -281,6 +283,7 @@ internal fun rememberAskITEntryProvider(
                 isResending = authState.isResending,
                 isSubmitting = authState.isSubmitting,
                 errorMessage = authState.errorRes?.let { stringResource(it) },
+                hint = if (BuildConfig.DEMO_BUILD) stringResource(R.string.demo_otp_hint, com.askit.app.auth.PREVIEW_OTP) else null,
             )
         }
         entry<AppDestination.FormA> { key ->
@@ -624,6 +627,7 @@ internal fun rememberAskITEntryProvider(
                 previewControls = if (BuildConfig.CLIENT_PREVIEW) {
                     (
                         {
+                            AppVariant.DemoSettings(onOpen = navigationState::push)
                             AppVariant.PreviewProfileControls(
                                 onAccount = {
                                     authViewModel.selectPreviewAccount(it)

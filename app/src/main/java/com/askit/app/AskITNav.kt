@@ -348,6 +348,12 @@ fun AskITApp(
             navigationState.push(AppDestination.ListService)
         },
     )
+    // Demo build only: the "DEMO" chip and its jump-to-any-screen menu. Renders nothing elsewhere.
+    com.askit.app.variant.AppVariant.DemoBadge(
+        signedIn = authState.destination == null && resolvedAuthViewModel.session != null,
+        onOpen = navigationState::push,
+        onExploreDemo = resolvedAuthViewModel::enterDemo,
+    )
 }
 
 @Composable

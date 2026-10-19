@@ -18,4 +18,15 @@
     <string name="profile_preview_seeker">Sign in as seeker</string>
     <string name="profile_preview_view_provider">View provider profile</string>
     <string name="profile_preview_view_seeker">View seeker profile</string>
+    <!-- Demo build menu (BuildConfig.DEMO_BUILD only). Developer tool, English only. -->
+    <string name="demo_badge" translatable="false">DEMO</string>
+    <string name="demo_menu_title" translatable="false">Demo: jump to any screen</string>
+    <string name="demo_menu_signed_out" translatable="false">Only the sign-in screens are listed until you enter the demo account.</string>
+    <string name="demo_settings_title" translatable="false">Demo build</string>
+    <string name="demo_settings_body" translatable="false">No server: every account, chat, task and job is stored on this phone. Any valid mobile number signs in with OTP 123456; job start codes are 1234.</string>
+    <string name="demo_reset" translatable="false">Reset demo data</string>
+    <string name="demo_reset_body" translatable="false">Erase everything you changed in this demo and close the app. Open it again to start fresh.</string>
+    <string name="demo_reset_confirm" translatable="false">Erase and close</string>
+    <string name="demo_cancel" translatable="false">Cancel</string>
+    <string name="demo_close" translatable="false">Close</string>
 </resources>

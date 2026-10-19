@@ -42,6 +42,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         buildConfigField("boolean", "CLIENT_PREVIEW", "false")
+        buildConfigField("boolean", "DEMO_BUILD", "false")
         buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // The secrets plugin sets the real key per app variant; this inert default only exists
@@ -69,6 +70,16 @@ android {
         }
     }
 
+    signingConfigs {
+        // Throwaway key for the demo APK only (password is public on purpose; see docs/build-variants.md).
+        create("demo") {
+            storeFile = file("demo-keystore/askit-demo.jks")
+            storePassword = "askit-demo"
+            keyAlias = "askit-demo"
+            keyPassword = "askit-demo"
+        }
+    }
+
     buildTypes {
         release {
             if (signRelease) signingConfig = signingConfigs.getByName("upload")
@@ -86,6 +97,21 @@ android {
             matchingFallbacks += "release"
             signingConfig = signingConfigs.getByName("debug")
             buildConfigField("boolean", "CLIENT_PREVIEW", "true")
+            buildConfigField("String", "BACKEND_BASE_URL", "\"\"")
+        }
+        // Testable demo APK: release-like (R8, non-debuggable) but fully local. Starts on the Welcome
+        // screen with an "Explore demo" path, accepts any phone number with OTP 123456 and adds the
+        // in-app demo menu. Signed with the committed throwaway demo keystore, never a real key.
+        // Its default source set is src/demo, so the fixtures and src/demo/AndroidManifest.xml
+        // (app name "AskIT Demo") come in automatically.
+        create("demo") {
+            initWith(getByName("preview"))
+            applicationIdSuffix = ".demo"
+            versionNameSuffix = "-demo"
+            matchingFallbacks += "release"
+            signingConfig = signingConfigs.getByName("demo")
+            buildConfigField("boolean", "CLIENT_PREVIEW", "true")
+            buildConfigField("boolean", "DEMO_BUILD", "true")
             buildConfigField("String", "BACKEND_BASE_URL", "\"\"")
         }
     }

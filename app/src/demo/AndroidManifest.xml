@@ -1,0 +1,4 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Only the "demo" build type uses this manifest (debug and preview add src/demo java/res only). -->
+    <application android:label="AskIT Demo" tools:replace="android:label" />
+</manifest>

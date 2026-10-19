@@ -8,6 +8,8 @@ local.properties
 secrets.properties
 *.jks
 *.keystore
+# Throwaway demo-build signing key (public password, see docs/build-variants.md).
+!app/demo-keystore/askit-demo.jks
 keystore.properties
 google-services.json
 

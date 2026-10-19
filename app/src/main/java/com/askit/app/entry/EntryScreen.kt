@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,6 +45,8 @@ fun EntryScreen(
     modifier: Modifier = Modifier,
     onOpenTerms: () -> Unit = {},
     onOpenPrivacyPolicy: () -> Unit = {},
+    /** Demo build only: sign in locally as the seeded demo account. Null hides the button. */
+    onExploreDemo: (() -> Unit)? = null,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val colors = welcomeColors(dark)
@@ -122,6 +125,16 @@ fun EntryScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center,
                         )
+                    }
+                    if (onExploreDemo != null) {
+                        Spacer(Modifier.height(4.dp))
+                        OutlinedButton(
+                            onClick = onExploreDemo,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("entry_btn_explore_demo"),
+                            shape = RoundedCornerShape(100),
+                        ) {
+                            Text(stringResource(R.string.entry_explore_demo), color = colors.headline, textAlign = TextAlign.Center)
+                        }
                     }
                     Spacer(Modifier.height(16.dp))
                     LegalDisclaimer(

@@ -70,7 +70,8 @@ class MainActivity : AppCompatActivity() {
         val profileViewModel = viewModels[ProfileViewModel::class.java]
         val creatorDashboardViewModel = viewModels[CreatorDashboardViewModel::class.java]
         val providerDashboardViewModel = viewModels[ProviderDashboardViewModel::class.java]
-        val initialRoute = if (BuildConfig.CLIENT_PREVIEW || (
+        // The client preview opens signed in; the demo build keeps the Welcome screen first.
+        val initialRoute = if ((BuildConfig.CLIENT_PREVIEW && !BuildConfig.DEMO_BUILD) || (
                 BuildConfig.DEBUG &&
                     intent.getBooleanExtra("extra_start_at_home", false) &&
                     !intent.getBooleanExtra("extra_start_entry", false)

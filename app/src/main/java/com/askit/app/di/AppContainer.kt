@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.askit.app.auth.AuthApi
 import com.askit.app.auth.AuthSessionStore
 import com.askit.app.auth.AuthViewModel
+import com.askit.app.config.AppLinks
 import com.askit.app.config.AppLinksViewModel
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.creatordashboard.CreatorDashboardViewModel
@@ -69,7 +70,13 @@ class AppContainer(
 
     /** One factory for every screen view model, all wired to [graph]. */
     fun viewModelFactory(graph: SessionGraph): ViewModelProvider.Factory = viewModelFactory {
-        initializer { AppLinksViewModel(config.backendBaseUrl) }
+        initializer {
+            AppLinksViewModel(
+                config.backendBaseUrl,
+                // Demo build has no app-config endpoint; give profile links a base so Copy/Share work.
+                initialLinks = if (config.demoBuild) AppLinks(publicProfileBaseUrl = DEMO_PROFILE_BASE_URL) else AppLinks(),
+            )
+        }
         initializer { TaskDiscussionViewModel(graph.tasks, createSavedStateHandle()) }
         initializer { TaskActionsViewModel(graph.tasks, createSavedStateHandle()) }
         initializer { HomeViewModel(graph.home) }
@@ -94,6 +101,7 @@ class AppContainer(
                 sessionStore = config.backendBaseUrl?.let(authSessionStore),
                 profileStore = graph.profileStore,
                 previewProfileLoader = { id -> previewStorage?.load(id) ?: content.previewProfile(id) },
+                autoSignInPreviewOwner = !config.demoBuild,
             )
         }
         initializer {
@@ -103,3 +111,5 @@ class AppContainer(
         initializer { ProviderDashboardViewModel(graph.profileStore, content::providerDashboardSample) }
     }
 }
+
+private const val DEMO_PROFILE_BASE_URL = "https://askit.in/u/"

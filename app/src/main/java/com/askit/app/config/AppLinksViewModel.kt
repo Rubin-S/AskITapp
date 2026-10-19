@@ -29,9 +29,13 @@ data class AppLinks(
     }
 }
 
-class AppLinksViewModel(backendUrl: String? = null, client: OkHttpClient = OkHttpClient()) : ViewModel() {
+class AppLinksViewModel(
+    backendUrl: String? = null,
+    client: OkHttpClient = OkHttpClient(),
+    initialLinks: AppLinks = AppLinks(),
+) : ViewModel() {
     private val backend = backendUrl?.let { BackendClient(it, client) }
-    private val mutableLinks = MutableStateFlow(AppLinks())
+    private val mutableLinks = MutableStateFlow(initialLinks)
     val links = mutableLinks.asStateFlow()
     private val json = Json { ignoreUnknownKeys = true }
     private var request: Job? = null

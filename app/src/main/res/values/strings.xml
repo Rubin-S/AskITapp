@@ -596,6 +596,10 @@
     <string name="entry_subtitle">Discover services in your community, or offer your own.</string>
     <string name="entry_get_started">Get started</string>
     <string name="entry_already_have_account">I already have an account</string>
+    <!-- Demo build only (BuildConfig.DEMO_BUILD); no server, everything is local. -->
+    <string name="entry_explore_demo">Explore demo (no sign-up)</string>
+    <string name="demo_phone_hint">Demo build: any valid mobile number works, for example 98765 43210. Nothing is sent.</string>
+    <string name="demo_otp_hint">Demo build: enter %1$s. No SMS is sent.</string>
     <string name="entry_legal_disclaimer">By creating an account, you agree to our <annotation link="terms">Terms of Service</annotation> and acknowledge our <annotation link="privacy">Privacy Policy</annotation>.</string>
 
     <!-- Authentication: Phone Number & OTP -->

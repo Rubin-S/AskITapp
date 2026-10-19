@@ -38,6 +38,8 @@ class AuthViewModel(
     private val sessionStore: AuthSessionStorage? = null,
     val profileStore: SessionProfileStore = SessionProfileStore(),
     private val previewProfileLoader: (String) -> com.askit.app.session.SessionProfile? = { null },
+    /** Client preview signs straight in as the owner persona; the demo build waits on the Welcome screen. */
+    autoSignInPreviewOwner: Boolean = clientPreview,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(AuthUiState())
     val state = mutableState.asStateFlow()
@@ -52,8 +54,11 @@ class AuthViewModel(
     private val previewProfiles = mutableMapOf<String, com.askit.app.session.SessionProfile>()
 
     init {
-        if (clientPreview) selectPreviewAccount("preview-owner")
+        if (clientPreview && autoSignInPreviewOwner) selectPreviewAccount(PREVIEW_OWNER_ID)
     }
+
+    /** Demo build's "Explore demo": sign in locally as the seeded owner persona. */
+    fun enterDemo() = selectPreviewAccount(PREVIEW_OWNER_ID)
 
     fun selectPreviewAccount(id: String) {
         if (!clientPreview) return
@@ -262,7 +267,7 @@ class AuthViewModel(
         if (state.value.isSubmitting || state.value.signedOut || session != null) return
         val challenge = state.value.challenge
         if (clientPreview && challenge != null) {
-            if (code != "123456") {
+            if (code != PREVIEW_OTP) {
                 mutableState.value = state.value.copy(errorRes = R.string.auth_invalid_code)
             } else {
                 val signupId = "preview-signup"
@@ -391,6 +396,12 @@ class AuthViewModel(
         return now + TimeUnit.SECONDS.toMillis(seconds).coerceAtMost(Long.MAX_VALUE - now)
     }
 }
+
+/** Seeded owner persona of the client-preview and demo builds. */
+const val PREVIEW_OWNER_ID = "preview-owner"
+
+/** The only code the local (backend-less) preview and demo sign-in accept. */
+const val PREVIEW_OTP = "123456"
 
 /**
  * Whether disposing an auth screen's composition should cancel its in-flight request.

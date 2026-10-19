@@ -33,7 +33,7 @@ internal fun previewProfile(id: String): SessionProfile {
         ),
     )
     return SessionProfile(
-        accountId = id, pincode = "641001", email = "meera@example.com", phoneNumber = "+919876543298",
+        accountId = id, pincode = "605001", email = "meera@example.com", phoneNumber = "+919876543298",
         displayName = if (id != "preview-owner") "Kavin Kumar" else "Meera Raman",
         username = if (id != "preview-owner") "kavin.kumar" else "meera.raman",
         hasListedService = id != "preview-seeker", activeRole = if (id == "preview-seeker") "Seeker" else "Both",

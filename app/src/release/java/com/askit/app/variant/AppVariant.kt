@@ -15,6 +15,7 @@ import com.askit.app.home.posts.PostStore
 import com.askit.app.inbox.InboxSeed
 import com.askit.app.jobs.Job
 import com.askit.app.jobs.JobsStore
+import com.askit.app.navigation.AppDestination
 import com.askit.app.providerdashboard.ProviderDashboardUiState
 import com.askit.app.session.SessionProfile
 import com.askit.app.task.Task
@@ -52,4 +53,10 @@ object AppVariant : VariantContent {
 
     @Composable
     override fun PreviewProfileControls(onAccount: (String) -> Unit, onView: (String) -> Unit) = Unit
+
+    @Composable
+    override fun DemoBadge(signedIn: Boolean, onOpen: (AppDestination) -> Unit, onExploreDemo: () -> Unit) = Unit
+
+    @Composable
+    override fun DemoSettings(onOpen: (AppDestination) -> Unit) = Unit
 }

@@ -16,7 +16,7 @@ internal fun sampleIncomingLeads(): List<Job> = listOf(
         localParty = JobParty.Receiver,
         status = JobStatus.Applied,
         workMode = JobWorkMode.OnSite,
-        locationLabel = "Coimbatore",
+        locationLabel = "White Town, Puducherry",
         otp = "4821",
     ),
     Job(
@@ -27,7 +27,7 @@ internal fun sampleIncomingLeads(): List<Job> = listOf(
         localParty = JobParty.Receiver,
         status = JobStatus.Applied,
         workMode = JobWorkMode.OnSite,
-        locationLabel = "Chennai",
+        locationLabel = "Lawspet, Puducherry",
         otp = "7390",
     ),
     Job(
@@ -47,11 +47,11 @@ internal fun clientPreviewJobs(): List<Job> = listOf(
     Job(
         "preview-verify", "Demo: start an electrical repair", "Priya", kind = JobKind.ServiceRequest,
         localParty = JobParty.Receiver, status = JobStatus.OnTheWay, workMode = JobWorkMode.OnSite,
-        locationLabel = "Coimbatore", otp = "1234", providerAccountId = "preview-owner", seekerAccountId = "preview-visitor",
+        locationLabel = "White Town, Puducherry", otp = "1234", providerAccountId = "preview-owner", seekerAccountId = "preview-visitor",
     ),
     Job(
         "preview-review", "Demo: completed lighting installation", "Karthik", kind = JobKind.ServiceRequest,
         localParty = JobParty.Applicant, status = JobStatus.AwaitingSeekerComplete, workMode = JobWorkMode.OnSite,
-        locationLabel = "Coimbatore", otp = "1234", providerAccountId = "preview-visitor", seekerAccountId = "preview-owner",
+        locationLabel = "White Town, Puducherry", otp = "1234", providerAccountId = "preview-visitor", seekerAccountId = "preview-owner",
     ),
 )

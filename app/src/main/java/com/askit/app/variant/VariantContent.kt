@@ -14,6 +14,7 @@ import com.askit.app.home.posts.PostStore
 import com.askit.app.inbox.InboxSeed
 import com.askit.app.jobs.Job
 import com.askit.app.jobs.JobsStore
+import com.askit.app.navigation.AppDestination
 import com.askit.app.providerdashboard.ProviderDashboardUiState
 import com.askit.app.session.SessionProfile
 import com.askit.app.task.Task
@@ -56,6 +57,16 @@ interface VariantContent {
 
     @Composable
     fun PreviewProfileControls(onAccount: (String) -> Unit, onView: (String) -> Unit)
+
+    // --- Demo build only (render nothing unless BuildConfig.DEMO_BUILD) ---
+
+    /** "DEMO" chip drawn over every screen; opens a menu that jumps to any screen. */
+    @Composable
+    fun DemoBadge(signedIn: Boolean, onOpen: (AppDestination) -> Unit, onExploreDemo: () -> Unit)
+
+    /** Settings rows: the screen menu and "Reset demo data". */
+    @Composable
+    fun DemoSettings(onOpen: (AppDestination) -> Unit)
 }
 
 /** Durable per-account profile snapshots. Only the client-preview build has an implementation. */

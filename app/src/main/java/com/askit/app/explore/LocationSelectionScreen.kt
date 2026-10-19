@@ -374,12 +374,12 @@ fun SearchAreaScreen(
                 Column {
                     Text(stringResource(R.string.location_demo_message))
                     listOf(
-                        Triple("Coimbatore", 11.0168, 76.9558),
-                        Triple("Chennai", 13.0827, 80.2707),
-                        Triple("Madurai", 9.9252, 78.1198),
+                        Triple("Puducherry", 11.9416, 79.8083),
+                        Triple("Karaikal", 10.9254, 79.8380),
+                        Triple("Auroville", 12.0052, 79.8069),
                     ).forEach { (city, lat, lng) ->
                         TextButton(onClick = {
-                            applyDraft(ExploreSearchArea(null, city, "Tamil Nadu, India", lat, lng, radiusKm, ExploreLocationSource.SAVED))
+                            applyDraft(ExploreSearchArea(null, city, "Puducherry, India", lat, lng, radiusKm, ExploreLocationSource.SAVED))
                             showPreviewLocations = false
                         }) { Text(city) }
                     }

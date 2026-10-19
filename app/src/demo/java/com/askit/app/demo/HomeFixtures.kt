@@ -220,7 +220,7 @@ internal object HomeFixtures {
                 id = "post-6",
                 authorName = "Chloe Bennett",
                 authorAvatarUrl = "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300",
-                locationLabel = "San Francisco, CA",
+                locationLabel = "Auroville, Puducherry",
                 content = "Three-piece custom walnut credenza completed for an architect's studio. Clean brass hardware and soft-close under-mount slides.",
                 media = PostMedia.Carousel(
                     urls = listOf(

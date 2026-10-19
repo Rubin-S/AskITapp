@@ -555,6 +555,9 @@
     <string name="entry_subtitle">உங்கள் சமூகத்தில் சேவைகளைக் கண்டறியுங்கள் அல்லது உங்கள் சேவைகளை வழங்குங்கள்.</string>
     <string name="entry_get_started">தொடங்குங்கள்</string>
     <string name="entry_already_have_account">எனக்கு ஏற்கனவே ஒரு கணக்கு உள்ளது</string>
+    <string name="entry_explore_demo">டெமோவைப் பார்க்கவும் (பதிவு தேவையில்லை)</string>
+    <string name="demo_phone_hint">டெமோ பதிப்பு: எந்த சரியான மொபைல் எண்ணும் போதும், எ.கா. 98765 43210. எதுவும் அனுப்பப்படாது.</string>
+    <string name="demo_otp_hint">டெமோ பதிப்பு: %1$s என உள்ளிடவும். SMS அனுப்பப்படாது.</string>
     <string name="entry_legal_disclaimer">கணக்கை உருவாக்குவதன் மூலம், எங்கள் <annotation link="terms">சேவை விதிமுறைகளை</annotation> ஏற்று, <annotation link="privacy">தனியுரிமைக் கொள்கையை</annotation> அறிந்துகொண்டதாக ஒப்புக்கொள்கிறீர்கள்.</string>
 
     <!-- Authentication: Phone Number & OTP (Tamil) -->
