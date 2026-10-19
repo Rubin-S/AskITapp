@@ -1,43 +1,28 @@
 package com.askit.app.posttask
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.askit.app.R
 import com.askit.app.forms.FormRadioRow
+import com.askit.designsystem.components.AskITPhotoThumbnails
 import com.askit.designsystem.inputs.AskITTextField
 
 @Composable
@@ -204,8 +189,10 @@ internal fun PostTaskPhotosSection(
                 ),
             )
         }
-        PhotoList(
-            uris = state.photoUris,
+        AskITPhotoThumbnails(
+            photos = state.photoUris,
+            photoDescription = { stringResource(R.string.post_task_photo_description, it) },
+            removeDescription = { stringResource(R.string.post_task_remove_photo, it) },
             onRemovePhoto = onRemovePhoto,
         )
     }
@@ -295,58 +282,6 @@ internal fun PostTaskAccessSection(state: PostTaskFormState, onToggle: () -> Uni
                 supportingText = { Text(stringResource(R.string.post_task_access_helper)) },
                 minLines = 3,
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun PhotoList(uris: List<String>, onRemovePhoto: (String) -> Unit, allowRemove: Boolean = true) {
-    if (uris.isEmpty()) return
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        uris.forEachIndexed { index, uri ->
-            val description = stringResource(R.string.post_task_photo_description, index + 1)
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.widthIn(min = 88.dp, max = 96.dp),
-            ) {
-                Box(modifier = Modifier.size(88.dp)) {
-                    AsyncImage(
-                        model = uri,
-                        contentDescription = description,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                    )
-                    if (allowRemove) {
-                        IconButton(
-                            onClick = { onRemovePhoto(uri) },
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .size(48.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                                    shape = CircleShape,
-                                ),
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_clear),
-                                contentDescription = stringResource(
-                                    R.string.post_task_remove_photo,
-                                    index + 1,
-                                ),
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
 }

@@ -1,26 +1,19 @@
 package com.askit.app.listservice
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -29,17 +22,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.askit.app.R
 import com.askit.app.forms.FormFieldError
 import com.askit.app.forms.FormRadioRow
@@ -273,60 +263,6 @@ internal fun ListServiceAreaButton(areaLabel: String, onClick: () -> Unit, testT
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-internal fun PortfolioPhotoList(uris: List<String>, onRemovePhoto: (String) -> Unit) {
-    if (uris.isEmpty()) return
-    FlowRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("list_service_portfolio_photos"),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        uris.forEachIndexed { index, uri ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.widthIn(min = 88.dp, max = 96.dp),
-            ) {
-                Box(modifier = Modifier.size(88.dp)) {
-                    AsyncImage(
-                        model = uri,
-                        contentDescription = stringResource(
-                            R.string.list_service_photo_description,
-                            index + 1,
-                        ),
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                    )
-                    IconButton(
-                        onClick = { onRemovePhoto(uri) },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(48.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                                shape = CircleShape,
-                            ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_clear),
-                            contentDescription = stringResource(
-                                R.string.list_service_remove_photo,
-                                index + 1,
-                            ),
-                            tint = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                }
-            }
         }
     }
 }
