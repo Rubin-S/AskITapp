@@ -244,7 +244,7 @@ fun SearchAreaScreen(
                 return@addOnSuccessListener
             }
             coroutineScope.launch {
-                val locality = reverseGeocode(context, location)
+                val locality = reverseGeocodeLocality(context, location)
                 applyDraft(
                     ExploreSearchArea(
                         placeId = null,

@@ -2,9 +2,7 @@ package com.askit.app.explore
 
 import android.content.Context
 import android.location.Address
-import android.location.Geocoder
 import android.location.Location
-import android.os.Build
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,6 +28,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
+import com.askit.app.location.reverseGeocode
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.AddressComponent
 import com.google.android.libraries.places.api.model.AutocompletePrediction
@@ -38,11 +37,7 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -171,40 +166,8 @@ internal fun List<AddressComponent>.componentName(type: String): String? = first
 
 internal data class LocalityLabel(val displayName: String, val supportingText: String?)
 
-internal suspend fun reverseGeocode(context: Context, location: Location): LocalityLabel? {
-    if (!Geocoder.isPresent()) return null
-    return try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            suspendCancellableCoroutine { continuation ->
-                Geocoder(context).getFromLocation(
-                    location.latitude,
-                    location.longitude,
-                    1,
-                    object : Geocoder.GeocodeListener {
-                        override fun onGeocode(addresses: MutableList<Address>) {
-                            if (continuation.isActive) {
-                                continuation.resume(addresses.firstOrNull().toLocalityLabel()) { _, _, _ -> }
-                            }
-                        }
-
-                        override fun onError(errorMessage: String?) {
-                            if (continuation.isActive) continuation.resume(null) { _, _, _ -> }
-                        }
-                    },
-                )
-            }
-        } else {
-            withContext(Dispatchers.IO) {
-                @Suppress("DEPRECATION")
-                Geocoder(context).getFromLocation(location.latitude, location.longitude, 1)
-                    ?.firstOrNull()
-                    .toLocalityLabel()
-            }
-        }
-    } catch (_: Exception) {
-        null
-    }
-}
+internal suspend fun reverseGeocodeLocality(context: Context, location: Location): LocalityLabel? =
+    reverseGeocode(context, location.latitude, location.longitude).toLocalityLabel()
 
 internal fun Address?.toLocalityLabel(): LocalityLabel? {
     if (this == null) return null
