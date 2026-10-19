@@ -46,6 +46,16 @@ class MessagingPrivacyTest {
         assertFalse(store.sendPhoto(contact.id, "content://photo"))
     }
 
+    @Test fun aBlockedPersonCanBeUnblockedFromTheirProfile() {
+        val store = InboxStore(messageAccess = { MessageAccess.Allowed })
+        val contact = ChatContact("recipient", "Recipient")
+        store.moderate(contact, report = false)
+        assertNull(store.startConversation(contact))
+        store.unblock(contact.id)
+        assertFalse(requireNotNull(store.conversation(contact.id)).blocked)
+        assertEquals(contact.id, store.startConversation(contact))
+    }
+
     @Test fun sharedStoriesUseTheSameLivePolicy() {
         var access = MessageAccess.ContactsOnly
         val store = InboxStore(InboxSeed(contacts = listOf(ChatContact("priya", "Priya"))), messageAccess = { access })

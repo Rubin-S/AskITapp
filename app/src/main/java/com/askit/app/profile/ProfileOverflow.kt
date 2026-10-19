@@ -27,6 +27,7 @@ import com.askit.designsystem.profile.ProfileTopBar
 /**
  * Owners get a Settings gear plus Copy/Share of their own link. Visitors get About, Copy, Share and,
  * when [onModerate] is given (signed in, social supported, not blocked yet), Block and Report.
+ * A blocked profile offers Unblock ([onUnblock]) in place of Block.
  */
 @Composable
 internal fun ProfileOverflowTopBar(
@@ -36,6 +37,7 @@ internal fun ProfileOverflowTopBar(
     onBack: (() -> Unit)? = null,
     onSettings: (() -> Unit)? = null,
     onModerate: ((Boolean) -> Boolean)? = null,
+    onUnblock: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var about by rememberSaveable(profile.userId) { mutableStateOf(false) }
@@ -56,7 +58,11 @@ internal fun ProfileOverflowTopBar(
 
         else -> listOf(ProfileMenuItem("about", stringResource(R.string.profile_about_account), { about = true })) + linkItems +
             listOf(
-                ProfileMenuItem("block", stringResource(R.string.messages_block), { moderation = false }, canModerate),
+                if (onUnblock != null) {
+                    ProfileMenuItem("unblock", stringResource(R.string.profile_unblock), onUnblock)
+                } else {
+                    ProfileMenuItem("block", stringResource(R.string.messages_block), { moderation = false }, canModerate)
+                },
                 ProfileMenuItem("report", stringResource(R.string.messages_report), { moderation = true }, canModerate),
             )
     }

@@ -336,6 +336,7 @@
     <string name="messages_profile">சுயவிவரத்தைப் பார்</string>
     <string name="messages_block">தடு</string>
     <string name="messages_report">புகாரளி</string>
+    <string name="profile_unblock">தடையை நீக்கு</string>
     <string name="messages_blocked">இந்த உரையாடலைத் தடுத்துவிட்டீர்கள். பழைய செய்திகளை இன்னும் படிக்கலாம்.</string>
     <string name="messages_reported">நன்றி. இந்தச் சாதனத்தில் உங்கள் புகார் பதிவு செய்யப்பட்டது.</string>
     <string name="messages_view_as_other">மற்ற தரப்பாகப் பார்</string>

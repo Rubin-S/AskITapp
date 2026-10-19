@@ -84,6 +84,11 @@ class InboxStore(
         conversations[conversationId] = current.copy(blocked = true)
     }
 
+    fun unblock(conversationId: String) {
+        val current = conversations[conversationId] ?: return
+        conversations[conversationId] = current.copy(blocked = false)
+    }
+
     fun report(conversationId: String) {
         val current = conversations[conversationId] ?: return
         conversations[conversationId] = current.copy(reported = true)

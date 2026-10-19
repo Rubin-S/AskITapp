@@ -108,6 +108,12 @@ sealed interface AppDestination : NavKey {
         override val bottomBarDestination = AskITDestination.Inbox
     }
 
+    /** Settings > My job requests: the jobs where you are the one asking for the work. */
+    @Serializable
+    data object MyJobRequests : AppDestination {
+        override val bottomBarDestination = AskITDestination.Profile
+    }
+
     @Serializable
     data class JobDetail(val jobId: String) : AppDestination {
         override val bottomBarDestination = AskITDestination.Inbox

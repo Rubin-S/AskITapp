@@ -1,10 +1,12 @@
 package com.askit.app.home.details
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,6 +62,7 @@ fun UserProfileScreen(
     onMessage: (() -> Unit)?,
     onModerate: ((Boolean) -> Boolean)?,
     modifier: Modifier = Modifier,
+    onUnblock: (() -> Unit)? = null,
 ) {
     var sectionId by rememberSaveable(userId) { mutableStateOf("") }
     var showContact by rememberSaveable(userId) { mutableStateOf(false) }
@@ -79,6 +82,7 @@ fun UserProfileScreen(
                 publicProfileUrl,
                 onBack = onBack,
                 onModerate = onModerate.takeIf { !isBlocked },
+                onUnblock = onUnblock.takeIf { isBlocked },
             )
         },
     ) { padding ->
@@ -88,8 +92,17 @@ fun UserProfileScreen(
                 profilesAvailable -> R.string.user_profile_unavailable_body
                 else -> R.string.user_profile_unavailable_release
             }
-            Box(Modifier.fillMaxSize().padding(padding).padding(24.dp), contentAlignment = Alignment.Center) {
+            Column(
+                Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Text(stringResource(message))
+                if (isBlocked && onUnblock != null) {
+                    TextButton(onClick = onUnblock, modifier = Modifier.testTag("user_profile_unblock")) {
+                        Text(stringResource(R.string.profile_unblock))
+                    }
+                }
             }
             return@Scaffold
         }

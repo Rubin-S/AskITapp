@@ -82,6 +82,15 @@ internal fun EntryProviderScope<NavKey>.profileEntries(deps: ProfileNavDeps) {
     entry<AppDestination.ProfileSettings> { SettingsEntry(deps) }
     entry<AppDestination.EditProfile> { EditProfileEntry(deps) }
     entry<AppDestination.UserProfile> { key -> UserProfileEntry(deps, key.userId) }
+    entry<AppDestination.MyJobRequests> {
+        val jobs by deps.jobsViewModel.jobs.collectAsStateWithLifecycle()
+        MyJobRequestsScreen(
+            jobs = jobs,
+            onBack = { deps.navigation.pop() },
+            onOpenJob = { deps.navigation.push(AppDestination.JobDetail(it)) },
+            onCancelJob = { deps.jobsViewModel.store.cancel(it) },
+        )
+    }
 }
 
 @Composable
@@ -144,7 +153,7 @@ private fun SettingsEntry(deps: ProfileNavDeps) = with(deps) {
         onEditProfile = { navigation.push(AppDestination.EditProfile) },
         onEditListing = actions.editListing,
         onOpenCreatorHub = { navigation.push(AppDestination.CreatorDashboard) }.takeIf { capabilities.dashboards },
-        onOpenJobRequests = { navigation.navigate(AppDestination.Inbox) },
+        onOpenJobRequests = { navigation.push(AppDestination.MyJobRequests) },
         onOpenLink = actions.openExternalLink,
         supportLink = appLinks.supportEmail?.let { "mailto:$it" } ?: appLinks.supportUrl,
         helpCenterLink = appLinks.helpCenterUrl,
@@ -251,6 +260,7 @@ private fun UserProfileEntry(deps: ProfileNavDeps, userId: String) = with(deps) 
         onToggleFollow = toggleFollow.takeIf { canMutate },
         onMessage = message.takeIf { canMutate },
         onModerate = moderate.takeIf { canMutate },
+        onUnblock = { inboxViewModel.unblock(userId) }.takeIf { canMutate },
     )
 }
 

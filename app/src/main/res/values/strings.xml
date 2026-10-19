@@ -336,6 +336,7 @@
     <string name="messages_profile">View profile</string>
     <string name="messages_block">Block</string>
     <string name="messages_report">Report</string>
+    <string name="profile_unblock">Unblock</string>
     <string name="messages_blocked">You blocked this conversation. You can still read past messages.</string>
     <string name="messages_reported">Thanks. We recorded your report on this device.</string>
     <string name="messages_view_as_other">View as other party</string>

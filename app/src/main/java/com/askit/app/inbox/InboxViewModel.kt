@@ -95,6 +95,11 @@ class InboxViewModel(
         refresh()
     }
 
+    fun unblock(conversationId: String) {
+        store.unblock(conversationId)
+        refresh()
+    }
+
     fun report(conversationId: String) {
         store.report(conversationId)
         refresh()
