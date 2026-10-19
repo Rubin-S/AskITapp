@@ -1,6 +1,5 @@
 package com.askit.app.inbox
 
-import android.text.format.DateUtils
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import com.askit.app.format.relativeTimeLabel
 import com.askit.designsystem.R
 import com.askit.designsystem.chat.ConversationRow
 import com.askit.designsystem.empty.AskITEmptyState
@@ -47,7 +47,7 @@ fun ChatsPane(
                     conversation.preview
                 },
                 unreadCount = conversation.unreadCount,
-                timeLabel = relativeTimeLabel(conversation.updatedAtMillis, nowMillis),
+                timeLabel = relativeTimeLabel(conversation.updatedAtMillis, nowMillis, abbreviated = true),
                 avatarUrl = conversation.contact.avatarUrl,
                 onClick = { onOpenChat(conversation.id) },
                 showDivider = index < conversations.lastIndex,
@@ -56,10 +56,3 @@ fun ChatsPane(
         }
     }
 }
-
-private fun relativeTimeLabel(updatedAtMillis: Long, nowMillis: Long): String = DateUtils.getRelativeTimeSpanString(
-    updatedAtMillis,
-    nowMillis,
-    DateUtils.MINUTE_IN_MILLIS,
-    DateUtils.FORMAT_ABBREV_RELATIVE,
-).toString()

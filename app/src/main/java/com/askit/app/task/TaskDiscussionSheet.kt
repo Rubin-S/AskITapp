@@ -8,11 +8,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.askit.app.R
+import com.askit.app.format.formatInstantDate
 import com.askit.designsystem.posts.CommentItem
 import com.askit.designsystem.posts.ControlledCommentsBottomSheet
 import kotlinx.coroutines.delay
-import java.text.DateFormat
-import java.util.Date
 
 @Composable
 fun TaskDiscussionSheet(
@@ -93,6 +92,6 @@ private fun commentTime(context: Context, createdAt: Long, now: Long): String {
         minutes < 60 -> context.resources.getQuantityString(R.plurals.task_discussion_minutes, minutes, minutes)
         minutes < 1_440 -> (minutes / 60).let { context.resources.getQuantityString(R.plurals.task_discussion_hours, it, it) }
         minutes < 10_080 -> (minutes / 1_440).let { context.resources.getQuantityString(R.plurals.task_discussion_days, it, it) }
-        else -> DateFormat.getDateInstance(DateFormat.MEDIUM, context.resources.configuration.locales[0]).format(Date(createdAt))
+        else -> formatInstantDate(createdAt, context.resources.configuration.locales[0])
     }
 }

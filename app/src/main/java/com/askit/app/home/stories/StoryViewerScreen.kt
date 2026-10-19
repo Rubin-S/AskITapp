@@ -1,6 +1,5 @@
 package com.askit.app.home.stories
 
-import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
@@ -39,6 +38,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.currentStateAsState
+import com.askit.app.format.relativeTimeLabel
 import com.askit.app.home.model.Story
 import com.askit.app.home.model.isShareable
 import com.askit.app.story.StoryMediaType
@@ -296,7 +296,7 @@ internal fun StoryViewerScreen(
                                 com.askit.app.R.string.profile_highlight_label,
                             )
                         } else {
-                            relativeTimeLabel(state.currentStory)
+                            storyAgeLabel(state.currentStory)
                         },
                         onClose = onDismiss,
                         modifier = Modifier
@@ -338,7 +338,7 @@ private fun StoryPageContent(
     val story = group.stories[itemIndex.coerceIn(group.stories.indices)]
     val content = story.content
     val mediaDescription = content.caption.ifBlank {
-        stringResource(com.askit.app.R.string.story_viewer_media_fallback, group.authorName, relativeTimeLabel(story))
+        stringResource(com.askit.app.R.string.story_viewer_media_fallback, group.authorName, storyAgeLabel(story))
     }
     key(story.id) {
         StoryFrame(content.viewport) {
@@ -404,10 +404,5 @@ private fun TopAndBottomScrims() {
 
 private val NO_PROGRESS: () -> Float = { 0f }
 
-private fun relativeTimeLabel(story: Story?): String = story?.let {
-    DateUtils.getRelativeTimeSpanString(
-        it.createdAtMillis,
-        System.currentTimeMillis(),
-        DateUtils.MINUTE_IN_MILLIS,
-    ).toString()
-} ?: ""
+private fun storyAgeLabel(story: Story?): String =
+    story?.let { relativeTimeLabel(it.createdAtMillis, System.currentTimeMillis()) }.orEmpty()

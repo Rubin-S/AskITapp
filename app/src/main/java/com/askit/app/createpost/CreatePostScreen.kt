@@ -58,6 +58,10 @@ import com.askit.app.createpost.components.pollClosingSummary
 import com.askit.app.explore.ExploreLocationSource
 import com.askit.app.explore.ExploreSearchArea
 import com.askit.app.explore.SearchAreaScreen
+import com.askit.app.format.endOfDayMillis
+import com.askit.app.format.localDateOf
+import com.askit.app.format.pickerDate
+import com.askit.app.format.toPickerMillis
 import com.askit.app.media.persistPhotoPickerReadAccess
 import com.askit.designsystem.dialogs.AskITAlertDialog
 import com.askit.designsystem.posts.PostFeedAuthor
@@ -356,7 +360,8 @@ private fun CreatePostScreen(
 
     if (showClosingDatePicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = state.poll?.closingAtMillis,
+            // The poll closes at the end of the picked day where the user is; the picker speaks UTC days.
+            initialSelectedDateMillis = state.poll?.closingAtMillis?.let { localDateOf(it).toPickerMillis() },
         )
         DatePickerDialog(
             onDismissRequest = { showClosingDatePicker = false },
@@ -367,7 +372,7 @@ private fun CreatePostScreen(
                         datePickerState.selectedDateMillis?.let { selectedDate ->
                             viewModel.setPollClosingRule(
                                 PostPollClosingRule.CUSTOM_DATE,
-                                selectedDate + DAY_MILLIS - 1,
+                                endOfDayMillis(pickerDate(selectedDate)),
                             )
                         }
                         showClosingDatePicker = false
@@ -554,4 +559,3 @@ private fun firstInvalidField(errors: Set<PostValidationField>): PostValidationF
 ).first { it in errors }
 
 private const val MAX_POST_PHOTOS = CreatePostViewModel.MAX_POST_PHOTOS
-private const val DAY_MILLIS = 24 * 60 * 60 * 1000L

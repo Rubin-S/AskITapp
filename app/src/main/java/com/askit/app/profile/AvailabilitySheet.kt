@@ -33,12 +33,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
+import com.askit.app.format.appLocale
+import com.askit.app.format.formatPickerDate
 import com.askit.app.session.ProfileAvailability
 import com.askit.designsystem.inputs.AskITTextField
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 private enum class AvailabilityDateField { From, To }
 
@@ -202,9 +200,6 @@ private fun DateField(value: String, label: String, tag: String, onClick: () -> 
     )
 }
 
-internal fun formatProfileDate(millis: Long?): String {
-    if (millis == null) return ""
-    return DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-        .withZone(ZoneId.systemDefault())
-        .format(Instant.ofEpochMilli(millis))
-}
+/** Availability from/to are date-picker days (midnight UTC), so they are never shifted by the device zone. */
+@Composable
+private fun formatProfileDate(millis: Long?): String = millis?.let { formatPickerDate(it, appLocale()) }.orEmpty()

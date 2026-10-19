@@ -3,14 +3,11 @@ package com.askit.app.task
 import android.content.Context
 import com.askit.app.R
 import com.askit.app.category.ASKIT_SERVICE_CATEGORIES
+import com.askit.app.format.formatPickerDate
 import com.askit.app.posttask.PostTaskBudget
 import com.askit.app.posttask.PostTaskMaterialsPolicy
 import com.askit.app.posttask.PostTaskTimingMode
 import com.askit.app.posttask.PostTaskWorkMode
-import java.text.DateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 
 data class TaskPresentation(
     val category: String,
@@ -42,7 +39,7 @@ fun Task.presentation(context: Context): TaskPresentation {
             PostTaskTimingMode.ASAP -> context.getString(R.string.post_task_asap)
 
             PostTaskTimingMode.DATE -> data.selectedDateMillis?.let {
-                formatTaskDate(it, context.resources.configuration.locales[0])
+                formatPickerDate(it, context.resources.configuration.locales[0])
             }.orEmpty()
 
             PostTaskTimingMode.FLEXIBLE -> context.getString(R.string.post_task_flexible)
@@ -79,8 +76,3 @@ val TaskLanguage.labelRes: Int
         TaskLanguage.TAMIL -> R.string.task_language_tamil
     }
 
-// Material date-picker values represent midnight UTC, independent of the device timezone.
-fun formatTaskDate(millis: Long, locale: Locale = Locale.getDefault()): String =
-    DateFormat.getDateInstance(DateFormat.MEDIUM, locale).apply {
-        timeZone = TimeZone.getTimeZone("UTC")
-    }.format(Date(millis))

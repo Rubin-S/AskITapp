@@ -41,10 +41,9 @@ import com.askit.app.createpost.PollOptionError
 import com.askit.app.createpost.PostPollClosingRule
 import com.askit.app.createpost.PostPollDraft
 import com.askit.app.createpost.PostValidationField
+import com.askit.app.format.appLocale
+import com.askit.app.format.formatInstantDate
 import com.askit.designsystem.inputs.AskITTextField
-import java.text.DateFormat
-import java.util.Date
-import java.util.Locale
 import com.askit.designsystem.R as DesignR
 
 @Composable
@@ -275,8 +274,7 @@ fun pollClosingSummary(content: PostPollDraft): String = when (content.closingRu
     PostPollClosingRule.AFTER_24_HOURS -> stringResource(R.string.create_post_closes_24_hours)
 
     PostPollClosingRule.CUSTOM_DATE -> content.closingAtMillis?.let { millis ->
-        stringResource(R.string.create_post_closes_on, formatDate(millis))
+        stringResource(R.string.create_post_closes_on, formatInstantDate(millis, appLocale()))
     } ?: stringResource(R.string.create_post_closes_24_hours)
 }
 
-private fun formatDate(millis: Long): String = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).format(Date(millis))

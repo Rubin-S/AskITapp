@@ -26,6 +26,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
+import com.askit.app.format.appLocale
+import com.askit.app.format.formatInstantDateTime
 import com.askit.app.home.model.Story
 import com.askit.app.story.StoryLayer
 import com.askit.designsystem.inputs.AskITTextField
@@ -33,8 +35,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.DateFormat
-import java.util.Date
 import java.util.UUID
 import com.askit.designsystem.R as DsR
 
@@ -160,7 +160,7 @@ internal fun HighlightEditor(
                     val label = story.content.caption.ifBlank {
                         story.content.layers.filterIsInstance<StoryLayer.Text>().joinToString(" ") { it.text }
                     }.ifBlank { story.authorName }
-                    val date = DateFormat.getDateTimeInstance().format(Date(story.createdAtMillis))
+                    val date = formatInstantDateTime(story.createdAtMillis, appLocale())
                     val description = "$label, $date"
                     val select = {
                         failed = false
