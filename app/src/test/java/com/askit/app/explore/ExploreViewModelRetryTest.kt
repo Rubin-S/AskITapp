@@ -141,17 +141,17 @@ class ExploreViewModelRetryTest {
         val source = source(*Array(4) { ExploreResultState.Results(people, emptyList()) })
         val vm = ExploreViewModel(handle, source)
         vm.submitQuery("plumber")
-        vm.onSortChanged(ExploreResultScope.Tasks, ExploreSortOption.Newest)
+        vm.sort.select(ExploreResultScope.Tasks, ExploreSortOption.Newest)
         // Unsupported for the tab: ignored rather than stored.
-        vm.onSortChanged(ExploreResultScope.People, ExploreSortOption.DueSoon)
-        assertEquals(mapOf(ExploreResultScope.Tasks to ExploreSortOption.Newest), vm.selectedSortOptions.value)
+        vm.sort.select(ExploreResultScope.People, ExploreSortOption.DueSoon)
+        assertEquals(mapOf(ExploreResultScope.Tasks to ExploreSortOption.Newest), vm.sort.selected.value)
 
         val recreated = ExploreViewModel(handle, source)
-        assertEquals(mapOf(ExploreResultScope.Tasks to ExploreSortOption.Newest), recreated.selectedSortOptions.value)
+        assertEquals(mapOf(ExploreResultScope.Tasks to ExploreSortOption.Newest), recreated.sort.selected.value)
 
         recreated.submitQuery("Plumber") // same query, different case: keeps the sort
-        assertEquals(ExploreSortOption.Newest, recreated.selectedSortOptions.value[ExploreResultScope.Tasks])
+        assertEquals(ExploreSortOption.Newest, recreated.sort.selected.value[ExploreResultScope.Tasks])
         recreated.submitQuery("electrician")
-        assertTrue(recreated.selectedSortOptions.value.isEmpty())
+        assertTrue(recreated.sort.selected.value.isEmpty())
     }
 }

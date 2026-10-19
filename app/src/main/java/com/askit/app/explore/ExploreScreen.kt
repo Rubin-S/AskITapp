@@ -63,7 +63,7 @@ fun ExploreRoute(
     val priceFilters by viewModel.priceFilters.collectAsStateWithLifecycle()
     val remoteResults by viewModel.resultState.collectAsStateWithLifecycle()
     val browseState by viewModel.browseState.collectAsStateWithLifecycle()
-    val selectedSortOptions by viewModel.selectedSortOptions.collectAsStateWithLifecycle()
+    val selectedSortOptions by viewModel.sort.selected.collectAsStateWithLifecycle()
     val resultState = remember(remoteResults, localTasks) { remoteResults.withLocalTasks(localTasks) }
 
     ExploreScreen(
@@ -83,9 +83,9 @@ fun ExploreRoute(
         browseState = browseState,
         onRetryResults = viewModel::retryResults,
         onRetryBrowseSection = viewModel::retryBrowseSection,
-        availableSortOptions = viewModel.availableSortOptions,
+        availableSortOptions = viewModel.sort.available,
         selectedSortOptions = selectedSortOptions,
-        onSortChanged = viewModel::onSortChanged,
+        onSortChanged = viewModel.sort::select,
         availableFilterOptions = availableFilterOptions,
         appliedFilterOptions = appliedFilterOptions,
         onFiltersChanged = onFiltersChanged,

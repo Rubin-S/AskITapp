@@ -53,10 +53,7 @@ data class ExploreUiState(
     val recentSearches: List<String> = emptyList(),
 )
 
-class ExploreViewModel(
-    private val savedStateHandle: SavedStateHandle,
-    private val contentSource: ExploreContentSource,
-) : ViewModel() {
+class ExploreViewModel(private val savedStateHandle: SavedStateHandle, private val contentSource: ExploreContentSource) : ViewModel() {
 
     private val queryState = savedStateHandle.getStateFlow(QUERY_KEY, "")
     private val recentSearchesState = savedStateHandle.getStateFlow(
@@ -188,20 +185,8 @@ class ExploreViewModel(
     )
     val browseState: StateFlow<ExploreBrowseState> = browseStateFlow.asStateFlow()
 
-    /** The sort options each tab supports; tabs with fewer than two show no sort control. */
-    val availableSortOptions: Map<ExploreResultScope, List<ExploreSortOption>> = exploreAvailableSortOptions()
-
-    private val sortOptionsState = MutableStateFlow(
-        ExploreResultScope.entries.mapNotNull { scope ->
-            savedStateHandle.get<String>(sortKey(scope))
-                ?.let { name -> ExploreSortOption.entries.firstOrNull { it.name == name } }
-                ?.takeIf { it in availableSortOptions[scope].orEmpty() }
-                ?.let { scope to it }
-        }.toMap(),
-    )
-
-    /** The selected sort per tab. Survives rotation and process death; reset by a new query. */
-    val selectedSortOptions: StateFlow<Map<ExploreResultScope, ExploreSortOption>> = sortOptionsState.asStateFlow()
+    /** Per-tab sort selection, saved with the rest of Explore's state. */
+    val sort = ExploreSortSelection(savedStateHandle)
 
     private var searchJob: Job? = null
     private val browseJobs = mutableMapOf<ExploreBrowseSection, Job>()
@@ -226,26 +211,19 @@ class ExploreViewModel(
         loadBrowseSection(section)
     }
 
-    fun onSortChanged(scope: ExploreResultScope, option: ExploreSortOption) {
-        if (option !in availableSortOptions[scope].orEmpty()) return
-        sortOptionsState.update { it + (scope to option) }
-        savedStateHandle[sortKey(scope)] = option.name
-    }
-
-    private fun currentSearchArea() = ExploreSearchArea(
-        placeId = searchAreaPlaceIdState.value,
-        displayName = searchAreaNameState.value,
-        supportingText = searchAreaSupportingTextState.value,
-        latitude = searchAreaLatitudeState.value,
-        longitude = searchAreaLongitudeState.value,
-        radiusKm = searchAreaRadiusState.value,
-        source = ExploreLocationSource.fromName(searchAreaSourceState.value),
-    )
-
-    private fun currentRequest() = ExploreSearchRequest(normalizeExploreQuery(queryState.value), currentSearchArea())
+    private val currentSearchArea: ExploreSearchArea
+        get() = ExploreSearchArea(
+            placeId = searchAreaPlaceIdState.value,
+            displayName = searchAreaNameState.value,
+            supportingText = searchAreaSupportingTextState.value,
+            latitude = searchAreaLatitudeState.value,
+            longitude = searchAreaLongitudeState.value,
+            radiusKm = searchAreaRadiusState.value,
+            source = ExploreLocationSource.fromName(searchAreaSourceState.value),
+        )
 
     private fun search(showLoading: Boolean) {
-        val request = currentRequest()
+        val request = ExploreSearchRequest(normalizeExploreQuery(queryState.value), currentSearchArea)
         searchJob?.cancel()
         resultStateFlow.update { current ->
             if (showLoading || current !is ExploreResultState.Results) {
@@ -260,7 +238,7 @@ class ExploreViewModel(
     }
 
     private fun loadBrowseSection(section: ExploreBrowseSection) {
-        val searchArea = currentSearchArea()
+        val searchArea = currentSearchArea
         browseJobs[section]?.cancel()
         browseStateFlow.update { it.withStatus(section, ExploreBrowseStatus.Loading) }
         browseJobs[section] = viewModelScope.launch {
@@ -285,7 +263,7 @@ class ExploreViewModel(
         if (!normalizedQuery.equals(previousSubmitted, ignoreCase = true)) {
             // A new query starts from relevance, like the result tab does.
             savedStateHandle[SUBMITTED_QUERY_KEY] = normalizedQuery
-            clearSortOptions()
+            sort.reset()
             search(showLoading = true)
         }
 
@@ -321,11 +299,6 @@ class ExploreViewModel(
         ExploreBrowseSection.entries.forEach(::loadBrowseSection)
     }
 
-    private fun clearSortOptions() {
-        sortOptionsState.value = emptyMap()
-        ExploreResultScope.entries.forEach { savedStateHandle.remove<String>(sortKey(it)) }
-    }
-
     fun onFilterScopeSelected(scope: ExploreResultScope) {
         filterScopeState.value = scope
         savedStateHandle[FILTER_SCOPE_KEY] = scope.name
@@ -356,8 +329,6 @@ class ExploreViewModel(
         const val SEARCH_AREA_SOURCE_KEY = "explore_search_area_source"
         const val FILTER_SCOPE_KEY = "explore_filter_scope"
         const val SUBMITTED_QUERY_KEY = "explore_submitted_query"
-
-        fun sortKey(scope: ExploreResultScope): String = "explore_sort_${scope.name.lowercase()}"
 
         fun filterOptionsKey(scope: ExploreResultScope): String = "explore_filter_options_${scope.name.lowercase()}"
     }

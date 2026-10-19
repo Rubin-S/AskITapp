@@ -24,10 +24,8 @@ interface ExploreContentSource {
  * people/services source as unavailable so the screen says so and offers Retry, instead of
  * pretending there were simply no matches.
  */
-class FixedExploreContentSource(
-    private val people: () -> List<ExplorePersonResult>,
-    private val browseState: () -> ExploreBrowseState,
-) : ExploreContentSource {
+class FixedExploreContentSource(private val people: () -> List<ExplorePersonResult>, private val browseState: () -> ExploreBrowseState) :
+    ExploreContentSource {
     override suspend fun search(request: ExploreSearchRequest): ExploreResultState {
         val peopleStatus = browseState().professionals
         val peopleUnavailable = peopleStatus == ExploreBrowseStatus.ServerUnavailable ||
@@ -50,11 +48,12 @@ internal fun ExploreBrowseState.statusOf(section: ExploreBrowseSection): Explore
     ExploreBrowseSection.Tasks -> tasks
 }
 
-internal fun ExploreBrowseState.withStatus(section: ExploreBrowseSection, status: ExploreBrowseStatus): ExploreBrowseState = when (section) {
-    ExploreBrowseSection.Services -> copy(services = status)
-    ExploreBrowseSection.Professionals -> copy(professionals = status)
-    ExploreBrowseSection.Tasks -> copy(tasks = status)
-}
+internal fun ExploreBrowseState.withStatus(section: ExploreBrowseSection, status: ExploreBrowseStatus): ExploreBrowseState =
+    when (section) {
+        ExploreBrowseSection.Services -> copy(services = status)
+        ExploreBrowseSection.Professionals -> copy(professionals = status)
+        ExploreBrowseSection.Tasks -> copy(tasks = status)
+    }
 
 /**
  * Merges the device's live task list into remote results. Tasks never come from the remote

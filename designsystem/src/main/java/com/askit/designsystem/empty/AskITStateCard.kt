@@ -26,13 +26,6 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
-/** How serious an [AskITStateCard] is: an ordinary empty result, a connectivity problem, or an error. */
-enum class AskITStateTone {
-    Neutral,
-    Offline,
-    Error,
-}
-
 /**
  * Inline empty / error state for a section inside a scrolling list (the full-screen version is
  * [AskITEmptyState]). Announced politely when it appears; the title is a heading so screen-reader

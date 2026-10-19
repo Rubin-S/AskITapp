@@ -3,6 +3,7 @@ package com.askit.app.auth
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Address
 import android.location.Location
 import android.location.LocationManager
 import android.os.CancellationSignal
@@ -66,20 +67,9 @@ object LocationHelper {
                 val lat = location.latitude
                 val lon = location.longitude
 
-                val address = reverseGeocode(context, lat, lon)
-                val city = address?.locality ?: address?.subAdminArea ?: address?.adminArea
-                if (address == null || city.isNullOrBlank()) {
-                    return@withTimeoutOrNull Result.failure(IllegalStateException("City lookup unavailable"))
-                }
-                Result.success(
-                    GeoLocationResult(
-                        city = city,
-                        pincode = address.postalCode.orEmpty(),
-                        latitude = lat,
-                        longitude = lon,
-                        area = address.subLocality ?: address.thoroughfare.orEmpty(),
-                    ),
-                )
+                reverseGeocode(context, lat, lon)?.toGeoLocationResult(lat, lon)
+                    ?.let { Result.success(it) }
+                    ?: Result.failure(IllegalStateException("City lookup unavailable"))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -87,4 +77,17 @@ object LocationHelper {
             }
         } ?: Result.failure(IllegalStateException("Location lookup timed out"))
     }
+}
+
+/** City, pincode and area for sign-up; null when the geocoder could not name a city. */
+private fun Address.toGeoLocationResult(latitude: Double, longitude: Double): GeoLocationResult? {
+    val city = locality ?: subAdminArea ?: adminArea
+    if (city.isNullOrBlank()) return null
+    return GeoLocationResult(
+        city = city,
+        pincode = postalCode.orEmpty(),
+        latitude = latitude,
+        longitude = longitude,
+        area = subLocality ?: thoroughfare.orEmpty(),
+    )
 }

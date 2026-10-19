@@ -89,13 +89,15 @@ private fun dueRank(task: ExploreTaskResult): Int {
 }
 
 private fun dueAtMillis(task: ExploreTaskResult): Long {
-    val source = task.sourceTask ?: return Long.MAX_VALUE
-    val details = source.publicDetails ?: return Long.MAX_VALUE
-    return when (details.timingMode) {
+    val source = task.sourceTask
+    val details = source?.publicDetails
+    return when (details?.timingMode) {
         // Equal urgency: whoever asked first has waited longest.
-        PostTaskTimingMode.ASAP -> source.createdAtMillis
-        PostTaskTimingMode.DATE -> details.selectedDateMillis ?: Long.MAX_VALUE
-        PostTaskTimingMode.FLEXIBLE -> Long.MAX_VALUE
+        PostTaskTimingMode.ASAP -> source?.createdAtMillis ?: Long.MAX_VALUE
+
+        PostTaskTimingMode.DATE -> details?.selectedDateMillis ?: Long.MAX_VALUE
+
+        PostTaskTimingMode.FLEXIBLE, null -> Long.MAX_VALUE
     }
 }
 

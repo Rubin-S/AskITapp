@@ -41,9 +41,15 @@ fun AskITDisclosureRow(
             .semantics {
                 stateDescription = actionLabel
                 if (expanded) {
-                    collapse { onClick(); true }
+                    collapse {
+                        onClick()
+                        true
+                    }
                 } else {
-                    expand { onClick(); true }
+                    expand {
+                        onClick()
+                        true
+                    }
                 }
             }
             .clickable(role = Role.Button, onClick = onClick)

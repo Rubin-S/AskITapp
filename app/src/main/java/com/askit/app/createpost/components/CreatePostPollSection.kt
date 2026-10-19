@@ -277,4 +277,3 @@ fun pollClosingSummary(content: PostPollDraft): String = when (content.closingRu
         stringResource(R.string.create_post_closes_on, formatInstantDate(millis, appLocale()))
     } ?: stringResource(R.string.create_post_closes_24_hours)
 }
-

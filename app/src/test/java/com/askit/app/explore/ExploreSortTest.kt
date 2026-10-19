@@ -6,11 +6,11 @@ import com.askit.app.posttask.PostTaskWorkMode
 import com.askit.app.task.Task
 import com.askit.app.task.TaskProviderPreferences
 import com.askit.app.task.TaskPublicDetails
-import java.math.BigDecimal
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.math.BigDecimal
 
 class ExploreSortTest {
     private fun priced(id: String, minimum: String?) = person(id).copy(
@@ -88,7 +88,12 @@ class ExploreSortTest {
     @Test fun newestSortsTasksByPostingTime() {
         val state = ExploreResultState.Results(
             people = emptyList(),
-            tasks = listOf(task("plain"), sourceTask("old", createdAt = 10), sourceTask("new", createdAt = 30), sourceTask("mid", createdAt = 20)),
+            tasks = listOf(
+                task("plain"),
+                sourceTask("old", createdAt = 10),
+                sourceTask("new", createdAt = 30),
+                sourceTask("mid", createdAt = 20),
+            ),
         )
         assertEquals(listOf("new", "mid", "old", "plain"), sortExploreResults(state, ExploreSortOption.Newest).taskIds())
     }

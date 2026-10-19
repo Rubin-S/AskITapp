@@ -75,4 +75,3 @@ val TaskLanguage.labelRes: Int
         TaskLanguage.ENGLISH -> R.string.task_language_english
         TaskLanguage.TAMIL -> R.string.task_language_tamil
     }
-

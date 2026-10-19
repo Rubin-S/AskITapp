@@ -67,13 +67,12 @@ fun endOfDayMillis(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): Long
  * future read as "in 5 minutes", and anything older than a week falls back to a short date
  * ("3 Oct"). Uses the platform's localized relative-time strings, so Tamil comes from the system.
  */
-fun relativeTimeLabel(timeMillis: Long, nowMillis: Long, abbreviated: Boolean = false): String =
-    DateUtils.getRelativeTimeSpanString(
-        timeMillis,
-        nowMillis,
-        DateUtils.MINUTE_IN_MILLIS,
-        relativeTimeFlags(abbreviated),
-    ).toString()
+fun relativeTimeLabel(timeMillis: Long, nowMillis: Long, abbreviated: Boolean = false): String = DateUtils.getRelativeTimeSpanString(
+    timeMillis,
+    nowMillis,
+    DateUtils.MINUTE_IN_MILLIS,
+    relativeTimeFlags(abbreviated),
+).toString()
 
 /** Both forms share the date fallback; only the relative part ("minutes" vs "mins") differs. */
 internal fun relativeTimeFlags(abbreviated: Boolean): Int =
