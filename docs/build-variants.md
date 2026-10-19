@@ -17,10 +17,11 @@
   - `app/src/release/java/.../variant/AppVariant.kt` — release, returns empty data.
 - Release therefore cannot compile against a fixture: if `src/main` references anything in
   `src/demo/java`, `assembleRelease` fails.
-- `app/src/testRelease/.../ReleaseVariantTest.kt` (run by `testReleaseUnitTest`) also fails if any
-  fixture class is on the release classpath or `AppVariant.hasDemoContent` is true.
-- Tests that need fixtures live in `app/src/testDebug`; shared tests in `app/src/test` must only
-  use `src/main`, because they run for both debug and release.
+- `app/src/testRelease/.../ReleaseVariantTest.kt` (run by `testReleaseUnitTest`) also fails if
+  release is a client preview, any fixture class is on the release classpath, or
+  `AppVariant.hasDemoContent` is true.
+- Shared tests in `app/src/test` must only use `src/main`, because they run for both debug and
+  release.
 
 ## What lives where
 

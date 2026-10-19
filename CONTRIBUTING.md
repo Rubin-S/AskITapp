@@ -42,17 +42,18 @@ in separate commits.
 - Icon-only controls have a `contentDescription`; decorative images use `null`.
 - Expose state with semantics (`selected`, `stateDescription`, `Role`), and give gesture-only
   interactions a semantics action.
-- Text uses theme colour roles; don't lower their alpha. `ColorContrastTest` checks the theme
-  against WCAG AA, and `contrastRatio()` is available for new pairs.
+- Text uses theme colour roles; don't lower their alpha.
 
 ## Tests are required
 
-- New logic gets JVM unit tests (`app/src/test`, JUnit 4, coroutines-test, Turbine).
-- Code that needs demo fixtures is tested in `app/src/testDebug`; `app/src/test` runs for release
-  too and may only use `src/main`.
-- UI flows get Compose UI tests in `app/src/androidTest` where practical.
-- Visual changes to shared components: update Roborazzi baselines (`./gradlew recordRoborazziDebug`
-  on an x86_64 or macOS machine) and commit the PNGs with the change.
+- The suite is small on purpose: plain JVM JUnit 4 in `app/src/test` (kotlinx-coroutines-test only
+  where a view model or flow must be driven). No Android framework, Robolectric, emulator or
+  screenshot tests.
+- Add a test when breaking the behaviour would ship a real bug or a privacy/security problem
+  (sign-in and session, account scoping, privacy filters, authorization, date boundaries, string
+  parity). Don't add tests for mappers, labels, fixtures, the demo build or layout.
+- `app/src/test` runs for debug and release, so it may only use `src/main`.
+  `app/src/testRelease` holds the release-only guard.
 
 Run before pushing:
 

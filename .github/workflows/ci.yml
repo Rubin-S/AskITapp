@@ -50,30 +50,6 @@ jobs:
       - name: Unit tests
         run: ./gradlew testDebugUnitTest testReleaseUnitTest
 
-      - name: Screenshot tests (Roborazzi)
-        # Baselines are recorded on this runner (Robolectric native graphics has no linux-aarch64
-        # build). Until they are committed, record them and publish them as an artifact.
-        run: |
-          if compgen -G "app/src/testDebug/screenshots/*.png" > /dev/null && \
-             compgen -G "designsystem/src/test/screenshots/*.png" > /dev/null; then
-            ./gradlew verifyRoborazziDebug
-          else
-            echo "::warning::No Roborazzi baselines committed yet; recording them. Commit the roborazzi-baselines artifact."
-            ./gradlew recordRoborazziDebug
-          fi
-
-      - name: Upload recorded screenshot baselines
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: roborazzi-baselines
-          path: |
-            app/src/testDebug/screenshots/
-            designsystem/src/test/screenshots/
-            **/build/outputs/roborazzi/
-          if-no-files-found: ignore
-          retention-days: 14
-
       - name: Assemble debug
         run: ./gradlew assembleDebug
 

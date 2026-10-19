@@ -4,7 +4,6 @@ import java.net.URI
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.roborazzi)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.secrets)
 }
@@ -44,10 +43,6 @@ android {
         buildConfigField("boolean", "CLIENT_PREVIEW", "false")
         buildConfigField("boolean", "DEMO_BUILD", "false")
         buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        // The secrets plugin sets the real key per app variant; this inert default only exists
-        // so the unit-test manifest (merged for Robolectric) has a value to substitute.
-        manifestPlaceholders["PLACES_API_KEY"] = "DEFAULT_API_KEY"
     }
 
     if (signRelease) {
@@ -138,11 +133,6 @@ android {
         buildConfig = true
     }
 
-    testOptions {
-        // Robolectric/Roborazzi tests need merged resources and the test manifest.
-        unitTests.isIncludeAndroidResources = true
-    }
-
     lint {
         warningsAsErrors = true
         abortOnError = true
@@ -154,8 +144,8 @@ android {
 androidComponents {
     beforeVariants(selector().withBuildType("release")) { variant ->
         // AGP only creates host (unit) tests for debug by default. Enable them for release so
-        // testReleaseUnitTest runs src/testRelease/ReleaseVariantTest, which fails if any demo
-        // fixture is reachable from the release variant.
+        // testReleaseUnitTest runs the shared suite plus src/testRelease/ReleaseVariantTest, which
+        // fails if the release variant is a client preview or can reach a demo fixture.
         variant.hostTests[HostTestBuilder.UNIT_TEST_TYPE]?.enable = true
     }
 }
@@ -198,35 +188,9 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
+    debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Plain JVM unit tests only (no Robolectric, no instrumented tests). See CONTRIBUTING.md.
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
-    testImplementation(libs.robolectric)
-    testImplementation(libs.roborazzi)
-    testImplementation(libs.roborazzi.compose)
-    testImplementation(platform(libs.androidx.compose.bom))
-    testImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.androidx.test.runner)
-    androidTestImplementation(libs.androidx.test.core)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-}
-
-// Screenshot tests (Roborazzi on Robolectric Native Graphics) live under a `screenshots` package.
-// Robolectric ships no linux-aarch64 native graphics runtime, so on such hosts they are skipped
-// (CI runs on ubuntu x86_64). Pass -Paskit.forceScreenshotTests to run them anyway.
-val robolectricNativeGraphicsAvailable =
-    !(System.getProperty("os.name") == "Linux" && System.getProperty("os.arch") in setOf("aarch64", "arm64")) ||
-        providers.gradleProperty("askit.forceScreenshotTests").isPresent
-tasks.withType<Test>().configureEach {
-    maxHeapSize = "1536m"
-    if (!robolectricNativeGraphicsAvailable) {
-        exclude("**/screenshots/**")
-        // :designsystem has only screenshot tests, so nothing is left to run on such hosts.
-        failOnNoDiscoveredTests.set(false)
-    }
 }

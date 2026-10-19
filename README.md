@@ -41,8 +41,8 @@ kotlinx.serialization · OkHttp · Gradle version catalog · JDK 17 · minSdk 26
 | `demo` | `com.askit.app.demo` | yes, plus preview personas and the demo menu | Testable demo APK ("AskIT Demo"): R8-optimised, non-debuggable, signed with the committed throwaway key. Welcome screen first, **Explore demo** or any number + OTP `123456`. No backend. See [Testing the demo build](#testing-the-demo-build). |
 | `release` | `com.askit.app` | **no** (`src/release`) | Real/local data only; screens without a backend show empty or "not available yet" states. |
 
-Tests that need fixtures live in `app/src/testDebug`; `app/src/testRelease/ReleaseVariantTest`
-fails if any fixture reaches the release classpath. Full notes: [docs/build-variants.md](docs/build-variants.md).
+`app/src/testRelease/ReleaseVariantTest` fails if release is a client preview or any fixture
+reaches the release classpath. Full notes: [docs/build-variants.md](docs/build-variants.md).
 
 ## Testing the demo build
 
@@ -87,31 +87,23 @@ phone, and profile links point at `askit.in/u/...` placeholders.
 
 # Tests
 ./gradlew testDebugUnitTest testReleaseUnitTest      # JVM unit tests (incl. en/ta string parity)
-./gradlew connectedDebugAndroidTest                  # Compose UI tests, needs a device/emulator
 
 # Static analysis (all fail on new findings; warningsAsErrors is on for lint)
 ./gradlew ktlintCheck        # ./gradlew ktlintFormat to auto-fix
 ./gradlew detekt
 ./gradlew lintDebug lintRelease
 python3 scripts/check_hardcoded_strings.py           # no hardcoded user-visible strings
-
-# Screenshot tests (Roborazzi on Robolectric)
-./gradlew recordRoborazziDebug     # write baselines to */src/test*/screenshots
-./gradlew verifyRoborazziDebug     # compare against committed baselines
 ```
 
-Screenshot tests need Robolectric native graphics, which has no Linux arm64 build: on such hosts
-they are skipped (pass `-Paskit.forceScreenshotTests` to try anyway). Record baselines on x86_64
-(or macOS) and commit the PNGs.
+The unit tests are a deliberately small plain-JVM suite (no Robolectric, emulator or screenshot
+tests): they cover only behaviour that would ship a real bug or a privacy/security problem if it
+broke. See CONTRIBUTING.md.
 
 ## CI
 
 - `.github/workflows/ci.yml` (push and pull request to `main`): hardcoded-string check, ktlint,
-  detekt, Android lint, debug and release unit tests, Roborazzi verify (or record and upload a
-  `roborazzi-baselines` artifact until baselines are committed), debug and release assembly.
+  detekt, Android lint, debug and release unit tests, debug, release and demo assembly.
   Reports are uploaded when a step fails.
-- `.github/workflows/instrumented.yml` (pull requests, manual): emulator run of
-  `connectedDebugAndroidTest` on API 28 and 34. Non-blocking.
 
 ## Contributing
 

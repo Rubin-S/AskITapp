@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.secrets) apply false
-    alias(libs.plugins.roborazzi) apply false
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -88,11 +87,8 @@ val detektInputs =
         "app/src/release/java",
         "app/src/preview/java",
         "app/src/test/java",
-        "app/src/testDebug/java",
         "app/src/testRelease/java",
-        "app/src/androidTest/java",
         "designsystem/src/main/java",
-        "designsystem/src/test/java",
     ).filter { file(it).isDirectory }
 val detektConfig = layout.projectDirectory.file("config/detekt/detekt.yml")
 val detektBaselineFile = layout.projectDirectory.file("config/detekt/baseline.xml")

@@ -65,8 +65,7 @@ user action ──► Screen (stateless composable)
 ```
 
 - Screens are split into a `Route` (gets the view model, collects state, wires navigation) and a
-  stateless `Screen` that takes plain state and callbacks, which is what UI and screenshot tests
-  drive.
+  stateless `Screen` that takes plain state and callbacks.
 - State is immutable data classes exposed as `StateFlow`; one-off events (navigation, toasts) go
   through callbacks or event flows.
 - Models keep typed data (enums, amounts, ids). Display text is produced at render time from
@@ -84,6 +83,5 @@ the screen is shown.
 ## Design system
 
 `:designsystem` provides `AskITTheme` (light and dark Material 3 colour schemes), contrast helpers
-(`contrastRatio`, `StoryScrimColor`, WCAG constants, checked by `ColorContrastTest`) and shared
-components. Components take state and callbacks, use theme colour roles, and are covered by
-Roborazzi screenshot tests in light and dark.
+(`StoryScrimColor`) and shared components. Components take state and callbacks
+and use theme colour roles.

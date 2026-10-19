@@ -35,7 +35,7 @@ style:
   MagicNumber:
     # Compose UI is full of dp/sp/alpha literals; magic numbers are reviewed by humans there.
     ignoreAnnotated: ['Composable', 'Preview']
-    excludes: ['**/test/**', '**/testDebug/**', '**/testRelease/**', '**/androidTest/**', '**/demo/**']
+    excludes: ['**/test/**', '**/testRelease/**', '**/demo/**']
   UnusedPrivateFunction:
     ignoreAnnotated: ['Preview']
   WildcardImport:
