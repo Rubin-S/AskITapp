@@ -37,6 +37,10 @@ object LocationHelper {
         if (!hasLocationPermission(context)) {
             return@withContext Result.failure(SecurityException("Location permission not granted"))
         }
+        // The Settings "Location services" switch is honoured wherever the app reads the device location.
+        if (!com.askit.app.location.LocationPreference.isEnabled(context)) {
+            return@withContext Result.failure(IllegalStateException("Location services are off in AskIT settings"))
+        }
 
         withTimeoutOrNull(15_000) {
             try {

@@ -277,6 +277,10 @@ fun SearchAreaScreen(
     }
 
     fun requestCurrentLocation() {
+        if (!com.askit.app.location.LocationPreference.isEnabled(context)) {
+            errorMessage = resources.getString(R.string.settings_location_off)
+            return
+        }
         if (ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
