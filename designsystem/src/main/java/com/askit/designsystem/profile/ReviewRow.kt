@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -17,10 +16,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.askit.designsystem.R
 import com.askit.designsystem.people.AskITAvatar
+import kotlin.math.roundToInt
+
+private const val STAR_COUNT = 5
 
 @Composable
 fun ReviewRow(
@@ -28,8 +32,8 @@ fun ReviewRow(
     meta: String,
     rating: Float,
     body: String,
-    verifiedLabel: String?,
     avatarUrl: String?,
+    ratingDescription: String,
     modifier: Modifier = Modifier,
     showDivider: Boolean = true,
 ) {
@@ -57,11 +61,15 @@ fun ReviewRow(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    repeat(5) { index ->
+                // Stars are one announced value ("Rated 4.9 out of 5"); 4.9 shows five stars, not four.
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.clearAndSetSemantics { contentDescription = ratingDescription },
+                ) {
+                    repeat(STAR_COUNT) { index ->
                         Icon(
                             painter = painterResource(
-                                if (index < rating.toInt()) R.drawable.ic_star_filled else R.drawable.ic_star_outline,
+                                if (index < rating.roundToInt()) R.drawable.ic_star_filled else R.drawable.ic_star_outline,
                             ),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.tertiary,
@@ -74,19 +82,6 @@ fun ReviewRow(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                if (verifiedLabel != null) {
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                    ) {
-                        Text(
-                            text = verifiedLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        )
-                    }
-                }
             }
         }
         if (showDivider) {

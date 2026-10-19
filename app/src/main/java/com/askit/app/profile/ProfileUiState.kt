@@ -4,8 +4,20 @@ import com.askit.app.home.details.UserProfileData
 import com.askit.app.jobs.Job
 import com.askit.app.session.ServiceListing
 import com.askit.app.session.SessionProfile
-import com.askit.designsystem.navigation.SectionTab
+import com.askit.app.session.isAvailableOn
 import com.askit.designsystem.profile.ProfileMetricItem
+import java.time.LocalDate
+
+/** Section tab ids; the scaffold picks owner or visitor labels for them. */
+internal object ProfileTab {
+    const val ABOUT = "about"
+    const val SHOWCASE = "showcase"
+    const val SERVICES = "services"
+    const val POSTS = "posts"
+    const val TASKS = "tasks"
+
+    fun forRole(isProvider: Boolean) = if (isProvider) listOf(ABOUT, SHOWCASE, SERVICES, TASKS) else listOf(POSTS, TASKS)
+}
 
 data class ProfileUiState(
     val userId: String = "",
@@ -21,7 +33,7 @@ data class ProfileUiState(
     val tradeHeadline: String? = null,
     val bio: String = "",
     val metrics: List<ProfileMetricItem> = emptyList(),
-    val tabs: List<SectionTab> = emptyList(),
+    val tabs: List<String> = emptyList(),
     val selectedSectionId: String = "",
     val isPublicPreview: Boolean = false,
     val isFollowing: Boolean = false,
@@ -30,7 +42,8 @@ data class ProfileUiState(
     val reviews: List<ProfileReview> = emptyList(),
     val joinedYear: String = "",
 ) {
-    val canEditMedia: Boolean get() = isOwner && !isPublicPreview
+    /** The owner looking at their own profile (not "View as"): the only case that shows owner controls and copy. */
+    val isOwnerView: Boolean get() = isOwner && !isPublicPreview
     val displayUsername: String get() = username.removePrefix("@").ifBlank { displayName }
 }
 
@@ -38,42 +51,35 @@ fun SessionProfile.toUiState(
     jobs: List<Job> = emptyList(),
     isPublicPreview: Boolean = false,
     selectedSectionId: String = "",
-    isFollowing: Boolean = false,
+    today: LocalDate = LocalDate.now(),
 ): ProfileUiState {
-    val isProviderMode = listing != null
-
-    val metricsList = profileMetrics(
-        accountId,
-        isProviderMode,
-        reviews,
-        jobs.profileCompletedCount(accountId, isProviderMode),
-        followerCount,
-        followingCount,
-    )
-
-    val tabList = profileTabs(isProviderMode)
-
-    val safeSectionId = selectedSectionId.takeIf { id -> tabList.any { it.id == id } } ?: tabList.first().id
-
+    val provider = listing != null
     return ProfileUiState(
         userId = accountId,
         username = username,
         displayName = displayName,
         avatarUrl = avatarUrl,
-        bannerUrl = bannerUrl, highlights = highlights,
+        bannerUrl = bannerUrl,
+        highlights = highlights,
         localityLine = city,
         joinedYear = joinedYear,
         isVerified = isVerified,
-        isProvider = isProviderMode,
-        tradeHeadline = if (isProviderMode) listing.title else title.takeIf(String::isNotBlank),
-        bio = if (isProviderMode) listing.description else bio,
-        metrics = metricsList,
-        tabs = tabList,
-        selectedSectionId = safeSectionId,
+        isProvider = provider,
+        tradeHeadline = listing?.title ?: title.takeIf(String::isNotBlank),
+        bio = listing?.description ?: bio,
+        metrics = profileMetrics(
+            accountId,
+            provider,
+            reviews,
+            jobs.profileCompletedCount(accountId, provider),
+            followerCount,
+            followingCount,
+        ),
+        tabs = ProfileTab.forRole(provider),
+        selectedSectionId = selectedSectionId.validIn(ProfileTab.forRole(provider)),
         isPublicPreview = isPublicPreview,
-        isFollowing = isFollowing,
         isOwner = true,
-        listing = listing,
+        listing = effectiveListing(today),
         reviews = reviews,
     )
 }
@@ -82,67 +88,48 @@ fun UserProfileData.toUiState(
     selectedSectionId: String = "",
     viewerPostcode: String? = null,
     isFollowing: Boolean = false,
-): ProfileUiState {
-    val metricsList = profileMetrics(
+): ProfileUiState = ProfileUiState(
+    userId = id,
+    username = username,
+    displayName = name,
+    avatarUrl = avatarUrl,
+    bannerUrl = bannerUrl,
+    highlights = highlights,
+    approximateDistanceKm = approximateProfileDistance(discloseApproximateLocation, viewerPostcode, postcodeDistanceKm),
+    localityLine = location,
+    joinedYear = joinedYear,
+    isVerified = isVerified,
+    isProvider = isProvider,
+    tradeHeadline = listing?.title ?: trade.takeIf(String::isNotBlank),
+    bio = listing?.description ?: bio,
+    metrics = profileMetrics(
         id,
         isProvider,
         directionalReviews,
         if (isProvider) completedAsProvider else completedAsSeeker,
         followerCount,
         followingCount,
-    )
+        ratingSummary,
+    ),
+    tabs = ProfileTab.forRole(isProvider),
+    selectedSectionId = selectedSectionId.validIn(ProfileTab.forRole(isProvider)),
+    isFollowing = isFollowing,
+    listing = listing,
+    reviews = directionalReviews,
+)
 
-    val tabList = profileTabs(isProvider)
+private fun String.validIn(tabs: List<String>) = takeIf { it in tabs } ?: tabs.first()
 
-    val safeSectionId = selectedSectionId.takeIf { id -> tabList.any { it.id == id } } ?: tabList.first().id
+/** The listing as others see it today: paused while an availability window covers [today]. */
+private fun SessionProfile.effectiveListing(today: LocalDate): ServiceListing? =
+    listing?.let { it.copy(live = it.live && availability.isAvailableOn(today)) }
 
-    val mappedReviews = directionalReviews
-
-    val providerListing = listing
-
-    return ProfileUiState(
-        userId = id,
-        username = username,
-        displayName = name,
-        avatarUrl = avatarUrl, bannerUrl = bannerUrl, highlights = highlights,
-        approximateDistanceKm = approximateProfileDistance(discloseApproximateLocation, viewerPostcode, postcodeDistanceKm),
-        localityLine = location,
-        joinedYear = joinedYear,
-        isVerified = isVerified,
-        isProvider = isProvider,
-        tradeHeadline = providerListing?.title ?: trade.takeIf(String::isNotBlank),
-        bio = providerListing?.description ?: bio,
-        metrics = metricsList,
-        tabs = tabList,
-        selectedSectionId = safeSectionId,
-        isPublicPreview = false,
-        isFollowing = isFollowing,
-        isOwner = false,
-        listing = providerListing,
-        reviews = mappedReviews,
-    )
-}
-
-private fun profileTabs(isProvider: Boolean): List<SectionTab> = if (isProvider) {
-    listOf(
-        SectionTab("about", "About"),
-        SectionTab("showcase", "Showcase"),
-        SectionTab("services", "My services"),
-        SectionTab("tasks", "Post your task"),
-    )
-} else {
-    listOf(
-        SectionTab("posts", "My post"),
-        SectionTab("tasks", "Post your task"),
-    )
-}
-
-/** Public adapter deliberately excludes private Form A contact/postcode fields. */
-internal fun SessionProfile.toPublicProfile() = UserProfileData(
+/** Public adapter: never carries Form A contact or postcode, nor listing contact, whatever the writers did. */
+internal fun SessionProfile.toPublicProfile(today: LocalDate = LocalDate.now()) = UserProfileData(
     id = accountId, username = username, name = displayName, avatarUrl = avatarUrl,
     trade = listing?.title ?: title, bio = listing?.description ?: bio, isProvider = listing != null,
-    location = city, joinedYear = joinedYear, skills = skills, isVerified = isVerified,
+    location = city, joinedYear = joinedYear, isVerified = isVerified,
     followerCount = followerCount, followingCount = followingCount,
-    bannerUrl = bannerUrl, highlights = highlights, listing = listing, directionalReviews = reviews,
-    discloseApproximateLocation = discloseApproximateLocation,
+    bannerUrl = bannerUrl, highlights = highlights, listing = effectiveListing(today)?.copy(phoneNumber = "", email = ""),
+    directionalReviews = reviews, discloseApproximateLocation = discloseApproximateLocation,
 )

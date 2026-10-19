@@ -46,7 +46,7 @@ fun YourServiceCard(
     responseHint: String,
     tags: List<String>,
     editLabel: String,
-    onEdit: () -> Unit,
+    onEdit: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -185,7 +185,7 @@ fun YourServiceCard(
                 ChipRow(chips = tags)
             }
 
-            if (editLabel.isNotBlank()) {
+            if (onEdit != null) {
                 HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.5f))
                 AskITSecondaryButton(
                     onClick = onEdit,
@@ -228,6 +228,28 @@ private fun ListingMetric(label: String, value: String, hint: String, modifier: 
                     text = hint,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+/** Read-only tags: plain labels, not disabled chips (which read as "disabled" to TalkBack). */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun ChipRow(chips: List<String>, modifier: Modifier = Modifier) {
+    FlowRow(
+        modifier = modifier.testTag("profile_chips"),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        chips.forEach { chip ->
+            Surface(shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+                Text(
+                    chip,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 )
             }
         }

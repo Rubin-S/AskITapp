@@ -10,9 +10,9 @@ class ProfileSectionsTest {
     @Test fun sectionsRemainVisibleWithoutContentForBothRoles() {
         assertEquals(
             listOf("about", "showcase", "services", "tasks"),
-            SessionProfile(listing = DefaultCarpentryListing).toUiState().tabs.map { it.id },
+            SessionProfile(listing = DefaultCarpentryListing).toUiState().tabs,
         )
-        assertEquals(listOf("posts", "tasks"), SessionProfile().toUiState().tabs.map { it.id })
+        assertEquals(listOf("posts", "tasks"), SessionProfile().toUiState().tabs)
     }
 
     @Test fun selectionUsesStableIdsAndFallsBackWhenTheRoleChanges() {

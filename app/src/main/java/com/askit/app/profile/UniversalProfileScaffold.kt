@@ -17,9 +17,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
 import com.askit.designsystem.navigation.AskITSectionTabs
+import com.askit.designsystem.navigation.SectionTab
 import com.askit.designsystem.profile.ProfileActionConfig
 import com.askit.designsystem.profile.ProfileActionRow
 import com.askit.designsystem.profile.ProfileAvatar
@@ -40,45 +41,42 @@ import com.askit.designsystem.profile.ProfileMetricsBar
 import com.askit.designsystem.profile.ProfilePreviewBanner
 import kotlinx.coroutines.launch
 
+/**
+ * Shared layout for every profile: header, highlights, metrics, actions, sticky section tabs and
+ * the selected section. Owner-only controls appear only when their callbacks are given.
+ */
 @Composable
 fun UniversalProfileScaffold(
     uiState: ProfileUiState,
+    actionConfig: ProfileActionConfig,
+    onSectionSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
-    isVisitor: Boolean = false,
     people: ProfilePeopleState = ProfilePeopleState(),
-    onOpenProfile: (String) -> Unit = {},
-    onFollowPerson: (String, Boolean) -> Boolean = { _, _ -> false },
     viewerAccountId: String? = null,
     authorizedPostIds: Set<String> = emptySet(),
-    onOpenPost: (String) -> Unit = {},
-    actionConfig: ProfileActionConfig,
     publicProfileUrl: String? = null,
-    onModerate: (Boolean) -> Boolean = { false },
     showTopBar: Boolean = true,
+    onOpenProfile: (String) -> Unit = {},
+    onFollowPerson: (String, Boolean) -> Boolean = { _, _ -> false },
+    onOpenPost: (String) -> Unit = {},
+    onModerate: ((Boolean) -> Boolean)? = null,
     onBack: (() -> Unit)? = null,
-    onExitPreview: () -> Unit = {},
-    onSectionSelected: (String) -> Unit,
-    onCameraClick: () -> Unit = {},
-    onSaveBanner: (String?) -> Boolean = { false },
-    onOpenSettings: () -> Unit = {},
+    onOpenSettings: (() -> Unit)? = null,
+    onCameraClick: (() -> Unit)? = null,
+    onSaveBanner: (suspend (String?) -> Boolean)? = null,
     highlightsContent: (@Composable () -> Unit)? = null,
     content: @Composable (sectionId: String) -> Unit,
 ) {
     var metricDialog by rememberSaveable(uiState.userId) { mutableStateOf<String?>(null) }
     metricDialog?.let {
-        ProfileMetricSheet(
-            it,
-            uiState,
-            people,
-            onDismiss = { metricDialog = null },
-            onOpenProfile = onOpenProfile,
-            onFollow = onFollowPerson,
-        )
+        ProfileMetricSheet(it, uiState, people, onDismiss = {
+            metricDialog = null
+        }, onOpenProfile = onOpenProfile, onFollow = onFollowPerson)
     }
-    val activeTabId = uiState.tabs.firstOrNull { it.id == uiState.selectedSectionId }?.id ?: uiState.tabs.firstOrNull()?.id.orEmpty()
+    val activeTabId = uiState.selectedSectionId.takeIf { it in uiState.tabs } ?: uiState.tabs.firstOrNull().orEmpty()
     val listState = rememberSaveable(uiState.userId, saver = LazyListState.Saver) { LazyListState() }
     val scope = rememberCoroutineScope()
-    var tabHeight by remember { mutableIntStateOf(0) }
+    var tabHeight by rememberSaveable { mutableIntStateOf(0) }
     val density = LocalDensity.current
     Box(modifier.fillMaxSize().testTag("profile_scaffold")) {
         Column(Modifier.fillMaxSize()) {
@@ -87,7 +85,7 @@ fun UniversalProfileScaffold(
                     uiState,
                     viewerAccountId,
                     publicProfileUrl,
-                    onBack = if (isVisitor || uiState.isPublicPreview) (onBack ?: onExitPreview) else null,
+                    onBack = onBack,
                     onSettings = onOpenSettings,
                     onModerate = onModerate,
                 )
@@ -100,95 +98,17 @@ fun UniversalProfileScaffold(
                     contentPadding = PaddingValues(bottom = if (uiState.isPublicPreview) 80.dp else 24.dp),
                 ) {
                     item(key = "identity") {
-                        Column(Modifier.fillMaxWidth()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .testTag("profile_header_box"),
-                            ) {
-                                androidx.compose.runtime.key(uiState.userId) {
-                                    ProfileBanner(
-                                        uiState.bannerUrl,
-                                        canEdit = uiState.canEditMedia && !isVisitor,
-                                        onSave = onSaveBanner,
-                                    )
-                                }
-                                ProfileAvatar(
-                                    avatarUrl = uiState.avatarUrl,
-                                    cameraContentDescription = stringResource(R.string.profile_update_photo),
-                                    onCamera = if (!isVisitor && !uiState.isPublicPreview) onCameraClick else null,
-                                    modifier = Modifier
-                                        .padding(start = 16.dp)
-                                        .offset(y = 72.dp)
-                                        .testTag("profile_avatar"),
-                                )
-                            }
-
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 56.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                ProfileIdentityBlock(
-                                    displayName = uiState.displayName,
-                                    localityLine = listOfNotNull(
-                                        uiState.localityLine.takeIf { it.isNotBlank() },
-                                        uiState.joinedYear.takeIf { it.isNotBlank() }?.let {
-                                            stringResource(R.string.profile_joined_year, it)
-                                        },
-                                    ).joinToString(" · "),
-                                    tradeHeadline = uiState.tradeHeadline,
-                                    isVerified = uiState.isVerified,
-                                    bio = uiState.bio,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                )
-
-                                if (highlightsContent != null) {
-                                    highlightsContent()
-                                } else {
-                                    ProfileHighlights(
-                                        uiState.userId, viewerAccountId, uiState.highlights, emptyList(), canManage = false,
-                                        authorizedPostIds = authorizedPostIds, onSave = {
-                                            false
-                                        }, onDelete = { false }, onOpenPost = onOpenPost,
-                                    )
-                                }
-                                uiState.approximateDistanceKm?.let { distance ->
-                                    Text(
-                                        stringResource(R.string.profile_approximate_distance, distance),
-                                        Modifier.padding(horizontal = 16.dp),
-                                    )
-                                }
-                                ProfileMetricsBar(
-                                    metrics = uiState.metrics.map { metric ->
-                                        val label = when (metric.id) {
-                                            "rating" -> stringResource(R.string.job_review_rating)
-                                            "completed_jobs" -> stringResource(R.string.profile_completed)
-                                            "followers" -> stringResource(R.string.profile_followers)
-                                            "following" -> stringResource(R.string.profile_following)
-                                            "activity" -> stringResource(R.string.story_activity)
-                                            else -> metric.label
-                                        }
-                                        metric.copy(
-                                            label = label,
-                                            onClick = if (metric.id in
-                                                setOf("rating", "followers", "following")
-                                            ) {
-                                                ({ metricDialog = metric.id })
-                                            } else {
-                                                metric.onClick
-                                            },
-                                        )
-                                    },
-                                    modifier = Modifier.testTag("profile_metrics_bar"),
-                                )
-
-                                ProfileActionRow(
-                                    config = actionConfig,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                )
-                            }
+                        ProfileHeader(
+                            uiState,
+                            actionConfig,
+                            viewerAccountId,
+                            authorizedPostIds,
+                            onOpenPost,
+                            onCameraClick,
+                            onSaveBanner,
+                            highlightsContent,
+                        ) {
+                            metricDialog = it
                         }
                     }
                     stickyHeader(key = "sections") {
@@ -197,21 +117,12 @@ fun UniversalProfileScaffold(
                             modifier = Modifier.fillMaxWidth().onSizeChanged { tabHeight = it.height },
                         ) {
                             AskITSectionTabs(
-                                tabs = uiState.tabs.map { tab ->
-                                    val label = when (tab.id) {
-                                        "services" -> stringResource(R.string.profile_my_services)
-                                        "posts" -> stringResource(R.string.profile_my_post)
-                                        "showcase" -> stringResource(R.string.profile_showcase)
-                                        "tasks" -> stringResource(R.string.profile_post_your_task)
-                                        "about" -> stringResource(R.string.profile_about)
-                                        else -> tab.label
-                                    }
-                                    tab.copy(label = label)
-                                },
+                                tabs = uiState.tabs.map { SectionTab(it, stringResource(tabLabel(it, uiState.isOwnerView))) },
                                 selectedId = activeTabId,
                                 onSelect = { id ->
-                                    onSectionSelected(id)
-                                    scope.launch { listState.animateScrollToItem(1) }
+                                    onSectionSelect(id)
+                                    // Bring the tabs to the top only when the header has scrolled past them.
+                                    if (listState.firstVisibleItemIndex >= 1) scope.launch { listState.animateScrollToItem(1) }
                                 },
                                 tabTagPrefix = "profile_tab_",
                                 modifier = Modifier.testTag("profile_tabs"),
@@ -220,22 +131,90 @@ fun UniversalProfileScaffold(
                     }
                     item(key = "content:$activeTabId") {
                         Box(
-                            Modifier.fillMaxWidth().heightIn(min = minimumContentHeight)
-                                .padding(16.dp).testTag("profile_content_section"),
+                            Modifier.fillMaxWidth().heightIn(min = minimumContentHeight).padding(16.dp)
+                                .testTag("profile_content_section"),
                         ) {
-                            Box(Modifier.fillMaxWidth().testTag("profile_content_$activeTabId")) {
-                                content(activeTabId)
-                            }
+                            Box(Modifier.fillMaxWidth().testTag("profile_content_$activeTabId")) { content(activeTabId) }
                         }
                     }
                 }
             }
         }
-        if (uiState.isPublicPreview) {
-            ProfilePreviewBanner(
-                onExitPreview = onExitPreview,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-            )
+        if (uiState.isPublicPreview && onBack != null) {
+            ProfilePreviewBanner(onExitPreview = onBack, modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp))
         }
     }
+}
+
+@Composable
+private fun ProfileHeader(
+    uiState: ProfileUiState,
+    actionConfig: ProfileActionConfig,
+    viewerAccountId: String?,
+    authorizedPostIds: Set<String>,
+    onOpenPost: (String) -> Unit,
+    onCameraClick: (() -> Unit)?,
+    onSaveBanner: (suspend (String?) -> Boolean)?,
+    highlightsContent: (@Composable () -> Unit)?,
+    onOpenMetric: (String) -> Unit,
+) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(Modifier.fillMaxWidth().testTag("profile_header_box")) {
+            key(uiState.userId) { ProfileBanner(uiState.bannerUrl, onSave = onSaveBanner) }
+            ProfileAvatar(
+                avatarUrl = uiState.avatarUrl,
+                cameraContentDescription = stringResource(R.string.profile_update_photo),
+                onCamera = onCameraClick,
+                modifier = Modifier.padding(start = 16.dp).offset(y = 72.dp).testTag("profile_avatar"),
+            )
+        }
+        ProfileIdentityBlock(
+            displayName = uiState.displayName,
+            localityLine = listOfNotNull(
+                uiState.localityLine.takeIf { it.isNotBlank() },
+                uiState.joinedYear.takeIf { it.isNotBlank() }?.let { stringResource(R.string.profile_joined_year, it) },
+                uiState.approximateDistanceKm?.let { stringResource(R.string.profile_approximate_distance, it) },
+            ).joinToString(" · "),
+            tradeHeadline = uiState.tradeHeadline,
+            isVerified = uiState.isVerified,
+            bio = uiState.bio,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 44.dp),
+        )
+        highlightsContent?.invoke() ?: ProfileHighlights(
+            ownerId = uiState.userId,
+            viewerId = viewerAccountId,
+            collections = uiState.highlights,
+            stories = emptyList(),
+            canManage = false,
+            authorizedPostIds = authorizedPostIds,
+            onOpenPost = onOpenPost,
+        )
+        ProfileMetricsBar(
+            metrics = uiState.metrics.map { metric ->
+                metric.copy(
+                    label = stringResource(metricLabel(metric.id)),
+                    onClick = if (metric.id == ProfileMetric.COMPLETED) null else ({ onOpenMetric(metric.id) }),
+                )
+            },
+            modifier = Modifier.testTag("profile_metrics_bar"),
+        )
+        ProfileActionRow(config = actionConfig, modifier = Modifier.padding(horizontal = 16.dp))
+    }
+}
+
+/** Only these four ids exist; the scaffold opens sheets for rating, followers and following. */
+internal fun metricLabel(id: String) = when (id) {
+    ProfileMetric.RATING -> R.string.job_review_rating
+    ProfileMetric.COMPLETED -> R.string.profile_completed
+    ProfileMetric.FOLLOWERS -> R.string.profile_followers
+    else -> R.string.profile_following
+}
+
+/** Owners read "My services"; visitors and "View as" read the neutral "Services". */
+private fun tabLabel(id: String, owner: Boolean) = when (id) {
+    ProfileTab.ABOUT -> R.string.profile_about
+    ProfileTab.SHOWCASE -> R.string.profile_showcase
+    ProfileTab.SERVICES -> if (owner) R.string.profile_my_services else R.string.profile_services
+    ProfileTab.POSTS -> if (owner) R.string.profile_my_post else R.string.profile_posts
+    else -> if (owner) R.string.profile_post_your_task else R.string.profile_tasks
 }

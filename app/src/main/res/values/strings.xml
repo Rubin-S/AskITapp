@@ -433,7 +433,6 @@
     <string name="profile_view_all">View all</string>
 
     <string name="profile_reviews">Reviews</string>
-    <string name="profile_reviews_summary">★ %1$s · %2$d</string>
     <string name="profile_metric_rating">RATING</string>
     <string name="profile_reviews_empty_title">No reviews yet</string>
     <string name="profile_reviews_empty_supporting">Reviews from completed jobs will show up here.</string>
@@ -467,7 +466,7 @@
     <string name="profile_discard">Discard</string>
     <string name="profile_keep_editing">Keep editing</string>
     <string name="profile_availability_title">Change availability</string>
-    <string name="profile_availability_helper">Set up your profile and put your skills in front of the right people.</string>
+    <string name="profile_availability_helper">Let people know when you can take new work.</string>
     <string name="profile_availability_warning">You are marking yourself as Not Available. Your profile stays visible, but people will see you\'re currently unavailable.</string>
     <string name="profile_availability_when">Let\'s know when you\'ll be back</string>
     <string name="profile_availability_from">From</string>
@@ -475,7 +474,7 @@
     <string name="profile_availability_message">Optional message</string>
     <string name="profile_availability_message_hint">e.g. Away for a family event, back soon!</string>
     <string name="profile_availability_mute">Mute my notifications</string>
-    <string name="profile_availability_auto">Your profile will be automatically turned back to live on %1$s.</string>
+    <string name="profile_availability_auto">Your listing goes live again on %1$s.</string>
     <string name="profile_cancel">Cancel</string>
 
 
@@ -498,7 +497,6 @@
     <string name="settings_availability">Availability</string>
     <string name="settings_creator_hub">Creator hub</string>
     <string name="settings_saved">Saved</string>
-    <string name="settings_history">History</string>
     <string name="settings_my_job_requests">My job requests</string>
     <string name="settings_help_center">Help center</string>
     <string name="settings_contact_support">Contact support</string>
@@ -508,12 +506,10 @@
     <string name="settings_logout_confirm_title">Log out?</string>
     <string name="settings_logout_confirm_msg">Are you sure you want to log out of your AskIT account?</string>
     <string name="settings_clear_data_confirm_title">Clear all app data?</string>
-    <string name="settings_clear_data_confirm_msg">This resets the tasks, listings, and preferences saved on this device and signs you out.</string>
+    <string name="settings_clear_data_confirm_msg">This deletes the tasks, listings, photos and preferences saved on this device and signs you out.</string>
     <string name="settings_clear_data_action">Clear data</string>
     <string name="settings_status_live">Live</string>
     <string name="settings_status_manage">Manage</string>
-    <string name="settings_status_on">On</string>
-    <string name="settings_status_off">Off</string>
     <string name="settings_data_cleared">Local data cleared successfully.</string>
 
     <string name="story_close">Close story</string>
@@ -554,7 +550,6 @@
     <string name="story_trim_title">Trim video</string>
     <string name="story_your_story">Your story</string>
     <string name="story_add_new_title">Add to your story</string>
-    <string name="story_activity">Activity</string>
     <string name="story_close_circle">Close circle</string>
     <string name="story_next">Next</string>
     <string name="story_text_done">Done</string>
@@ -731,7 +726,6 @@
     <string name="provider_pro_boost_perks">3x search visibility · Verified badge · Unlimited connections</string>
     <string name="provider_pro_boost_cta">Upgrade to Premium</string>
     <string name="settings_blocked_empty">No blocked accounts. Accounts you block won\'t be able to message or view your listings.</string>
-    <string name="settings_history_empty">Your completed service history and past task applications will appear here.</string>
     <string name="settings_close">Close</string>
     <string name="auth_logo">AskIT Logo</string>
     <string name="auth_clear_phone">Clear phone</string>
@@ -827,7 +821,6 @@
     <string name="profile_services_empty">No services listed yet</string>
 
 
-    <string name="settings_provider_name">Provider</string>
     <string name="form_a_location_failed">Couldn\'t detect your location. Try again or enter your city and postcode below.</string>
     <string name="form_a_save_failed">Couldn\'t save your profile. Your details are still here; please try again.</string>
     <string name="auth_logging_out">Logging out…</string>
@@ -1052,9 +1045,7 @@
     <string name="profile_banner">Profile banner</string>
     <string name="profile_edit_banner">Edit banner</string>
     <string name="profile_remove_banner">Remove banner</string>
-    <string name="profile_banner_failed">Banner unavailable or could not be saved. Try another image.</string>
-    <string name="profile_distance_consent">Show my approximate distance to other members</string>
-    <string name="profile_distance_consent_hint">Off by default. Uses postcode areas only; your postcode and exact location stay private.</string>
+    <string name="profile_banner_failed">Couldn\'t show this banner. Try another image.</string>
     <string name="profile_approximate_distance">About %1$d km away</string>
     <string name="profile_highlights">Highlights</string>
     <string name="profile_highlight_new">New highlight</string>
@@ -1079,12 +1070,11 @@
     <string name="profile_copy_url">Copy profile URL</string>
     <string name="profile_link_unavailable">Public profile links are not configured yet.</string>
     <string name="profile_url_copied">Profile URL copied</string>
-    <string name="profile_action_unavailable">This service is not available yet.</string>
     <string name="profile_contact_unavailable">No contact details have been published.</string>
     <string name="profile_message">Message</string>
     <string name="profile_photo_unavailable">This image could not be opened. Please try another photo.</string>
     <string name="profile_my_services">My services</string>
-    <string name="profile_my_post">My post</string>
+    <string name="profile_my_post">My posts</string>
     <string name="profile_post_your_task">Post your task</string>
     <string name="profile_posts_empty">No posts yet.</string>
     <string name="profile_tasks_empty">No tasks posted yet.</string>
@@ -1151,4 +1141,27 @@
     <string name="list_service_coverage_up_to_km">Up to %1$d km</string>
     <string name="list_service_mode_travels_to_site">Travels to site</string>
     <string name="list_service_mode_at_provider">At your location</string>
+    <!-- Profile fix (Oct 2026) -->
+    <string name="profile_services">Services</string>
+    <string name="profile_posts">Posts</string>
+    <string name="profile_tasks">Tasks</string>
+    <string name="user_profile_unavailable_release">Other people\'s profiles aren\'t available yet.</string>
+    <string name="profile_block_explainer">%1$s won\'t be able to message you, and you\'ll stop following them.</string>
+    <string name="profile_report_explainer">AskIT will review the profile of %1$s. They won\'t know you reported them.</string>
+    <string name="profile_camera_denied">Camera permission is needed to take a photo.</string>
+    <string name="profile_camera_off_title">Camera access is off</string>
+    <string name="profile_camera_off_body">To take a profile photo, allow camera access for AskIT in Settings.</string>
+    <string name="profile_open_settings">Open settings</string>
+    <string name="profile_rating_description">Rated %1$.1f out of 5</string>
+    <string name="profile_listing_identity_hint">Your headline and bio come from your service listing. Edit the listing to change them.</string>
+    <string name="settings_availability_available">Available</string>
+    <string name="settings_availability_away">Away</string>
+    <string name="settings_availability_away_until">Away until %1$s</string>
+    <string name="settings_availability_scheduled">Away from %1$s</string>
+    <string name="settings_blocked_unavailable">Your blocked accounts can\'t be listed here yet.</string>
+    <string name="settings_location_off">Location services are off in AskIT settings.</string>
+    <plurals name="profile_experience_years">
+        <item quantity="one">%d year</item>
+        <item quantity="other">%d years</item>
+    </plurals>
 </resources>

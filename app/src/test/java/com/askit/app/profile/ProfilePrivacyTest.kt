@@ -17,9 +17,9 @@ class ProfilePrivacyTest {
 
     @Test fun bannerMapsToOwnerAndReadOnlyPublicPreview() {
         val profile = SessionProfile(bannerUrl = "content://photo/banner")
-        assertTrue(profile.toUiState().canEditMedia)
-        assertFalse(profile.toUiState(isPublicPreview = true).canEditMedia)
-        assertFalse(ProfileUiState(isOwner = false).canEditMedia)
+        assertTrue(profile.toUiState().isOwnerView)
+        assertFalse(profile.toUiState(isPublicPreview = true).isOwnerView)
+        assertFalse(ProfileUiState(isOwner = false).isOwnerView)
         assertEquals(profile.bannerUrl, profile.toUiState().bannerUrl)
         assertEquals(profile.bannerUrl, profile.toUiState(isPublicPreview = true).bannerUrl)
     }

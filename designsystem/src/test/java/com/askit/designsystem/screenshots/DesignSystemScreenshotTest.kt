@@ -103,7 +103,7 @@ class DesignSystemScreenshotTest {
     @Test fun profileBits() = snapshot("profile_bits") {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             MetricTrio(MetricSpec("4.8", "Rating"), MetricSpec("126", "Jobs"), MetricSpec("2y", "On AskIT"))
-            ChipRow(chips = listOf("Plumbing", "Electrical", "Tamil", "English"), addLabel = "Add", onAdd = {})
+            ChipRow(chips = listOf("Plumbing", "Electrical", "Tamil", "English"))
             AskITSectionTabs(
                 tabs = listOf(SectionTab("about", "About"), SectionTab("services", "Services"), SectionTab("reviews", "Reviews")),
                 selectedId = "services",

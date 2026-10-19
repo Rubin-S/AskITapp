@@ -2,12 +2,19 @@ package com.askit.app.profile
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.askit.app.R
@@ -17,62 +24,50 @@ import com.askit.app.session.ServiceListing
 import com.askit.designsystem.profile.ProfileMenuItem
 import com.askit.designsystem.profile.ProfileTopBar
 
+/**
+ * Owners get a Settings gear plus Copy/Share of their own link. Visitors get About, Copy, Share and,
+ * when [onModerate] is given (signed in, social supported, not blocked yet), Block and Report.
+ */
 @Composable
 internal fun ProfileOverflowTopBar(
     profile: ProfileUiState,
     viewerId: String?,
     publicUrl: String?,
     onBack: (() -> Unit)? = null,
-    onSettings: () -> Unit = {},
-    onModerate: (Boolean) -> Boolean = { false },
+    onSettings: (() -> Unit)? = null,
+    onModerate: ((Boolean) -> Boolean)? = null,
 ) {
     val context = LocalContext.current
-    var about by remember(profile.userId) { mutableStateOf(false) }
-    var moderation by remember(profile.userId) { mutableStateOf<Boolean?>(null) }
-    var failed by remember { mutableStateOf(false) }
-    val owner = profile.isOwner && !profile.isPublicPreview
-    val canMutate = canMutateProfileVisitor(viewerId, profile.userId, profile.isPublicPreview)
-    val unavailable = stringResource(R.string.profile_link_unavailable)
-    val copied = stringResource(R.string.profile_url_copied)
+    var about by rememberSaveable(profile.userId) { mutableStateOf(false) }
+    var moderation by rememberSaveable(profile.userId) { mutableStateOf<Boolean?>(null) }
+    var failed by rememberSaveable(profile.userId, moderation) { mutableStateOf(false) }
+    val owner = profile.isOwnerView
+    val canModerate = onModerate != null && canMutateProfileVisitor(viewerId, profile.userId, profile.isPublicPreview)
     val share = stringResource(R.string.profile_share)
-    val menus = listOf(
-        ProfileMenuItem("about", stringResource(R.string.profile_about_account), { about = true }),
-        ProfileMenuItem("copy", stringResource(R.string.profile_copy_url), {
-            if (publicUrl == null) {
-                Toast.makeText(context, unavailable, Toast.LENGTH_LONG).show()
-            } else {
-                context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("Profile URL", publicUrl))
-                Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
-            }
-        }),
-        ProfileMenuItem("share", share, {
-            if (publicUrl == null) {
-                Toast.makeText(context, unavailable, Toast.LENGTH_LONG).show()
-            } else {
-                runCatching {
-                    context.startActivity(
-                        Intent.createChooser(
-                            Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, publicUrl)
-                            },
-                            share,
-                        ),
-                    )
-                }
-                    .onFailure { Toast.makeText(context, unavailable, Toast.LENGTH_LONG).show() }
-            }
-        }),
-        ProfileMenuItem("block", stringResource(R.string.messages_block), { moderation = false }, canMutate),
-        ProfileMenuItem("report", stringResource(R.string.messages_report), { moderation = true }, canMutate),
+    val copyLabel = stringResource(R.string.profile_copy_url)
+    val linkItems = listOf(
+        ProfileMenuItem("copy", copyLabel, { copyProfileLink(context, publicUrl, copyLabel) }),
+        ProfileMenuItem("share", share, { shareProfileLink(context, publicUrl, share) }),
     )
+    val menu = when {
+        profile.userId.isBlank() -> emptyList()
+
+        owner -> linkItems
+
+        else -> listOf(ProfileMenuItem("about", stringResource(R.string.profile_about_account), { about = true })) + linkItems +
+            listOf(
+                ProfileMenuItem("block", stringResource(R.string.messages_block), { moderation = false }, canModerate),
+                ProfileMenuItem("report", stringResource(R.string.messages_report), { moderation = true }, canModerate),
+            )
+    }
     ProfileTopBar(
         profile.displayUsername,
         stringResource(R.string.messages_more),
-        if (owner) emptyList() else menus,
+        menu,
         onBack = onBack,
         backContentDescription = stringResource(R.string.explore_back),
         onSettingsClick = onSettings.takeIf { owner },
+        settingsContentDescription = stringResource(R.string.settings_title),
     )
     if (about) {
         AlertDialog(
@@ -89,49 +84,49 @@ internal fun ProfileOverflowTopBar(
         )
     }
     moderation?.let { report ->
+        val action = stringResource(if (report) R.string.messages_report else R.string.messages_block)
         AlertDialog(
-            onDismissRequest = {
-                moderation = null
+            onDismissRequest = { moderation = null },
+            title = { Text(action) },
+            text = {
+                Text(
+                    when {
+                        failed -> stringResource(R.string.profile_action_error)
+                        report -> stringResource(R.string.profile_report_explainer, profile.displayName)
+                        else -> stringResource(R.string.profile_block_explainer, profile.displayName)
+                    },
+                )
             },
-            title = { Text(stringResource(if (report) R.string.messages_report else R.string.messages_block)) },
-            text = { Text(if (failed) stringResource(R.string.profile_action_unavailable) else profile.displayName) },
             confirmButton = {
-                TextButton(onClick = {
-                    if (onModerate(report)) {
-                        moderation = null
-                        failed = false
-                    } else {
-                        failed = true
-                    }
-                }) {
-                    Text(stringResource(if (report) R.string.messages_report else R.string.messages_block))
-                }
+                TextButton(onClick = { if (onModerate?.invoke(report) == true) moderation = null else failed = true }) { Text(action) }
             },
             dismissButton = { TextButton(onClick = { moderation = null }) { Text(stringResource(R.string.profile_cancel)) } },
         )
     }
 }
 
+private fun copyProfileLink(context: Context, url: String?, label: String) {
+    if (url == null) return linkUnavailable(context)
+    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText(label, url))
+    Toast.makeText(context, R.string.profile_url_copied, Toast.LENGTH_SHORT).show()
+}
+
+private fun shareProfileLink(context: Context, url: String?, title: String) {
+    if (url == null) return linkUnavailable(context)
+    val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, url)
+    runCatching { context.startActivity(Intent.createChooser(send, title)) }.onFailure { linkUnavailable(context) }
+}
+
+private fun linkUnavailable(context: Context) = Toast.makeText(context, R.string.profile_link_unavailable, Toast.LENGTH_LONG).show()
+
+/** Shown only when the listing publishes a valid phone or email (see [hasPublishedContact]). */
 @Composable
 internal fun ProfileContactDialog(listing: ServiceListing?, readOnly: Boolean, onDismiss: () -> Unit) {
     val context = LocalContext.current
-    val unavailable = stringResource(R.string.profile_action_unavailable)
     fun open(scheme: String, address: String) {
-        runCatching {
-            context.startActivity(
-                Intent(
-                    if (scheme ==
-                        "tel"
-                    ) {
-                        Intent.ACTION_DIAL
-                    } else {
-                        Intent.ACTION_SENDTO
-                    },
-                    Uri.fromParts(scheme, address, null),
-                ),
-            )
-        }
-            .onFailure { Toast.makeText(context, unavailable, Toast.LENGTH_LONG).show() }
+        val action = if (scheme == "tel") Intent.ACTION_DIAL else Intent.ACTION_SENDTO
+        runCatching { context.startActivity(Intent(action, Uri.fromParts(scheme, address, null))) }
+            .onFailure { Toast.makeText(context, R.string.external_link_unavailable, Toast.LENGTH_LONG).show() }
     }
     val phone = listing?.phoneNumber?.takeIf(::validAccountPhone)
     val email = listing?.email?.takeIf(::validAccountEmail)

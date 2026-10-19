@@ -1,10 +1,8 @@
 package com.askit.app.home.details
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,121 +17,105 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.askit.app.R
+import com.askit.app.home.model.FeedPost
+import com.askit.app.profile.ProfileActionId
+import com.askit.app.profile.ProfileContactDialog
+import com.askit.app.profile.ProfileOverflowTopBar
+import com.askit.app.profile.ProfilePeopleState
+import com.askit.app.profile.ProfileSections
+import com.askit.app.profile.ProfileUiState
 import com.askit.app.profile.UniversalProfileScaffold
+import com.askit.app.profile.profileActions
 import com.askit.app.profile.toUiState
 import com.askit.app.profile.withPeople
-
-data class UserReviewData(val reviewerName: String, val rating: Double, val date: String, val comment: String)
-
-data class UserProfileData(
-    val id: String,
-    val username: String,
-    val name: String,
-    val trade: String = "",
-    val avatarUrl: String? = null,
-    val directionalReviews: List<com.askit.app.profile.ProfileReview> = emptyList(),
-    val completedAsProvider: Int? = null,
-    val completedAsSeeker: Int? = null,
-    val rating: Double = 0.0,
-    val completedJobsCount: Int = 0,
-    val location: String = "Local District",
-    val joinedYear: String = "",
-    val bio: String = "",
-    val skills: List<String> = emptyList(),
-    val reviews: List<UserReviewData> = emptyList(),
-    val isProvider: Boolean = true,
-    val followerCount: Int = 0,
-    val followingCount: Int = 0,
-    val isVerified: Boolean = false,
-    val bannerUrl: String? = null,
-    val highlights: List<com.askit.app.profile.ProfileHighlight> = emptyList(),
-    val listing: com.askit.app.session.ServiceListing? = null,
-    val discloseApproximateLocation: Boolean = false,
-    val postcodeDistanceKm: Double? = null,
-)
+import com.askit.app.task.Task
 
 /** Sample public profiles exist only in the client-preview build; release has no profile lookup yet. */
 fun getUserProfileById(userId: String): UserProfileData? =
     if (com.askit.app.BuildConfig.CLIENT_PREVIEW) com.askit.app.variant.AppVariant.publicProfile(userId) else null
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+/**
+ * Someone else's profile. Follow, Message and Block/Report appear only when their callbacks are
+ * given (signed in and supported by this build); Contact only when the listing publishes contact.
+ */
 @Composable
 fun UserProfileScreen(
     userId: String,
+    publicProfile: UserProfileData?,
+    profilesAvailable: Boolean,
+    viewerAccountId: String?,
+    viewerPostcode: String?,
+    people: ProfilePeopleState,
+    posts: List<FeedPost>,
+    tasks: List<Task>,
+    publicProfileUrl: String?,
+    isBlocked: Boolean,
+    isFollowing: Boolean,
     onBack: () -> Unit,
+    onOpenProfile: (String) -> Unit,
+    onFollowPerson: (String, Boolean) -> Boolean,
+    onOpenPost: (String) -> Unit,
+    onOpenTask: (String) -> Unit,
+    onToggleFollow: (() -> Unit)?,
+    onMessage: (() -> Unit)?,
+    onModerate: ((Boolean) -> Boolean)?,
     modifier: Modifier = Modifier,
-    posts: List<com.askit.app.home.model.FeedPost> = emptyList(),
-    onOpenPost: (String) -> Unit = {},
-    onMessage: () -> Unit = {},
-    tasks: List<com.askit.app.task.Task> = emptyList(),
-    onOpenTask: (String) -> Unit = {},
-    publicProfileUrl: String? = null,
-    onModerate: (Boolean) -> Boolean = { false },
-    isBlocked: Boolean = false,
-    viewerPostcode: String? = null,
-    viewerAccountId: String? = null,
-    publicProfile: UserProfileData? = null,
-    people: com.askit.app.profile.ProfilePeopleState = com.askit.app.profile.ProfilePeopleState(),
-    onOpenProfile: (String) -> Unit = {},
-    onFollowPerson: (String, Boolean) -> Boolean = { _, _ -> false },
-    isFollowing: Boolean? = null,
-    onToggleFollow: (() -> Unit)? = null,
 ) {
-    val user = publicProfile ?: remember(userId) { getUserProfileById(userId) }
-    val following = isFollowing ?: false
     var sectionId by rememberSaveable(userId) { mutableStateOf("") }
-
+    var showContact by rememberSaveable(userId) { mutableStateOf(false) }
+    val uiState = remember(publicProfile, isFollowing, sectionId, viewerPostcode, people) {
+        publicProfile?.toUiState(
+            isFollowing = isFollowing,
+            selectedSectionId = sectionId,
+            viewerPostcode = viewerPostcode,
+        )?.withPeople(people)
+    }
     Scaffold(
         modifier = modifier.fillMaxSize().testTag("user_profile_screen"),
         topBar = {
-            com.askit.app.profile.ProfileOverflowTopBar(
-                user?.toUiState() ?: com.askit.app.profile.ProfileUiState(),
+            ProfileOverflowTopBar(
+                uiState ?: ProfileUiState(),
                 viewerAccountId,
                 publicProfileUrl,
                 onBack = onBack,
-                onModerate = onModerate,
+                onModerate = onModerate.takeIf { !isBlocked },
             )
         },
     ) { padding ->
-        if (user == null || isBlocked) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(stringResource(if (isBlocked) R.string.messages_blocked else R.string.user_profile_unavailable_body))
+        if (uiState == null || isBlocked) {
+            val message = when {
+                isBlocked -> R.string.messages_blocked
+                profilesAvailable -> R.string.user_profile_unavailable_body
+                else -> R.string.user_profile_unavailable_release
+            }
+            Box(Modifier.fillMaxSize().padding(padding).padding(24.dp), contentAlignment = Alignment.Center) {
+                Text(stringResource(message))
             }
             return@Scaffold
         }
-        val uiState = user.toUiState(
-            isFollowing = following,
-            selectedSectionId = sectionId,
-            viewerPostcode = viewerPostcode,
-        ).withPeople(people)
-        var showContact by rememberSaveable(userId) { mutableStateOf(false) }
-        if (showContact) com.askit.app.profile.ProfileContactDialog(uiState.listing, false) { showContact = false }
-        val actionConfig = com.askit.app.profile.profileActions(
+        if (showContact) ProfileContactDialog(uiState.listing, readOnly = false) { showContact = false }
+        val actionConfig = profileActions(
             uiState,
             viewerAccountId,
-            mapOf(
-                com.askit.app.profile.ProfileActionId.FOLLOW to { onToggleFollow?.invoke() },
-                com.askit.app.profile.ProfileActionId.MESSAGE to onMessage,
-                com.askit.app.profile.ProfileActionId.CONTACT to { showContact = true },
-            ),
+            buildMap {
+                onToggleFollow?.let { put(ProfileActionId.FOLLOW, it) }
+                onMessage?.let { put(ProfileActionId.MESSAGE, it) }
+                put(ProfileActionId.CONTACT) { showContact = true }
+            },
         )
-
         UniversalProfileScaffold(
-            uiState = uiState, people = people, onOpenProfile = onOpenProfile, onFollowPerson = onFollowPerson,
+            uiState = uiState,
             actionConfig = actionConfig,
+            onSectionSelect = { sectionId = it },
+            people = people,
             showTopBar = false,
-            isVisitor = true,
             viewerAccountId = viewerAccountId,
-            authorizedPostIds = posts.map { it.id }.toSet(),
+            authorizedPostIds = remember(posts) { posts.mapTo(HashSet()) { it.id } },
+            onOpenProfile = onOpenProfile,
+            onFollowPerson = onFollowPerson,
             onOpenPost = onOpenPost,
             modifier = Modifier.padding(padding),
-            onSectionSelected = { sectionId = it },
-            content = { id ->
-                com.askit.app.profile.ProfileSections(id, uiState, posts, tasks, onOpenPost, onOpenTask)
-            },
+            content = { id -> ProfileSections(id, uiState, posts, tasks, onOpenPost, onOpenTask) },
         )
     }
 }

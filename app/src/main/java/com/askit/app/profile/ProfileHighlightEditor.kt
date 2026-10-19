@@ -2,7 +2,19 @@ package com.askit.app.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -11,9 +23,23 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,10 +57,7 @@ import com.askit.app.format.formatInstantDateTime
 import com.askit.app.home.model.Story
 import com.askit.app.story.StoryLayer
 import com.askit.designsystem.inputs.AskITTextField
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.UUID
 import com.askit.designsystem.R as DsR
 
@@ -45,10 +68,11 @@ internal fun HighlightEditor(
     original: ProfileHighlight?,
     availableStories: List<Story>,
     onDismiss: () -> Unit,
-    onSave: (ProfileHighlight) -> Boolean,
+    onSave: suspend (ProfileHighlight) -> Boolean,
     onDelete: (String) -> Unit,
 ) {
-    val id = remember(ownerId, original?.id) { original?.id ?: UUID.randomUUID().toString() }
+    // Saveable, so a new draft keeps its id (and the name/selection keyed on it) across rotation.
+    val id = rememberSaveable(ownerId, original?.id) { original?.id ?: UUID.randomUUID().toString() }
     val candidates = (original?.stories.orEmpty() + availableStories)
         .filter { it.authorId == ownerId && !it.isDeleted }.distinctBy { it.id }
     var name by rememberSaveable(id) { mutableStateOf(original?.name.orEmpty()) }
@@ -89,7 +113,7 @@ internal fun HighlightEditor(
                     scope.launch {
                         busy = true
                         val collection = ProfileHighlight(id, ownerId, name.trim(), members, cover?.id)
-                        val saved = persistHighlightChange { onSave(collection) }
+                        val saved = onSave(collection)
                         busy = false
                         if (saved) onDismiss() else failed = true
                     }
@@ -123,7 +147,7 @@ internal fun HighlightEditor(
                             AskITTextField(
                                 name,
                                 {
-                                    if (it.length <= 60) {
+                                    if (it.length <= HIGHLIGHT_NAME_MAX) {
                                         name = it
                                         failed = false
                                     }
@@ -131,6 +155,7 @@ internal fun HighlightEditor(
                                 enabled = !busy,
                                 singleLine = true,
                                 label = { Text(stringResource(R.string.profile_highlight_name)) },
+                                supportingText = { Text("${name.length}/$HIGHLIGHT_NAME_MAX") },
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
@@ -145,7 +170,7 @@ internal fun HighlightEditor(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                         )
-                        if (failed) Text(stringResource(R.string.profile_save_unavailable), color = MaterialTheme.colorScheme.error)
+                        if (failed) Text(stringResource(R.string.profile_action_error), color = MaterialTheme.colorScheme.error)
                         if (candidates.isEmpty()) {
                             Text(
                                 stringResource(R.string.profile_highlight_no_stories),
@@ -211,15 +236,5 @@ internal fun HighlightEditor(
                 }
             }
         }
-    }
-}
-
-internal suspend fun persistHighlightChange(action: () -> Boolean): Boolean = withContext(Dispatchers.IO) {
-    try {
-        action()
-    } catch (cancelled: CancellationException) {
-        throw cancelled
-    } catch (_: Exception) {
-        false
     }
 }

@@ -1,18 +1,41 @@
 package com.askit.app.profile
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,9 +54,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.askit.app.R
 import com.askit.app.home.model.Story
+import com.askit.app.home.stories.StoryGroup
+import com.askit.app.home.stories.StoryPlaybackContext
+import com.askit.app.home.stories.StoryViewerScreen
+import com.askit.app.home.stories.StoryViewerUiState
 import com.askit.app.story.StoryLayer
 import com.askit.app.story.StoryMediaType
 import kotlinx.coroutines.launch
@@ -46,16 +75,18 @@ internal fun ProfileHighlights(
     collections: List<ProfileHighlight>,
     stories: List<Story>,
     canManage: Boolean,
-    authorizedPostIds: Set<String> = emptySet(),
-    onSave: (ProfileHighlight) -> Boolean,
-    onDelete: (String) -> Boolean,
     onOpenPost: (String) -> Unit,
+    authorizedPostIds: Set<String> = emptySet(),
+    onSave: suspend (ProfileHighlight) -> Boolean = { false },
+    onDelete: suspend (String) -> Boolean = { false },
 ) {
     var editingId by rememberSaveable(ownerId, viewerId) { mutableStateOf<String?>(null) }
     var viewingId by rememberSaveable(ownerId, viewerId) { mutableStateOf<String?>(null) }
     var menuId by rememberSaveable(ownerId, viewerId) { mutableStateOf<String?>(null) }
     var deletingId by rememberSaveable(ownerId, viewerId) { mutableStateOf<String?>(null) }
     val owned = collections.filter { it.ownerId == ownerId }
+    // Visitors see nothing rather than an empty row; the owner keeps the "New" button and a hint.
+    if (owned.isEmpty() && !canManage) return
     val highlightsLabel = stringResource(R.string.profile_highlights)
     Column(Modifier.fillMaxWidth().testTag("profile_highlights")) {
         LazyRow(
@@ -108,7 +139,7 @@ internal fun ProfileHighlights(
                 }
             }
         }
-        if (owned.isEmpty() || canManage) {
+        if (canManage) {
             Text(
                 stringResource(if (owned.isEmpty()) R.string.profile_highlights_empty else R.string.profile_highlight_manage_hint),
                 style = MaterialTheme.typography.bodySmall,
@@ -246,19 +277,19 @@ internal fun HighlightCover(story: Story?, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun HighlightDeleteDialog(collection: ProfileHighlight, onDismiss: () -> Unit, onDelete: (String) -> Boolean) {
+private fun HighlightDeleteDialog(collection: ProfileHighlight, onDismiss: () -> Unit, onDelete: suspend (String) -> Boolean) {
     var busy by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     AlertDialog(
         onDismissRequest = { if (!busy) onDismiss() },
         title = { Text(stringResource(R.string.profile_highlight_delete_title, collection.name)) },
-        text = { Text(stringResource(if (failed) R.string.profile_save_unavailable else R.string.profile_highlight_delete_hint)) },
+        text = { Text(stringResource(if (failed) R.string.profile_action_error else R.string.profile_highlight_delete_hint)) },
         confirmButton = {
             TextButton(enabled = !busy, onClick = {
                 scope.launch {
                     busy = true
-                    val deleted = persistHighlightChange { onDelete(collection.id) }
+                    val deleted = onDelete(collection.id)
                     busy = false
                     if (deleted) onDismiss() else failed = true
                 }
@@ -266,4 +297,49 @@ private fun HighlightDeleteDialog(collection: ProfileHighlight, onDismiss: () ->
         },
         dismissButton = { TextButton(enabled = !busy, onClick = onDismiss) { Text(stringResource(R.string.profile_cancel)) } },
     )
+}
+
+/** Reuses the story renderer with an explicit retained context and no ordinary-story mutations. */
+@Composable
+private fun HighlightPlayback(
+    collection: ProfileHighlight,
+    viewerId: String?,
+    authorizedPostIds: Set<String>,
+    onDismiss: () -> Unit,
+    onOpenPost: (String) -> Unit,
+) {
+    val stories = collection.visibleStories(viewerId, authorizedPostIds)
+    var index by rememberSaveable(collection.id, viewerId) { mutableIntStateOf(0) }
+    var paused by rememberSaveable(collection.id) { mutableStateOf(false) }
+    if (stories.isEmpty()) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(collection.name) },
+            text = { Text(stringResource(R.string.profile_highlight_unavailable)) },
+            confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.explore_back)) } },
+        )
+        return
+    }
+    val state = StoryViewerUiState(
+        isLoading = false,
+        groups = listOf(StoryGroup(collection.name, stories.first().authorAvatarUrl, stories, collection.ownerId)),
+        itemIndex = index.coerceAtMost(stories.lastIndex),
+        paused = paused,
+        playbackContext = StoryPlaybackContext.Highlight(collection.ownerId, collection.id),
+    )
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        BackHandler(onBack = onDismiss)
+        StoryViewerScreen(
+            state = state,
+            onNext = { if (index < stories.lastIndex) index++ else onDismiss() },
+            onPrevious = { index = (index - 1).coerceAtLeast(0) },
+            onPauseChanged = { paused = it },
+            onLikeClick = {},
+            onShareClick = {},
+            socialLikes = emptySet(),
+            onSelectGroup = {},
+            onDismiss = onDismiss,
+            onViewPost = onOpenPost,
+        )
+    }
 }
