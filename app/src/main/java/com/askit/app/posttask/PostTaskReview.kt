@@ -1,8 +1,6 @@
 package com.askit.app.posttask
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -20,25 +17,21 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.askit.app.R
 import com.askit.app.forms.FormSummaryRow
-import com.askit.app.task.TaskPhotoGallery
-import com.askit.app.task.TaskPreferencesSummary
+import com.askit.app.task.TaskDetailContent
 import com.askit.app.task.presentation
 import com.askit.app.task.toPublicTask
 import com.askit.designsystem.tasks.TaskResultItem
@@ -50,12 +43,6 @@ internal fun PostTaskReview(modifier: Modifier = Modifier, state: PostTaskFormSt
     val draft = state.toDraft()
     val task = draft.toPublicTask("review", stringResource(R.string.post_task_you_creator))
     val display = task.presentation(context)
-    val categoryLabel = display.category
-    val timingLabel = display.timing
-    val previewLocationLabel = display.location
-    val previewTimingLabel = display.timing
-    val previewBudgetLabel = display.budget
-    val requirementsList = display.requirements
     val scopeHighlights = display.requirements.take(2)
     val privateAddress = state.privateAddressOrLandmark.trim()
     val accessInstructions = state.accessInstructions.trim()
@@ -101,11 +88,11 @@ internal fun PostTaskReview(modifier: Modifier = Modifier, state: PostTaskFormSt
 
             TaskResultItem(
                 title = state.title.trim(),
-                category = categoryLabel,
+                category = display.category,
                 summary = state.details.trim().takeIf(String::isNotEmpty),
-                budgetLabel = previewBudgetLabel,
-                locationLabel = previewLocationLabel,
-                timingLabel = previewTimingLabel,
+                budgetLabel = display.budget,
+                locationLabel = display.location,
+                timingLabel = display.timing,
                 posterName = stringResource(R.string.post_task_you_creator),
                 postedLabel = stringResource(R.string.post_task_review_draft),
                 status = null,
@@ -120,185 +107,19 @@ internal fun PostTaskReview(modifier: Modifier = Modifier, state: PostTaskFormSt
             modifier = Modifier.padding(vertical = 4.dp),
         )
 
-        // Full Task Details Header
+        // Full Task Details: the same composable the task detail screen renders.
         Text(
             text = stringResource(R.string.post_task_full_details),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.semantics { heading() },
         )
-
-        // Category & timing badge row (matching TaskDetailScreen)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
-            ) {
-                Text(
-                    text = categoryLabel,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                )
-            }
-
-            Text(
-                text = timingLabel.ifEmpty { stringResource(R.string.post_task_flexible) },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        // Title (matching TaskDetailScreen)
-        Text(
-            text = state.title.trim(),
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
+        TaskDetailContent(
+            task = task,
+            display = display,
+            posterInitial = stringResource(R.string.post_task_you_initial),
+            modifier = Modifier.testTag("post_task_detail_preview"),
         )
-
-        // Estimated Budget & Timing Card (matching TaskDetailScreen)
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = stringResource(R.string.task_detail_budget),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = previewBudgetLabel,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.post_task_timeline),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = timingLabel.ifEmpty { stringResource(R.string.post_task_flexible) },
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = if (state.timingMode == PostTaskTimingMode.ASAP) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        },
-                    )
-                }
-            }
-        }
-
-        // Requester & Location row (matching TaskDetailScreen)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(R.string.post_task_you_initial),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = stringResource(R.string.post_task_you_creator),
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = previewLocationLabel,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-
-        // Description (matching TaskDetailScreen)
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.list_service_description),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = state.details.trim(),
-                style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        // Key Requirements (matching TaskDetailScreen)
-        if (requirementsList.isNotEmpty()) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = stringResource(R.string.task_detail_requirements),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                requirementsList.forEach { req ->
-                    Row(
-                        verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(
-                            text = "•",
-                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Text(
-                            text = req,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-        }
-
-        // Photos (matching TaskDetailScreen)
-        if (state.photoUris.isNotEmpty()) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = pluralStringResource(R.plurals.post_task_preview_photos, state.photoUris.size, state.photoUris.size),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                TaskPhotoGallery(state.photoUris)
-            }
-        }
-
-        TaskPreferencesSummary(draft.preferences)
 
         // Dedicated Private Information Card (with lock icon & reassurance)
         if (state.workMode == PostTaskWorkMode.AT_MY_LOCATION &&
