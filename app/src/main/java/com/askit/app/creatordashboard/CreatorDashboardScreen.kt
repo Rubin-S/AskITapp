@@ -48,8 +48,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -59,6 +57,7 @@ import com.askit.app.creatordashboard.components.CreatorAiInsightCard
 import com.askit.app.creatordashboard.components.CreatorMetricCard
 import com.askit.app.creatordashboard.components.CreatorTrendGraph
 import com.askit.app.dashboard.DashboardDataUnavailable
+import com.askit.designsystem.components.AskITSectionHeader
 import com.askit.designsystem.navigation.AskITSectionTabs
 import com.askit.designsystem.navigation.SectionTab
 import com.askit.designsystem.people.AskITAvatar
@@ -178,7 +177,7 @@ fun CreatorDashboardScreen(
 
             // 4. Discovery & Reach Section
             item(key = "discovery_section_title") {
-                SectionHeader(title = stringResource(R.string.creator_section_discovery))
+                AskITSectionHeader(title = stringResource(R.string.creator_section_discovery))
             }
 
             item(key = "discovery_metrics_grid") {
@@ -197,7 +196,7 @@ fun CreatorDashboardScreen(
 
             // 5. Community & Interactions Section
             item(key = "community_section_title") {
-                SectionHeader(title = stringResource(R.string.creator_section_community))
+                AskITSectionHeader(title = stringResource(R.string.creator_section_community))
             }
 
             item(key = "community_metrics_grid_1") {
@@ -254,7 +253,7 @@ fun CreatorDashboardScreen(
 
             // 8. Recent Activity Feed
             item(key = "recent_activity_title") {
-                SectionHeader(title = stringResource(R.string.creator_recent_activity_title))
+                AskITSectionHeader(title = stringResource(R.string.creator_recent_activity_title))
             }
 
             items(
@@ -601,14 +600,4 @@ private fun ActivityRow(activity: CreatorActivityItem, onClick: () -> Unit, modi
             )
         }
     }
-}
-
-@Composable
-private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = modifier.semantics { heading() },
-    )
 }
