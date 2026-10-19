@@ -2,7 +2,6 @@ package com.askit.app
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -30,7 +29,6 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import com.askit.app.auth.AuthOperation
 import com.askit.app.config.AppLinks
-import com.askit.app.config.profileUrl
 import com.askit.app.createpost.CreatePostRoute
 import com.askit.app.createpost.CreatePostViewModel
 import com.askit.app.creatordashboard.CreatorDashboardRoute
@@ -46,11 +44,8 @@ import com.askit.app.home.HomeViewModel
 import com.askit.app.home.details.PostDetailScreen
 import com.askit.app.home.details.ServiceDetailScreen
 import com.askit.app.home.details.TaskDetailScreen
-import com.askit.app.home.details.UserProfileScreen
 import com.askit.app.home.stories.StoryViewerRoute
 import com.askit.app.home.stories.StoryViewerViewModel
-import com.askit.app.home.stories.followerIds
-import com.askit.app.home.stories.followingIds
 import com.askit.app.inbox.ChatContact
 import com.askit.app.inbox.ChatThread
 import com.askit.app.inbox.InboxViewModel
@@ -74,12 +69,9 @@ import com.askit.app.posttask.PostTaskDraft
 import com.askit.app.posttask.PostTaskRoute
 import com.askit.app.posttask.PostTaskViewModel
 import com.askit.app.posttask.TaskEditUnavailableScreen
-import com.askit.app.profile.EditProfileScreen
 import com.askit.app.profile.ProfileReview
-import com.askit.app.profile.ProfileRoute
-import com.askit.app.profile.ProfileSettingsScreen
 import com.askit.app.profile.ProfileViewModel
-import com.askit.app.profile.toPublicProfile
+import com.askit.app.profile.profileEntries
 import com.askit.app.story.StoryRoute
 import com.askit.app.story.StoryViewModel
 import com.askit.app.task.TaskActionsViewModel
@@ -90,6 +82,7 @@ import com.askit.app.task.TaskRepository
 import com.askit.app.task.actionPolicy
 import com.askit.app.task.toExploreTaskResult
 import com.askit.app.variant.AppVariant
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun rememberAskITEntryProvider(
@@ -167,46 +160,42 @@ internal fun rememberAskITEntryProvider(
             }
         }
     }
-    val profileRelationships by storyViewerViewModel.social.relationships.collectAsStateWithLifecycle()
-    fun peopleFor(id: String): com.askit.app.profile.ProfilePeopleState {
-        if (!BuildConfig.CLIENT_PREVIEW) return com.askit.app.profile.ProfilePeopleState(viewerId = currentTaskAccountId())
-        fun person(accountId: String): com.askit.app.profile.ProfilePerson {
-            val account = runCatching { AppVariant.previewProfileStorage(context)?.load(accountId) }.getOrNull()
-            val sample = com.askit.app.home.details.getUserProfileById(accountId)
-            return com.askit.app.profile.ProfilePerson(
-                accountId,
-                account?.displayName ?: sample?.name ?: accountId,
-                account?.avatarUrl ?: sample?.avatarUrl,
-            )
-        }
-        return com.askit.app.profile.ProfilePeopleState(
-            currentTaskAccountId(),
-            profileRelationships.followerIds(id).map(::person),
-            profileRelationships.followingIds(id).map(::person),
-            profileRelationships[currentTaskAccountId()].orEmpty(),
-            canMutate = true,
-        )
-    }
-    fun openProfileDashboard(route: AppDestination) {
-        if (BuildConfig.CLIENT_PREVIEW) {
-            navigationState.push(route)
-        } else {
-            Toast.makeText(context, R.string.profile_action_unavailable, Toast.LENGTH_LONG).show()
-        }
-    }
     fun openProfile(id: String) = navigationState.openProfile(id, currentTaskAccountId())
-    fun followPerson(id: String, following: Boolean): Boolean {
-        if (!BuildConfig.CLIENT_PREVIEW) {
-            Toast.makeText(context, R.string.profile_save_unavailable, Toast.LENGTH_LONG).show()
-            return false
-        }
-        return storyViewerViewModel.social.setFollowing(
-            currentTaskAccountId(),
-            id,
-            following,
-        ) is com.askit.app.home.stories.StoryActionResult.Success
+    val editListing = {
+        val draft = profileViewModel.profile.value.listingDraft
+        if (draft != null) listServiceViewModel.loadDraft(draft) else listServiceViewModel.startNewDraft()
+        navigationState.push(AppDestination.ListService)
     }
+    val profileDeps = com.askit.app.profile.profileNavDeps(
+        navigationState, profileViewModel, authViewModel, homeViewModel, taskRepository, jobsViewModel, storyViewerViewModel,
+        inboxViewModel, appLinks,
+        com.askit.app.profile.ProfileNavActions(
+            currentAccountId = ::currentTaskAccountId,
+            openExternalLink = openExternalLink,
+            editListing = editListing,
+            postTask = {
+                postTaskViewModel.startNewDraft()
+                navigationState.push(AppDestination.PostTask)
+            },
+            previewControls = if (BuildConfig.CLIENT_PREVIEW) {
+                {
+                    AppVariant.DemoSettings(onOpen = navigationState::push)
+                    AppVariant.PreviewProfileControls(
+                        onAccount = {
+                            authViewModel.selectPreviewAccount(it)
+                            navigationState.navigate(AppDestination.Profile)
+                        },
+                        onView = ::openProfile,
+                    )
+                }
+            } else {
+                null
+            },
+        ),
+    )
+    val listingScope = androidx.compose.runtime.rememberCoroutineScope()
     return entryProvider<NavKey> {
+        profileEntries(profileDeps)
         entry<AppDestination.Entry> {
             EntryScreen(
                 onOpenTerms = { openExternalLink(appLinks.termsUrl) },
@@ -423,14 +412,12 @@ internal fun rememberAskITEntryProvider(
                 profile = profile,
                 onBack = { navigationState.pop() },
                 onCompleteDraft = { draft ->
-                    if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) {
-                        android.widget.Toast.makeText(context, R.string.profile_save_unavailable, android.widget.Toast.LENGTH_LONG).show()
-                        return@ListServiceRoute
+                    if (!profileViewModel.capabilities.editProfile) {
+                        Toast.makeText(context, R.string.profile_save_unavailable, Toast.LENGTH_LONG).show()
+                    } else {
+                        val listing = draft.toServiceListing(draft.categoryLabel(context::getString))
+                        listingScope.launch { profileViewModel.saveListing(listing, draft) }
                     }
-                    jobsViewModel.profileStore.applyListing(
-                        listing = draft.toServiceListing(draft.categoryLabel(context::getString)),
-                        draft = draft,
-                    )
                 },
             )
         }
@@ -563,161 +550,6 @@ internal fun rememberAskITEntryProvider(
                 onDeclineJob = { jobsViewModel.store.reject(it) },
                 onCancelJob = { jobsViewModel.store.cancel(it) },
                 initialPane = MessagesPane.Chats,
-            )
-        }
-        entry<AppDestination.Profile> {
-            val profilePostRecords by homeViewModel.posts.posts.collectAsStateWithLifecycle()
-            val profileTasks by taskRepository.tasks.collectAsStateWithLifecycle()
-            val profile by profileViewModel.profile.collectAsStateWithLifecycle()
-            val loadState by profileViewModel.loadState.collectAsStateWithLifecycle()
-            val jobs by jobsViewModel.jobs.collectAsStateWithLifecycle()
-            val profileHome by homeViewModel.uiState.collectAsStateWithLifecycle()
-            ProfileRoute(
-                people = peopleFor(profile.accountId), onOpenProfile = ::openProfile, onFollowPerson = ::followPerson,
-                stories = (profileHome as? com.askit.app.home.HomeUiState.Success)?.stories.orEmpty(),
-                onSaveHighlight = { profileViewModel.saveHighlight(profile.accountId, it) },
-                onDeleteHighlight = { profileViewModel.deleteHighlight(profile.accountId, it) },
-                posts = com.askit.app.home.posts.orderedProfilePosts(profilePostRecords.values, profile.accountId),
-                onOpenPost = { navigationState.push(AppDestination.PostDetail(it)) },
-                profile = profile,
-                tasks = profileTasks, onOpenTask = { navigationState.push(AppDestination.TaskDetail(it)) },
-                jobs = jobs,
-                loadState = loadState,
-                messages = profileViewModel.messages,
-                onEditProfile = { navigationState.push(AppDestination.EditProfile) },
-                onEditListing = {
-                    val draft = jobsViewModel.profileStore.profile.value.listingDraft
-                    if (draft != null) {
-                        listServiceViewModel.loadDraft(draft)
-                    } else {
-                        listServiceViewModel.startNewDraft()
-                    }
-                    navigationState.push(AppDestination.ListService)
-                },
-                onSetAvatar = { uri -> profileViewModel.setAvatar(profile.accountId, uri) },
-                onSaveBanner = { uri -> profileViewModel.setBanner(profile.accountId, uri) },
-                onOpenSettings = { navigationState.push(AppDestination.ProfileSettings) },
-                onOpenProviderDashboard = { openProfileDashboard(AppDestination.ProviderDashboard) },
-                onOpenCreatorDashboard = { openProfileDashboard(AppDestination.CreatorDashboard) },
-                onPostTask = {
-                    postTaskViewModel.startNewDraft()
-                    navigationState.push(AppDestination.PostTask)
-                },
-                publicProfileUrl = appLinks.profileUrl(profile.accountId),
-            )
-        }
-        entry<AppDestination.ProfileSettings> {
-            val storySocial by storyViewerViewModel.social.state.collectAsStateWithLifecycle()
-            val profile by profileViewModel.profile.collectAsStateWithLifecycle()
-            val postRecords by homeViewModel.posts.posts.collectAsStateWithLifecycle()
-            val postAccount by homeViewModel.posts.account.collectAsStateWithLifecycle()
-            ProfileSettingsScreen(
-                previewControls = if (BuildConfig.CLIENT_PREVIEW) {
-                    (
-                        {
-                            AppVariant.DemoSettings(onOpen = navigationState::push)
-                            AppVariant.PreviewProfileControls(
-                                onAccount = {
-                                    authViewModel.selectPreviewAccount(it)
-                                    navigationState.navigate(AppDestination.Profile)
-                                },
-                                onView = ::openProfile,
-                            )
-                        }
-                        )
-                } else {
-                    null
-                },
-                savedPosts = remember(postRecords, postAccount) { homeViewModel.posts.savedPosts() },
-                archivedPosts = remember(postRecords, postAccount) { homeViewModel.posts.archivedPosts() },
-                onOpenPost = { navigationState.push(AppDestination.PostDetail(it)) },
-                onRestorePost = { id ->
-                    val result = homeViewModel.posts.setArchived(id, currentTaskAccountId(), false)
-                    if (result is com.askit.app.home.posts.PostResult.Failure) {
-                        Toast.makeText(
-                            context,
-                            result.messageRes,
-                            Toast.LENGTH_LONG,
-                        ).show()
-                    }
-                },
-                profile = profile,
-                mutedStoryAuthors = storySocial.muted.values.toList(),
-                onUnmuteStoryAuthor = { authorId ->
-                    val result = storyViewerViewModel.social.unmute(currentTaskAccountId(), authorId)
-                    if (result is com.askit.app.home.stories.StoryActionResult.Rejected) {
-                        storyViewerViewModel.social.notify(
-                            result.reason.messageRes,
-                        )
-                    }
-                },
-                onBack = { navigationState.pop() },
-                onNavigateToEditProfile = { navigationState.push(AppDestination.EditProfile) },
-                onNavigateToListService = {
-                    val draft = jobsViewModel.profileStore.profile.value.listingDraft
-                    if (draft != null) {
-                        listServiceViewModel.loadDraft(draft)
-                    } else {
-                        listServiceViewModel.startNewDraft()
-                    }
-                    navigationState.push(AppDestination.ListService)
-                },
-                onNavigateToCreatePost = {
-                    createPostViewModel.startNewDraft()
-                    navigationState.push(AppDestination.CreatePost)
-                },
-                onNavigateToJobRequests = {
-                    navigationState.navigate(AppDestination.Inbox)
-                },
-                onContactSupport = {
-                    openExternalLink(appLinks.supportEmail?.let { Uri.fromParts("mailto", it, null).toString() } ?: appLinks.supportUrl)
-                },
-                onOpenHelpCenter = { openExternalLink(appLinks.helpCenterUrl) },
-                onOpenTerms = { openExternalLink(appLinks.termsUrl) },
-                onOpenPrivacyPolicy = { openExternalLink(appLinks.privacyPolicyUrl) },
-                onUpdatePushNotifications = profileViewModel::updatePushNotifications,
-                onUpdateJobAlerts = profileViewModel::updateJobAlerts,
-                onUpdateLanguage = { language ->
-                    profileViewModel.updateLanguage(language)
-                    AppCompatDelegate.setApplicationLocales(
-                        LocaleListCompat.forLanguageTags(com.askit.app.session.AppLanguage.fromStoredValue(language).languageTag),
-                    )
-                },
-                onUpdateLocationServices = profileViewModel::updateLocationServices,
-                onUpdateWhoCanMessage = { option ->
-                    if (!profileViewModel.updateWhoCanMessage(option)) {
-                        val message = if (BuildConfig.CLIENT_PREVIEW) R.string.profile_action_error else R.string.profile_save_unavailable
-                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                    }
-                },
-                onSaveAvailability = profileViewModel::updateAvailability,
-                onLogout = authViewModel::signOut,
-                onClearAppData = {
-                    // Clearing local data ends the session too: staying signed in with a blank
-                    // profile left the account half-broken until the next sign-in.
-                    profileViewModel.resetAppData()
-                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
-                    authViewModel.signOut()
-                },
-            )
-        }
-        entry<AppDestination.EditProfile> {
-            val profile by profileViewModel.profile.collectAsStateWithLifecycle()
-            EditProfileScreen(
-                profile = profile,
-                onBack = { navigationState.pop() },
-                onSave = { state ->
-                    profileViewModel.saveIdentity(state).also { saved ->
-                        if (saved) {
-                            AppCompatDelegate.setApplicationLocales(
-                                LocaleListCompat.forLanguageTags(
-                                    com.askit.app.session.AppLanguage.fromStoredValue(state.language).languageTag,
-                                ),
-                            )
-                            navigationState.pop()
-                        }
-                    }
-                },
             )
         }
         entry<AppDestination.NewMessage> {
@@ -927,71 +759,6 @@ internal fun rememberAskITEntryProvider(
                         AppDestination.Inbox,
                         AppDestination.JobDetail(jobId),
                     )
-                },
-            )
-        }
-        entry<AppDestination.UserProfile> { key ->
-            if (key.userId == currentTaskAccountId()) {
-                LaunchedEffect(key.userId) { openProfile(key.userId) }
-                return@entry
-            }
-            val profilePostRecords by homeViewModel.posts.posts.collectAsStateWithLifecycle()
-            val profileTasks by taskRepository.tasks.collectAsStateWithLifecycle()
-            val social by storyViewerViewModel.social.state.collectAsStateWithLifecycle()
-            val currentProfile by profileViewModel.profile.collectAsStateWithLifecycle()
-            val publicProfile = remember(key.userId, currentProfile) {
-                if (com.askit.app.BuildConfig.CLIENT_PREVIEW) {
-                    runCatching {
-                        val account = AppVariant.previewProfileStorage(context)?.load(key.userId)
-                            ?: if (key.userId in
-                                setOf("preview-owner", "preview-visitor", "preview-seeker")
-                            ) {
-                                AppVariant.previewProfile(key.userId)
-                            } else {
-                                null
-                            }
-                        account?.toPublicProfile() ?: com.askit.app.home.details.getUserProfileById(key.userId)
-                    }.getOrNull()
-                } else {
-                    null
-                }
-            }
-            UserProfileScreen(
-                tasks = profileTasks, onOpenTask = { navigationState.push(AppDestination.TaskDetail(it)) },
-                publicProfileUrl = appLinks.profileUrl(key.userId),
-                isBlocked = inboxViewModel.conversations.any { it.contact.id == key.userId && it.blocked },
-                onModerate = moderate@{ report ->
-                    val actor = currentTaskAccountId()
-                    if (!BuildConfig.CLIENT_PREVIEW ||
-                        !com.askit.app.profile.canMutateProfileVisitor(actor, key.userId, false)
-                    ) {
-                        return@moderate false
-                    }
-                    val target = publicProfile ?: return@moderate false
-                    inboxViewModel.moderate(ChatContact(target.id, target.name, target.avatarUrl), report)
-                    if (!report) followPerson(target.id, false)
-                    true
-                },
-                people = peopleFor(key.userId), onOpenProfile = ::openProfile, onFollowPerson = ::followPerson,
-                publicProfile = publicProfile,
-                viewerAccountId = currentTaskAccountId(),
-                viewerPostcode = currentProfile.pincode,
-                posts = com.askit.app.home.posts.orderedProfilePosts(profilePostRecords.values, key.userId),
-                onOpenPost = { navigationState.push(AppDestination.PostDetail(it)) },
-                userId = key.userId,
-                isFollowing = key.userId in social.following,
-                onToggleFollow = { followPerson(key.userId, key.userId !in social.following) },
-                onBack = { navigationState.pop() },
-                onMessage = message@{
-                    if (!BuildConfig.CLIENT_PREVIEW) {
-                        Toast.makeText(context, R.string.profile_action_unavailable, Toast.LENGTH_LONG).show()
-                        return@message
-                    }
-                    val target = publicProfile ?: return@message
-                    val conversationId =
-                        inboxViewModel.startConversation(ChatContact(target.id, target.name, target.avatarUrl)) ?: return@message
-                    inboxViewModel.openThread(conversationId)
-                    navigationState.push(AppDestination.ChatThread(conversationId))
                 },
             )
         }
