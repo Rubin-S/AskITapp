@@ -34,8 +34,7 @@ class DemoScreensTest {
                 is AppDestination.UserProfile -> assertNotNull(AppVariant.publicProfile(destination.userId))
                 is AppDestination.StoryViewer -> assertTrue(HomeFixtures.stories().any { it.id == destination.startStoryId })
                 is AppDestination.PostDetail -> assertTrue(HomeFixtures.feed().posts.any { it.id == destination.postId })
-                is AppDestination.ChatThread ->
-                    assertTrue(sampleInboxSeed().conversations.any { it.id == destination.conversationId })
+                is AppDestination.ChatThread -> assertTrue(sampleInboxSeed().conversations.any { it.id == destination.conversationId })
                 is AppDestination.JobDetail -> assertTrue(clientPreviewJobs().any { it.id == destination.jobId })
                 is AppDestination.JobVerifyEnter -> assertTrue(clientPreviewJobs().any { it.id == destination.jobId })
                 is AppDestination.JobVerifyShare -> assertTrue(clientPreviewJobs().any { it.id == destination.jobId })

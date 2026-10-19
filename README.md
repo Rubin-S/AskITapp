@@ -38,10 +38,35 @@ kotlinx.serialization · OkHttp · Gradle version catalog · JDK 17 · minSdk 26
 | --- | --- | --- | --- |
 | `debug` | `com.askit.app` | yes (`src/demo`) | Local development with sample feed, people, chats, jobs and dashboards. |
 | `preview` | `com.askit.app.preview` | yes, plus preview personas | Optimised client-checkpoint APK. Opens Home without sign-in, OTP `123456`, backend URL forced empty. Installs next to a normal build. Never publish it. |
+| `demo` | `com.askit.app.demo` | yes, plus preview personas and the demo menu | Testable demo APK ("AskIT Demo"): R8-optimised, non-debuggable, signed with the committed throwaway key. Welcome screen first, **Explore demo** or any number + OTP `123456`. No backend. See [Testing the demo build](#testing-the-demo-build). |
 | `release` | `com.askit.app` | **no** (`src/release`) | Real/local data only; screens without a backend show empty or "not available yet" states. |
 
 Tests that need fixtures live in `app/src/testDebug`; `app/src/testRelease/ReleaseVariantTest`
 fails if any fixture reaches the release classpath. Full notes: [docs/build-variants.md](docs/build-variants.md).
+
+## Testing the demo build
+
+The `demo` APK runs every screen with no server and no real account. Everything (accounts, posts,
+tasks, chats, jobs) is sample Puducherry data stored on the phone.
+
+1. Download `AskIT-demo-*.apk` from the repo's Releases page (or `./gradlew assembleDemo`).
+2. Open it on an Android 8.0+ phone and allow "Install unknown apps" for your browser or file app
+   when asked. It installs as **AskIT Demo** (`com.askit.app.demo`) next to any other AskIT build.
+3. Enter the app:
+   - **Explore demo (no sign-up)** on the Welcome screen signs in as the seeded demo account
+     (a provider with a listed service, so both seeker and provider screens work); or
+   - **Get started / I already have an account**: any valid Indian mobile number (e.g.
+     `98765 43210`), then OTP `123456` (shown on screen). This opens the sign-up form, so the
+     sign-up flow is testable too.
+4. Tap the small **DEMO** chip at the top of any screen to jump straight to any screen (Welcome,
+   sign-in, sign-up, Home, Explore, Inbox/chat, profile and edit, settings, post task/service/post,
+   stories, dashboards, jobs and reviews). The same menu is in **Settings → Demo build**.
+5. **Settings → Demo build → Reset demo data** erases everything and closes the app (like a fresh
+   install). Settings also has the preview account switcher (provider / seeker).
+
+Handy demo values: job start code `1234`; location search offers Puducherry, Karaikal and Auroville.
+Things that need real services are still local stand-ins: no SMS is sent, messages stay on the
+phone, and profile links point at `askit.in/u/...` placeholders.
 
 ## Setup
 
@@ -57,6 +82,7 @@ fails if any fixture reaches the release classpath. Full notes: [docs/build-vari
 # Build
 ./gradlew assembleDebug
 ./gradlew assemblePreview            # client checkpoint APK: app/build/outputs/apk/preview/
+./gradlew assembleDemo               # testable demo APK: app/build/outputs/apk/demo/app-demo.apk
 ./gradlew assembleRelease bundleRelease
 
 # Tests

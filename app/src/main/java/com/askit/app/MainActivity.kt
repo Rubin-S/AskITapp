@@ -70,13 +70,7 @@ class MainActivity : AppCompatActivity() {
         val profileViewModel = viewModels[ProfileViewModel::class.java]
         val creatorDashboardViewModel = viewModels[CreatorDashboardViewModel::class.java]
         val providerDashboardViewModel = viewModels[ProviderDashboardViewModel::class.java]
-        // The client preview opens signed in; the demo build keeps the Welcome screen first.
-        val initialRoute = if ((BuildConfig.CLIENT_PREVIEW && !BuildConfig.DEMO_BUILD) || (
-                BuildConfig.DEBUG &&
-                    intent.getBooleanExtra("extra_start_at_home", false) &&
-                    !intent.getBooleanExtra("extra_start_entry", false)
-                )
-        ) {
+        val initialRoute = if (startsSignedIn()) {
             com.askit.app.navigation.AppDestination.Home
         } else {
             com.askit.app.navigation.AppDestination.Entry
@@ -129,6 +123,14 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         appLinksViewModel.refresh()
+    }
+
+    /** The client preview opens signed in; the demo build keeps the Welcome screen first. */
+    private fun startsSignedIn(): Boolean {
+        if (BuildConfig.CLIENT_PREVIEW) return !BuildConfig.DEMO_BUILD
+        val debugStartAtHome = intent.getBooleanExtra("extra_start_at_home", false) &&
+            !intent.getBooleanExtra("extra_start_entry", false)
+        return BuildConfig.DEBUG && debugStartAtHome
     }
 
     private fun initializePlaces() {
