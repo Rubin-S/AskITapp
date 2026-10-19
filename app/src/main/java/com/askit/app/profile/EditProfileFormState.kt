@@ -1,5 +1,9 @@
 package com.askit.app.profile
 
+import com.askit.app.auth.AccountFormRules
+import com.askit.app.auth.SignupDraft
+import com.askit.app.session.AppLanguage
+
 @kotlinx.serialization.Serializable
 data class EditProfileFormState(
     val displayName: String,
@@ -11,24 +15,19 @@ data class EditProfileFormState(
     val email: String = "",
     val pincode: String = "",
     val phoneNumber: String = "",
-    val language: String = com.askit.app.session.AppLanguage.English.storedValue,
+    val language: String = AppLanguage.English.storedValue,
     val discloseApproximateLocation: Boolean = false,
 ) {
+    /** Checked against the account contract (city required; username, email and PIN optional). */
     val isValid: Boolean
-        get() = accountDraft().validation(photoReadable = true).isValid && bio.length <= BioMaxLength && title.length <= 100
+        get() = accountDraft().validation(photoReadable = true, rules = AccountFormRules.Edit).isValid &&
+            bio.length <= BIO_MAX_LENGTH && title.length <= TITLE_MAX_LENGTH
 
-    fun accountDraft() =
-        com.askit.app.auth.SignupDraft(displayName, username, city, pincode, phoneNumber, avatarUrl, language, email = email)
-
-    fun isDirty(original: EditProfileFormState): Boolean = displayName != original.displayName ||
-        username != original.username ||
-        city != original.city ||
-        bio != original.bio ||
-        avatarUrl != original.avatarUrl || title != original.title || email != original.email ||
-        pincode != original.pincode || phoneNumber != original.phoneNumber || language != original.language ||
-        discloseApproximateLocation != original.discloseApproximateLocation
+    fun accountDraft() = SignupDraft(displayName, username, city, pincode, phoneNumber, avatarUrl, language, email = email)
 }
 
-const val BioMaxLength = 200
+const val BIO_MAX_LENGTH = 200
+const val TITLE_MAX_LENGTH = 100
 
+/** Kept in the profile package: `/v1/me` validation (a detekt-baselined condition) names it here. */
 fun isUsernameValid(username: String): Boolean = username.matches(Regex("^[A-Za-z0-9._]+$"))

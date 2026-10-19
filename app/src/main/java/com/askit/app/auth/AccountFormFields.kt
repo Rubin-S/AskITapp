@@ -19,8 +19,15 @@ import com.askit.designsystem.inputs.AskITTextField
 /** Controlled Form A fields shared by registration and identity editing. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun AccountFormFields(draft: SignupDraft, onChange: (SignupDraft) -> Unit, enabled: Boolean = true, tag: String = "account") {
-    val validation = draft.validation(photoReadable = true)
+internal fun AccountFormFields(
+    draft: SignupDraft,
+    onChange: (SignupDraft) -> Unit,
+    enabled: Boolean = true,
+    tag: String = "account",
+    rules: AccountFormRules = AccountFormRules.Signup,
+) {
+    val validation = draft.validation(photoReadable = true, rules = rules)
+    val signup = rules == AccountFormRules.Signup
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         AccountField(
             draft.fullName,
@@ -37,6 +44,7 @@ internal fun AccountFormFields(draft: SignupDraft, onChange: (SignupDraft) -> Un
             validation.usernameValid,
             "${tag}_username",
             enabled,
+            required = signup,
         )
         AccountField(
             draft.phoneNumber,
@@ -54,6 +62,7 @@ internal fun AccountFormFields(draft: SignupDraft, onChange: (SignupDraft) -> Un
             validation.emailValid,
             "${tag}_email",
             enabled,
+            required = signup,
             keyboard = KeyboardType.Email,
         )
         AccountField(
@@ -63,16 +72,17 @@ internal fun AccountFormFields(draft: SignupDraft, onChange: (SignupDraft) -> Un
             validation.postcodeValid,
             "${tag}_pincode",
             enabled,
+            required = signup,
             keyboard = KeyboardType.Number,
         )
         AccountField(
             draft.city,
             { onChange(draft.copy(city = it)) },
             R.string.profile_city,
-            true,
+            validation.cityValid,
             "${tag}_city",
             enabled,
-            required = false,
+            required = !signup,
         )
         Text(stringResource(R.string.form_a_app_language) + " *", style = MaterialTheme.typography.labelLarge)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

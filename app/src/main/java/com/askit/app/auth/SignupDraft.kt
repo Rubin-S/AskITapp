@@ -16,15 +16,24 @@ data class SignupDraft(
     val area: String = "",
     val email: String? = null,
 ) {
-    fun validation(photoReadable: Boolean) = SignupValidation(
-        photoValid = avatarUri.isNullOrBlank() || photoReadable,
-        nameValid = fullName.isNotBlank(),
-        usernameValid = isUsernameValid(username),
-        postcodeValid = validAccountPostcode(pincode),
-        phoneValid = validAccountPhone(phoneNumber),
-        languageValid = preferredLanguage in com.askit.app.session.AppLanguage.storedValues,
-        emailValid = validAccountEmail(email),
-    )
+    /**
+     * Form A (signup) requires username, email and PIN (profile-backend-contract). Editing follows the
+     * account contract instead: city is required, while username, email and PIN may be empty but
+     * must be valid when given, so a returning account without an email can still save.
+     */
+    fun validation(photoReadable: Boolean, rules: AccountFormRules = AccountFormRules.Signup): SignupValidation {
+        val edit = rules == AccountFormRules.Edit
+        return SignupValidation(
+            photoValid = avatarUri.isNullOrBlank() || photoReadable,
+            nameValid = fullName.isNotBlank(),
+            usernameValid = (edit && username.isEmpty()) || isUsernameValid(username),
+            postcodeValid = (edit && pincode.isEmpty()) || validAccountPostcode(pincode),
+            phoneValid = validAccountPhone(phoneNumber),
+            languageValid = preferredLanguage in com.askit.app.session.AppLanguage.storedValues,
+            emailValid = (edit && email.isNullOrBlank()) || validAccountEmail(email),
+            cityValid = !edit || city.isNotBlank(),
+        )
+    }
 
     fun normalized() = copy(
         fullName = fullName.trim(),
@@ -47,10 +56,14 @@ data class SignupValidation(
     val phoneValid: Boolean,
     val languageValid: Boolean,
     val emailValid: Boolean,
+    val cityValid: Boolean = true,
 ) {
     val isValid: Boolean
-        get() = photoValid && nameValid && usernameValid && postcodeValid && phoneValid && languageValid && emailValid
+        get() = photoValid && nameValid && usernameValid && postcodeValid && phoneValid && languageValid && emailValid && cityValid
 }
+
+/** Which contract a Form A field set is checked against. */
+enum class AccountFormRules { Signup, Edit }
 
 /** Decodes a small preview to check readability without allocating the full photo. Call off main. */
 internal fun isSignupPhotoReadable(contentResolver: ContentResolver, avatarUri: String?): Boolean {

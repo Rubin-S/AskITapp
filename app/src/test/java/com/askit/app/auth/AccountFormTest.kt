@@ -25,16 +25,27 @@ class AccountFormTest {
         }
     }
 
-    @Test fun editingUsesTheSameAccountValidationAndTracksEveryField() {
+    @Test fun editingFollowsTheAccountContractAndTracksEveryField() {
         val original = EditProfileFormState(
-            "Arun Kumar", "arun", "", "", null,
+            "Arun Kumar", "arun", "Chennai", "", null,
             email = "arun@example.com", pincode = "600001", phoneNumber = "+919876543210", language = "English",
         )
         assertTrue(original.isValid)
-        assertFalse(original.copy(email = "").isValid)
+        // The current-account contract requires city but allows empty username, email and PIN.
+        assertFalse(original.copy(city = " ").isValid)
+        assertTrue(original.copy(email = "", username = "", pincode = "").isValid)
+        // Anything given must still be valid.
+        assertFalse(original.copy(email = "bad").isValid)
         assertFalse(original.copy(pincode = "12").isValid)
-        assertTrue(original.copy(title = "Homeowner").isDirty(original))
-        assertTrue(original.copy(language = "Tamil").isDirty(original))
+        assertFalse(original.copy(username = "a b").isValid)
+        assertTrue(original.copy(title = "Homeowner") != original)
+        assertTrue(original.copy(language = "Tamil") != original)
+    }
+
+    @Test fun signupStillRequiresUsernameEmailAndPinButNotCity() {
+        assertFalse(draft().copy(username = "").validation(true).isValid)
+        assertTrue(draft().copy(city = "").validation(true).isValid)
+        assertTrue(draft().copy(email = "", username = "", pincode = "", city = "Chennai").validation(true, AccountFormRules.Edit).isValid)
     }
 
     @Test fun previewSignupCannotOverwriteThePreviouslySignedInAccount() {
