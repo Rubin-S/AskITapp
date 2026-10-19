@@ -12,10 +12,8 @@
     <ID>ComplexCondition:CurrentAccount.kt:AccountProfile$listingDraft != null &amp;&amp; ( listing == null || listing.title != listingDraft.title || listing.description != listingDraft.description )</ID>
     <ID>ComplexCondition:CurrentAccount.kt:AccountProfile$mediaUrls.any { value -&gt; val url = value.toHttpUrlOrNull() value.length &gt; 2_048 || url == null || !url.isHttps || url.username.isNotEmpty() || url.password.isNotEmpty() }</ID>
     <ID>ComplexCondition:ExploreFilterPredicates.kt:ExplorePriceFilter$low == null || high == null || low &lt; BigDecimal.ZERO || high &lt; low</ID>
-    <ID>ComplexCondition:ExploreResultSections.kt:hasVisibleResults &amp;&amp; options.size &gt;= 2 &amp;&amp; selectedOption != null &amp;&amp; selectedOption in options &amp;&amp; onSortChanged != null</ID>
     <ID>ComplexCondition:ListServiceViewModel.kt:ListServiceDeliveryMode.AT_PROVIDER_LOCATION in state.deliveryModes &amp;&amp; ( state.providerAreaLabel.isBlank() || state.providerLatitude == null || state.providerLongitude == null )</ID>
     <ID>ComplexCondition:ListServiceViewModel.kt:state.availability.isBlank() || state.experience.toIntOrNull() !in 0..60 || !com.askit.app.auth.validAccountPhone(state.contactPhone) || !com.askit.app.auth.validAccountEmail(state.contactEmail)</ID>
-    <ID>ComplexCondition:MainActivity.kt:MainActivity$BuildConfig.CLIENT_PREVIEW || ( BuildConfig.DEBUG &amp;&amp; intent.getBooleanExtra("extra_start_at_home", false) &amp;&amp; !intent.getBooleanExtra("extra_start_entry", false) )</ID>
     <ID>ComplexCondition:PhoneNumberValidator.kt:PhoneNumberValidator$countryIso != null &amp;&amp; international &amp;&amp; ( number.countryCode != phoneUtil.getCountryCodeForRegion(countryIso) || (inferredRegion != null &amp;&amp; inferredRegion != countryIso &amp;&amp; phoneUtil.isValidNumber(number)) )</ID>
     <ID>ComplexCondition:PostTaskViewModel.kt:!validAge(minimumAge) || !validAge(maximumAge) || ( minimumAge.isNotEmpty() &amp;&amp; maximumAge.isNotEmpty() &amp;&amp; (minimumAge.toIntOrNull() ?: 0) &gt; (maximumAge.toIntOrNull() ?: 0) )</ID>
     <ID>ComplexCondition:PostTaskViewModel.kt:state.workMode == PostTaskWorkMode.AT_MY_LOCATION &amp;&amp; (state.publicAreaLabel.isBlank() || state.latitude == null || state.longitude == null)</ID>
@@ -31,9 +29,7 @@
     <ID>ComposableParamOrder:ListServiceReview.kt:@OptIn(ExperimentalLayoutApi::class) @Composable internal fun ListServiceReview</ID>
     <ID>ComposableParamOrder:PostTaskForm.kt:@Composable internal fun PostTaskForm</ID>
     <ID>ComposableParamOrder:PostTaskReview.kt:@Composable internal fun PostTaskReview</ID>
-    <ID>ComposableParamOrder:ProfileHighlights.kt:@Composable internal fun ProfileHighlights</ID>
     <ID>ComposableParamOrder:StoryCamera.kt:@Composable fun StoryCamera</ID>
-    <ID>ComposableParamOrder:UniversalProfileScaffold.kt:@Composable fun UniversalProfileScaffold</ID>
     <ID>CyclomaticComplexMethod:AuthViewModel.kt:AuthViewModel$fun verifyCode</ID>
     <ID>CyclomaticComplexMethod:CreatePostViewModel.kt:private fun validate: Set&lt;PostValidationField&gt;</ID>
     <ID>CyclomaticComplexMethod:CurrentAccount.kt:AccountProfile$internal fun toSessionProfile: SessionProfile</ID>
@@ -61,7 +57,6 @@
     <ID>LambdaParameterInRestartableEffect:SharedStoryCard.kt:resolveStory: (String) -&gt; Story?</ID>
     <ID>LambdaParameterInRestartableEffect:StoryViewerScreen.kt:onDismiss: () -&gt; Unit</ID>
     <ID>LongMethod:AuthViewModel.kt:AuthViewModel$fun verifyCode</ID>
-    <ID>LongMethod:CreatorDashboardFixtures.kt:CreatorDashboardFixtures$fun sample: CreatorDashboardSample</ID>
     <ID>LongMethod:CreatorDashboardFixtures.kt:CreatorDashboardFixtures$private fun getCategoryMetrics: CreatorCategoryMetrics</ID>
     <ID>LongMethod:CurrentAccount.kt:AccountProfile$internal fun toSessionProfile: SessionProfile</ID>
     <ID>LongMethod:ExploreFixtures.kt:internal fun sampleExplorePeople: List&lt;ExplorePersonResult&gt;</ID>
@@ -130,9 +125,6 @@
     <ID>MagicNumber:PostPhotoCrop.kt:PostPhotoRatio.PORTRAIT$4</ID>
     <ID>MagicNumber:PostTaskViewModel.kt:100</ID>
     <ID>MagicNumber:PostTaskViewModel.kt:18</ID>
-    <ID>MagicNumber:ProfileHighlight.kt:ProfileHighlight$60</ID>
-    <ID>MagicNumber:ProfileRatings.kt:5f</ID>
-    <ID>MagicNumber:SessionProfile.kt:SessionProfileStore$90</ID>
     <ID>MagicNumber:SignupDraft.kt:128</ID>
     <ID>MagicNumber:Story.kt:1000L</ID>
     <ID>MagicNumber:Story.kt:24</ID>
@@ -168,15 +160,11 @@
     <ID>ModifierMissing:AskITDiscardDialog.kt:@Composable fun AskITDiscardDialog</ID>
     <ID>ModifierMissing:AskITNav.kt:@Composable fun AskITApp</ID>
     <ID>ModifierMissing:CreatePostScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun CreatePostRoute</ID>
-    <ID>ModifierMissing:DiscardChangesDialog.kt:@Composable fun DiscardChangesDialog</ID>
     <ID>ModifierMissing:ExploreScreen.kt:@Composable @OptIn(ExperimentalMaterial3Api::class) fun ExploreScreen</ID>
     <ID>ModifierMissing:ListServiceScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ListServiceRoute</ID>
     <ID>ModifierMissing:LocationSelectionScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun SearchAreaScreen</ID>
     <ID>ModifierMissing:PostTaskScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun PostTaskRoute</ID>
     <ID>ModifierMissing:PostTaskScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun TaskEditUnavailableScreen</ID>
-    <ID>ModifierMissing:ProfilePostsPane.kt:@Composable fun ProfilePostsPane</ID>
-    <ID>ModifierMissing:ProfileSections.kt:@Composable fun ProfileSections</ID>
-    <ID>ModifierMissing:ProfileTopBar.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun ProfileTopBar</ID>
     <ID>ModifierMissing:SharedStoryCard.kt:@Composable fun SharedStoryCard</ID>
     <ID>ModifierMissing:TaskActionDialogs.kt:@Composable fun TaskActionDialogs</ID>
     <ID>ModifierMissing:TaskComponents.kt:@Composable fun TaskPhotoGallery</ID>
@@ -227,9 +215,9 @@
     <ID>ParameterNaming:JobReview.kt:onReviewSubmitted: (rating: Int, comment: String) -&gt; Boolean = { _, _ -&gt; false }</ID>
     <ID>ParameterNaming:JobVerifyEnter.kt:onVerified: () -&gt; Unit</ID>
     <ID>ParameterNaming:LocationSelectionScreen.kt:onFiltersChanged: ((ExploreResultScope, Set&lt;ExploreFilterOption&gt;) -&gt; Unit)? = null</ID>
-    <ID>ParameterNaming:SearchAreaPlaces.kt:onOptionToggled: (ExploreFilterOption) -&gt; Unit</ID>
     <ID>ParameterNaming:LocationSelectionScreen.kt:onPriceFilterApplied: (ExplorePriceFilter) -&gt; Unit = {}</ID>
     <ID>ParameterNaming:PostPhotoCropScreen.kt:onCropped: (PostMediaDraft) -&gt; Unit</ID>
+    <ID>ParameterNaming:SearchAreaPlaces.kt:onOptionToggled: (ExploreFilterOption) -&gt; Unit</ID>
     <ID>ParameterNaming:StoryCamera.kt:onPhotoCaptured: (Uri) -&gt; Unit</ID>
     <ID>ParameterNaming:StoryCamera.kt:onVideoCaptured: (Uri, Long) -&gt; Unit</ID>
     <ID>ParameterNaming:StoryCanvas.kt:onDrawFinished: () -&gt; Unit = {}</ID>
@@ -248,7 +236,6 @@
     <ID>ParameterNaming:StoryViewerScreen.kt:onStorySeen: ((String) -&gt; Unit)? = null</ID>
     <ID>ParameterNaming:StoryViewerScreen.kt:onVideoFinished: () -&gt; Unit</ID>
     <ID>ParameterNaming:TaskDetailScreen.kt:onDeleted: (String) -&gt; Unit = {}</ID>
-    <ID>ParameterNaming:UniversalProfileScaffold.kt:onSectionSelected: (String) -&gt; Unit</ID>
     <ID>ReturnCount:AppLinksViewModel.kt:AppLinksViewModel$fun refresh: Job?</ID>
     <ID>ReturnCount:AppLinksViewModel.kt:internal fun AppLinks.profileUrl: String?</ID>
     <ID>ReturnCount:AskITNavEntries.kt:fun saveTask</ID>
@@ -268,7 +255,6 @@
     <ID>ReturnCount:JobsStore.kt:JobsStore$@Synchronized fun verifyStartCode: StartCodeCheck</ID>
     <ID>ReturnCount:JobsStore.kt:JobsStore$fun markComplete: Boolean</ID>
     <ID>ReturnCount:LocalHomeRepository.kt:LocalHomeRepository$override fun addStory: StoryActionResult</ID>
-    <ID>ReturnCount:SearchAreaPlaces.kt:internal fun Address?.toLocalityLabel: LocalityLabel?</ID>
     <ID>ReturnCount:PhoneNumberValidator.kt:PhoneNumberValidator$fun validate: PhoneValidation</ID>
     <ID>ReturnCount:PhoneNumberValidator.kt:PhoneNumberValidator$private fun normalize: String?</ID>
     <ID>ReturnCount:PostPhotoCrop.kt:internal fun loadCropBitmap: Bitmap</ID>
@@ -281,8 +267,7 @@
     <ID>ReturnCount:PostStore.kt:PostStore$fun undoHidden: PostResult</ID>
     <ID>ReturnCount:PostStore.kt:PostStore$fun update: PostResult</ID>
     <ID>ReturnCount:PreviewProfileStorage.kt:PreviewProfileStorage$private fun retain: String?</ID>
-    <ID>ReturnCount:ProfileViewModel.kt:ProfileViewModel$fun saveIdentity: Boolean</ID>
-    <ID>ReturnCount:ProfileViewModel.kt:ProfileViewModel$suspend fun completeSignup: SignupResult</ID>
+    <ID>ReturnCount:SearchAreaPlaces.kt:internal fun Address?.toLocalityLabel: LocalityLabel?</ID>
     <ID>ReturnCount:SignupDraft.kt:internal fun isSignupPhotoReadable: Boolean</ID>
     <ID>ReturnCount:StorySocialStore.kt:StorySocialStore$fun report: StoryActionResult</ID>
     <ID>ReturnCount:StoryViewModel.kt:StoryViewModel$fun buildValidatedDraft: StoryDraft?</ID>
@@ -320,10 +305,9 @@
     <ID>TooManyFunctions:ListServiceViewModel.kt:ListServiceViewModel : ViewModel</ID>
     <ID>TooManyFunctions:PostStore.kt:PostStore</ID>
     <ID>TooManyFunctions:PostTaskViewModel.kt:PostTaskViewModel : ViewModel</ID>
-    <ID>TooManyFunctions:ProfileRepository.kt:LocalProfileRepository : ProfileRepository</ID>
     <ID>TooManyFunctions:ProfileRepository.kt:ProfileRepository</ID>
     <ID>TooManyFunctions:ProfileViewModel.kt:ProfileViewModel : ViewModel</ID>
-    <ID>TooManyFunctions:SessionProfile.kt:SessionProfileStore</ID>
+    <ID>TooManyFunctions:SessionProfile.kt:SessionProfileStore : ProfileRepository</ID>
     <ID>TooManyFunctions:StorySocialStore.kt:StorySocialStore</ID>
     <ID>TooManyFunctions:StoryViewModel.kt:StoryViewModel : ViewModel</ID>
     <ID>TooManyFunctions:StoryViewerViewModel.kt:StoryViewerViewModel : ViewModel</ID>
@@ -331,10 +315,10 @@
     <ID>TooManyFunctions:VariantContent.kt:VariantContent</ID>
     <ID>ViewModelForwarding:AskITNavEntries.kt:CreatePostRoute( viewModel = createPostViewModel, onBack = { createPostViewModel.startNewDraft() navigationState.pop() }, onCompleteDraft = { draft -&gt; when ( val result = homeViewModel.posts.publish( draft, currentTaskAccountId(), jobsViewModel.profileStore.profile.value, ) ) { is com.askit.app.home.posts.PostResult.Failure -&gt; android.widget.Toast.makeText( context, result.messageRes, android.widget.Toast.LENGTH_LONG, ).show() is com.askit.app.home.posts.PostResult.Success -&gt; { createPostViewModel.retainPublishedCrops() createPostViewModel.startNewDraft() navigationState.clearToHome() } } }, )</ID>
     <ID>ViewModelForwarding:AskITNavEntries.kt:CreatePostRoute( viewModel = createPostViewModel, onBack = { createPostViewModel.startNewDraft() navigationState.pop() }, onCompleteDraft = { updated -&gt; when (val result = homeViewModel.posts.update(key.postId, updated, currentTaskAccountId())) { is com.askit.app.home.posts.PostResult.Failure -&gt; android.widget.Toast.makeText( context, result.messageRes, android.widget.Toast.LENGTH_LONG, ).show() is com.askit.app.home.posts.PostResult.Success -&gt; { createPostViewModel.retainPublishedCrops() createPostViewModel.startNewDraft() navigationState.pop() } } }, )</ID>
-    <ID>ViewModelForwarding:AskITNavEntries.kt:CreatorDashboardRoute( viewModel = creatorDashboardViewModel, onBack = { navigationState.pop() }, onCreatePost = { _ -&gt; createPostViewModel.startNewDraft() navigationState.push(AppDestination.CreatePost) }, onOpenChat = { conversationId -&gt; inboxViewModel.openThread(conversationId) navigationState.push(AppDestination.ChatThread(conversationId)) }, onOpenPostDetail = { postId -&gt; navigationState.push(AppDestination.PostDetail(postId)) }, onOpenProfile = { userId -&gt; navigationState.push(AppDestination.UserProfile(userId)) }, )</ID>
-    <ID>ViewModelForwarding:AskITNavEntries.kt:ExploreRoute( viewModel = exploreViewModel, onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) }, onSearchAreaClick = { navigationState.push(AppDestination.ExploreLocationDestination) }, localTasks = mappedExploreTasks, availableFilterOptions = availableFilterOptions, appliedFilterOptions = appliedFilterOptions, onFiltersChanged = onFiltersChanged, onFilterScopeChanged = exploreViewModel::onFilterScopeSelected, onPersonClick = { personId -&gt; navigationState.push(AppDestination.UserProfile(userId = personId)) }, onTaskClick = { taskId -&gt; navigationState.push(AppDestination.TaskDetail(taskId = taskId)) }, )</ID>
-    <ID>ViewModelForwarding:AskITNavEntries.kt:HomeScreen( followingIds = social.following, followingAccountId = social.accountId, onTogglePersonFollow = { person -&gt; val store = storyViewerViewModel.social val result = store.setFollowing( currentTaskAccountId(), person.id, person.id !in store.state.value.following, ) if (result is com.askit.app.home.stories.StoryActionResult.Rejected) { store.notify( if (result.reason == com.askit.app.home.stories.StoryActionFailure.SIGN_IN) { R.string.nearby_follow_sign_in } else { R.string.nearby_follow_unavailable }, ) } }, viewModel = homeViewModel, currentAccountId = ::currentTaskAccountId, onEditPost = { navigationState.push(AppDestination.EditPost(it)) }, onAddStoryClick = { post -&gt; if (post != null) { storyViewModel.startReshareDraft(post) } else { storyViewModel.startNewDraft() } navigationState.push(AppDestination.Story) }, onStoryClick = { story -&gt; navigationState.push(AppDestination.StoryViewer(startStoryId = story.id)) }, onTaskClick = { task -&gt; navigationState.push(AppDestination.TaskDetail(taskId = task.id)) }, onServiceClick = { service -&gt; navigationState.push(AppDestination.ServiceDetail(serviceId = service.id)) }, onPersonClick = { person -&gt; navigationState.push(AppDestination.UserProfile(userId = person.id)) }, )</ID>
-    <ID>ViewModelForwarding:AskITNavEntries.kt:ListServiceRoute( viewModel = listServiceViewModel, profile = profile, onBack = { navigationState.pop() }, onCompleteDraft = { draft -&gt; if (!com.askit.app.BuildConfig.CLIENT_PREVIEW) { android.widget.Toast.makeText(context, R.string.profile_save_unavailable, android.widget.Toast.LENGTH_LONG).show() return@ListServiceRoute } jobsViewModel.profileStore.applyListing( listing = draft.toServiceListing(draft.categoryLabel(context::getString)), draft = draft, ) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:CreatorDashboardRoute( viewModel = creatorDashboardViewModel, onBack = { navigationState.pop() }, onCreatePost = { _ -&gt; createPostViewModel.startNewDraft() navigationState.push(AppDestination.CreatePost) }, onOpenChat = { conversationId -&gt; inboxViewModel.openThread(conversationId) navigationState.push(AppDestination.ChatThread(conversationId)) }, onOpenPostDetail = { postId -&gt; navigationState.push(AppDestination.PostDetail(postId)) }, onOpenProfile = ::openProfile, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:ExploreRoute( viewModel = exploreViewModel, onSearchFiltersClick = { navigationState.push(AppDestination.SearchAreaDestination) }, onSearchAreaClick = { navigationState.push(AppDestination.ExploreLocationDestination) }, localTasks = mappedExploreTasks, availableFilterOptions = availableFilterOptions, appliedFilterOptions = appliedFilterOptions, onFiltersChanged = onFiltersChanged, onFilterScopeChanged = exploreViewModel::onFilterScopeSelected, onPersonClick = ::openProfile, onTaskClick = { taskId -&gt; navigationState.push(AppDestination.TaskDetail(taskId = taskId)) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:HomeScreen( followingIds = social.following, followingAccountId = social.accountId, onTogglePersonFollow = { person -&gt; val store = storyViewerViewModel.social val result = store.setFollowing( currentTaskAccountId(), person.id, person.id !in store.state.value.following, ) if (result is com.askit.app.home.stories.StoryActionResult.Rejected) { store.notify( if (result.reason == com.askit.app.home.stories.StoryActionFailure.SIGN_IN) { R.string.nearby_follow_sign_in } else { R.string.nearby_follow_unavailable }, ) } }, viewModel = homeViewModel, currentAccountId = ::currentTaskAccountId, onEditPost = { navigationState.push(AppDestination.EditPost(it)) }, onAddStoryClick = { post -&gt; if (post != null) { storyViewModel.startReshareDraft(post) } else { storyViewModel.startNewDraft() } navigationState.push(AppDestination.Story) }, onStoryClick = { story -&gt; navigationState.push(AppDestination.StoryViewer(startStoryId = story.id)) }, onTaskClick = { task -&gt; navigationState.push(AppDestination.TaskDetail(taskId = task.id)) }, onServiceClick = { service -&gt; navigationState.push(AppDestination.ServiceDetail(serviceId = service.id)) }, onPersonClick = { person -&gt; openProfile(person.id) }, )</ID>
+    <ID>ViewModelForwarding:AskITNavEntries.kt:ListServiceRoute( viewModel = listServiceViewModel, profile = profile, onBack = { navigationState.pop() }, onCompleteDraft = { draft -&gt; if (!profileViewModel.capabilities.editProfile) { Toast.makeText(context, R.string.profile_save_unavailable, Toast.LENGTH_LONG).show() } else { val listing = draft.toServiceListing(draft.categoryLabel(context::getString)) listingScope.launch { profileViewModel.saveListing(listing, draft) } } }, )</ID>
     <ID>ViewModelForwarding:AskITNavEntries.kt:PostTaskRoute( viewModel = postTaskViewModel, onBack = { postTaskViewModel.startNewDraft() navigationState.pop() }, onCompleteDraft = { draft -&gt; saveTask(draft) }, )</ID>
     <ID>ViewModelForwarding:AskITNavEntries.kt:PostTaskRoute( viewModel = postTaskViewModel, onBack = { postTaskViewModel.startNewDraft() navigationState.pop() }, onCompleteDraft = { updated -&gt; saveTask(updated, key.taskId) }, )</ID>
     <ID>ViewModelForwarding:AskITNavEntries.kt:ProviderDashboardRoute( viewModel = providerDashboardViewModel, onBack = { navigationState.pop() }, onOpenJob = { jobId -&gt; navigationState.push(AppDestination.JobDetail(jobId)) }, onOpenChat = { conversationId -&gt; inboxViewModel.openThread(conversationId) navigationState.push(AppDestination.ChatThread(conversationId)) }, onEditProfile = { navigationState.push(AppDestination.EditProfile) }, onUploadWork = { createPostViewModel.startNewDraft() navigationState.push(AppDestination.CreatePost) }, onManageAlerts = { navigationState.navigate(AppDestination.Inbox) }, )</ID>
@@ -377,43 +361,19 @@
     <ID>WildcardImport:ClientPreview.kt:import com.askit.app.listservice.*</ID>
     <ID>WildcardImport:ClientPreview.kt:import com.askit.app.posttask.*</ID>
     <ID>WildcardImport:ClientPreview.kt:import com.askit.app.task.*</ID>
-    <ID>WildcardImport:EditProfileScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:EditProfileScreen.kt:import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:EditProfileScreen.kt:import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:HighlightPlayback.kt:import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:HighlightPlayback.kt:import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:HighlightPlayback.kt:import com.askit.app.home.stories.*</ID>
     <ID>WildcardImport:MessagingPrivacyTest.kt:import org.junit.Assert.*</ID>
     <ID>WildcardImport:PostPhotoCropScreen.kt:import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:PostPhotoCropScreen.kt:import androidx.compose.material3.*</ID>
     <ID>WildcardImport:PostPhotoCropScreen.kt:import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:ProfileActionRow.kt:import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:ProfileActionsTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ProfileBanner.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ProfileBanner.kt:import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:ProfileBanner.kt:import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:ProfileHighlightEditor.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ProfileHighlightEditor.kt:import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:ProfileHighlightEditor.kt:import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:ProfileHighlights.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ProfileHighlights.kt:import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:ProfileHighlights.kt:import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:ProfileHighlightsTest.kt:import com.askit.app.story.*</ID>
     <ID>WildcardImport:ProfileHighlightsTest.kt:import org.junit.Assert.*</ID>
     <ID>WildcardImport:ProfileIdentityTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ProfileMetricSheets.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ProfileMetricSheets.kt:import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:ProfileMetricSheets.kt:import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:ProfileMetricsTest.kt:import com.askit.app.jobs.*</ID>
     <ID>WildcardImport:ProfileMetricsTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ProfileOverflow.kt:import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:ProfileOverflow.kt:import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:ProfilePostsPane.kt:import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:ProfilePrivacyTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ProfileReturnNavigationTest.kt:import org.junit.Assert.*</ID>
     <ID>WildcardImport:ProfileSectionsTest.kt:import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ProfileTopBar.kt:import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:ProfileTopBar.kt:import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:ServiceFormTest.kt:import org.junit.Assert.*</ID>
     <ID>WildcardImport:SharedStoryCard.kt:import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:SharedStoryCard.kt:import androidx.compose.material3.*</ID>
