@@ -802,7 +802,6 @@
     <string name="post_task_you_initial">Y</string>
     <string name="post_task_review_draft">Review Draft</string>
     <string name="post_task_full_details">Full Task Details</string>
-    <string name="post_task_timeline">Timeline</string>
     <string name="post_task_private_information">Private Information</string>
     <string name="post_task_private_visibility">🔒 Visible only to your assigned provider after you accept their offer.</string>
     <plurals name="post_task_preview_photos">

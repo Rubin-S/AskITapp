@@ -799,7 +799,6 @@
     <string name="post_task_you_initial">நீ</string>
     <string name="post_task_review_draft">வரைவை மதிப்பாய்வு செய்</string>
     <string name="post_task_full_details">வேலையின் முழு விவரங்கள்</string>
-    <string name="post_task_timeline">காலக்கெடு</string>
     <string name="post_task_private_information">தனிப்பட்ட தகவல்</string>
     <string name="post_task_private_visibility">🔒 சேவை வழங்குநரின் சலுகையை நீங்கள் ஏற்ற பிறகு, நியமிக்கப்பட்ட சேவை வழங்குநருக்கு மட்டுமே தெரியும்.</string>
     <plurals name="post_task_preview_photos">
